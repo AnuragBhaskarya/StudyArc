@@ -546,54 +546,63 @@
 
     const timerSection = document.querySelector('.timer-section');
     const centerPad = document.getElementById('timer-center-pad');
-    const focusBar = document.getElementById('active-focus-bar');
-    const focusTitle = document.getElementById('active-focus-title');
-    const focusSub = document.getElementById('active-focus-sub');
+    const headerPill = document.getElementById('header-topic-pill');
+    const headerTopicName = document.getElementById('header-topic-name');
 
     const hasActiveTask = Boolean(state.activeTaskName);
 
     if (hasActiveTask) {
       timerSection?.classList.add('is-session-locked');
-      focusBar?.classList.add('is-active');
-      if (focusTitle) focusTitle.textContent = state.activeTaskName;
+
+      // Top bar topic pill: visible ONLY when timer is set with a topic
+      if (headerPill) {
+        headerPill.classList.remove('hidden');
+        headerPill.title = state.activeTaskName;
+        headerPill.classList.toggle('is-running', state.timer.status === 'running');
+        headerPill.classList.toggle('is-paused', state.timer.status === 'paused');
+      }
+      if (headerTopicName) {
+        headerTopicName.textContent = state.activeTaskName;
+      }
 
       if (state.timer.status === 'running') {
         timerSection?.classList.add('is-running');
         timerSection?.classList.remove('is-paused');
-        focusBar?.classList.remove('is-paused');
-        if (focusSub) focusSub.textContent = 'Focusing • Hold 1.2s to save & finish';
         centerPad?.setAttribute('aria-label', `Focusing on ${state.activeTaskName}. Tap to pause, hold 1.2s to save.`);
         document.title = `(${formatDigitalTime(state.timer.remainingSeconds)}) ${state.activeTaskName} • StudyArc`;
       } else if (state.timer.status === 'paused') {
         timerSection?.classList.remove('is-running');
         timerSection?.classList.add('is-paused');
-        focusBar?.classList.add('is-paused');
-        if (focusSub) focusSub.textContent = 'Paused • Tap to resume • Hold 1.2s to save';
         centerPad?.setAttribute('aria-label', `Paused on ${state.activeTaskName}. Tap to resume, hold 1.2s to save.`);
         document.title = `Paused (${formatDigitalTime(state.timer.remainingSeconds)}) • StudyArc`;
       } else {
         timerSection?.classList.remove('is-running', 'is-paused');
-        focusBar?.classList.remove('is-paused');
-        if (focusSub) focusSub.textContent = 'Ready • Tap center to start';
         centerPad?.setAttribute('aria-label', `Ready to focus on ${state.activeTaskName}. Tap to start.`);
         document.title = `StudyArc — Minimal Focus & Habit Tracker`;
       }
     } else {
       timerSection?.classList.remove('is-session-locked', 'is-running', 'is-paused');
-      focusBar?.classList.remove('is-active', 'is-paused');
-      if (focusTitle) focusTitle.textContent = 'Set time & tap center to begin';
-      if (focusSub) focusSub.textContent = 'Drag bead to adjust';
+
+      // Top bar topic pill: completely hidden when idle, keeping top bar empty!
+      if (headerPill) {
+        headerPill.classList.add('hidden');
+        headerPill.classList.remove('is-running', 'is-paused');
+      }
+      if (headerTopicName) {
+        headerTopicName.textContent = '';
+      }
+
       centerPad?.setAttribute('aria-label', 'Timer ready. Tap to start, drag bead to adjust.');
       document.title = `StudyArc — Minimal Focus & Habit Tracker`;
     }
 
-    updateTodayFocusPill();
+    updateTodayLiveStat();
   }
 
-  function updateTodayFocusPill() {
-    const pillEl = document.getElementById('today-focus-pill');
-    const timeEl = document.getElementById('today-focus-time');
-    if (!pillEl || !timeEl) return;
+  function updateTodayLiveStat() {
+    const todayStatEl = document.getElementById('stat-today-focus');
+    const statItemToday = document.getElementById('stat-item-today');
+    if (!todayStatEl) return;
 
     const todayStr = getLocalDateString();
     const loggedMinutes = state.dayActivity[todayStr] || 0;
@@ -610,20 +619,14 @@
     const secs = totalSecs % 60;
     const secStr = String(secs).padStart(2, '0') + 's';
 
-    timeEl.textContent = hrs > 0
+    todayStatEl.textContent = hrs > 0
       ? `${hrs}h ${String(mins).padStart(2, '0')}m ${secStr}`
       : `${mins}m ${secStr}`;
 
-    pillEl.title = `Today's Focus: ${timeEl.textContent} • Click to view Day Record`;
-
-    if (state.timer.status === 'running') {
-      pillEl.classList.add('is-running');
-      pillEl.classList.remove('is-paused');
-    } else if (state.timer.status === 'paused') {
-      pillEl.classList.remove('is-running');
-      pillEl.classList.add('is-paused');
-    } else {
-      pillEl.classList.remove('is-running', 'is-paused');
+    if (statItemToday) {
+      statItemToday.title = `Today's Focus: ${todayStatEl.textContent} • Click to view Day Record`;
+      statItemToday.classList.toggle('is-running', state.timer.status === 'running');
+      statItemToday.classList.toggle('is-paused', state.timer.status === 'paused');
     }
   }
 
@@ -1625,11 +1628,13 @@
   function renderStats() {
     const streakEl = document.getElementById('stat-streak');
     const xpEl = document.getElementById('stat-xp');
-    const focusEl = document.getElementById('stat-focus');
+    const settingTotalFocusEl = document.getElementById('setting-total-focus');
 
     if (streakEl) streakEl.textContent = state.streak;
     if (xpEl) xpEl.textContent = state.xp.toLocaleString();
-    if (focusEl) focusEl.textContent = formatHoursMinutes(state.totalFocusSeconds);
+    if (settingTotalFocusEl) settingTotalFocusEl.textContent = formatHoursMinutes(state.totalFocusSeconds);
+
+    updateTodayLiveStat();
   }
 
   // =========================================================================
@@ -1831,11 +1836,17 @@
       brandHome.addEventListener('click', () => switchView('focus'));
     }
 
-    // Today's Focus Pill click -> Open Day Record dialog for today
-    const todayPill = document.getElementById('today-focus-pill');
-    if (todayPill) {
-      todayPill.addEventListener('click', () => {
+    // Today's Focus item in stats-strip click -> Open Day Record dialog for today
+    const statItemToday = document.getElementById('stat-item-today');
+    if (statItemToday) {
+      statItemToday.addEventListener('click', () => {
         openDayDialog(getLocalDateString());
+      });
+      statItemToday.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openDayDialog(getLocalDateString());
+        }
       });
     }
 
@@ -1967,14 +1978,6 @@
       });
     }
 
-    // Active focus bar click -> Play / Pause / New task
-    const activeFocusBar = document.getElementById('active-focus-bar');
-    if (activeFocusBar) {
-      activeFocusBar.style.cursor = 'pointer';
-      activeFocusBar.addEventListener('click', () => {
-        handlePlayPauseAction();
-      });
-    }
 
     // Keyboard Space shortcut to toggle timer / start task
     window.addEventListener('keydown', (e) => {

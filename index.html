@@ -32,14 +32,13 @@
         </div>
 
         <div class="header-right">
-          <!-- Today's Focus Live Pill -->
-          <button class="today-focus-pill" id="today-focus-pill" title="Today's Total Focus Time" aria-label="Today's Focus Time">
-            <span class="today-focus-dot" aria-hidden="true"></span>
-            <span class="today-focus-label">Today</span>
-            <span class="today-focus-time" id="today-focus-time">0m 00s</span>
-          </button>
+          <!-- Topic Pill: Right-aligned next to profile avatar, visible ONLY when a timer session is active/set -->
+          <div class="header-topic-pill hidden" id="header-topic-pill" title="">
+            <span class="header-topic-dot" aria-hidden="true"></span>
+            <span class="header-topic-name" id="header-topic-name"></span>
+          </div>
 
-          <button class="profile-avatar-btn" id="btn-profile" title="Settings & Preferences • Click to customize" aria-label="Settings">
+          <button class="profile-avatar-btn" id="btn-profile" title="Settings &amp; Preferences" aria-label="Settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <circle cx="12" cy="10" r="3"></circle>
@@ -54,15 +53,6 @@
         
         <!-- MAIN FOCUS TIMER (The Hero Element) -->
         <div class="timer-section">
-          <!-- Active Focus Task Indicator Bar -->
-          <div class="active-focus-bar" id="active-focus-bar" title="Focus Session Status">
-            <span class="active-focus-dot" id="active-focus-dot" aria-hidden="true"></span>
-            <div class="active-focus-texts">
-              <span class="active-focus-title" id="active-focus-title">Set time &amp; tap center to begin</span>
-              <span class="active-focus-sub" id="active-focus-sub">Drag bead to adjust</span>
-            </div>
-          </div>
-
           <div class="timer-wrapper">
             <svg class="timer-svg" id="timer-svg" viewBox="0 0 420 420">
               <!-- Outer subtle depth outline -->
@@ -131,18 +121,17 @@
 
           <div class="stat-divider" aria-hidden="true"></div>
 
-          <!-- Total Focus -->
-          <div class="stat-item">
+          <!-- Today's Focus (Live Ticking) -->
+          <div class="stat-item stat-item-clickable" id="stat-item-today" title="Today's Focus • Click to view Day Record" role="button" tabindex="0">
             <div class="stat-icon-box">
-              <svg class="bars-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="20" x2="18" y2="10"></line>
-                <line x1="12" y1="20" x2="12" y2="4"></line>
-                <line x1="6" y1="20" x2="6" y2="14"></line>
+              <svg class="clock-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
             </div>
             <div class="stat-data">
-              <span class="stat-number" id="stat-focus">0h 0m</span>
-              <span class="stat-title">Total Focus</span>
+              <span class="stat-number stat-today-live" id="stat-today-focus">0m 00s</span>
+              <span class="stat-title">Today's Focus</span>
             </div>
           </div>
         </div>
@@ -187,10 +176,18 @@
       <section class="view-panel hidden" id="view-settings">
         <div class="panel-inner">
           <div class="panel-header-row">
-            <h2 class="panel-heading">Settings & Preferences</h2>
+            <h2 class="panel-heading">Settings &amp; Preferences</h2>
             <button class="btn-subtle" id="btn-close-settings" title="Back to Timer">← Back to Timer</button>
           </div>
           <div class="settings-form">
+            <div class="setting-field">
+              <div class="setting-meta">
+                <span class="setting-label">All-Time Total Focus</span>
+                <span class="setting-hint">Total cumulative study time recorded across all sessions</span>
+              </div>
+              <span class="setting-badge-value" id="setting-total-focus">0h 0m</span>
+            </div>
+
             <div class="setting-field">
               <div class="setting-meta">
                 <span class="setting-label">Default Timer Duration</span>
