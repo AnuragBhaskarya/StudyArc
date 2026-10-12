@@ -86,8 +86,8 @@ Engineered with a centered, distraction-free interface, StudyArc eliminates clut
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/AnuragBhaskarya/study-tracker.git
-cd study-tracker
+git clone https://github.com/AnuragBhaskarya/StudyArc.git
+cd StudyArc
 ```
 
 ### 2. Set Up Virtual Environment (Optional but recommended)
@@ -218,7 +218,7 @@ erDiagram
 ## 📁 Repository Structure
 
 ```
-study-tracker/
+StudyArc/
 ├── assets/
 │   ├── preview-main.png          # Main interface screenshot
 │   └── preview-day-dialog.png    # Day record modal screenshot
