@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>StudyArc — Minimal Focus & Habit Tracker</title>
+  <meta name="description" content="StudyArc is a minimal, elegant study time tracker featuring a circular focus timer, GitHub-style consistency heatmap, XP, and streak progression.">
+  
+  <!-- Typography: Plus Jakarta Sans for UI, Lilita One & Titan One for bold rounded thick numerals -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-layout">
+    
+
+
+    <!-- MAIN VIEWPORT -->
+    <main class="main-viewport">
+      
+      <!-- TOP HEADER (Desktop Avatar / Mobile Branding & Top Bar) -->
+      <header class="app-header">
+        <div class="mobile-brand" id="brand-home" title="StudyArc • Focus">
+          <svg class="brand-leaf" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11.5 20.5A7.5 7.5 0 0 1 10.2 5.6C16.3 4.4 17.9 3.8 20 1.2c1.1 2.1 2.1 4.5 2.1 8.6 0 5.9-5.1 10.7-10.6 10.7Z" fill="currentColor"/>
+            <path d="M1.8 21.6c0-3.2 2-5.7 5.4-6.4 2.6-.5 5.3-2.1 6.3-3.2" stroke="#080B0A" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <span class="brand-text">StudyArc</span>
+        </div>
+
+        <div class="header-right">
+          <!-- Today's Focus Live Pill -->
+          <button class="today-focus-pill" id="today-focus-pill" title="Today's Total Focus Time" aria-label="Today's Focus Time">
+            <span class="today-focus-dot" aria-hidden="true"></span>
+            <span class="today-focus-label">Today</span>
+            <span class="today-focus-time" id="today-focus-time">0m 00s</span>
+          </button>
+
+          <button class="profile-avatar-btn" id="btn-profile" title="Settings & Preferences • Click to customize" aria-label="Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <circle cx="12" cy="10" r="3"></circle>
+              <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- VIEW 1: FOCUS DASHBOARD (Default / Main Screen) -->
+      <section class="view-panel active" id="view-focus">
+        
+        <!-- MAIN FOCUS TIMER (The Hero Element) -->
+        <div class="timer-section">
+          <div class="timer-wrapper">
+            <svg class="timer-svg" id="timer-svg" viewBox="0 0 420 420">
+              <!-- Outer subtle depth outline -->
+              <circle class="timer-outer-rim" cx="210" cy="210" r="184"></circle>
+              <!-- Dark circular track -->
+              <circle class="timer-track" id="timer-track" cx="210" cy="210" r="172"></circle>
+              <!-- Mint green progress arc (Circumference = 2 * PI * 172 ≈ 1080.7) -->
+              <circle class="timer-arc" id="timer-arc" cx="210" cy="210" r="172" stroke-dasharray="1080.7" stroke-dashoffset="720.5" transform="rotate(-90 210 210)"></circle>
+              <!-- Interactive Draggable Bead -->
+              <g class="timer-bead-group" id="timer-bead-group" transform="translate(358.95, 296)">
+                <!-- Touch target hit area for effortless mobile dragging -->
+                <circle class="bead-touch-target" cx="0" cy="0" r="26"></circle>
+                <!-- Glowing mint halo aura -->
+                <circle class="timer-bead-glow" cx="0" cy="0" r="12"></circle>
+                <!-- Central bead jewel -->
+                <circle class="timer-bead" id="timer-bead" cx="0" cy="0" r="7"></circle>
+              </g>
+            </svg>
+
+            <!-- Center Content inside Timer Circle (Tap anywhere to start/pause, Hold 2s to reset) -->
+            <div class="timer-center-content" id="timer-center-pad" role="button" tabindex="0" aria-label="Timer ready. Tap to start, drag bead to adjust.">
+              <div class="timer-digits has-hours" id="timer-digits">
+                <span class="timer-hours-wrap" id="timer-hours-wrap">
+                  <span class="timer-hours-inner">
+                    <span class="timer-num" id="timer-hours-val">1</span><span class="timer-colon">:</span>
+                  </span>
+                </span>
+                <span class="timer-min-sec" id="timer-min-sec">
+                  <span class="timer-num" id="timer-mins-val">00</span><span class="timer-colon">:</span><span class="timer-num" id="timer-secs-val">00</span>
+                </span>
+              </div>
+              <div class="timer-state-dot" id="timer-state-dot" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMPACT GAMIFICATION STATISTICS STRIP -->
+        <div class="stats-strip" aria-label="Study Progress Statistics">
+          <!-- Day Streak -->
+          <div class="stat-item">
+            <div class="stat-icon-box">
+              <svg class="flame-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+              </svg>
+            </div>
+            <div class="stat-data">
+              <span class="stat-number" id="stat-streak">0</span>
+              <span class="stat-title">Day Streak</span>
+            </div>
+          </div>
+
+          <div class="stat-divider" aria-hidden="true"></div>
+
+          <!-- Total XP -->
+          <div class="stat-item">
+            <div class="stat-icon-box">
+              <svg class="star-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"></path>
+              </svg>
+            </div>
+            <div class="stat-data">
+              <span class="stat-number" id="stat-xp">0</span>
+              <span class="stat-title">Total XP</span>
+            </div>
+          </div>
+
+          <div class="stat-divider" aria-hidden="true"></div>
+
+          <!-- Total Focus -->
+          <div class="stat-item">
+            <div class="stat-icon-box">
+              <svg class="bars-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+            </div>
+            <div class="stat-data">
+              <span class="stat-number" id="stat-focus">0h 0m</span>
+              <span class="stat-title">Total Focus</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMPACT MONTHLY ACTIVITY HEATMAP CARD -->
+        <div class="heatmap-card" aria-label="Activity Consistency Heatmap">
+          <div class="heatmap-card-header">
+            <div class="heatmap-year-controls">
+              <button class="nav-arrow-btn" id="btn-prev-period" aria-label="Previous Period">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <span class="heatmap-year-badge" id="heatmap-year-badge">2026</span>
+              <button class="nav-arrow-btn" id="btn-next-period" aria-label="Next Period">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Heatmap Viewport (Months header + Mon/Wed/Fri + multi-month grid) -->
+          <div class="heatmap-body-wrap">
+            <div class="heatmap-weekdays">
+              <span class="weekday-label weekday-mon">Mon</span>
+              <span class="weekday-label weekday-wed">Wed</span>
+              <span class="weekday-label weekday-fri">Fri</span>
+            </div>
+
+            <div class="heatmap-scroll-area" id="heatmap-scroll-area">
+              <div class="heatmap-track" id="heatmap-track">
+                <!-- Dynamically populated accurate monthly calendar blocks by app.js -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- VIEW 4: SETTINGS & PREFERENCES -->
+      <section class="view-panel hidden" id="view-settings">
+        <div class="panel-inner">
+          <div class="panel-header-row">
+            <h2 class="panel-heading">Settings & Preferences</h2>
+            <button class="btn-subtle" id="btn-close-settings" title="Back to Timer">← Back to Timer</button>
+          </div>
+          <div class="settings-form">
+            <div class="setting-field">
+              <div class="setting-meta">
+                <span class="setting-label">Default Timer Duration</span>
+                <span class="setting-hint">Target focus time (1 to 180 minutes, default 60m)</span>
+              </div>
+              <input type="number" id="setting-focus-mins" class="num-input" value="60" min="1" max="180">
+            </div>
+
+            <div class="setting-field">
+              <div class="setting-meta">
+                <span class="setting-label">Sound Effects</span>
+                <span class="setting-hint">Synthesized gentle audio chimes on session finish</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="setting-sound-enabled" checked>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-field">
+              <div class="setting-meta">
+                <span class="setting-label">Real Starter Data</span>
+                <span class="setting-hint">Sync & reload authentic session-based dataset into SQL database</span>
+              </div>
+              <button class="btn-subtle" id="btn-load-demo-data">Sync SQL Data</button>
+            </div>
+
+            <div class="setting-field danger-field">
+              <div class="setting-meta">
+                <span class="setting-label text-danger">Reset All Progress</span>
+                <span class="setting-hint">Permanently wipe all session logs, streaks, and XP in SQL database</span>
+              </div>
+              <button class="btn-danger-outline" id="btn-wipe-data">Reset All</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DAY DETAIL MODAL DIALOG (Opened via Today pill or clicking any Heatmap cell) -->
+      <dialog id="day-detail-dialog" class="day-detail-dialog" closedby="any" aria-labelledby="day-dialog-title">
+        <div class="day-dialog-shell">
+          <!-- Header -->
+          <div class="day-dialog-header">
+            <div class="day-dialog-header-info">
+              <span class="day-dialog-badge" id="day-dialog-badge">Today's Record</span>
+              <h2 class="day-dialog-title" id="day-dialog-title">Monday, October 12, 2026</h2>
+            </div>
+            <button class="day-dialog-close-btn" id="btn-close-day-dialog" aria-label="Close Day Record">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <!-- 4 User-Requested Highlight Pills for that Day -->
+          <div class="day-summary-strip" aria-label="Day Summary Metrics">
+            <!-- Total Time -->
+            <div class="day-pill">
+              <div class="day-pill-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+              <div class="day-pill-content">
+                <span class="day-pill-label">Total Time</span>
+                <span class="day-pill-value" id="day-pill-time">0m</span>
+              </div>
+            </div>
+
+            <!-- Total Sessions -->
+            <div class="day-pill">
+              <div class="day-pill-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                  <path d="M6 2v20"></path>
+                </svg>
+              </div>
+              <div class="day-pill-content">
+                <span class="day-pill-label">Sessions</span>
+                <span class="day-pill-value" id="day-pill-sessions">0</span>
+              </div>
+            </div>
+
+            <!-- Average Focus Time -->
+            <div class="day-pill">
+              <div class="day-pill-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </div>
+              <div class="day-pill-content">
+                <span class="day-pill-label">Avg Focus</span>
+                <span class="day-pill-value" id="day-pill-avg">0m</span>
+              </div>
+            </div>
+
+            <!-- Total XP Gained -->
+            <div class="day-pill day-pill-xp">
+              <div class="day-pill-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              <div class="day-pill-content">
+                <span class="day-pill-label">XP Gained</span>
+                <span class="day-pill-value" id="day-pill-xp">+0 XP</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sessions Timeline Feed for that Day -->
+          <div class="day-timeline-wrapper">
+            <div class="day-timeline-heading">
+              <span>Timeline & Sessions</span>
+              <span class="day-timeline-count" id="day-timeline-count">0 sessions</span>
+            </div>
+            <div class="day-sessions-list" id="day-sessions-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </dialog>
+
+
+
+    </main>
+  </div>
+
+  <!-- FLOATING TOOLTIP FOR HEATMAP CELLS -->
+  <div id="heatmap-tooltip" class="heatmap-tooltip hidden" role="tooltip"></div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script src="app.js"></script>
+</body>
+</html>
