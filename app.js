@@ -38,6 +38,11 @@
     // Focus Subjects (Loaded from SQLite database)
     subjects: [],
 
+    // Active Focus Session
+    activeTaskName: null,
+    activeTaskStartTime: null,
+    activeTaskTargetSeconds: null,
+
     // Preferences
     soundEnabled: true
   };
@@ -53,8 +58,16 @@
         if (!merged.timer.targetSeconds || merged.timer.targetSeconds > 3 * 3600) {
           merged.timer.targetSeconds = 60 * 60;
         }
-        merged.timer.status = 'idle';
-        merged.timer.remainingSeconds = merged.timer.targetSeconds;
+        if (merged.activeTaskName && merged.timer && merged.timer.status !== 'idle') {
+          merged.timer.status = 'paused';
+          merged.timer.remainingSeconds = merged.timer.remainingSeconds || merged.timer.targetSeconds;
+        } else {
+          merged.activeTaskName = null;
+          merged.activeTaskStartTime = null;
+          merged.activeTaskTargetSeconds = null;
+          merged.timer.status = 'idle';
+          merged.timer.remainingSeconds = merged.timer.targetSeconds;
+        }
         return merged;
       }
     } catch (e) {
@@ -533,19 +546,43 @@
 
     const timerSection = document.querySelector('.timer-section');
     const centerPad = document.getElementById('timer-center-pad');
+    const focusBar = document.getElementById('active-focus-bar');
+    const focusTitle = document.getElementById('active-focus-title');
+    const focusSub = document.getElementById('active-focus-sub');
 
-    if (state.timer.status === 'running') {
-      timerSection?.classList.add('is-running');
-      timerSection?.classList.remove('is-paused');
-      centerPad?.setAttribute('aria-label', 'Timer running. Tap to pause, hold 1.2s to reset.');
-      document.title = `(${formatDigitalTime(state.timer.remainingSeconds)}) • StudyArc`;
-    } else if (state.timer.status === 'paused') {
-      timerSection?.classList.remove('is-running');
-      timerSection?.classList.add('is-paused');
-      centerPad?.setAttribute('aria-label', 'Timer paused. Tap to resume, hold 1.2s to reset.');
-      document.title = `Paused (${formatDigitalTime(state.timer.remainingSeconds)}) • StudyArc`;
+    const hasActiveTask = Boolean(state.activeTaskName);
+
+    if (hasActiveTask) {
+      timerSection?.classList.add('is-session-locked');
+      focusBar?.classList.add('is-active');
+      if (focusTitle) focusTitle.textContent = state.activeTaskName;
+
+      if (state.timer.status === 'running') {
+        timerSection?.classList.add('is-running');
+        timerSection?.classList.remove('is-paused');
+        focusBar?.classList.remove('is-paused');
+        if (focusSub) focusSub.textContent = 'Focusing • Hold 1.2s to save & finish';
+        centerPad?.setAttribute('aria-label', `Focusing on ${state.activeTaskName}. Tap to pause, hold 1.2s to save.`);
+        document.title = `(${formatDigitalTime(state.timer.remainingSeconds)}) ${state.activeTaskName} • StudyArc`;
+      } else if (state.timer.status === 'paused') {
+        timerSection?.classList.remove('is-running');
+        timerSection?.classList.add('is-paused');
+        focusBar?.classList.add('is-paused');
+        if (focusSub) focusSub.textContent = 'Paused • Tap to resume • Hold 1.2s to save';
+        centerPad?.setAttribute('aria-label', `Paused on ${state.activeTaskName}. Tap to resume, hold 1.2s to save.`);
+        document.title = `Paused (${formatDigitalTime(state.timer.remainingSeconds)}) • StudyArc`;
+      } else {
+        timerSection?.classList.remove('is-running', 'is-paused');
+        focusBar?.classList.remove('is-paused');
+        if (focusSub) focusSub.textContent = 'Ready • Tap center to start';
+        centerPad?.setAttribute('aria-label', `Ready to focus on ${state.activeTaskName}. Tap to start.`);
+        document.title = `StudyArc — Minimal Focus & Habit Tracker`;
+      }
     } else {
-      timerSection?.classList.remove('is-running', 'is-paused');
+      timerSection?.classList.remove('is-session-locked', 'is-running', 'is-paused');
+      focusBar?.classList.remove('is-active', 'is-paused');
+      if (focusTitle) focusTitle.textContent = 'Set time & tap center to begin';
+      if (focusSub) focusSub.textContent = 'Drag bead to adjust';
       centerPad?.setAttribute('aria-label', 'Timer ready. Tap to start, drag bead to adjust.');
       document.title = `StudyArc — Minimal Focus & Habit Tracker`;
     }
@@ -638,8 +675,14 @@
   async function logSession(minutesCompleted, subjectName = null) {
     if (minutesCompleted < 1) return;
     const todayStr = getLocalDateString();
-    const subj = subjectName || (state.subjects && state.subjects.length > 0 ? state.subjects[0].name : 'Focus Session');
+    const subj = subjectName || state.activeTaskName || (state.subjects && state.subjects.length > 0 ? state.subjects[0].name : 'Focus Session');
     const now = Date.now();
+    const startMs = state.activeTaskStartTime || (now - minutesCompleted * 60000);
+    const startD = new Date(startMs);
+    const endD = new Date(now);
+    const startStr = formatTime(startD);
+    const endStr = formatTime(endD);
+    const timeRangeStr = `${startStr} – ${endStr}`;
 
     // Optimistic local update
     state.xp += minutesCompleted;
@@ -651,7 +694,11 @@
       date: todayStr,
       durationMinutes: minutesCompleted,
       subject: subj,
-      timestamp: now
+      timestamp: now,
+      startTime: startStr,
+      endTime: endStr,
+      timeRange: timeRangeStr,
+      xp: minutesCompleted
     });
 
     updateStreak();
@@ -667,7 +714,9 @@
           subject_name: subj,
           duration_minutes: minutesCompleted,
           date: todayStr,
-          timestamp: now
+          timestamp: now,
+          start_time: startStr,
+          end_time: endStr
         })
       });
       if (res.ok) {
@@ -698,8 +747,16 @@
     pauseTimer();
     playChime('complete');
 
-    const minutesCompleted = Math.round(state.timer.targetSeconds / 60);
-    logSession(minutesCompleted);
+    const taskName = state.activeTaskName || 'Focus Session';
+    const targetDuration = state.activeTaskTargetSeconds || state.timer.targetSeconds;
+    const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
+    logSession(minutesCompleted, taskName);
+
+    showToast(`Completed ${minutesCompleted}m focus on ${taskName}! (+${minutesCompleted} XP)`);
+
+    state.activeTaskName = null;
+    state.activeTaskStartTime = null;
+    state.activeTaskTargetSeconds = null;
 
     // Reset back to set target duration
     state.timer.remainingSeconds = state.timer.targetSeconds;
@@ -821,9 +878,10 @@
       e.preventDefault();
       e.stopPropagation();
 
-      // Pause if currently running when user grabs the bead
-      if (state.timer.status === 'running') {
-        pauseTimer();
+      // If in an active task session, dragging bead or rim is locked!
+      if (state.activeTaskName || state.timer.status !== 'idle') {
+        showToast('Timer locked in session. Hold 1.2s to save & exit before changing time.');
+        return;
       }
 
       isDragging = true;
@@ -846,6 +904,9 @@
 
     // Also allow grabbing anywhere on the SVG outer ring (outside center pad)
     svg.addEventListener('pointerdown', (e) => {
+      if (state.activeTaskName || state.timer.status !== 'idle') {
+        return; // Locked in session
+      }
       if (e.target && beadGroup.contains(e.target)) return;
       if (centerPad) {
         const padRect = centerPad.getBoundingClientRect();
@@ -894,7 +955,7 @@
       updateDigitalDisplay(visualSeconds);
 
       if (progress >= 1) {
-        // Complete 1.2-second hold: Trigger Reset to 1.5 hours!
+        // Complete 1.2-second hold: Trigger Save Progress & Exit!
         holdCompleted = true;
         isDraining = false;
         isCenterPadHolding = false;
@@ -904,17 +965,28 @@
         if (navigator.vibrate) navigator.vibrate([40, 50, 40]);
         playChime('reset');
 
-        // Check if any study time was logged during this session
-        const elapsedStudy = state.timer.targetSeconds - holdStartRemaining;
-        if (elapsedStudy >= 60) {
+        if (state.activeTaskName) {
+          const taskName = state.activeTaskName;
+          const targetSecs = state.activeTaskTargetSeconds || state.timer.targetSeconds;
+          const elapsedStudy = Math.max(0, targetSecs - holdStartRemaining);
           const minutesLogged = Math.round(elapsedStudy / 60);
-          logSession(minutesLogged);
+
+          if (minutesLogged >= 1) {
+            logSession(minutesLogged, taskName);
+            showToast(`Saved ${minutesLogged}m of ${taskName}! (+${minutesLogged} XP)`);
+          } else {
+            showToast('Focus session ended (less than 1 minute).');
+          }
+        } else {
+          showToast('Timer reset.');
         }
 
         pauseTimer();
-        const RESET_SECONDS = 90 * 60; // Always 1.5 hours (5400s) on reset
-        state.timer.targetSeconds = RESET_SECONDS;
-        state.timer.remainingSeconds = RESET_SECONDS;
+        state.activeTaskName = null;
+        state.activeTaskStartTime = null;
+        state.activeTaskTargetSeconds = null;
+
+        state.timer.remainingSeconds = state.timer.targetSeconds;
         state.timer.status = 'idle';
         saveState();
         renderAll();
@@ -976,13 +1048,9 @@
       }
 
       const pressDuration = performance.now() - pointerDownTime;
-      if (!wasDraining && pressDuration < 320) {
-        // Clean quick click/tap: toggle Play / Pause!
-        if (state.timer.status === 'running') {
-          pauseTimer();
-        } else {
-          startTimer();
-        }
+      if (!wasDraining && pressDuration < 450) {
+        // Clean quick click/tap: toggle Play / Pause / New Task!
+        handlePlayPauseAction();
       } else if (wasDraining) {
         // Held partially (>220ms) but released before 1.2s: restore display cleanly
         renderTimerDisplay(state.timer.remainingSeconds, { duration: 340 });
@@ -1002,13 +1070,99 @@
     pad.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        if (state.timer.status === 'running') {
-          pauseTimer();
-        } else {
-          startTimer();
-        }
+        handlePlayPauseAction();
       }
     });
+  }
+
+  // =========================================================================
+  // TASK FOCUS PROMPT & ACTIONS
+  // =========================================================================
+  function handlePlayPauseAction() {
+    if (state.timer.status === 'running') {
+      pauseTimer();
+    } else if (state.timer.status === 'paused') {
+      // Already has active task session -> Resume directly without prompt!
+      startTimer();
+    } else {
+      // Status is 'idle' -> Prompt for new task name before starting!
+      openTaskPromptDialog();
+    }
+  }
+
+  function openTaskPromptDialog() {
+    const dialog = document.getElementById('task-prompt-dialog');
+    const input = document.getElementById('input-task-name');
+    const durationPill = document.getElementById('task-prompt-duration');
+    const chipsContainer = document.getElementById('task-suggestions-chips');
+    if (!dialog) return;
+
+    const targetMins = Math.round(state.timer.targetSeconds / 60);
+    if (durationPill) {
+      durationPill.textContent = `⏱️ ${targetMins} mins`;
+    }
+
+    if (input) {
+      input.value = '';
+    }
+
+    if (chipsContainer) {
+      const subjectsList = (state.subjects && state.subjects.length > 0)
+        ? state.subjects.map(s => s.name || s)
+        : ['Computer Science', 'Mathematics', 'System Architecture', 'Cognitive Science', 'Machine Learning'];
+
+      const uniqueNames = Array.from(new Set(subjectsList)).slice(0, 8);
+
+      chipsContainer.innerHTML = uniqueNames.map(name => `
+        <button type="button" class="task-chip" data-name="${escapeHtml(name)}">${escapeHtml(name)}</button>
+      `).join('');
+
+      chipsContainer.querySelectorAll('.task-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (input) {
+            input.value = btn.dataset.name;
+            input.focus();
+          }
+        });
+      });
+    }
+
+    if (typeof dialog.showModal === 'function' && !dialog.open) {
+      dialog.showModal();
+      setTimeout(() => input?.focus(), 50);
+    }
+  }
+
+  function closeTaskPromptDialog() {
+    const dialog = document.getElementById('task-prompt-dialog');
+    if (dialog && dialog.open) {
+      dialog.close();
+    }
+  }
+
+  function startTaskSession(taskName) {
+    const cleanName = (taskName || '').trim() || 'Focus Session';
+    state.activeTaskName = cleanName;
+    state.activeTaskStartTime = Date.now();
+    state.activeTaskTargetSeconds = state.timer.targetSeconds;
+    state.timer.remainingSeconds = state.timer.targetSeconds;
+    saveState();
+    closeTaskPromptDialog();
+    startTimer();
+    renderTimer();
+    showToast(`Focus session started: ${cleanName}`);
+  }
+
+  let toastTimeout = null;
+  function showToast(message) {
+    const toast = document.getElementById('toast-notification');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.remove('hidden');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+      toast.classList.add('hidden');
+    }, 3200);
   }
 
   // =========================================================================
@@ -1782,16 +1936,52 @@
       });
     }
 
-    // Keyboard Space shortcut to toggle timer
+    // Task Prompt Dialog form submission
+    const taskForm = document.getElementById('task-prompt-form');
+    if (taskForm) {
+      taskForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('input-task-name');
+        startTaskSession(input ? input.value : '');
+      });
+    }
+
+    // Task Prompt Dialog Cancel Button
+    const btnCancelTask = document.getElementById('btn-cancel-task');
+    if (btnCancelTask) {
+      btnCancelTask.addEventListener('click', closeTaskPromptDialog);
+    }
+
+    // Task Prompt Dialog backdrop click light-dismiss fallback
+    const taskDialog = document.getElementById('task-prompt-dialog');
+    if (taskDialog) {
+      taskDialog.addEventListener('click', (e) => {
+        const rect = taskDialog.getBoundingClientRect();
+        const isInDialog = (
+          rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+          rect.left <= e.clientX && e.clientX <= rect.left + rect.width
+        );
+        if (!isInDialog) {
+          closeTaskPromptDialog();
+        }
+      });
+    }
+
+    // Active focus bar click -> Play / Pause / New task
+    const activeFocusBar = document.getElementById('active-focus-bar');
+    if (activeFocusBar) {
+      activeFocusBar.style.cursor = 'pointer';
+      activeFocusBar.addEventListener('click', () => {
+        handlePlayPauseAction();
+      });
+    }
+
+    // Keyboard Space shortcut to toggle timer / start task
     window.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (e.code === 'Space') {
         e.preventDefault();
-        if (state.timer.status === 'running') {
-          pauseTimer();
-        } else {
-          startTimer();
-        }
+        handlePlayPauseAction();
       }
     });
 

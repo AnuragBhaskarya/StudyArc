@@ -1544,6 +1544,327 @@ input:checked + .switch-slider:before {
   max-width: 260px;
 }
 
+/* ==========================================================================
+   ACTIVE FOCUS BAR (Status bar above circular timer)
+   ========================================================================== */
+.active-focus-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.38rem 0.95rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  max-width: 90%;
+  transition: all 220ms ease;
+  user-select: none;
+}
+
+.active-focus-bar.is-active {
+  background: rgba(121, 217, 155, 0.08);
+  border-color: rgba(121, 217, 155, 0.28);
+  box-shadow: 0 0 16px rgba(121, 217, 155, 0.08);
+}
+
+.active-focus-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+  transition: all 200ms ease;
+}
+
+.active-focus-bar.is-active .active-focus-dot {
+  background: var(--accent-primary);
+  box-shadow: 0 0 8px var(--accent-primary);
+  animation: today-pill-breathe 2.4s ease-in-out infinite;
+}
+
+.active-focus-bar.is-paused .active-focus-dot {
+  background: #FBBF24;
+  box-shadow: 0 0 8px #FBBF24;
+  animation: none;
+}
+
+.active-focus-texts {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.active-focus-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.active-focus-bar.is-active .active-focus-title {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.active-focus-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   LOCKED TIMER BEAD (While in an active fixed session)
+   ========================================================================== */
+.timer-section.is-session-locked .timer-bead-group,
+.timer-section.is-session-locked .bead-touch-target,
+.timer-section.is-session-locked .timer-track,
+.timer-section.is-session-locked .timer-arc {
+  cursor: default !important;
+  pointer-events: none !important;
+}
+
+.timer-section.is-session-locked .timer-bead-glow {
+  opacity: 0.9;
+}
+
+/* ==========================================================================
+   TASK PROMPT MODAL (Native Dialog)
+   ========================================================================== */
+.task-prompt-dialog {
+  border: 1px solid rgba(121, 217, 155, 0.25);
+  border-radius: 22px;
+  background: rgba(14, 20, 17, 0.96);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  color: var(--text-primary);
+  padding: 0;
+  width: 90vw;
+  max-width: 440px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.88), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  margin: auto;
+  outline: none;
+  animation: dialog-pop-in 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  overflow: hidden;
+}
+
+.task-prompt-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.76);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: backdrop-fade-in 180ms ease forwards;
+}
+
+.task-prompt-shell {
+  padding: 1.6rem 1.6rem 1.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  box-sizing: border-box;
+}
+
+.task-prompt-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.task-prompt-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-primary);
+  background: rgba(121, 217, 155, 0.12);
+  border: 1px solid rgba(121, 217, 155, 0.25);
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+}
+
+.task-prompt-duration-pill {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border-subtle);
+}
+
+.task-prompt-title {
+  font-size: 1.28rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.task-input-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-name-input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-sizing: border-box;
+  outline: none;
+  transition: all 180ms ease;
+}
+
+.task-name-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(121, 217, 155, 0.18);
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.task-name-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Suggestion Chips */
+.task-suggestions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.task-suggestions-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.task-suggestions-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  max-height: 84px;
+  overflow-y: auto;
+}
+
+.task-chip {
+  padding: 0.28rem 0.65rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.task-chip:hover {
+  background: rgba(121, 217, 155, 0.12);
+  border-color: rgba(121, 217, 155, 0.35);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+/* Actions */
+.task-prompt-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.btn-task-cancel {
+  padding: 0.65rem 1.1rem;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.btn-task-cancel:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.btn-task-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.68rem 1.35rem;
+  border-radius: 10px;
+  background: var(--accent-primary);
+  border: none;
+  color: #070D09;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 160ms ease;
+  box-shadow: 0 4px 14px rgba(121, 217, 155, 0.28);
+}
+
+.btn-task-start svg {
+  width: 13px;
+  height: 13px;
+}
+
+.btn-task-start:hover {
+  background: var(--accent-bright);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(121, 217, 155, 0.4);
+}
+
+/* ==========================================================================
+   TOAST NOTIFICATION
+   ========================================================================== */
+.toast-notification {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(16, 24, 20, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(121, 217, 155, 0.35);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.75), 0 0 16px rgba(121, 217, 155, 0.12);
+  color: #E6FBF0;
+  padding: 0.65rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  z-index: 9999;
+  pointer-events: none;
+  animation: toast-slide-in 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
 .hidden {
   display: none !important;
 }

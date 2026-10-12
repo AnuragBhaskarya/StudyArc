@@ -168,7 +168,12 @@ def get_subjects():
         """)
         return [dict(row) for row in cursor.fetchall()]
 
-def add_or_get_subject(name, color='#79D99B'):
+SUBJECT_PALETTE = [
+    '#79D99B', '#A3F0BA', '#52C480', '#3A965A', '#4ECCA3',
+    '#6EE7B7', '#86EFAC', '#34D399', '#2DD4BF', '#5EEAD4'
+]
+
+def add_or_get_subject(name, color=None):
     clean_name = name.strip()
     if not clean_name:
         clean_name = 'Focus Session'
@@ -179,6 +184,10 @@ def add_or_get_subject(name, color='#79D99B'):
         row = cursor.fetchone()
         if row:
             return dict(row)
+            
+        if not color or color == '#79D99B':
+            idx = abs(hash(clean_name)) % len(SUBJECT_PALETTE)
+            color = SUBJECT_PALETTE[idx]
             
         cursor.execute("INSERT INTO subjects (name, color) VALUES (?, ?)", (clean_name, color))
         conn.commit()
