@@ -115,6 +115,9 @@ def auth_register():
         session['user_id'] = user['id']
         session['username'] = user['username']
 
+        # Pre-warm timer hot cache asynchronously so subsequent actions take <2ms
+        threading.Thread(target=get_hot_timer_state, args=(user['id'],), daemon=True).start()
+
         return jsonify({
             'success': True,
             'user': {
@@ -142,6 +145,9 @@ def auth_login():
     session.permanent = True
     session['user_id'] = user['id']
     session['username'] = user['username']
+
+    # Pre-warm timer hot cache asynchronously so subsequent actions take <2ms
+    threading.Thread(target=get_hot_timer_state, args=(user['id'],), daemon=True).start()
 
     return jsonify({
         'success': True,
@@ -356,7 +362,12 @@ def timer_live_route(user_id):
         # After wake up, re-fetch latest RAM state
         current_state = get_hot_timer_state(user_id)
 
-    return jsonify({'success': True, 'timer': current_state})
+    resp = jsonify({'success': True, 'timer': current_state})
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    resp.headers['X-Accel-Buffering'] = 'no'
+    return resp
 
 @app.route('/api/timer/action', methods=['POST'])
 @auth_required
@@ -381,7 +392,12 @@ def timer_action_route(user_id):
             active_task_name=active_task_name,
             remaining_seconds=remaining_seconds
         )
-        return jsonify({'success': True, 'timer': new_state})
+        resp = jsonify({'success': True, 'timer': new_state})
+        resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        resp.headers['Pragma'] = 'no-cache'
+        resp.headers['Expires'] = '0'
+        resp.headers['X-Accel-Buffering'] = 'no'
+        return resp
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 

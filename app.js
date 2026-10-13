@@ -207,9 +207,9 @@
     const myGeneration = ++syncLoopGeneration;
 
     while (state.authenticated && myGeneration === syncLoopGeneration) {
-      // Background tab: slow-poll to save battery
+      // Background tab: slow-poll to save mobile battery
       if (document.visibilityState === 'hidden') {
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 1500));
         continue;
       }
 
@@ -218,7 +218,7 @@
         const url = `/api/timer/live?since=${currentTimerVersion}&t=${Date.now()}`;
         const res = await fetch(url, {
           signal: activeSyncAbortController.signal,
-          headers: { 'Cache-Control': 'no-cache' }
+          headers: { 'Cache-Control': 'no-cache, no-store', 'Pragma': 'no-cache' }
         });
 
         if (res.ok) {
@@ -232,16 +232,14 @@
             broadcastLocalTimer(data.timer);
           }
         }
-        // Minimal yield before next long-poll
-        await new Promise(r => setTimeout(r, 15));
       } catch (err) {
         if (err.name === 'AbortError') {
-          // Aborted by visibility change or new loop start — continue, don't break
+          // Aborted by visibility change or new loop start — continue immediately
           await new Promise(r => setTimeout(r, 50));
           continue;
         }
         // Network error backoff
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise(r => setTimeout(r, 600));
       }
     }
   }
@@ -258,13 +256,8 @@
   }
 
   /**
-   * Core reconciliation function. Rules:
-   * - If this device just performed a local action (<2s ago), SKIP remote updates
-   *   UNLESS it's a direct response to our own action (isDirectResponse=true).
-   * - If the version was already applied, skip (dedup).
-   * - Running timer on operating device: only accept status/task changes, never
-   *   overwrite remainingSeconds (local tick is authoritative for display).
-   * - Non-operating device: apply server state fully including computed remaining.
+   * Ultra-fast, zero-calculation real-time reconciliation.
+   * Every pause, play, and reset transition applies across all devices immediately.
    */
   function applyLiveServerTimer(serverTimer, isDirectResponse = false) {
     if (!serverTimer) return;
@@ -276,26 +269,21 @@
       return;
     }
 
-    // Operating-device immunity: if user just clicked play/pause on THIS device,
-    // don't let long-poll/broadcast overwrite local state for 2 seconds
-    const timeSinceLocalAction = Date.now() - lastLocalActionTime;
-    if (!isDirectResponse && timeSinceLocalAction < 2000) {
-      return;
-    }
-
-    // Mark this version as applied
     if (sv > lastAppliedVersion) {
       lastAppliedVersion = sv;
     }
+    if (sv > currentTimerVersion) {
+      currentTimerVersion = sv;
+    }
 
-    // Register active task across devices
-    const incomingTask = serverTimer.activeTaskName || null;
+    // 1. Task name sync across devices
+    state.activeTaskName = serverTimer.activeTaskName || null;
 
-    // Handle completed-while-away
+    // 2. Handle completed-while-away
     if (serverTimer.hasCompleted) {
       const targetDuration = serverTimer.targetSeconds || 3600;
       const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
-      const taskName = incomingTask || 'Focus Session';
+      const taskName = serverTimer.activeTaskName || 'Focus Session';
       showToast(`Welcome back! Your focus on ${taskName} finished while away. (+${minutesCompleted} XP)`);
       logSession(minutesCompleted, taskName);
 
@@ -310,66 +298,67 @@
       return;
     }
 
-    state.activeTaskName = incomingTask;
+    // 3. PAUSE SYNC (Immediate, zero-calculation!)
+    if (serverTimer.status === 'paused') {
+      isLocallyOperating = false;
+      state.timer.status = 'paused';
+      state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
+      state.timer.remainingSeconds = Number(serverTimer.remainingSeconds != null ? serverTimer.remainingSeconds : state.timer.remainingSeconds);
+      state.timer.lastTickTime = null;
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      saveState();
+      renderTimer();
+      renderStats();
+      return;
+    }
 
+    // 4. IDLE / RESET SYNC (Immediate, zero-calculation!)
+    if (serverTimer.status === 'idle') {
+      isLocallyOperating = false;
+      state.timer.status = 'idle';
+      state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
+      state.timer.remainingSeconds = state.timer.targetSeconds;
+      state.activeTaskName = null;
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      saveState();
+      renderTimer();
+      renderStats();
+      return;
+    }
+
+    // 5. RUNNING SYNC (Immediate play/resume!)
     if (serverTimer.status === 'running') {
       const wasRunning = state.timer.status === 'running';
       state.timer.status = 'running';
       state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
 
       // Operating device immunity: If this device is actively ticking locally,
-      // local monotonic tick is 100% authoritative for continuous display.
-      // NEVER overwrite the operating device's display with remote sync responses!
+      // its local monotonic tick is already running smoothly without any jump
       if (isLocallyOperating && wasRunning && !isDirectResponse) {
         return;
       }
 
-      // Compute server's exact remaining using server-authoritative timestamps
+      // Fast, low-calculation remaining time computation
       const now = Date.now();
-      let serverRemaining;
-      if (serverTimer.currentRemaining != null) {
-        const serverNow = Number(serverTimer.serverTime) || now;
-        const timeSinceServer = Math.max(0, (now - serverNow) / 1000);
-        serverRemaining = Math.max(0, Number(serverTimer.currentRemaining) - timeSinceServer);
-      } else if (serverTimer.startedAt) {
-        const elapsed = (now - Number(serverTimer.startedAt)) / 1000;
-        const baseRem = serverTimer.remainingSeconds != null
-          ? Number(serverTimer.remainingSeconds)
-          : (serverTimer.targetSeconds || 3600);
-        serverRemaining = Math.max(0, baseRem - elapsed);
-      } else {
-        serverRemaining = Number(serverTimer.remainingSeconds != null ? serverTimer.remainingSeconds : 3600);
+      let serverRemaining = Number(serverTimer.remainingSeconds != null ? serverTimer.remainingSeconds : 3600);
+      if (serverTimer.startedAt) {
+        const elapsed = Math.max(0, (now - Number(serverTimer.startedAt)) / 1000);
+        serverRemaining = Math.max(0, serverRemaining - elapsed);
       }
 
-      // Apply server remaining to non-operating device or direct response
       state.timer.remainingSeconds = serverRemaining;
       state.timer.lastTickTime = now;
 
-      // Start local ticking on this synchronized device
+      // Start local ticking immediately
       if (!timerInterval) {
         timerInterval = setInterval(handleTimerTick, 500);
       }
-      saveState();
-      renderTimer();
-      renderStats();
-    } else if (serverTimer.status === 'paused') {
-      isLocallyOperating = false;
-      state.timer.status = 'paused';
-      state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
-      state.timer.remainingSeconds = serverTimer.remainingSeconds;
-      state.timer.lastTickTime = null;
-      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-      saveState();
-      renderTimer();
-      renderStats();
-    } else {
-      // Idle
-      isLocallyOperating = false;
-      state.timer.status = 'idle';
-      state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
-      state.timer.remainingSeconds = state.timer.targetSeconds;
-      state.activeTaskName = null;
-      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
       saveState();
       renderTimer();
       renderStats();
@@ -382,7 +371,18 @@
 
   async function syncTimerAction(action, extraPayload = {}) {
     if (!state.authenticated) return;
-    lastLocalActionTime = Date.now();
+
+    // 0ms instant broadcast to other open tabs on this machine
+    const optimisticState = {
+      status: state.timer.status,
+      targetSeconds: state.timer.targetSeconds,
+      remainingSeconds: Math.round(state.timer.remainingSeconds),
+      activeTaskName: state.activeTaskName,
+      startedAt: state.timer.startTime || Date.now(),
+      version: Date.now()
+    };
+    broadcastLocalTimer(optimisticState);
+
     try {
       const res = await fetch('/api/timer/action', {
         method: 'POST',
@@ -401,7 +401,6 @@
           const sv = data.timer.version || 0;
           if (sv > currentTimerVersion) currentTimerVersion = sv;
           if (sv > lastAppliedVersion) lastAppliedVersion = sv;
-          // Direct response: apply immediately but DON'T overwrite local operating state
           applyLiveServerTimer(data.timer, true);
           broadcastLocalTimer(data.timer);
         }
