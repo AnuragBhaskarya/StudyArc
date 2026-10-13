@@ -62,15 +62,32 @@
         if (!merged.timer.targetSeconds || merged.timer.targetSeconds > 3 * 3600) {
           merged.timer.targetSeconds = 60 * 60;
         }
-        if (merged.activeTaskName && merged.timer && merged.timer.status !== 'idle') {
-          merged.timer.status = 'paused';
-          merged.timer.remainingSeconds = merged.timer.remainingSeconds || merged.timer.targetSeconds;
+
+        const now = Date.now();
+        // If timer was running, compute exact elapsed time since last tick in 0ms!
+        if (merged.timer && merged.timer.status === 'running') {
+          const lastTime = merged.timer.lastTickTime || merged.timer.startTime || now;
+          const elapsedSecs = (now - lastTime) / 1000;
+          const currentRemaining = Math.max(
+            0,
+            (merged.timer.remainingSeconds != null ? merged.timer.remainingSeconds : merged.timer.targetSeconds) - elapsedSecs
+          );
+
+          if (currentRemaining <= 0) {
+            merged.timer.status = 'idle';
+            merged.timer.remainingSeconds = merged.timer.targetSeconds;
+            merged.timer._completedWhileAway = true;
+          } else {
+            merged.timer.status = 'running';
+            merged.timer.remainingSeconds = currentRemaining;
+            merged.timer.lastTickTime = now;
+          }
+        } else if (merged.timer && merged.timer.status === 'paused') {
+          merged.timer.remainingSeconds = (merged.timer.remainingSeconds != null) ? merged.timer.remainingSeconds : merged.timer.targetSeconds;
         } else {
-          merged.activeTaskName = null;
-          merged.activeTaskStartTime = null;
-          merged.activeTaskTargetSeconds = null;
           merged.timer.status = 'idle';
           merged.timer.remainingSeconds = merged.timer.targetSeconds;
+          merged.activeTaskName = null;
         }
         return merged;
       }
@@ -99,7 +116,6 @@
         state.authenticated = false;
         state.user = null;
         updateAuthUI();
-        openAuthDialog('login');
         return;
       }
 
@@ -110,6 +126,11 @@
           state.user = data.user || null;
           state.subjects = data.subjects || [];
           state.sessions = data.sessions || [];
+
+          const oldActivityStr = JSON.stringify(state.dayActivity);
+          const newActivityStr = JSON.stringify(data.dayActivity || {});
+          const activityChanged = oldActivityStr !== newActivityStr;
+
           state.dayActivity = data.dayActivity || {};
           if (data.stats) {
             state.streak = data.stats.streak || 0;
@@ -123,7 +144,11 @@
 
           updateAuthUI();
           saveState();
-          renderAll();
+          renderTimer();
+          renderStats();
+          if (activityChanged) {
+            renderHeatmap();
+          }
         }
       }
     } catch (err) {
@@ -132,26 +157,7 @@
   }
 
   async function checkAuthAndSync() {
-    try {
-      const res = await fetch('/api/auth/me');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.authenticated && data.user) {
-          state.authenticated = true;
-          state.user = data.user;
-          updateAuthUI();
-          await syncWithBackend();
-          return;
-        }
-      }
-    } catch (e) {
-      console.warn('StudyArc: Auth check error:', e);
-    }
-
-    state.authenticated = false;
-    state.user = null;
-    updateAuthUI();
-    openAuthDialog('login');
+    await syncWithBackend();
   }
 
   function reconcileServerTimer(serverTimer) {
@@ -165,25 +171,32 @@
       logSession(minutesCompleted, taskName);
 
       state.timer.status = 'idle';
-      state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
-      state.timer.remainingSeconds = state.timer.targetSeconds;
+      state.timer.targetSeconds = targetDuration;
+      state.timer.remainingSeconds = targetDuration;
       state.activeTaskName = null;
       if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
       }
+      renderTimer();
+      renderStats();
       return;
     }
 
     if (serverTimer.status === 'running') {
       state.timer.status = 'running';
       state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
-      state.timer.remainingSeconds = serverTimer.remainingSeconds;
       state.activeTaskName = serverTimer.activeTaskName || 'Focus Session';
+
+      // If local timer is already smoothly ticking and drift is minor (<= 3s), don't jump digits!
+      if (state.timer.remainingSeconds == null || Math.abs(state.timer.remainingSeconds - serverTimer.remainingSeconds) > 3) {
+        state.timer.remainingSeconds = serverTimer.remainingSeconds;
+      }
       state.timer.lastTickTime = Date.now();
       if (!timerInterval) {
         timerInterval = setInterval(handleTimerTick, 500);
       }
+      renderTimer();
     } else if (serverTimer.status === 'paused') {
       state.timer.status = 'paused';
       state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
@@ -193,14 +206,18 @@
         clearInterval(timerInterval);
         timerInterval = null;
       }
+      renderTimer();
     } else {
-      state.timer.status = 'idle';
-      state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
-      state.timer.remainingSeconds = state.timer.targetSeconds;
-      state.activeTaskName = null;
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
+      if (state.timer.status !== 'running') {
+        state.timer.status = 'idle';
+        state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
+        state.timer.remainingSeconds = state.timer.targetSeconds;
+        state.activeTaskName = null;
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+        renderTimer();
       }
     }
   }
@@ -1059,6 +1076,7 @@
     });
   }
 
+  let tickCounter = 0;
   function handleTimerTick() {
     if (state.timer.status !== 'running') return;
     if (isCenterPadHolding) return;
@@ -1073,6 +1091,11 @@
       completeSession();
     } else {
       renderTimer();
+    }
+
+    tickCounter++;
+    if (tickCounter % 10 === 0) {
+      saveState();
     }
   }
 
@@ -2579,6 +2602,33 @@
     window.addEventListener('resize', () => {
       scrollHeatmapToEnd(false);
     });
+
+    // Handle tab visibility change (instant resync when coming back to tab, save state when leaving)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        if (state.timer.status === 'running') {
+          const now = Date.now();
+          const elapsed = (now - (state.timer.lastTickTime || now)) / 1000;
+          state.timer.lastTickTime = now;
+          state.timer.remainingSeconds = Math.max(0, state.timer.remainingSeconds - elapsed);
+          if (state.timer.remainingSeconds <= 0) {
+            completeSession();
+          } else {
+            renderTimer();
+          }
+        }
+      } else {
+        if (state.timer.status === 'running') {
+          saveState();
+        }
+      }
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (state.timer.status === 'running') {
+        saveState();
+      }
+    });
   }
 
   // =========================================================================
@@ -2586,6 +2636,28 @@
   // =========================================================================
   document.addEventListener('DOMContentLoaded', async () => {
     initEvents();
+
+    // Check if session completed while user was away / page closed
+    if (state.timer && state.timer._completedWhileAway) {
+      state.timer._completedWhileAway = false;
+      const targetDuration = state.timer.targetSeconds || 3600;
+      const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
+      const taskName = state.activeTaskName || 'Focus Session';
+      showToast(`Welcome back! Your focus on ${taskName} finished while away. (+${minutesCompleted} XP)`);
+      logSession(minutesCompleted, taskName);
+      state.timer.status = 'idle';
+      state.timer.remainingSeconds = state.timer.targetSeconds;
+      state.activeTaskName = null;
+      saveState();
+    }
+
+    // Immediately start live ticking in 0ms if timer was already running!
+    if (state.timer && state.timer.status === 'running' && state.timer.remainingSeconds > 0) {
+      if (!timerInterval) {
+        timerInterval = setInterval(handleTimerTick, 500);
+      }
+    }
+
     renderAll();
     await checkAuthAndSync();
   });

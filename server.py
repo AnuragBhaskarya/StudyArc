@@ -218,14 +218,10 @@ def timer_action_route(user_id):
 @auth_required
 def get_state(user_id):
     """
-    Returns full application state aggregated for the authenticated user.
+    Returns full application state aggregated for the authenticated user in a single optimized call.
     """
     try:
-        subjects = database.get_subjects(user_id)
-        sessions = database.get_sessions(user_id)
-        day_activity = database.get_daily_activity(user_id)
-        stats = database.get_stats(user_id)
-        timer_state = database.get_timer_state(user_id)
+        data = database.get_full_state(user_id)
 
         return jsonify({
             'success': True,
@@ -234,11 +230,11 @@ def get_state(user_id):
                 'id': user_id,
                 'username': session.get('username')
             },
-            'subjects': subjects,
-            'sessions': sessions,
-            'dayActivity': day_activity,
-            'stats': stats,
-            'timer': timer_state
+            'subjects': data['subjects'],
+            'sessions': data['sessions'],
+            'dayActivity': data['dayActivity'],
+            'stats': data['stats'],
+            'timer': data['timer']
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -346,6 +342,17 @@ def reset_data(user_id):
         'sessions': database.get_sessions(user_id),
         'timer': database.get_timer_state(user_id)
     })
+
+# Pre-warm database connection pool on startup
+try:
+    if database.is_postgres():
+        pool = database.get_pg_pool()
+        conn = pool.getconn()
+        conn.autocommit = True
+        pool.putconn(conn)
+        print('✓ Database connection pool warmed up successfully.')
+except Exception as e:
+    print(f'Pool warmup notice: {e}')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))

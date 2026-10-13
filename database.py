@@ -84,20 +84,13 @@ class DBContext:
         if self.is_pg:
             pg_pool = get_pg_pool()
             conn = pg_pool.getconn()
-            try:
-                # Liveness check on pooled connection
-                if conn.closed:
-                    pg_pool.putconn(conn, close=True)
-                    conn = pg_pool.getconn()
-                else:
-                    cur = conn.cursor()
-                    cur.execute("SELECT 1")
-            except Exception:
+            if conn.closed:
                 try:
                     pg_pool.putconn(conn, close=True)
                 except Exception:
                     pass
                 conn = pg_pool.getconn()
+            conn.autocommit = True
             self.conn = conn
         else:
             self.conn = sqlite3.connect(DB_PATH)
@@ -110,9 +103,7 @@ class DBContext:
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.is_pg:
             try:
-                if exc_type is None:
-                    self.conn.commit()
-                else:
+                if exc_type is not None and not getattr(self.conn, 'autocommit', False):
                     self.conn.rollback()
             finally:
                 get_pg_pool().putconn(self.conn)
@@ -127,32 +118,59 @@ class DBContext:
         return self.conn.cursor()
 
     def commit(self):
-        self.conn.commit()
+        if not getattr(self.conn, 'autocommit', False):
+            self.conn.commit()
 
     def execute(self, sql, params=()):
-        cur = self.conn.cursor()
         if self.is_pg:
             sql_pg = sql.replace('?', '%s')
-            cur.execute(sql_pg, params)
+            try:
+                cur = self.conn.cursor()
+                cur.execute(sql_pg, params)
+                return cur
+            except (psycopg2.OperationalError, psycopg2.InterfaceError):
+                try:
+                    get_pg_pool().putconn(self.conn, close=True)
+                except Exception:
+                    pass
+                self.conn = get_pg_pool().getconn()
+                self.conn.autocommit = True
+                cur = self.conn.cursor()
+                cur.execute(sql_pg, params)
+                return cur
         else:
+            cur = self.conn.cursor()
             cur.execute(sql, params)
-        return cur
+            return cur
 
     def execute_insert(self, sql, params=()):
         """
         Executes an INSERT query and returns the newly generated integer primary key.
         """
-        cur = self.conn.cursor()
         if self.is_pg:
             sql_pg = sql.replace('?', '%s') + " RETURNING id"
-            cur.execute(sql_pg, params)
-            res = cur.fetchone()
-            val = fetch_scalar(res)
-            return int(val) if val is not None else None
+            try:
+                cur = self.conn.cursor()
+                cur.execute(sql_pg, params)
+                res = cur.fetchone()
+                val = fetch_scalar(res)
+                return int(val) if val is not None else None
+            except (psycopg2.OperationalError, psycopg2.InterfaceError):
+                try:
+                    get_pg_pool().putconn(self.conn, close=True)
+                except Exception:
+                    pass
+                self.conn = get_pg_pool().getconn()
+                self.conn.autocommit = True
+                cur = self.conn.cursor()
+                cur.execute(sql_pg, params)
+                res = cur.fetchone()
+                val = fetch_scalar(res)
+                return int(val) if val is not None else None
         else:
+            cur = self.conn.cursor()
             cur.execute(sql, params)
             return cur.lastrowid
-
 def get_connection():
     """Factory creating the unified DBContext manager."""
     return DBContext()
@@ -439,7 +457,9 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
             new_task = active_task_name
 
     elif action == 'pause':
-        if current['status'] == 'running' and current.get('startedAt'):
+        if remaining_seconds is not None:
+            new_remaining = int(remaining_seconds)
+        elif current['status'] == 'running' and current.get('startedAt'):
             elapsed = (now_ms - int(current['startedAt'])) / 1000.0
             new_remaining = max(0, int(current['remainingSeconds'] - elapsed))
         new_status = 'paused'
@@ -447,6 +467,8 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
 
     elif action == 'resume':
         new_status = 'running'
+        if remaining_seconds is not None:
+            new_remaining = int(remaining_seconds)
         new_started_at = now_ms
 
     elif action == 'reset':
@@ -493,7 +515,14 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
                 updated_at = excluded.updated_at
         """, (user_id, new_status, new_target, new_remaining, new_task, new_started_at, now_ms))
 
-    return get_timer_state(user_id)
+    return {
+        'status': new_status,
+        'targetSeconds': new_target,
+        'remainingSeconds': new_remaining,
+        'activeTaskName': new_task,
+        'startedAt': new_started_at,
+        'hasCompleted': False
+    }
 
 # =========================================================================
 # PER-USER SUBJECTS & SESSIONS
@@ -768,6 +797,171 @@ def get_stats(user_id):
         'totalFocusSeconds': total_focus_minutes * 60,
         'todayFocusSeconds': today_focus_minutes * 60,
         'todayFocusMinutes': today_focus_minutes
+    }
+
+def get_full_state(user_id):
+    """
+    High-performance state aggregation. Loads timer, subjects, sessions,
+    and daily activity in a SINGLE database round trip, computing gamification
+    metrics in-memory for instant page loading.
+    """
+    now_ms = int(datetime.now().timestamp() * 1000)
+    today_str = datetime.now().strftime('%Y-%m-%d')
+
+    with get_connection() as ctx:
+        if ctx.is_pg:
+            cur = ctx.execute("""
+                SELECT json_build_object(
+                    'timer', (
+                        SELECT row_to_json(t) FROM (
+                            SELECT status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at 
+                            FROM user_timer_state WHERE user_id = %s
+                        ) t
+                    ),
+                    'subjects', (
+                        SELECT COALESCE(json_agg(sub), '[]'::json) FROM (
+                            SELECT s.id, s.name, s.color, COALESCE(SUM(sess.duration_minutes), 0)::int AS total_minutes, COUNT(sess.id)::int AS session_count
+                            FROM subjects s
+                            LEFT JOIN sessions sess ON s.id = sess.subject_id AND sess.user_id = %s
+                            WHERE s.user_id = %s
+                            GROUP BY s.id, s.name, s.color
+                            ORDER BY total_minutes DESC, s.name ASC
+                        ) sub
+                    ),
+                    'sessions', (
+                        SELECT COALESCE(json_agg(sess_row), '[]'::json) FROM (
+                            SELECT sess.id, sess.subject_id, sess.subject_name, s.color, sess.duration_minutes, sess.date, sess.timestamp, sess.start_time, sess.end_time
+                            FROM sessions sess
+                            LEFT JOIN subjects s ON sess.subject_id = s.id
+                            WHERE sess.user_id = %s
+                            ORDER BY sess.timestamp DESC
+                            LIMIT 100
+                        ) sess_row
+                    ),
+                    'activity', (
+                        SELECT COALESCE(json_object_agg(a.date, a.total_minutes), '{}'::json) FROM (
+                            SELECT date, SUM(duration_minutes)::int as total_minutes
+                            FROM sessions WHERE user_id = %s
+                            GROUP BY date ORDER BY date ASC
+                        ) a
+                    )
+                ) AS full_state
+            """, (user_id, user_id, user_id, user_id, user_id))
+            data = cur.fetchone()['full_state']
+        else:
+            # SQLite fallback: fetch with single connection
+            cur_t = ctx.execute("SELECT * FROM user_timer_state WHERE user_id = ?", (user_id,))
+            t_row = cur_t.fetchone()
+            cur_s = ctx.execute("""
+                SELECT s.id, s.name, s.color, COALESCE(SUM(sess.duration_minutes), 0) AS total_minutes, COUNT(sess.id) AS session_count
+                FROM subjects s LEFT JOIN sessions sess ON s.id = sess.subject_id AND sess.user_id = ?
+                WHERE s.user_id = ? GROUP BY s.id, s.name, s.color ORDER BY total_minutes DESC, s.name ASC
+            """, (user_id, user_id))
+            sub_rows = [dict(r) for r in cur_s.fetchall()]
+            cur_sess = ctx.execute("""
+                SELECT sess.id, sess.subject_id, sess.subject_name, s.color, sess.duration_minutes, sess.date, sess.timestamp, sess.start_time, sess.end_time
+                FROM sessions sess LEFT JOIN subjects s ON sess.subject_id = s.id
+                WHERE sess.user_id = ? ORDER BY sess.timestamp DESC LIMIT 100
+            """, (user_id,))
+            sess_rows = [dict(r) for r in cur_sess.fetchall()]
+            cur_act = ctx.execute("SELECT date, SUM(duration_minutes) as total_minutes FROM sessions WHERE user_id = ? GROUP BY date ORDER BY date ASC", (user_id,))
+            act_dict = {r['date']: int(r['total_minutes']) for r in cur_act.fetchall()}
+            data = {
+                'timer': dict(t_row) if t_row else None,
+                'subjects': sub_rows,
+                'sessions': sess_rows,
+                'activity': act_dict
+            }
+
+    # 1. Process Timer State
+    timer_raw = data.get('timer') or {'status': 'idle', 'target_seconds': 3600, 'remaining_seconds': 3600}
+    status = timer_raw.get('status', 'idle')
+    target_secs = int(timer_raw.get('target_seconds', 3600))
+    remaining_secs = int(timer_raw.get('remaining_seconds', 3600))
+    started_at = timer_raw.get('started_at')
+    has_completed = False
+
+    if status == 'running' and started_at:
+        elapsed = (now_ms - int(started_at)) / 1000.0
+        calc_rem = remaining_secs - elapsed
+        if calc_rem <= 0:
+            calc_rem = 0
+            has_completed = True
+        remaining_secs = max(0, int(calc_rem))
+
+    timer_res = {
+        'status': status,
+        'targetSeconds': target_secs,
+        'remainingSeconds': remaining_secs,
+        'activeTaskName': timer_raw.get('active_task_name'),
+        'startedAt': started_at,
+        'hasCompleted': has_completed
+    }
+
+    # 2. Process Subjects
+    subjects_res = []
+    for s in (data.get('subjects') or []):
+        tot = int(s.get('total_minutes') or 0)
+        subjects_res.append({
+            'id': s['id'],
+            'name': s['name'],
+            'color': s.get('color', '#79D99B'),
+            'total_minutes': tot,
+            'hours': round(tot / 60.0, 1),
+            'session_count': int(s.get('session_count') or 0)
+        })
+
+    # 3. Process Sessions
+    sessions_res = []
+    for r in (data.get('sessions') or []):
+        duration = int(r['duration_minutes'])
+        ts = int(r['timestamp'])
+        end_dt = datetime.fromtimestamp(ts / 1000)
+        start_dt = end_dt - timedelta(minutes=duration)
+        start_str = r.get('start_time') or start_dt.strftime('%I:%M %p').lstrip('0')
+        end_str = r.get('end_time') or end_dt.strftime('%I:%M %p').lstrip('0')
+        sessions_res.append({
+            'id': f"sess_{r['id']}",
+            'subject_id': r['subject_id'],
+            'subject': r['subject_name'],
+            'color': r.get('color') or '#79D99B',
+            'durationMinutes': duration,
+            'date': r['date'],
+            'timestamp': ts,
+            'startTime': start_str,
+            'endTime': end_str,
+            'timeRange': f"{start_str} – {end_str}",
+            'xp': duration
+        })
+
+    # 4. Process Activity & Compute Stats in Python (0 extra DB queries!)
+    day_act = {k: int(v) for k, v in (data.get('activity') or {}).items()}
+    tot_focus_mins = sum(day_act.values())
+    today_focus_mins = day_act.get(today_str, 0)
+
+    active_dates = {d for d, mins in day_act.items() if mins > 0}
+    current_check = datetime.now().date()
+    if today_str not in active_dates:
+        current_check -= timedelta(days=1)
+    streak = 0
+    while current_check.strftime('%Y-%m-%d') in active_dates:
+        streak += 1
+        current_check -= timedelta(days=1)
+
+    stats_res = {
+        'streak': streak,
+        'xp': tot_focus_mins,
+        'totalFocusSeconds': tot_focus_mins * 60,
+        'todayFocusSeconds': today_focus_mins * 60,
+        'todayFocusMinutes': today_focus_mins
+    }
+
+    return {
+        'subjects': subjects_res,
+        'sessions': sessions_res,
+        'dayActivity': day_act,
+        'stats': stats_res,
+        'timer': timer_res
     }
 
 def reset_database(user_id):
