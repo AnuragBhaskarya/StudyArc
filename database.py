@@ -223,6 +223,7 @@ def seed_initial_real_data(ctx):
     
     durations_pool = [30, 45, 50, 60, 75, 90]
     
+    sessions_to_insert = []
     curr = start_date
     while curr <= end_date:
         d_str = curr.strftime('%Y-%m-%d')
@@ -248,7 +249,6 @@ def seed_initial_real_data(ctx):
             num_sessions = random.choices([1, 2, 3, 4], weights=[0.25, 0.45, 0.25, 0.05])[0]
             
         chosen_window_indices = sorted(random.sample(range(len(time_windows)), num_sessions))
-        
         for w_idx in chosen_window_indices:
             start_opts = time_windows[w_idx]
             sh, sm = random.choice(start_opts)
@@ -264,12 +264,24 @@ def seed_initial_real_data(ctx):
             subj_name, _ = random.choice(subjects_def)
             subj_id = subject_map.get(subj_name, 1)
             
-            ctx.execute("""
-                INSERT INTO sessions (subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (subj_id, subj_name, duration, d_str, ts_ms, start_str, end_str))
+            sessions_to_insert.append((subj_id, subj_name, duration, d_str, ts_ms, start_str, end_str))
             
         curr += timedelta(days=1)
+
+    if sessions_to_insert:
+        if ctx.is_pg:
+            from psycopg2.extras import execute_values
+            cur = ctx.conn.cursor()
+            execute_values(cur, """
+                INSERT INTO sessions (subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time)
+                VALUES %s
+            """, sessions_to_insert)
+        else:
+            cur = ctx.conn.cursor()
+            cur.executemany("""
+                INSERT INTO sessions (subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, sessions_to_insert)
 
 def get_subjects():
     with get_connection() as ctx:
