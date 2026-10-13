@@ -149,6 +149,9 @@
           if (activityChanged) {
             renderHeatmap();
           }
+
+          // Start multi-device real-time SSE stream
+          initRealtimeTimerSync();
         }
       }
     } catch (err) {
@@ -160,13 +163,71 @@
     await syncWithBackend();
   }
 
-  function reconcileServerTimer(serverTimer) {
+  let timerEventSource = null;
+  let sseReconnectTimer = null;
+
+  function initRealtimeTimerSync() {
+    if (!state.authenticated) {
+      if (timerEventSource) {
+        timerEventSource.close();
+        timerEventSource = null;
+      }
+      return;
+    }
+
+    if (timerEventSource && timerEventSource.readyState !== EventSource.CLOSED) {
+      return;
+    }
+
+    try {
+      if (timerEventSource) {
+        timerEventSource.close();
+      }
+
+      timerEventSource = new EventSource('/api/timer/stream');
+
+      timerEventSource.addEventListener('timer_state', (e) => {
+        try {
+          const serverTimer = JSON.parse(e.data);
+          if (serverTimer) {
+            applyLiveServerTimer(serverTimer);
+          }
+        } catch (err) {
+          console.warn('StudyArc: Realtime SSE parse error:', err);
+        }
+      });
+
+      timerEventSource.onerror = () => {
+        if (timerEventSource) {
+          timerEventSource.close();
+          timerEventSource = null;
+        }
+        // Resilient auto-reconnect after 4 seconds
+        if (!sseReconnectTimer) {
+          sseReconnectTimer = setTimeout(() => {
+            sseReconnectTimer = null;
+            if (state.authenticated) {
+              initRealtimeTimerSync();
+            }
+          }, 4000);
+        }
+      };
+    } catch (err) {
+      console.warn('StudyArc: EventSource setup error:', err);
+    }
+  }
+
+  function applyLiveServerTimer(serverTimer) {
     if (!serverTimer) return;
+
+    // 1. Immediately register & reflect active topic/task across devices without reloading!
+    const incomingTask = serverTimer.activeTaskName || null;
+    state.activeTaskName = incomingTask;
 
     if (serverTimer.hasCompleted) {
       const targetDuration = serverTimer.targetSeconds || 3600;
       const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
-      const taskName = serverTimer.activeTaskName || 'Focus Session';
+      const taskName = incomingTask || 'Focus Session';
       showToast(`Welcome back! Your focus on ${taskName} finished while away. (+${minutesCompleted} XP)`);
       logSession(minutesCompleted, taskName);
 
@@ -178,37 +239,51 @@
         clearInterval(timerInterval);
         timerInterval = null;
       }
-      renderTimer();
-      renderStats();
+      saveState();
+      renderAll();
       return;
     }
 
     if (serverTimer.status === 'running') {
       state.timer.status = 'running';
       state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
-      state.activeTaskName = serverTimer.activeTaskName || 'Focus Session';
 
-      // If local timer is already smoothly ticking and drift is minor (<= 3s), don't jump digits!
-      if (state.timer.remainingSeconds == null || Math.abs(state.timer.remainingSeconds - serverTimer.remainingSeconds) > 3) {
+      // Exact time synchronization via mathematical delta
+      const now = Date.now();
+      if (serverTimer.startedAt) {
+        const elapsed = (now - Number(serverTimer.startedAt)) / 1000;
+        const baseRem = serverTimer.baseRemainingSeconds != null ? serverTimer.baseRemainingSeconds : serverTimer.remainingSeconds;
+        const currentRemaining = Math.max(0, baseRem - elapsed);
+
+        // If local is smoothly running within 2 seconds, avoid jitter
+        if (state.timer.remainingSeconds == null || Math.abs(state.timer.remainingSeconds - currentRemaining) > 2) {
+          state.timer.remainingSeconds = currentRemaining;
+        }
+      } else {
         state.timer.remainingSeconds = serverTimer.remainingSeconds;
       }
-      state.timer.lastTickTime = Date.now();
+
+      state.timer.lastTickTime = now;
       if (!timerInterval) {
         timerInterval = setInterval(handleTimerTick, 500);
       }
+      saveState();
       renderTimer();
+      renderStats();
     } else if (serverTimer.status === 'paused') {
       state.timer.status = 'paused';
       state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
       state.timer.remainingSeconds = serverTimer.remainingSeconds;
-      state.activeTaskName = serverTimer.activeTaskName;
       if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
       }
+      saveState();
       renderTimer();
+      renderStats();
     } else {
-      if (state.timer.status !== 'running') {
+      // Idle
+      if (state.timer.status !== 'running' || !serverTimer.startedAt) {
         state.timer.status = 'idle';
         state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
         state.timer.remainingSeconds = state.timer.targetSeconds;
@@ -217,9 +292,15 @@
           clearInterval(timerInterval);
           timerInterval = null;
         }
+        saveState();
         renderTimer();
+        renderStats();
       }
     }
+  }
+
+  function reconcileServerTimer(serverTimer) {
+    applyLiveServerTimer(serverTimer);
   }
 
   async function syncTimerAction(action, extraPayload = {}) {
@@ -491,6 +572,10 @@
 
   async function handleLogout() {
     if (!confirm('Are you sure you want to sign out of StudyArc?')) return;
+    if (timerEventSource) {
+      timerEventSource.close();
+      timerEventSource = null;
+    }
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch (e) {
@@ -2606,6 +2691,9 @@
     // Handle tab visibility change (instant resync when coming back to tab, save state when leaving)
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
+        if (state.authenticated) {
+          initRealtimeTimerSync();
+        }
         if (state.timer.status === 'running') {
           const now = Date.now();
           const elapsed = (now - (state.timer.lastTickTime || now)) / 1000;
