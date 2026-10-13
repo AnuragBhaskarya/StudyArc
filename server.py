@@ -1,3 +1,6 @@
+from gevent import monkey
+monkey.patch_all()
+
 import os
 import re
 import json
@@ -6,19 +9,19 @@ import threading
 import mimetypes
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import Flask, jsonify, request, send_from_directory, session, Response
+from flask import Flask, jsonify, request, send_from_directory, session, Response, make_response
 from flask_socketio import SocketIO, emit, join_room, disconnect
 from werkzeug.security import generate_password_hash, check_password_hash
 import database
 
 app = Flask(__name__, static_folder='.', static_url_path='')
-socketio = SocketIO(app, cors_allowed_origins='*', async_mode='eventlet', ping_timeout=30, ping_interval=10)
+socketio = SocketIO(app, cors_allowed_origins='*', async_mode='gevent', ping_timeout=30, ping_interval=10)
 
 # Secret key configuration for cryptographic session signing
 app.secret_key = os.environ.get('SECRET_KEY', 'studyarc-production-super-secret-key-change-me')
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_COOKIE_SECURE'] = bool(os.environ.get('RENDER') or os.environ.get('DYNO'))
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
 # Ensure correct MIME types
@@ -71,11 +74,18 @@ def ping_endpoint():
 
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    resp = make_response(send_from_directory('.', 'index.html'))
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    return resp
 
 @app.route('/<path:filename>')
 def static_files(filename):
-    return send_from_directory('.', filename)
+    resp = make_response(send_from_directory('.', filename))
+    if filename.endswith(('.js', '.html', '.css')):
+        resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        resp.headers['Pragma'] = 'no-cache'
+    return resp
 
 # =========================================================================
 # AUTHENTICATION REST API
