@@ -164,13 +164,17 @@
   }
 
   // =========================================================================
-  // REAL-TIME MULTI-DEVICE & MULTI-TAB SYNCHRONIZATION ENGINE (<30ms LATENCY)
+  // REAL-TIME MULTI-DEVICE & MULTI-TAB SYNCHRONIZATION ENGINE v2
+  // Architecture: Server-authoritative timestamps, operating-device immunity,
+  // version-based dedup, abort-safe long-poll, generation-gated single loop.
   // =========================================================================
 
   let activeSyncAbortController = null;
-  let isSyncLoopRunning = false;
-  let currentTimerVersion = 0;
-  let lastLocalActionTime = 0;
+  let syncLoopGeneration = 0;       // generation counter prevents duplicate loops
+  let currentTimerVersion = 0;      // monotonic server version for dedup
+  let lastLocalActionTime = 0;      // timestamp of last local user action
+  let lastAppliedVersion = 0;       // last version we actually applied to UI
+  let isLocallyOperating = false;   // true while THIS device is actively running/ticking
 
   // 1. Same-device multi-tab instantaneous 0ms sync via BroadcastChannel
   let timerBroadcastChannel = null;
@@ -179,34 +183,33 @@
       timerBroadcastChannel = new BroadcastChannel('studyarc_timer_sync');
       timerBroadcastChannel.onmessage = (event) => {
         if (event && event.data && event.data.timer) {
-          applyLiveServerTimer(event.data.timer, true);
+          applyLiveServerTimer(event.data.timer, false);
         }
       };
     }
   } catch (e) {
-    console.warn('StudyArc: BroadcastChannel unsupported in this environment:', e);
+    console.warn('StudyArc: BroadcastChannel unsupported:', e);
   }
 
   function broadcastLocalTimer(timerState) {
     if (timerBroadcastChannel && timerState) {
       try {
-        timerBroadcastChannel.postMessage({
-          type: 'TIMER_SYNC',
-          timer: timerState
-        });
+        timerBroadcastChannel.postMessage({ type: 'TIMER_SYNC', timer: timerState });
       } catch (e) {}
     }
   }
 
-  // 2. Cross-device event sync loop: receives instant updates in <30ms
+  // 2. Abort-safe cross-device long-poll sync loop
   async function runRealtimeSyncLoop() {
-    if (!state.authenticated || isSyncLoopRunning) return;
-    isSyncLoopRunning = true;
+    if (!state.authenticated) return;
 
-    while (state.authenticated) {
-      // If tab is in background, pause persistent wait to conserve mobile battery
+    // Generation gate: increment and capture; if another call starts, this one exits
+    const myGeneration = ++syncLoopGeneration;
+
+    while (state.authenticated && myGeneration === syncLoopGeneration) {
+      // Background tab: slow-poll to save battery
       if (document.visibilityState === 'hidden') {
-        await new Promise(resolve => setTimeout(resolve, 1200));
+        await new Promise(r => setTimeout(r, 2000));
         continue;
       }
 
@@ -221,47 +224,74 @@
         if (res.ok) {
           const data = await res.json();
           if (data && data.success && data.timer) {
-            currentTimerVersion = data.timer.version || currentTimerVersion;
-            applyLiveServerTimer(data.timer);
+            const sv = data.timer.version || 0;
+            if (sv > currentTimerVersion) {
+              currentTimerVersion = sv;
+            }
+            applyLiveServerTimer(data.timer, false);
             broadcastLocalTimer(data.timer);
           }
         }
-        // Yield 20ms before next long-poll listen
-        await new Promise(resolve => setTimeout(resolve, 20));
+        // Minimal yield before next long-poll
+        await new Promise(r => setTimeout(r, 15));
       } catch (err) {
         if (err.name === 'AbortError') {
-          // Tab switched or manual abort, terminate cleanly
-          break;
+          // Aborted by visibility change or new loop start — continue, don't break
+          await new Promise(r => setTimeout(r, 50));
+          continue;
         }
-        // Network reconnection backoff
-        await new Promise(resolve => setTimeout(resolve, 800));
+        // Network error backoff
+        await new Promise(r => setTimeout(r, 1000));
       }
     }
-    isSyncLoopRunning = false;
   }
 
   function initRealtimeTimerSync() {
+    if (!state.authenticated) return;
+    // Abort any existing long-poll request
     if (activeSyncAbortController) {
       activeSyncAbortController.abort();
       activeSyncAbortController = null;
     }
-    isSyncLoopRunning = false;
-    if (!state.authenticated) return;
+    // Increment generation to kill any old loop
     runRealtimeSyncLoop();
   }
 
+  /**
+   * Core reconciliation function. Rules:
+   * - If this device just performed a local action (<2s ago), SKIP remote updates
+   *   UNLESS it's a direct response to our own action (isDirectResponse=true).
+   * - If the version was already applied, skip (dedup).
+   * - Running timer on operating device: only accept status/task changes, never
+   *   overwrite remainingSeconds (local tick is authoritative for display).
+   * - Non-operating device: apply server state fully including computed remaining.
+   */
   function applyLiveServerTimer(serverTimer, isDirectResponse = false) {
     if (!serverTimer) return;
 
-    // Guard against race conditions right after local click (<800ms)
-    if (!isDirectResponse && (Date.now() - lastLocalActionTime < 800)) {
+    const sv = serverTimer.version || 0;
+
+    // Dedup: skip if we already applied this exact version (except direct responses)
+    if (!isDirectResponse && sv > 0 && sv <= lastAppliedVersion) {
       return;
     }
 
-    // 1. Immediately register & reflect active topic/task across devices without reloading!
-    const incomingTask = serverTimer.activeTaskName || null;
-    state.activeTaskName = incomingTask;
+    // Operating-device immunity: if user just clicked play/pause on THIS device,
+    // don't let long-poll/broadcast overwrite local state for 2 seconds
+    const timeSinceLocalAction = Date.now() - lastLocalActionTime;
+    if (!isDirectResponse && timeSinceLocalAction < 2000) {
+      return;
+    }
 
+    // Mark this version as applied
+    if (sv > lastAppliedVersion) {
+      lastAppliedVersion = sv;
+    }
+
+    // Register active task across devices
+    const incomingTask = serverTimer.activeTaskName || null;
+
+    // Handle completed-while-away
     if (serverTimer.hasCompleted) {
       const targetDuration = serverTimer.targetSeconds || 3600;
       const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
@@ -269,39 +299,53 @@
       showToast(`Welcome back! Your focus on ${taskName} finished while away. (+${minutesCompleted} XP)`);
       logSession(minutesCompleted, taskName);
 
+      isLocallyOperating = false;
       state.timer.status = 'idle';
       state.timer.targetSeconds = targetDuration;
       state.timer.remainingSeconds = targetDuration;
       state.activeTaskName = null;
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-      }
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
       saveState();
       renderAll();
       return;
     }
 
+    state.activeTaskName = incomingTask;
+
     if (serverTimer.status === 'running') {
+      const wasRunning = state.timer.status === 'running';
       state.timer.status = 'running';
       state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
 
-      // Exact time synchronization via mathematical delta
-      const now = Date.now();
-      if (serverTimer.startedAt) {
-        const elapsed = (now - Number(serverTimer.startedAt)) / 1000;
-        const baseRem = serverTimer.baseRemainingSeconds != null ? serverTimer.baseRemainingSeconds : serverTimer.remainingSeconds;
-        const currentRemaining = Math.max(0, baseRem - elapsed);
-
-        // If local is smoothly running within 1.5 seconds, avoid jitter
-        if (state.timer.remainingSeconds == null || Math.abs(state.timer.remainingSeconds - currentRemaining) > 1.5) {
-          state.timer.remainingSeconds = currentRemaining;
-        }
-      } else {
-        state.timer.remainingSeconds = serverTimer.remainingSeconds;
+      // Operating device immunity: If this device is actively ticking locally,
+      // local monotonic tick is 100% authoritative for continuous display.
+      // NEVER overwrite the operating device's display with remote sync responses!
+      if (isLocallyOperating && wasRunning && !isDirectResponse) {
+        return;
       }
 
+      // Compute server's exact remaining using server-authoritative timestamps
+      const now = Date.now();
+      let serverRemaining;
+      if (serverTimer.currentRemaining != null) {
+        const serverNow = Number(serverTimer.serverTime) || now;
+        const timeSinceServer = Math.max(0, (now - serverNow) / 1000);
+        serverRemaining = Math.max(0, Number(serverTimer.currentRemaining) - timeSinceServer);
+      } else if (serverTimer.startedAt) {
+        const elapsed = (now - Number(serverTimer.startedAt)) / 1000;
+        const baseRem = serverTimer.remainingSeconds != null
+          ? Number(serverTimer.remainingSeconds)
+          : (serverTimer.targetSeconds || 3600);
+        serverRemaining = Math.max(0, baseRem - elapsed);
+      } else {
+        serverRemaining = Number(serverTimer.remainingSeconds != null ? serverTimer.remainingSeconds : 3600);
+      }
+
+      // Apply server remaining to non-operating device or direct response
+      state.timer.remainingSeconds = serverRemaining;
       state.timer.lastTickTime = now;
+
+      // Start local ticking on this synchronized device
       if (!timerInterval) {
         timerInterval = setInterval(handleTimerTick, 500);
       }
@@ -309,36 +353,31 @@
       renderTimer();
       renderStats();
     } else if (serverTimer.status === 'paused') {
+      isLocallyOperating = false;
       state.timer.status = 'paused';
       state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
       state.timer.remainingSeconds = serverTimer.remainingSeconds;
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-      }
+      state.timer.lastTickTime = null;
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
       saveState();
       renderTimer();
       renderStats();
     } else {
       // Idle
-      if (state.timer.status !== 'running' || !serverTimer.startedAt) {
-        state.timer.status = 'idle';
-        state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
-        state.timer.remainingSeconds = state.timer.targetSeconds;
-        state.activeTaskName = null;
-        if (timerInterval) {
-          clearInterval(timerInterval);
-          timerInterval = null;
-        }
-        saveState();
-        renderTimer();
-        renderStats();
-      }
+      isLocallyOperating = false;
+      state.timer.status = 'idle';
+      state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
+      state.timer.remainingSeconds = state.timer.targetSeconds;
+      state.activeTaskName = null;
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      saveState();
+      renderTimer();
+      renderStats();
     }
   }
 
   function reconcileServerTimer(serverTimer) {
-    applyLiveServerTimer(serverTimer);
+    applyLiveServerTimer(serverTimer, false);
   }
 
   async function syncTimerAction(action, extraPayload = {}) {
@@ -359,33 +398,18 @@
       if (res.ok) {
         const data = await res.json();
         if (data && data.success && data.timer) {
-          currentTimerVersion = data.timer.version || currentTimerVersion;
+          const sv = data.timer.version || 0;
+          if (sv > currentTimerVersion) currentTimerVersion = sv;
+          if (sv > lastAppliedVersion) lastAppliedVersion = sv;
+          // Direct response: apply immediately but DON'T overwrite local operating state
           applyLiveServerTimer(data.timer, true);
           broadcastLocalTimer(data.timer);
         }
       }
     } catch (err) {
-      console.warn('StudyArc: Persistent timer sync warning:', err);
+      console.warn('StudyArc: Timer sync warning:', err);
     }
   }
-
-  // Instant zero-latency sync when switching back to tab
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && state.authenticated) {
-      if (activeSyncAbortController) {
-        activeSyncAbortController.abort();
-        activeSyncAbortController = null;
-      }
-      isSyncLoopRunning = false;
-      runRealtimeSyncLoop();
-    }
-  });
-
-  window.addEventListener('focus', () => {
-    if (state.authenticated && !isSyncLoopRunning) {
-      runRealtimeSyncLoop();
-    }
-  });
 
   function updateAuthUI() {
     const btnHeaderAuth = document.getElementById('btn-header-auth');
@@ -1194,6 +1218,7 @@
     initAudio();
     playChime('start');
 
+    isLocallyOperating = true;
     state.timer.status = 'running';
     state.timer.startTime = Date.now();
     state.timer.lastTickTime = Date.now();
@@ -1210,7 +1235,29 @@
     });
   }
 
+  function resumeTimer() {
+    initAudio();
+    playChime('start');
+
+    isLocallyOperating = true;
+    state.timer.status = 'running';
+    state.timer.startTime = Date.now();
+    state.timer.lastTickTime = Date.now();
+    saveState();
+
+    if (!timerInterval) {
+      timerInterval = setInterval(handleTimerTick, 500);
+    }
+    renderTimer();
+    syncTimerAction('resume', {
+      target_seconds: state.timer.targetSeconds,
+      remaining_seconds: Math.round(state.timer.remainingSeconds),
+      active_task_name: state.activeTaskName
+    });
+  }
+
   function pauseTimer() {
+    isLocallyOperating = false;
     state.timer.status = 'paused';
     state.timer.startTime = null;
     state.timer.lastTickTime = null;
@@ -1320,8 +1367,12 @@
   }
 
   function completeSession() {
+    isLocallyOperating = false;
     state.timer.remainingSeconds = 0;
-    pauseTimer();
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
     playChime('complete');
 
     const taskName = state.activeTaskName || 'Focus Session';
@@ -1339,6 +1390,7 @@
     state.timer.remainingSeconds = state.timer.targetSeconds;
     state.timer.status = 'idle';
     saveState();
+    syncTimerAction('complete', { target_seconds: state.timer.targetSeconds });
     renderAll();
   }
 
@@ -1559,7 +1611,11 @@
           showToast('Timer reset.');
         }
 
-        pauseTimer();
+        isLocallyOperating = false;
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
         state.activeTaskName = null;
         state.activeTaskStartTime = null;
         state.activeTaskTargetSeconds = null;
@@ -1662,7 +1718,7 @@
       pauseTimer();
     } else if (state.timer.status === 'paused') {
       // Already has active task session -> Resume directly without prompt!
-      startTimer();
+      resumeTimer();
     } else {
       // Status is 'idle' -> Prompt for new task name before starting!
       openTaskPromptDialog();

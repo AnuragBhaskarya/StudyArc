@@ -418,18 +418,20 @@ def get_timer_state(user_id):
         active_task = state.get('active_task_name')
         has_completed = False
 
+        current_rem = remaining_secs
         if status == 'running' and started_at:
             elapsed_seconds = (now_ms - int(started_at)) / 1000.0
             calc_remaining = remaining_secs - elapsed_seconds
             if calc_remaining <= 0:
                 calc_remaining = 0
                 has_completed = True
-            remaining_secs = max(0, int(calc_remaining))
+            current_rem = max(0, int(calc_remaining))
 
         return {
             'status': status,
             'targetSeconds': target_secs,
             'remainingSeconds': remaining_secs,
+            'currentRemaining': current_rem,
             'activeTaskName': active_task,
             'startedAt': started_at,
             'hasCompleted': has_completed
@@ -469,6 +471,8 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
         new_status = 'running'
         if remaining_seconds is not None:
             new_remaining = int(remaining_seconds)
+        else:
+            new_remaining = current.get('remainingSeconds', 3600)
         new_started_at = now_ms
 
     elif action == 'reset':

@@ -180,9 +180,9 @@ def auth_me():
 # ULTRA-LOW LATENCY REAL-TIME TIMER ENGINE (RAM HOT-CACHE & INSTANT NOTIFIER)
 # =========================================================================
 
-_timer_cache_lock = threading.Lock()
+_timer_lock = threading.Lock()
+_timer_condition = threading.Condition(_timer_lock)
 USER_TIMER_HOT_CACHE = {}
-USER_TIMER_EVENTS = {}
 
 def get_hot_timer_state(user_id):
     """
@@ -190,35 +190,42 @@ def get_hot_timer_state(user_id):
     Loads from PostgreSQL on cold cache miss.
     """
     now_ms = int(time.time() * 1000)
-    with _timer_cache_lock:
+    with _timer_lock:
         cached = USER_TIMER_HOT_CACHE.get(user_id)
         if cached:
             state = dict(cached)
             if state.get('status') == 'running' and state.get('startedAt'):
                 elapsed = (now_ms - int(state['startedAt'])) / 1000.0
-                calc_rem = state.get('baseRemainingSeconds', state['remainingSeconds']) - elapsed
+                calc_rem = state['remainingSeconds'] - elapsed
                 if calc_rem <= 0:
                     state['status'] = 'idle'
                     state['remainingSeconds'] = state['targetSeconds']
+                    state['currentRemaining'] = state['targetSeconds']
                     state['hasCompleted'] = True
+                    state['startedAt'] = None
                 else:
-                    state['remainingSeconds'] = max(0, int(calc_rem))
+                    state['currentRemaining'] = max(0.0, calc_rem)
                     state['hasCompleted'] = False
+            else:
+                state['currentRemaining'] = state.get('remainingSeconds', 3600)
+            state['serverTime'] = now_ms
             return state
 
     # Cold cache miss: fetch from PostgreSQL once and cache in RAM
     db_state = database.get_timer_state(user_id)
-    with _timer_cache_lock:
+    with _timer_lock:
+        now_ms = int(time.time() * 1000)
         state = {
             'status': db_state['status'],
             'targetSeconds': db_state['targetSeconds'],
             'remainingSeconds': db_state['remainingSeconds'],
-            'baseRemainingSeconds': db_state['remainingSeconds'],
+            'currentRemaining': db_state.get('currentRemaining', db_state['remainingSeconds']),
             'activeTaskName': db_state.get('activeTaskName'),
             'startedAt': db_state.get('startedAt'),
             'updatedAt': now_ms,
             'version': now_ms,
-            'hasCompleted': db_state.get('hasCompleted', False)
+            'hasCompleted': db_state.get('hasCompleted', False),
+            'serverTime': now_ms
         }
         USER_TIMER_HOT_CACHE[user_id] = state
         return dict(state)
@@ -254,7 +261,7 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
             new_remaining = int(remaining_seconds)
         elif current.get('status') == 'running' and current.get('startedAt'):
             elapsed = (now_ms - int(current['startedAt'])) / 1000.0
-            new_remaining = max(0, int(current.get('baseRemainingSeconds', current['remainingSeconds']) - elapsed))
+            new_remaining = max(0, int(current['remainingSeconds'] - elapsed))
         new_status = 'paused'
         new_started_at = None
 
@@ -262,6 +269,8 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
         new_status = 'running'
         if remaining_seconds is not None:
             new_remaining = int(remaining_seconds)
+        else:
+            new_remaining = current.get('remainingSeconds', 3600)
         new_started_at = now_ms
 
     elif action == 'reset':
@@ -289,20 +298,19 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
         'status': new_status,
         'targetSeconds': new_target,
         'remainingSeconds': new_remaining,
-        'baseRemainingSeconds': new_remaining,
+        'currentRemaining': new_remaining,
         'activeTaskName': new_task,
         'startedAt': new_started_at,
         'updatedAt': now_ms,
         'version': now_ms,
-        'hasCompleted': False
+        'hasCompleted': False,
+        'serverTime': now_ms
     }
 
-    # 1. Update RAM state and immediately wake up waiting listeners (<0.01ms)
-    with _timer_cache_lock:
+    # 1. Update RAM state and immediately wake up all waiting listeners (<0.01ms)
+    with _timer_condition:
         USER_TIMER_HOT_CACHE[user_id] = new_state
-        event = USER_TIMER_EVENTS.get(user_id)
-        if event:
-            event.set()
+        _timer_condition.notify_all()
 
     # 2. Persist to PostgreSQL asynchronously in a background thread
     def persist_worker():
@@ -326,9 +334,9 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
 @auth_required
 def timer_live_route(user_id):
     """
-    Ultra-fast RAM endpoint (<0.05ms) with zero-latency event waiting.
+    Ultra-fast RAM endpoint (<0.05ms) with zero-latency condition variable waiting.
     If 'since' parameter is provided and matches current version,
-    waits up to 6.0s for an instant event before returning.
+    waits up to 10.0s for an instant event before returning.
     """
     since_version = request.args.get('since', type=int)
 
@@ -336,18 +344,14 @@ def timer_live_route(user_id):
     current_state = get_hot_timer_state(user_id)
     current_ver = current_state.get('version', 0)
 
-    # If client passed 'since' and version hasn't changed, wait on event
+    # If client passed 'since' and version hasn't changed, wait on Condition
     if since_version is not None and since_version >= current_ver:
-        event = None
-        with _timer_cache_lock:
-            if user_id not in USER_TIMER_EVENTS:
-                USER_TIMER_EVENTS[user_id] = threading.Event()
-            else:
-                USER_TIMER_EVENTS[user_id].clear()
-            event = USER_TIMER_EVENTS[user_id]
+        with _timer_condition:
+            def has_update():
+                s = USER_TIMER_HOT_CACHE.get(user_id)
+                return s is not None and s.get('version', 0) > since_version
 
-        # Block with 0% CPU waiting for state change or 6s timeout
-        event.wait(timeout=6.0)
+            _timer_condition.wait_for(has_update, timeout=10.0)
 
         # After wake up, re-fetch latest RAM state
         current_state = get_hot_timer_state(user_id)
