@@ -1,5 +1,6 @@
 import os
 import mimetypes
+from datetime import datetime
 from flask import Flask, jsonify, request, send_from_directory
 import database
 
@@ -9,8 +10,24 @@ app = Flask(__name__, static_folder='.', static_url_path='')
 mimetypes.add_type('application/javascript', '.js')
 mimetypes.add_type('text/css', '.css')
 
-# Initialize SQLite database with authentic starter data
+# Initialize database (PostgreSQL if DATABASE_URL is set, SQLite otherwise)
 database.init_db(seed_real_data=True)
+
+@app.route('/api/ping')
+@app.route('/ping')
+@app.route('/healthz')
+@app.route('/api/health')
+def ping_endpoint():
+    """
+    Lightweight ping & health check endpoint for Cloudflare Worker uptime monitor (pinger-js)
+    and Render health checks. Returns 200 OK immediately to keep the server awake 24/7.
+    """
+    return jsonify({
+        'status': 'pong',
+        'app': 'StudyArc',
+        'database': 'postgresql' if database.is_postgres() else 'sqlite',
+        'timestamp': int(datetime.now().timestamp() * 1000)
+    }), 200
 
 @app.route('/')
 def index():

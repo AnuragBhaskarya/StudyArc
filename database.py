@@ -3,70 +3,169 @@ import os
 import random
 from datetime import datetime, timedelta, date, time
 
+# Cloud PostgreSQL (Supabase / Neon / Render Postgres) support
+DATABASE_URL = os.environ.get('DATABASE_URL')
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'study_tracker.db')
 
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+except ImportError:
+    psycopg2 = None
+    RealDictCursor = None
+
+def is_postgres():
+    """Returns True if a PostgreSQL connection URL is configured in the environment."""
+    url = (os.environ.get('DATABASE_URL') or '').strip()
+    return url.startswith(('postgres://', 'postgresql://'))
+
+def get_clean_database_url():
+    url = (os.environ.get('DATABASE_URL') or '').strip()
+    # Normalize legacy postgres:// to postgresql:// (required by SQLAlchemy & some psycopg2 versions)
+    if url.startswith('postgres://'):
+        url = 'postgresql://' + url[len('postgres://'):]
+    # Ensure sslmode=require for cloud-hosted DBs (Supabase, Neon) unless local
+    if 'sslmode' not in url and 'localhost' not in url and '127.0.0.1' not in url:
+        sep = '&' if '?' in url else '?'
+        url = f"{url}{sep}sslmode=require"
+    return url
+
+def fetch_scalar(row):
+    """Safely extracts a single scalar value from a DB row (dict, tuple, or sqlite3.Row)."""
+    if row is None:
+        return None
+    if isinstance(row, dict) or hasattr(row, 'values'):
+        return next(iter(row.values()))
+    return row[0]
+
+class DBContext:
+    """
+    Unified database context manager supporting both local SQLite
+    and production cloud PostgreSQL (Supabase / Neon).
+    """
+    def __init__(self):
+        self.is_pg = is_postgres()
+        if self.is_pg:
+            if psycopg2 is None:
+                raise RuntimeError(
+                    "psycopg2 is not installed. Please run 'pip install psycopg2-binary' "
+                    "to use PostgreSQL with DATABASE_URL."
+                )
+            self.conn = psycopg2.connect(get_clean_database_url(), cursor_factory=RealDictCursor)
+        else:
+            self.conn = sqlite3.connect(DB_PATH)
+            self.conn.row_factory = sqlite3.Row
+            self.conn.execute("PRAGMA foreign_keys = ON")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            self.conn.commit()
+        else:
+            self.conn.rollback()
+        self.conn.close()
+
+    def cursor(self):
+        return self.conn.cursor()
+
+    def commit(self):
+        self.conn.commit()
+
+    def execute(self, sql, params=()):
+        cur = self.conn.cursor()
+        if self.is_pg:
+            sql_pg = sql.replace('?', '%s')
+            cur.execute(sql_pg, params)
+        else:
+            cur.execute(sql, params)
+        return cur
+
+    def execute_insert(self, sql, params=()):
+        """
+        Executes an INSERT query and returns the newly generated integer primary key.
+        """
+        cur = self.conn.cursor()
+        if self.is_pg:
+            sql_pg = sql.replace('?', '%s') + " RETURNING id"
+            cur.execute(sql_pg, params)
+            res = cur.fetchone()
+            val = fetch_scalar(res)
+            return int(val) if val is not None else None
+        else:
+            cur.execute(sql, params)
+            return cur.lastrowid
+
 def get_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+    """Factory creating the unified DBContext manager."""
+    return DBContext()
 
 def init_db(seed_real_data=True):
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        
-        # 1. Subjects table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS subjects (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT UNIQUE NOT NULL COLLATE NOCASE,
-                color TEXT NOT NULL DEFAULT '#79D99B',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
+    with get_connection() as ctx:
+        if ctx.is_pg:
+            # PostgreSQL Schema
+            ctx.execute("""
+                CREATE TABLE IF NOT EXISTS subjects (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(255) UNIQUE NOT NULL,
+                    color VARCHAR(32) NOT NULL DEFAULT '#79D99B',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            ctx.execute("""
+                CREATE TABLE IF NOT EXISTS sessions (
+                    id SERIAL PRIMARY KEY,
+                    subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+                    subject_name VARCHAR(255) NOT NULL,
+                    duration_minutes INTEGER NOT NULL,
+                    date VARCHAR(32) NOT NULL,
+                    timestamp BIGINT NOT NULL,
+                    start_time VARCHAR(32),
+                    end_time VARCHAR(32),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        else:
+            # SQLite Schema
+            ctx.execute("""
+                CREATE TABLE IF NOT EXISTS subjects (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT UNIQUE NOT NULL COLLATE NOCASE,
+                    color TEXT NOT NULL DEFAULT '#79D99B',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            ctx.execute("""
+                CREATE TABLE IF NOT EXISTS sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+                    subject_name TEXT NOT NULL,
+                    duration_minutes INTEGER NOT NULL,
+                    date TEXT NOT NULL,
+                    timestamp BIGINT NOT NULL,
+                    start_time TEXT,
+                    end_time TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
 
-        # 2. Sessions table: discrete study sessions per day with time and start/end details
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS sessions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
-                subject_name TEXT NOT NULL,
-                duration_minutes INTEGER NOT NULL,
-                date TEXT NOT NULL,
-                timestamp INTEGER NOT NULL,
-                start_time TEXT,
-                end_time TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
+        ctx.execute("CREATE INDEX IF NOT EXISTS idx_sessions_date ON sessions(date)")
+        ctx.execute("CREATE INDEX IF NOT EXISTS idx_sessions_subject ON sessions(subject_id)")
+        ctx.execute("CREATE INDEX IF NOT EXISTS idx_sessions_ts ON sessions(timestamp DESC)")
 
-        # Add start_time / end_time columns if table existed without them
-        cursor.execute("PRAGMA table_info(sessions)")
-        columns = [col['name'] for col in cursor.fetchall()]
-        if 'start_time' not in columns:
-            cursor.execute("ALTER TABLE sessions ADD COLUMN start_time TEXT")
-        if 'end_time' not in columns:
-            cursor.execute("ALTER TABLE sessions ADD COLUMN end_time TEXT")
-
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_sessions_date ON sessions(date)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_sessions_subject ON sessions(subject_id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_sessions_ts ON sessions(timestamp DESC)")
-
-        cursor.execute("SELECT COUNT(*) FROM sessions")
-        session_count = cursor.fetchone()[0]
+        cur = ctx.execute("SELECT COUNT(*) FROM sessions")
+        session_count = fetch_scalar(cur.fetchone()) or 0
 
         if session_count == 0 and seed_real_data:
-            seed_initial_real_data(conn)
-            
-        conn.commit()
+            seed_initial_real_data(ctx)
 
-def seed_initial_real_data(conn):
+def seed_initial_real_data(ctx):
     """
     Populate realistic, genuine session-based study history from 2025-01-01 through 2026-10-12.
     Includes diverse subjects, realistic time slots ('from when to when'), varying intensities,
     streaks, and rest days.
     """
-    cursor = conn.cursor()
     random.seed(1337)  # Deterministic seed for consistent, rich realistic history
     
     subjects_def = [
@@ -84,11 +183,14 @@ def seed_initial_real_data(conn):
     
     subject_map = {}
     for name, color in subjects_def:
-        cursor.execute("INSERT OR IGNORE INTO subjects (name, color) VALUES (?, ?)", (name, color))
-        cursor.execute("SELECT id FROM subjects WHERE name = ?", (name,))
-        row = cursor.fetchone()
+        if ctx.is_pg:
+            ctx.execute("INSERT INTO subjects (name, color) VALUES (?, ?) ON CONFLICT (name) DO NOTHING", (name, color))
+        else:
+            ctx.execute("INSERT OR IGNORE INTO subjects (name, color) VALUES (?, ?)", (name, color))
+        cur = ctx.execute("SELECT id FROM subjects WHERE name = ?", (name,))
+        row = cur.fetchone()
         if row:
-            subject_map[name] = row[0]
+            subject_map[name] = fetch_scalar(row)
 
     start_date = date(2025, 1, 1)
     end_date = date(2026, 10, 12)
@@ -143,7 +245,7 @@ def seed_initial_real_data(conn):
             subj_name, _ = random.choice(subjects_def)
             subj_id = subject_map.get(subj_name, 1)
             
-            cursor.execute("""
+            ctx.execute("""
                 INSERT INTO sessions (subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (subj_id, subj_name, duration, d_str, ts_ms, start_str, end_str))
@@ -151,22 +253,25 @@ def seed_initial_real_data(conn):
         curr += timedelta(days=1)
 
 def get_subjects():
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
+    with get_connection() as ctx:
+        cur = ctx.execute("""
             SELECT 
                 s.id, 
                 s.name, 
                 s.color, 
                 COALESCE(SUM(sess.duration_minutes), 0) AS total_minutes,
-                ROUND(COALESCE(SUM(sess.duration_minutes), 0) / 60.0, 1) AS hours,
                 COUNT(sess.id) AS session_count
             FROM subjects s
             LEFT JOIN sessions sess ON s.id = sess.subject_id
-            GROUP BY s.id
+            GROUP BY s.id, s.name, s.color
             ORDER BY total_minutes DESC, s.name ASC
         """)
-        return [dict(row) for row in cursor.fetchall()]
+        rows = [dict(r) for r in cur.fetchall()]
+        for r in rows:
+            tot = int(r.get('total_minutes') or 0)
+            r['total_minutes'] = tot
+            r['hours'] = round(tot / 60.0, 1)
+        return rows
 
 SUBJECT_PALETTE = [
     '#79D99B', '#A3F0BA', '#52C480', '#3A965A', '#4ECCA3',
@@ -178,10 +283,9 @@ def add_or_get_subject(name, color=None):
     if not clean_name:
         clean_name = 'Focus Session'
         
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, name, color FROM subjects WHERE name = ?", (clean_name,))
-        row = cursor.fetchone()
+    with get_connection() as ctx:
+        cur = ctx.execute("SELECT id, name, color FROM subjects WHERE LOWER(name) = LOWER(?)", (clean_name,))
+        row = cur.fetchone()
         if row:
             return dict(row)
             
@@ -189,9 +293,8 @@ def add_or_get_subject(name, color=None):
             idx = abs(hash(clean_name)) % len(SUBJECT_PALETTE)
             color = SUBJECT_PALETTE[idx]
             
-        cursor.execute("INSERT INTO subjects (name, color) VALUES (?, ?)", (clean_name, color))
-        conn.commit()
-        return {'id': cursor.lastrowid, 'name': clean_name, 'color': color}
+        new_id = ctx.execute_insert("INSERT INTO subjects (name, color) VALUES (?, ?)", (clean_name, color))
+        return {'id': new_id, 'name': clean_name, 'color': color}
 
 def add_session(subject_name, duration_minutes, date_str=None, timestamp_ms=None, start_time=None, end_time=None):
     if duration_minutes < 1:
@@ -213,14 +316,11 @@ def add_session(subject_name, duration_minutes, date_str=None, timestamp_ms=None
         
     subj = add_or_get_subject(subject_name)
     
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
+    with get_connection() as ctx:
+        session_id = ctx.execute_insert("""
             INSERT INTO sessions (subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (subj['id'], subj['name'], duration_minutes, date_str, timestamp_ms, start_time, end_time))
-        conn.commit()
-        session_id = cursor.lastrowid
         
     return {
         'id': f"sess_{session_id}",
@@ -247,14 +347,13 @@ def delete_session(session_id):
     except (ValueError, TypeError):
         return None
 
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
+    with get_connection() as ctx:
+        cur = ctx.execute("""
             SELECT id, subject_id, subject_name, duration_minutes, date, timestamp
             FROM sessions
             WHERE id = ?
         """, (session_id,))
-        row = cursor.fetchone()
+        row = cur.fetchone()
         if not row:
             return None
 
@@ -263,19 +362,17 @@ def delete_session(session_id):
             'numeric_id': row['id'],
             'subject_id': row['subject_id'],
             'subject_name': row['subject_name'],
-            'duration_minutes': row['duration_minutes'],
+            'duration_minutes': int(row['duration_minutes']),
             'date': row['date'],
-            'timestamp': row['timestamp']
+            'timestamp': int(row['timestamp'])
         }
 
-        cursor.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
-        conn.commit()
+        ctx.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
         return deleted
 
 def get_sessions(limit=100):
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
+    with get_connection() as ctx:
+        cur = ctx.execute("""
             SELECT sess.id, sess.subject_id, sess.subject_name, s.color, 
                    sess.duration_minutes, sess.date, sess.timestamp,
                    sess.start_time, sess.end_time
@@ -285,11 +382,11 @@ def get_sessions(limit=100):
             LIMIT ?
         """, (limit,))
         
-        rows = cursor.fetchall()
+        rows = [dict(r) for r in cur.fetchall()]
         result = []
         for r in rows:
-            duration = r['duration_minutes']
-            ts = r['timestamp']
+            duration = int(r['duration_minutes'])
+            ts = int(r['timestamp'])
             end_dt = datetime.fromtimestamp(ts / 1000)
             start_dt = end_dt - timedelta(minutes=duration)
             start_str = r['start_time'] or start_dt.strftime('%I:%M %p').lstrip('0')
@@ -316,9 +413,8 @@ def get_day_details(date_str):
     - total minutes, total sessions, avg focus time, total xp
     - detailed session timeline with 'from when to when'
     """
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
+    with get_connection() as ctx:
+        cur = ctx.execute("""
             SELECT sess.id, sess.subject_id, sess.subject_name, s.color,
                    sess.duration_minutes, sess.date, sess.timestamp,
                    sess.start_time, sess.end_time
@@ -327,15 +423,14 @@ def get_day_details(date_str):
             WHERE sess.date = ?
             ORDER BY sess.timestamp ASC
         """, (date_str,))
-        
-        rows = cursor.fetchall()
+        rows = [dict(r) for r in cur.fetchall()]
         
     sessions = []
     total_minutes = 0
     for r in rows:
-        duration = r['duration_minutes']
+        duration = int(r['duration_minutes'])
         total_minutes += duration
-        ts = r['timestamp']
+        ts = int(r['timestamp'])
         end_dt = datetime.fromtimestamp(ts / 1000)
         start_dt = end_dt - timedelta(minutes=duration)
         start_str = r['start_time'] or start_dt.strftime('%I:%M %p').lstrip('0')
@@ -385,35 +480,33 @@ def get_day_details(date_str):
     }
 
 def get_daily_activity():
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
+    with get_connection() as ctx:
+        cur = ctx.execute("""
             SELECT date, SUM(duration_minutes) as total_minutes
             FROM sessions
             GROUP BY date
             ORDER BY date ASC
         """)
-        return {row['date']: row['total_minutes'] for row in cursor.fetchall()}
+        rows = [dict(r) for r in cur.fetchall()]
+        return {r['date']: int(r['total_minutes']) for r in rows}
 
 def get_stats():
     today_str = datetime.now().strftime('%Y-%m-%d')
-    with get_connection() as conn:
-        cursor = conn.cursor()
+    with get_connection() as ctx:
+        cur = ctx.execute("SELECT COALESCE(SUM(duration_minutes), 0) FROM sessions")
+        total_focus_minutes = int(fetch_scalar(cur.fetchone()) or 0)
         
-        cursor.execute("SELECT COALESCE(SUM(duration_minutes), 0) FROM sessions")
-        total_focus_minutes = cursor.fetchone()[0]
+        cur = ctx.execute("SELECT COALESCE(SUM(duration_minutes), 0) FROM sessions WHERE date = ?", (today_str,))
+        today_focus_minutes = int(fetch_scalar(cur.fetchone()) or 0)
         
-        cursor.execute("SELECT COALESCE(SUM(duration_minutes), 0) FROM sessions WHERE date = ?", (today_str,))
-        today_focus_minutes = cursor.fetchone()[0]
-        
-        cursor.execute("""
+        cur = ctx.execute("""
             SELECT date, SUM(duration_minutes) as mins
             FROM sessions
             GROUP BY date
-            HAVING mins > 0
+            HAVING SUM(duration_minutes) > 0
             ORDER BY date DESC
         """)
-        active_dates = {row['date'] for row in cursor.fetchall()}
+        active_dates = {dict(row)['date'] for row in cur.fetchall()}
         
     current_check = datetime.now().date()
     if today_str not in active_dates:
@@ -433,12 +526,9 @@ def get_stats():
     }
 
 def reset_database(reseed=True):
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM sessions")
-        cursor.execute("DELETE FROM subjects")
-        conn.commit()
+    with get_connection() as ctx:
+        ctx.execute("DELETE FROM sessions")
+        ctx.execute("DELETE FROM subjects")
     if reseed:
-        with get_connection() as conn:
-            seed_initial_real_data(conn)
-            conn.commit()
+        with get_connection() as ctx:
+            seed_initial_real_data(ctx)
