@@ -44,7 +44,11 @@
     activeTaskTargetSeconds: null,
 
     // Preferences
-    soundEnabled: true
+    soundEnabled: true,
+
+    // User Authentication
+    user: null,
+    authenticated: false
   };
 
   let state = loadState();
@@ -84,13 +88,26 @@
     }
   }
 
-  // Sync state with SQLite backend
+  // =========================================================================
+  // SERVER SYNCHRONIZATION & AUTHENTICATION ENGINE
+  // =========================================================================
+
   async function syncWithBackend() {
     try {
       const res = await fetch('/api/state');
+      if (res.status === 401) {
+        state.authenticated = false;
+        state.user = null;
+        updateAuthUI();
+        openAuthDialog('login');
+        return;
+      }
+
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
+          state.authenticated = true;
+          state.user = data.user || null;
           state.subjects = data.subjects || [];
           state.sessions = data.sessions || [];
           state.dayActivity = data.dayActivity || {};
@@ -99,13 +116,389 @@
             state.xp = data.stats.xp || 0;
             state.totalFocusSeconds = data.stats.totalFocusSeconds || 0;
           }
+
+          if (data.timer) {
+            reconcileServerTimer(data.timer);
+          }
+
+          updateAuthUI();
           saveState();
           renderAll();
         }
       }
     } catch (err) {
-      console.warn('StudyArc: SQLite backend unavailable, using local cache:', err);
+      console.warn('StudyArc: Backend sync error, using local cache:', err);
     }
+  }
+
+  async function checkAuthAndSync() {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          state.authenticated = true;
+          state.user = data.user;
+          updateAuthUI();
+          await syncWithBackend();
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('StudyArc: Auth check error:', e);
+    }
+
+    state.authenticated = false;
+    state.user = null;
+    updateAuthUI();
+    openAuthDialog('login');
+  }
+
+  function reconcileServerTimer(serverTimer) {
+    if (!serverTimer) return;
+
+    if (serverTimer.hasCompleted) {
+      const targetDuration = serverTimer.targetSeconds || 3600;
+      const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
+      const taskName = serverTimer.activeTaskName || 'Focus Session';
+      showToast(`Welcome back! Your focus on ${taskName} finished while away. (+${minutesCompleted} XP)`);
+      logSession(minutesCompleted, taskName);
+
+      state.timer.status = 'idle';
+      state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
+      state.timer.remainingSeconds = state.timer.targetSeconds;
+      state.activeTaskName = null;
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      return;
+    }
+
+    if (serverTimer.status === 'running') {
+      state.timer.status = 'running';
+      state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
+      state.timer.remainingSeconds = serverTimer.remainingSeconds;
+      state.activeTaskName = serverTimer.activeTaskName || 'Focus Session';
+      state.timer.lastTickTime = Date.now();
+      if (!timerInterval) {
+        timerInterval = setInterval(handleTimerTick, 500);
+      }
+    } else if (serverTimer.status === 'paused') {
+      state.timer.status = 'paused';
+      state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
+      state.timer.remainingSeconds = serverTimer.remainingSeconds;
+      state.activeTaskName = serverTimer.activeTaskName;
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    } else {
+      state.timer.status = 'idle';
+      state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
+      state.timer.remainingSeconds = state.timer.targetSeconds;
+      state.activeTaskName = null;
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+  }
+
+  async function syncTimerAction(action, extraPayload = {}) {
+    if (!state.authenticated) return;
+    try {
+      await fetch('/api/timer/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          target_seconds: state.timer.targetSeconds,
+          remaining_seconds: Math.round(state.timer.remainingSeconds),
+          active_task_name: state.activeTaskName,
+          ...extraPayload
+        })
+      });
+    } catch (err) {
+      console.warn('StudyArc: Persistent timer sync warning:', err);
+    }
+  }
+
+  function updateAuthUI() {
+    const btnHeaderAuth = document.getElementById('btn-header-auth');
+    const headerUserBtn = document.getElementById('header-user-btn');
+    const headerUserInitial = document.getElementById('header-user-initial');
+    const headerUsernameText = document.getElementById('header-username-text');
+    const settingAvatar = document.getElementById('setting-user-avatar');
+    const settingUsername = document.getElementById('setting-username-display');
+    const authDialog = document.getElementById('auth-dialog');
+
+    if (state.authenticated && state.user) {
+      const username = state.user.username || 'User';
+      const initial = username.charAt(0).toUpperCase();
+
+      if (btnHeaderAuth) btnHeaderAuth.classList.add('hidden');
+      if (headerUserBtn) {
+        headerUserBtn.classList.remove('hidden');
+        if (headerUserInitial) headerUserInitial.textContent = initial;
+        if (headerUsernameText) headerUsernameText.textContent = username;
+      }
+      if (settingAvatar) settingAvatar.textContent = initial;
+      if (settingUsername) settingUsername.textContent = username;
+
+      if (authDialog && authDialog.open) {
+        authDialog.close();
+      }
+    } else {
+      if (btnHeaderAuth) btnHeaderAuth.classList.remove('hidden');
+      if (headerUserBtn) headerUserBtn.classList.add('hidden');
+      if (settingAvatar) settingAvatar.textContent = '?';
+      if (settingUsername) settingUsername.textContent = 'Not Signed In';
+    }
+  }
+
+  function openAuthDialog(mode = 'login') {
+    const dialog = document.getElementById('auth-dialog');
+    if (!dialog) return;
+
+    switchAuthTab(mode);
+
+    // Clear error messages
+    const loginError = document.getElementById('login-error-msg');
+    const registerError = document.getElementById('register-error-msg');
+    if (loginError) { loginError.textContent = ''; loginError.classList.add('hidden'); }
+    if (registerError) { registerError.textContent = ''; registerError.classList.add('hidden'); }
+
+    if (typeof dialog.showModal === 'function' && !dialog.open) {
+      dialog.showModal();
+    }
+  }
+
+  function closeAuthDialog() {
+    const dialog = document.getElementById('auth-dialog');
+    if (!dialog) return;
+
+    if (!state.authenticated) {
+      showToast('Please sign in or create an account to track your sessions.');
+      return;
+    }
+
+    if (dialog.open) {
+      dialog.close();
+    }
+  }
+
+  function switchAuthTab(tab) {
+    const tabLogin = document.getElementById('tab-auth-login');
+    const tabRegister = document.getElementById('tab-auth-register');
+    const formLogin = document.getElementById('form-auth-login');
+    const formRegister = document.getElementById('form-auth-register');
+    const modalTitle = document.getElementById('auth-modal-title');
+    const modalSub = document.getElementById('auth-modal-sub');
+
+    if (tab === 'login') {
+      tabLogin?.classList.add('active');
+      tabLogin?.setAttribute('aria-selected', 'true');
+      tabRegister?.classList.remove('active');
+      tabRegister?.setAttribute('aria-selected', 'false');
+
+      formLogin?.classList.remove('hidden');
+      formRegister?.classList.add('hidden');
+
+      if (modalTitle) modalTitle.textContent = 'Welcome to StudyArc';
+      if (modalSub) modalSub.textContent = 'Sign in to access your personal study records and sync timer state.';
+
+      setTimeout(() => document.getElementById('login-username')?.focus(), 50);
+    } else {
+      tabRegister?.classList.add('active');
+      tabRegister?.setAttribute('aria-selected', 'true');
+      tabLogin?.classList.remove('active');
+      tabLogin?.setAttribute('aria-selected', 'false');
+
+      formRegister?.classList.remove('hidden');
+      formLogin?.classList.add('hidden');
+
+      if (modalTitle) modalTitle.textContent = 'Create Private Account';
+      if (modalSub) modalSub.textContent = 'Set up a secure username and password for isolated study tracking.';
+
+      setTimeout(() => document.getElementById('register-username')?.focus(), 50);
+    }
+  }
+
+  async function handleLoginSubmit(e) {
+    e.preventDefault();
+    const usernameInput = document.getElementById('login-username');
+    const passwordInput = document.getElementById('login-password');
+    const errorEl = document.getElementById('login-error-msg');
+    const submitBtn = document.getElementById('btn-login-submit');
+
+    const username = (usernameInput?.value || '').trim();
+    const password = passwordInput?.value || '';
+
+    if (!username || !password) {
+      if (errorEl) {
+        errorEl.textContent = 'Please enter both username and password.';
+        errorEl.classList.remove('hidden');
+      }
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.querySelector('span').textContent = 'Signing in...';
+    }
+    if (errorEl) errorEl.classList.add('hidden');
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        state.authenticated = true;
+        state.user = data.user;
+        updateAuthUI();
+        closeAuthDialog();
+        showToast(`Welcome back, ${data.user.username}!`);
+        await syncWithBackend();
+      } else {
+        if (errorEl) {
+          errorEl.textContent = data.error || 'Invalid username or password.';
+          errorEl.classList.remove('hidden');
+        }
+      }
+    } catch (err) {
+      if (errorEl) {
+        errorEl.textContent = 'Connection error. Please try again.';
+        errorEl.classList.remove('hidden');
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.querySelector('span').textContent = 'Sign In';
+      }
+    }
+  }
+
+  async function handleRegisterSubmit(e) {
+    e.preventDefault();
+    const usernameInput = document.getElementById('register-username');
+    const passwordInput = document.getElementById('register-password');
+    const confirmInput = document.getElementById('register-confirm');
+    const errorEl = document.getElementById('register-error-msg');
+    const submitBtn = document.getElementById('btn-register-submit');
+
+    const username = (usernameInput?.value || '').trim();
+    const password = passwordInput?.value || '';
+    const confirmPassword = confirmInput?.value || '';
+
+    if (errorEl) errorEl.classList.add('hidden');
+
+    if (!username || username.length < 3) {
+      if (errorEl) {
+        errorEl.textContent = 'Username must be at least 3 characters long.';
+        errorEl.classList.remove('hidden');
+      }
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      if (errorEl) {
+        errorEl.textContent = 'Username can only contain letters, numbers, and underscores.';
+        errorEl.classList.remove('hidden');
+      }
+      return;
+    }
+
+    if (password.length < 6) {
+      if (errorEl) {
+        errorEl.textContent = 'Password must be at least 6 characters long.';
+        errorEl.classList.remove('hidden');
+      }
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      if (errorEl) {
+        errorEl.textContent = 'Passwords do not match.';
+        errorEl.classList.remove('hidden');
+      }
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.querySelector('span').textContent = 'Creating account...';
+    }
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          password,
+          confirm_password: confirmPassword
+        })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        state.authenticated = true;
+        state.user = data.user;
+        updateAuthUI();
+        closeAuthDialog();
+        showToast(`Account created! Welcome, ${data.user.username}!`);
+        await syncWithBackend();
+      } else {
+        if (errorEl) {
+          errorEl.textContent = data.error || 'Failed to create account.';
+          errorEl.classList.remove('hidden');
+        }
+      }
+    } catch (err) {
+      if (errorEl) {
+        errorEl.textContent = 'Connection error. Please try again.';
+        errorEl.classList.remove('hidden');
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.querySelector('span').textContent = 'Create Account';
+      }
+    }
+  }
+
+  async function handleLogout() {
+    if (!confirm('Are you sure you want to sign out of StudyArc?')) return;
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {
+      console.warn('Logout error:', e);
+    }
+    state.authenticated = false;
+    state.user = null;
+    state.sessions = [];
+    state.dayActivity = {};
+    state.subjects = [];
+    state.streak = 0;
+    state.xp = 0;
+    state.totalFocusSeconds = 0;
+    state.timer.status = 'idle';
+    state.timer.remainingSeconds = state.timer.targetSeconds;
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    saveState();
+    renderAll();
+    updateAuthUI();
+    switchView('focus');
+    showToast('Signed out successfully.');
+    openAuthDialog('login');
   }
 
   // =========================================================================
@@ -643,6 +1036,11 @@
       timerInterval = setInterval(handleTimerTick, 500);
     }
     renderTimer();
+    syncTimerAction('start', {
+      target_seconds: state.timer.targetSeconds,
+      remaining_seconds: Math.round(state.timer.remainingSeconds),
+      active_task_name: state.activeTaskName
+    });
   }
 
   function pauseTimer() {
@@ -656,6 +1054,9 @@
       timerInterval = null;
     }
     renderTimer();
+    syncTimerAction('pause', {
+      remaining_seconds: Math.round(state.timer.remainingSeconds)
+    });
   }
 
   function handleTimerTick() {
@@ -874,6 +1275,7 @@
       saveState();
       // On release: ensure digits firmly and gracefully settle on target
       renderTimerDisplay(state.timer.remainingSeconds, { duration: 320 });
+      syncTimerAction('adjust', { target_seconds: state.timer.targetSeconds });
     }
 
     function startDragging(e) {
@@ -992,6 +1394,7 @@
         state.timer.remainingSeconds = state.timer.targetSeconds;
         state.timer.status = 'idle';
         saveState();
+        syncTimerAction('reset', { target_seconds: state.timer.targetSeconds });
         renderAll();
         return;
       }
@@ -2062,6 +2465,107 @@
     }
 
 
+    // -------------------------------------------------------------------------
+    // Authentication & Profile Event Listeners
+    // -------------------------------------------------------------------------
+
+    // Header Sign In button
+    const btnHeaderAuth = document.getElementById('btn-header-auth');
+    if (btnHeaderAuth) {
+      btnHeaderAuth.addEventListener('click', () => openAuthDialog('login'));
+    }
+
+    // Header User pill button (opens settings)
+    const headerUserBtn = document.getElementById('header-user-btn');
+    if (headerUserBtn) {
+      headerUserBtn.addEventListener('click', () => switchView('settings'));
+    }
+
+    // Close Auth Dialog button
+    const btnCloseAuth = document.getElementById('btn-close-auth-dialog');
+    if (btnCloseAuth) {
+      btnCloseAuth.addEventListener('click', closeAuthDialog);
+    }
+
+    // Auth Dialog backdrop click light-dismiss fallback (only if already authenticated)
+    const authDialog = document.getElementById('auth-dialog');
+    if (authDialog) {
+      authDialog.addEventListener('click', (e) => {
+        const rect = authDialog.getBoundingClientRect();
+        const isInDialog = (
+          rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+          rect.left <= e.clientX && e.clientX <= rect.left + rect.width
+        );
+        if (!isInDialog) {
+          closeAuthDialog();
+        }
+      });
+    }
+
+    // Tab buttons
+    const tabLogin = document.getElementById('tab-auth-login');
+    const tabRegister = document.getElementById('tab-auth-register');
+    if (tabLogin) tabLogin.addEventListener('click', () => switchAuthTab('login'));
+    if (tabRegister) tabRegister.addEventListener('click', () => switchAuthTab('register'));
+
+    const linkSwitchRegister = document.getElementById('link-switch-to-register');
+    const linkSwitchLogin = document.getElementById('link-switch-to-login');
+    if (linkSwitchRegister) linkSwitchRegister.addEventListener('click', () => switchAuthTab('register'));
+    if (linkSwitchLogin) linkSwitchLogin.addEventListener('click', () => switchAuthTab('login'));
+
+    // Form submissions
+    const formLogin = document.getElementById('form-auth-login');
+    if (formLogin) formLogin.addEventListener('submit', handleLoginSubmit);
+
+    const formRegister = document.getElementById('form-auth-register');
+    if (formRegister) formRegister.addEventListener('submit', handleRegisterSubmit);
+
+    // Live password matching feedback
+    const pwInput = document.getElementById('register-password');
+    const confirmInput = document.getElementById('register-confirm');
+    const matchHint = document.getElementById('pw-match-hint');
+
+    function checkPasswordMatch() {
+      if (!confirmInput || !matchHint) return;
+      const p1 = pwInput?.value || '';
+      const p2 = confirmInput.value;
+      if (!p2) {
+        matchHint.textContent = '';
+        matchHint.className = 'auth-field-hint';
+        return;
+      }
+      if (p1 === p2) {
+        matchHint.textContent = '✓ Passwords match';
+        matchHint.className = 'auth-field-hint match';
+      } else {
+        matchHint.textContent = '✗ Passwords do not match';
+        matchHint.className = 'auth-field-hint mismatch';
+      }
+    }
+
+    if (pwInput) pwInput.addEventListener('input', checkPasswordMatch);
+    if (confirmInput) confirmInput.addEventListener('input', checkPasswordMatch);
+
+    // Show/Hide password toggle buttons
+    document.querySelectorAll('.btn-toggle-pw').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.dataset.target;
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        btn.innerHTML = isPassword
+          ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`
+          : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+      });
+    });
+
+    // Logout button
+    const btnLogout = document.getElementById('btn-logout');
+    if (btnLogout) {
+      btnLogout.addEventListener('click', handleLogout);
+    }
+
     // Keyboard Space shortcut to toggle timer / start task
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -2083,7 +2587,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     initEvents();
     renderAll();
-    await syncWithBackend();
+    await checkAuthAndSync();
   });
 
 })();
