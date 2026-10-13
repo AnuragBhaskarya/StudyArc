@@ -68,6 +68,8 @@
         // Never restore a running timer or offline elapsed ticks from stale localStorage.
         merged.timer.status = 'idle';
         merged.timer.remainingSeconds = merged.timer.targetSeconds;
+        merged.timer.anchorRemainingSeconds = merged.timer.targetSeconds;
+        merged.timer.anchorServerTime = null;
         merged.timer.startTime = null;
         merged.timer.lastTickTime = null;
         delete merged.timer._completedWhileAway;
@@ -88,7 +90,9 @@
         persistentState.timer = Object.assign({}, persistentState.timer, {
           status: 'idle',
           startTime: null,
-          lastTickTime: null
+          lastTickTime: null,
+          anchorServerTime: null,
+          anchorRemainingSeconds: persistentState.timer.targetSeconds
         });
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(persistentState));
@@ -165,9 +169,8 @@
         const data = await res.json();
         if (data && data.success && data.timer) {
           state.authenticated = true;
-          const sv = data.timer.version || 0;
-          if (sv > currentTimerVersion) currentTimerVersion = sv;
-          if (sv > lastAppliedVersion) lastAppliedVersion = sv;
+          const seq = Number(data.timer.sequence || data.timer.version || 0);
+          if (seq > lastAppliedSequence) lastAppliedSequence = seq;
           applyLiveServerTimer(data.timer, true);
         }
       }
@@ -177,17 +180,18 @@
   }
 
   // =========================================================================
-  // REAL-TIME MULTI-DEVICE & MULTI-TAB SYNCHRONIZATION ENGINE v2
-  // Architecture: Server-authoritative timestamps, operating-device immunity,
-  // version-based dedup, abort-safe long-poll, generation-gated single loop.
+  // =========================================================================
+  // REAL-TIME MULTI-DEVICE WEBSOCKET SYNCHRONIZATION ENGINE v3
+  // Architecture: Persistent WebSockets, Monotonic Sequence Deduplication,
+  // Server-Authoritative Anchor Clocks, RTT Clock Offset Sync, Auto-Reconnect.
   // =========================================================================
 
-  let activeSyncAbortController = null;
-  let syncLoopGeneration = 0;       // generation counter prevents duplicate loops
-  let currentTimerVersion = 0;      // monotonic server version for dedup
-  let lastLocalActionTime = 0;      // timestamp of last local user action
-  let lastAppliedVersion = 0;       // last version we actually applied to UI
-  let isLocallyOperating = false;   // true while THIS device is actively running/ticking
+  let timerSocket = null;
+  let socketReconnectTimer = null;
+  let socketPingTimer = null;
+  let reconnectAttempts = 0;
+  let serverClockOffset = 0;        // (serverTime - clientWallClock) in ms
+  let lastAppliedSequence = 0;      // Monotonic server sequence counter
 
   // 1. Same-device multi-tab instantaneous 0ms sync via BroadcastChannel
   let timerBroadcastChannel = null;
@@ -212,75 +216,160 @@
     }
   }
 
-  // 2. Abort-safe cross-device long-poll sync loop
-  async function runRealtimeSyncLoop() {
+  // 2. Persistent full-duplex WebSocket connection
+  function connectTimerSocket() {
     if (!state.authenticated) return;
+    if (timerSocket && (timerSocket.readyState === WebSocket.OPEN || timerSocket.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
 
-    // Generation gate: increment and capture; if another call starts, this one exits
-    const myGeneration = ++syncLoopGeneration;
+    clearTimeout(socketReconnectTimer);
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/timer`;
 
-    while (state.authenticated && myGeneration === syncLoopGeneration) {
+    try {
+      timerSocket = new WebSocket(wsUrl);
+    } catch (e) {
+      scheduleSocketReconnect();
+      return;
+    }
+
+    timerSocket.onopen = () => {
+      reconnectAttempts = 0;
+      // Immediately measure clock offset & RTT
+      sendSocketPing();
+      // Regular heartbeat ping every 8s to keep mobile sockets alive
+      clearInterval(socketPingTimer);
+      socketPingTimer = setInterval(sendSocketPing, 8000);
+    };
+
+    timerSocket.onmessage = (event) => {
       try {
-        activeSyncAbortController = new AbortController();
-        const url = `/api/timer/live?since=${currentTimerVersion}&t=${Date.now()}`;
-        const res = await fetch(url, {
-          signal: activeSyncAbortController.signal,
-          headers: { 'Cache-Control': 'no-cache, no-store', 'Pragma': 'no-cache' }
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.success && data.timer) {
-            const sv = data.timer.version || 0;
-            if (sv > currentTimerVersion) {
-              currentTimerVersion = sv;
-            }
-            applyLiveServerTimer(data.timer, false);
-            broadcastLocalTimer(data.timer);
-          }
-        }
+        const data = JSON.parse(event.data);
+        handleSocketMessage(data);
       } catch (err) {
-        if (err.name === 'AbortError') {
-          // Aborted by visibility change or new loop start — continue immediately
-          await new Promise(r => setTimeout(r, 50));
-          continue;
-        }
-        // Network error backoff
-        await new Promise(r => setTimeout(r, 600));
+        console.warn('StudyArc: WS message error:', err);
+      }
+    };
+
+    timerSocket.onclose = () => {
+      clearInterval(socketPingTimer);
+      timerSocket = null;
+      scheduleSocketReconnect();
+    };
+
+    timerSocket.onerror = () => {
+      try { timerSocket.close(); } catch (_) {}
+    };
+  }
+
+  function scheduleSocketReconnect() {
+    if (!state.authenticated) return;
+    clearTimeout(socketReconnectTimer);
+    reconnectAttempts++;
+    // Exponential backoff: 300ms, 600ms, 1200ms, max 3000ms with jitter
+    const delay = Math.min(3000, 300 * Math.pow(1.5, Math.min(reconnectAttempts, 6))) + Math.floor(Math.random() * 150);
+    socketReconnectTimer = setTimeout(() => {
+      connectTimerSocket();
+    }, delay);
+  }
+
+  function sendSocketPing() {
+    if (timerSocket && timerSocket.readyState === WebSocket.OPEN) {
+      try {
+        timerSocket.send(JSON.stringify({
+          type: 'PING',
+          clientTime: Date.now()
+        }));
+      } catch (_) {}
+    }
+  }
+
+  function handleSocketMessage(data) {
+    if (!data) return;
+
+    if (data.type === 'PONG') {
+      if (data.clientTime && data.serverTime) {
+        const now = Date.now();
+        const rtt = Math.max(1, now - data.clientTime);
+        const measuredOffset = data.serverTime - (data.clientTime + rtt / 2);
+        serverClockOffset = (serverClockOffset === 0) 
+          ? measuredOffset 
+          : (0.75 * serverClockOffset + 0.25 * measuredOffset);
+      }
+      return;
+    }
+
+    if (data.type === 'TIMER_INIT' || data.type === 'TIMER_UPDATE') {
+      if (data.serverTime) {
+        const now = Date.now();
+        const measuredOffset = data.serverTime - now;
+        if (serverClockOffset === 0) serverClockOffset = measuredOffset;
+      }
+      if (data.timer) {
+        applyLiveServerTimer(data.timer, false);
+        broadcastLocalTimer(data.timer);
       }
     }
   }
 
+  function handleTabAwakeOrFocus() {
+    if (!state.authenticated) return;
+    if (!timerSocket || timerSocket.readyState === WebSocket.CLOSED || timerSocket.readyState === WebSocket.CLOSING) {
+      connectTimerSocket();
+    } else if (timerSocket.readyState === WebSocket.OPEN) {
+      sendSocketPing();
+      try {
+        timerSocket.send(JSON.stringify({ type: 'GET_STATE' }));
+      } catch (_) {}
+    }
+    recalculateRemainingSeconds();
+    renderTimer();
+  }
+
   function initRealtimeTimerSync() {
     if (!state.authenticated) return;
-    // Abort any existing long-poll request
-    if (activeSyncAbortController) {
-      activeSyncAbortController.abort();
-      activeSyncAbortController = null;
-    }
-    // Increment generation to kill any old loop
-    runRealtimeSyncLoop();
+    connectTimerSocket();
   }
 
   /**
-   * Ultra-fast, zero-calculation real-time reconciliation.
-   * Every pause, play, and reset transition applies across all devices immediately.
+   * Monotonic server-authoritative anchor calculation.
+   * Eliminates clock drift and freeze on inactive tabs or backgrounded mobile devices.
+   */
+  function recalculateRemainingSeconds() {
+    if (state.timer.status !== 'running') {
+      return state.timer.remainingSeconds;
+    }
+    const anchorServerTime = state.timer.anchorServerTime;
+    const anchorRemaining = Number(state.timer.anchorRemainingSeconds != null ? state.timer.anchorRemainingSeconds : state.timer.remainingSeconds);
+
+    if (!anchorServerTime) {
+      return anchorRemaining;
+    }
+
+    const estimatedServerNow = Date.now() + serverClockOffset;
+    const elapsed = Math.max(0, (estimatedServerNow - anchorServerTime) / 1000);
+    const calculated = Math.max(0, anchorRemaining - elapsed);
+    state.timer.remainingSeconds = calculated;
+    return calculated;
+  }
+
+  /**
+   * Applies live server state across all devices immediately.
+   * Monotonic sequence deduplication prevents stale responses from rolling back state.
    */
   function applyLiveServerTimer(serverTimer, isDirectResponse = false) {
     if (!serverTimer) return;
 
-    const sv = serverTimer.version || 0;
+    const seq = Number(serverTimer.sequence || serverTimer.version || 0);
 
-    // Dedup: skip if we already applied this exact version (except direct responses)
-    if (!isDirectResponse && sv > 0 && sv <= lastAppliedVersion) {
+    // Dedup: skip if we already applied this exact sequence or a newer one
+    if (!isDirectResponse && seq > 0 && seq <= lastAppliedSequence) {
       return;
     }
 
-    if (sv > lastAppliedVersion) {
-      lastAppliedVersion = sv;
-    }
-    if (sv > currentTimerVersion) {
-      currentTimerVersion = sv;
+    if (seq > lastAppliedSequence) {
+      lastAppliedSequence = seq;
     }
 
     // 1. Task name sync across devices
@@ -294,10 +383,11 @@
       showToast(`Welcome back! Your focus on ${taskName} finished while away. (+${minutesCompleted} XP)`);
       logSession(minutesCompleted, taskName);
 
-      isLocallyOperating = false;
       state.timer.status = 'idle';
       state.timer.targetSeconds = targetDuration;
       state.timer.remainingSeconds = targetDuration;
+      state.timer.anchorRemainingSeconds = targetDuration;
+      state.timer.anchorServerTime = null;
       state.activeTaskName = null;
       if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
       saveState();
@@ -307,10 +397,11 @@
 
     // 3. PAUSE SYNC (Immediate, zero-calculation!)
     if (serverTimer.status === 'paused') {
-      isLocallyOperating = false;
       state.timer.status = 'paused';
       state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
       state.timer.remainingSeconds = Number(serverTimer.remainingSeconds != null ? serverTimer.remainingSeconds : state.timer.remainingSeconds);
+      state.timer.anchorRemainingSeconds = state.timer.remainingSeconds;
+      state.timer.anchorServerTime = null;
       state.timer.lastTickTime = null;
       if (timerInterval) {
         clearInterval(timerInterval);
@@ -324,10 +415,12 @@
 
     // 4. IDLE / RESET SYNC (Immediate, zero-calculation!)
     if (serverTimer.status === 'idle') {
-      isLocallyOperating = false;
       state.timer.status = 'idle';
       state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
       state.timer.remainingSeconds = state.timer.targetSeconds;
+      state.timer.anchorRemainingSeconds = state.timer.targetSeconds;
+      state.timer.anchorServerTime = null;
+      state.timer.lastTickTime = null;
       state.activeTaskName = null;
       if (timerInterval) {
         clearInterval(timerInterval);
@@ -341,33 +434,16 @@
 
     // 5. RUNNING SYNC (Immediate play/resume!)
     if (serverTimer.status === 'running') {
-      const wasRunning = state.timer.status === 'running';
       state.timer.status = 'running';
       state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
+      state.timer.anchorRemainingSeconds = Number(serverTimer.remainingSeconds != null ? serverTimer.remainingSeconds : 3600);
+      state.timer.anchorServerTime = serverTimer.startedAt ? Number(serverTimer.startedAt) : (Date.now() + serverClockOffset);
+      state.timer.lastTickTime = Date.now();
 
-      // Operating device immunity: If this device is actively ticking locally,
-      // its local monotonic tick is already running smoothly without any jump
-      if (isLocallyOperating && wasRunning && !isDirectResponse) {
-        return;
-      }
+      recalculateRemainingSeconds();
 
-      // Fast, zero-drift remaining time calculation
-      const now = Date.now();
-      let serverRemaining = (serverTimer.currentRemaining != null)
-        ? Number(serverTimer.currentRemaining)
-        : Number(serverTimer.remainingSeconds != null ? serverTimer.remainingSeconds : 3600);
-
-      if (serverTimer.currentRemaining == null && serverTimer.startedAt) {
-        const elapsed = Math.max(0, (now - Number(serverTimer.startedAt)) / 1000);
-        serverRemaining = Math.max(0, serverRemaining - elapsed);
-      }
-
-      state.timer.remainingSeconds = serverRemaining;
-      state.timer.lastTickTime = now;
-
-      // Start local ticking immediately
       if (!timerInterval) {
-        timerInterval = setInterval(handleTimerTick, 500);
+        timerInterval = setInterval(handleTimerTick, 250);
       }
       saveState();
       renderTimer();
@@ -382,35 +458,45 @@
   async function syncTimerAction(action, extraPayload = {}) {
     if (!state.authenticated) return;
 
+    const payload = {
+      type: 'ACTION',
+      action,
+      target_seconds: state.timer.targetSeconds,
+      remaining_seconds: Math.round(state.timer.remainingSeconds),
+      active_task_name: state.activeTaskName,
+      ...extraPayload
+    };
+
     // 0ms instant broadcast to other open tabs on this machine
-    const optimisticState = {
+    broadcastLocalTimer({
       status: state.timer.status,
       targetSeconds: state.timer.targetSeconds,
       remainingSeconds: Math.round(state.timer.remainingSeconds),
       activeTaskName: state.activeTaskName,
-      startedAt: state.timer.startTime || Date.now(),
-      version: Date.now()
-    };
-    broadcastLocalTimer(optimisticState);
+      startedAt: state.timer.anchorServerTime || (Date.now() + serverClockOffset),
+      sequence: lastAppliedSequence + 1
+    });
 
+    // 1. Instant WebSocket push (<1ms)
+    if (timerSocket && timerSocket.readyState === WebSocket.OPEN) {
+      try {
+        timerSocket.send(JSON.stringify(payload));
+        return;
+      } catch (err) {
+        console.warn('StudyArc: WS send failed, falling back to HTTP:', err);
+      }
+    }
+
+    // 2. HTTP POST fallback if socket is reconnecting
     try {
       const res = await fetch('/api/timer/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action,
-          target_seconds: state.timer.targetSeconds,
-          remaining_seconds: Math.round(state.timer.remainingSeconds),
-          active_task_name: state.activeTaskName,
-          ...extraPayload
-        })
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         const data = await res.json();
         if (data && data.success && data.timer) {
-          const sv = data.timer.version || 0;
-          if (sv > currentTimerVersion) currentTimerVersion = sv;
-          if (sv > lastAppliedVersion) lastAppliedVersion = sv;
           applyLiveServerTimer(data.timer, true);
           broadcastLocalTimer(data.timer);
         }
@@ -669,11 +755,12 @@
   }
 
   async function handleLogout() {
-    if (activeSyncAbortController) {
-      activeSyncAbortController.abort();
-      activeSyncAbortController = null;
+    if (timerSocket) {
+      try { timerSocket.close(); } catch (_) {}
+      timerSocket = null;
     }
-    isSyncLoopRunning = false;
+    clearTimeout(socketReconnectTimer);
+    clearInterval(socketPingTimer);
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch (e) {
@@ -1227,14 +1314,14 @@
     initAudio();
     playChime('start');
 
-    isLocallyOperating = true;
     state.timer.status = 'running';
-    state.timer.startTime = Date.now();
+    state.timer.anchorRemainingSeconds = state.timer.remainingSeconds;
+    state.timer.anchorServerTime = Date.now() + serverClockOffset;
     state.timer.lastTickTime = Date.now();
     saveState();
 
     if (!timerInterval) {
-      timerInterval = setInterval(handleTimerTick, 500);
+      timerInterval = setInterval(handleTimerTick, 250);
     }
     renderTimer();
     syncTimerAction('start', {
@@ -1248,14 +1335,14 @@
     initAudio();
     playChime('start');
 
-    isLocallyOperating = true;
     state.timer.status = 'running';
-    state.timer.startTime = Date.now();
+    state.timer.anchorRemainingSeconds = state.timer.remainingSeconds;
+    state.timer.anchorServerTime = Date.now() + serverClockOffset;
     state.timer.lastTickTime = Date.now();
     saveState();
 
     if (!timerInterval) {
-      timerInterval = setInterval(handleTimerTick, 500);
+      timerInterval = setInterval(handleTimerTick, 250);
     }
     renderTimer();
     syncTimerAction('resume', {
@@ -1266,9 +1353,8 @@
   }
 
   function pauseTimer() {
-    isLocallyOperating = false;
     state.timer.status = 'paused';
-    state.timer.startTime = null;
+    state.timer.anchorServerTime = null;
     state.timer.lastTickTime = null;
     saveState();
 
@@ -1287,20 +1373,16 @@
     if (state.timer.status !== 'running') return;
     if (isCenterPadHolding) return;
 
-    const now = Date.now();
-    const deltaSeconds = (now - state.timer.lastTickTime) / 1000;
-    state.timer.lastTickTime = now;
+    const remaining = recalculateRemainingSeconds();
 
-    state.timer.remainingSeconds -= deltaSeconds;
-
-    if (state.timer.remainingSeconds <= 0) {
+    if (remaining <= 0) {
       completeSession();
     } else {
       renderTimer();
     }
 
     tickCounter++;
-    if (tickCounter % 10 === 0) {
+    if (tickCounter % 20 === 0) {
       saveState();
     }
   }
@@ -2819,14 +2901,20 @@
       scrollHeatmapToEnd(false);
     });
 
-    // Handle tab visibility change (instant resync when coming back to tab)
+    // Handle tab visibility change & wakeup (instant resync when unlocking or switching back)
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
-        if (state.authenticated) {
-          fetchLatestServerTimer();
-          initRealtimeTimerSync();
-        }
+        handleTabAwakeOrFocus();
       }
+    });
+    window.addEventListener('focus', () => {
+      handleTabAwakeOrFocus();
+    });
+    window.addEventListener('pageshow', () => {
+      handleTabAwakeOrFocus();
+    });
+    window.addEventListener('online', () => {
+      handleTabAwakeOrFocus();
     });
   }
 

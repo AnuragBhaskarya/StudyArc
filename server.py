@@ -7,10 +7,12 @@ import mimetypes
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import Flask, jsonify, request, send_from_directory, session, Response
+from flask_sock import Sock
 from werkzeug.security import generate_password_hash, check_password_hash
 import database
 
 app = Flask(__name__, static_folder='.', static_url_path='')
+sock = Sock(app)
 
 # Secret key configuration for cryptographic session signing
 app.secret_key = os.environ.get('SECRET_KEY', 'studyarc-production-super-secret-key-change-me')
@@ -183,17 +185,47 @@ def auth_me():
     })
 
 # =========================================================================
-# ULTRA-LOW LATENCY REAL-TIME TIMER ENGINE (RAM HOT-CACHE & INSTANT NOTIFIER)
+# ULTRA-LOW LATENCY REAL-TIME TIMER ENGINE (RAM HOT-CACHE, MONOTONIC SEQ, & WEBSOCKET BROADCASTER)
 # =========================================================================
 
 _timer_lock = threading.Lock()
 _timer_condition = threading.Condition(_timer_lock)
 USER_TIMER_HOT_CACHE = {}
 
+# Active WebSocket connections per user: user_id -> set of WebSocket objects
+_ws_lock = threading.Lock()
+_active_user_sockets = {}
+
+def broadcast_timer_state(user_id, state):
+    """
+    Instantly pushes timer updates to all connected WebSockets for user_id in <0.5ms.
+    """
+    with _ws_lock:
+        clients = list(_active_user_sockets.get(user_id, []))
+    if not clients:
+        return
+
+    payload = json.dumps({
+        'type': 'TIMER_UPDATE',
+        'timer': state,
+        'serverTime': int(time.time() * 1000)
+    })
+    dead = []
+    for ws in clients:
+        try:
+            ws.send(payload)
+        except Exception:
+            dead.append(ws)
+    if dead:
+        with _ws_lock:
+            if user_id in _active_user_sockets:
+                for ws in dead:
+                    _active_user_sockets[user_id].discard(ws)
+
 def get_hot_timer_state(user_id):
     """
     Returns real-time timer state from RAM in 0.01ms.
-    Loads from PostgreSQL on cold cache miss.
+    Loads from PostgreSQL/SQLite on cold cache miss.
     """
     now_ms = int(time.time() * 1000)
     with _timer_lock:
@@ -217,10 +249,11 @@ def get_hot_timer_state(user_id):
             state['serverTime'] = now_ms
             return state
 
-    # Cold cache miss: fetch from PostgreSQL once and cache in RAM
+    # Cold cache miss: fetch from PostgreSQL/SQLite once and cache in RAM
     db_state = database.get_timer_state(user_id)
     with _timer_lock:
         now_ms = int(time.time() * 1000)
+        seq = int(db_state.get('sequence') or 1)
         state = {
             'status': db_state['status'],
             'targetSeconds': db_state['targetSeconds'],
@@ -229,7 +262,8 @@ def get_hot_timer_state(user_id):
             'activeTaskName': db_state.get('activeTaskName'),
             'startedAt': db_state.get('startedAt'),
             'updatedAt': now_ms,
-            'version': now_ms,
+            'sequence': seq,
+            'version': seq,
             'hasCompleted': db_state.get('hasCompleted', False),
             'serverTime': now_ms
         }
@@ -238,8 +272,10 @@ def get_hot_timer_state(user_id):
 
 def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=None, remaining_seconds=None):
     """
-    Updates RAM state in 0.01ms, wakes up all waiting long-poll listeners instantly (<1ms),
-    and persists to PostgreSQL asynchronously in a background thread.
+    Unified routine for all timer modifications across the entire application:
+    Updates RAM state in 0.01ms, increments monotonic sequence (1, 2, 3...),
+    broadcasts instantly over WebSockets (<1ms), wakes any long-poll listeners,
+    and persists to database asynchronously in a background thread.
     """
     now_ms = int(time.time() * 1000)
     current = get_hot_timer_state(user_id)
@@ -249,6 +285,8 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
     new_remaining = int(current.get('remainingSeconds', 3600))
     new_task = active_task_name if active_task_name is not None else current.get('activeTaskName')
     new_started_at = current.get('startedAt')
+    current_seq = int(current.get('sequence') or 0)
+    new_seq = current_seq + 1
 
     if action == 'start':
         new_status = 'running'
@@ -310,17 +348,21 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
         'activeTaskName': new_task,
         'startedAt': new_started_at,
         'updatedAt': now_ms,
-        'version': now_ms,
+        'sequence': new_seq,
+        'version': new_seq,
         'hasCompleted': False,
         'serverTime': now_ms
     }
 
-    # 1. Update RAM state and immediately wake up all waiting listeners (<0.01ms)
+    # 1. Update RAM state and wake condition listeners
     with _timer_condition:
         USER_TIMER_HOT_CACHE[user_id] = new_state
         _timer_condition.notify_all()
 
-    # 2. Persist to PostgreSQL asynchronously in a background thread
+    # 2. Push real-time event directly over WebSockets in <1ms
+    broadcast_timer_state(user_id, new_state)
+
+    # 3. Persist to database asynchronously in a background thread
     def persist_worker():
         try:
             database.update_timer_state(
@@ -337,22 +379,84 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
 
     return new_state
 
+@sock.route('/ws/timer')
+def ws_timer_endpoint(ws):
+    """
+    Persistent bi-directional WebSocket connection for instant 0ms cross-device timer sync.
+    Handles PING/PONG (RTT clock offset sync), ACTION dispatch, and real-time state broadcasts.
+    """
+    user_id = session.get('user_id')
+    if not user_id:
+        ws.close(1008, 'Unauthorized')
+        return
+
+    with _ws_lock:
+        if user_id not in _active_user_sockets:
+            _active_user_sockets[user_id] = set()
+        _active_user_sockets[user_id].add(ws)
+
+    try:
+        # Send initial full state and current server time immediately upon connection
+        initial_state = get_hot_timer_state(user_id)
+        ws.send(json.dumps({
+            'type': 'TIMER_INIT',
+            'timer': initial_state,
+            'serverTime': int(time.time() * 1000)
+        }))
+
+        while True:
+            data = ws.receive()
+            if data is None:
+                break
+            try:
+                msg = json.loads(data)
+            except Exception:
+                continue
+
+            msg_type = msg.get('type')
+            if msg_type == 'PING':
+                ws.send(json.dumps({
+                    'type': 'PONG',
+                    'clientTime': msg.get('clientTime'),
+                    'serverTime': int(time.time() * 1000)
+                }))
+            elif msg_type == 'GET_STATE':
+                ws.send(json.dumps({
+                    'type': 'TIMER_UPDATE',
+                    'timer': get_hot_timer_state(user_id),
+                    'serverTime': int(time.time() * 1000)
+                }))
+            elif msg_type == 'ACTION':
+                action = msg.get('action')
+                if action:
+                    trigger_timer_update(
+                        user_id,
+                        action,
+                        target_seconds=msg.get('target_seconds') or msg.get('targetSeconds'),
+                        active_task_name=msg.get('active_task_name') or msg.get('activeTaskName'),
+                        remaining_seconds=msg.get('remaining_seconds') or msg.get('remainingSeconds')
+                    )
+    except Exception as e:
+        pass
+    finally:
+        with _ws_lock:
+            if user_id in _active_user_sockets:
+                _active_user_sockets[user_id].discard(ws)
+                if not _active_user_sockets[user_id]:
+                    del _active_user_sockets[user_id]
+
 @app.route('/api/timer/live', methods=['GET'])
 @app.route('/api/timer/state', methods=['GET'])
 @auth_required
 def timer_live_route(user_id):
     """
-    Ultra-fast RAM endpoint (<0.05ms) with zero-latency condition variable waiting.
-    If 'since' parameter is provided and matches current version,
-    waits up to 10.0s for an instant event before returning.
+    Fallback HTTP poll endpoint with monotonic sequence check.
     """
     since_version = request.args.get('since', type=int)
 
-    # Fetch current RAM state in 0.01ms
     current_state = get_hot_timer_state(user_id)
     current_ver = current_state.get('version', 0)
 
-    # If client passed 'since' and version hasn't changed, wait on Condition
     if since_version is not None and since_version >= current_ver:
         with _timer_condition:
             def has_update():
@@ -361,7 +465,6 @@ def timer_live_route(user_id):
 
             _timer_condition.wait_for(has_update, timeout=10.0)
 
-        # After wake up, re-fetch latest RAM state
         current_state = get_hot_timer_state(user_id)
 
     resp = jsonify({'success': True, 'timer': current_state})
@@ -375,7 +478,7 @@ def timer_live_route(user_id):
 @auth_required
 def timer_action_route(user_id):
     """
-    Instantaneous 0.01ms timer action update that wakes up waiting devices in <1ms.
+    HTTP POST action fallback: updates hot cache and broadcasts over WebSockets instantly.
     """
     data = request.get_json(force=True, silent=True) or {}
     action = data.get('action')
@@ -406,10 +509,6 @@ def timer_action_route(user_id):
 @app.route('/api/timer/stream')
 @auth_required
 def timer_stream_legacy_route(user_id):
-    """
-    Legacy SSE route fallback: Returns current state and closes immediately
-    to prevent worker starvation on Gunicorn.
-    """
     timer_state = get_hot_timer_state(user_id)
     payload = json.dumps(timer_state)
     return Response(f"event: timer_state\ndata: {payload}\n\n", mimetype='text/event-stream')
@@ -494,8 +593,8 @@ def handle_sessions(user_id):
         user_id, subject_name, duration_minutes, date_str, timestamp_ms, start_time, end_time
     )
 
-    # Automatically update persistent timer state back to idle upon session save
-    database.update_timer_state(user_id, 'complete')
+    # Automatically update persistent timer state back to idle upon session save & broadcast to all WebSockets
+    trigger_timer_update(user_id, 'complete')
 
     return jsonify({
         'success': True,
@@ -549,13 +648,14 @@ def get_stats(user_id):
 @auth_required
 def reset_data(user_id):
     database.reset_database(user_id)
+    timer_state = trigger_timer_update(user_id, 'reset')
     return jsonify({
         'success': True,
         'stats': database.get_stats(user_id),
         'dayActivity': database.get_daily_activity(user_id),
         'subjects': database.get_subjects(user_id),
         'sessions': database.get_sessions(user_id),
-        'timer': database.get_timer_state(user_id)
+        'timer': timer_state
     })
 
 # Pre-warm database connection pool on startup

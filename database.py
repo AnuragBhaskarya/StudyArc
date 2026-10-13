@@ -210,9 +210,11 @@ def init_db():
                     remaining_seconds INTEGER NOT NULL DEFAULT 3600,
                     active_task_name VARCHAR(255),
                     started_at BIGINT,
-                    updated_at BIGINT NOT NULL
+                    updated_at BIGINT NOT NULL,
+                    sequence BIGINT NOT NULL DEFAULT 1
                 )
             """)
+            ctx.execute("ALTER TABLE user_timer_state ADD COLUMN IF NOT EXISTS sequence BIGINT NOT NULL DEFAULT 1")
 
             # 3. Subjects Table
             ctx.execute("""
@@ -282,9 +284,15 @@ def init_db():
                     remaining_seconds INTEGER NOT NULL DEFAULT 3600,
                     active_task_name TEXT,
                     started_at INTEGER,
-                    updated_at INTEGER NOT NULL
+                    updated_at INTEGER NOT NULL,
+                    sequence INTEGER NOT NULL DEFAULT 1
                 )
             """)
+
+            cur = ctx.execute("PRAGMA table_info(user_timer_state)")
+            cols = [r['name'] for r in cur.fetchall()]
+            if 'sequence' not in cols:
+                ctx.execute("ALTER TABLE user_timer_state ADD COLUMN sequence INTEGER NOT NULL DEFAULT 1")
 
             ctx.execute("""
                 CREATE TABLE IF NOT EXISTS subjects (
@@ -390,7 +398,7 @@ def get_timer_state(user_id):
     now_ms = int(datetime.now().timestamp() * 1000)
     with get_connection() as ctx:
         cur = ctx.execute("""
-            SELECT status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at
+            SELECT status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at, sequence
             FROM user_timer_state
             WHERE user_id = ?
         """, (user_id,))
@@ -398,8 +406,8 @@ def get_timer_state(user_id):
 
         if not row:
             ctx.execute("""
-                INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, updated_at)
-                VALUES (?, 'idle', 3600, 3600, ?)
+                INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, updated_at, sequence)
+                VALUES (?, 'idle', 3600, 3600, ?, 1)
             """, (user_id, now_ms))
             return {
                 'status': 'idle',
@@ -407,7 +415,9 @@ def get_timer_state(user_id):
                 'remainingSeconds': 3600,
                 'activeTaskName': None,
                 'startedAt': None,
-                'hasCompleted': False
+                'hasCompleted': False,
+                'sequence': 1,
+                'version': 1
             }
 
         state = dict(row)
@@ -416,6 +426,7 @@ def get_timer_state(user_id):
         remaining_secs = int(state['remaining_seconds'])
         started_at = state.get('started_at')
         active_task = state.get('active_task_name')
+        sequence = int(state.get('sequence') or 1)
         has_completed = False
 
         current_rem = remaining_secs
@@ -434,7 +445,9 @@ def get_timer_state(user_id):
             'currentRemaining': current_rem,
             'activeTaskName': active_task,
             'startedAt': started_at,
-            'hasCompleted': has_completed
+            'hasCompleted': has_completed,
+            'sequence': sequence,
+            'version': sequence
         }
 
 def update_timer_state(user_id, action, target_seconds=None, active_task_name=None, remaining_seconds=None):
@@ -445,6 +458,7 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
     new_remaining = current['remainingSeconds']
     new_task = active_task_name if active_task_name is not None else current['activeTaskName']
     new_started_at = current.get('startedAt')
+    new_sequence = int(current.get('sequence') or 1) + 1
 
     if action == 'start':
         new_status = 'running'
@@ -500,34 +514,39 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
 
     with get_connection() as ctx:
         ctx.execute("""
-            INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at, sequence)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (user_id) DO UPDATE SET
                 status = EXCLUDED.status,
                 target_seconds = EXCLUDED.target_seconds,
                 remaining_seconds = EXCLUDED.remaining_seconds,
                 active_task_name = EXCLUDED.active_task_name,
                 started_at = EXCLUDED.started_at,
-                updated_at = EXCLUDED.updated_at
+                updated_at = EXCLUDED.updated_at,
+                sequence = EXCLUDED.sequence
         """ if ctx.is_pg else """
-            INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at, sequence)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(user_id) DO UPDATE SET
                 status = excluded.status,
                 target_seconds = excluded.target_seconds,
                 remaining_seconds = excluded.remaining_seconds,
                 active_task_name = excluded.active_task_name,
                 started_at = excluded.started_at,
-                updated_at = excluded.updated_at
-        """, (user_id, new_status, new_target, new_remaining, new_task, new_started_at, now_ms))
+                updated_at = excluded.updated_at,
+                sequence = excluded.sequence
+        """, (user_id, new_status, new_target, new_remaining, new_task, new_started_at, now_ms, new_sequence))
 
     return {
         'status': new_status,
         'targetSeconds': new_target,
         'remainingSeconds': new_remaining,
+        'currentRemaining': new_remaining,
         'activeTaskName': new_task,
         'startedAt': new_started_at,
-        'hasCompleted': False
+        'hasCompleted': False,
+        'sequence': new_sequence,
+        'version': new_sequence
     }
 
 # =========================================================================
