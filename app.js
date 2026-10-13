@@ -59,36 +59,19 @@
       if (data) {
         const parsed = JSON.parse(data);
         const merged = Object.assign({}, defaultState, parsed);
-        if (!merged.timer.targetSeconds || merged.timer.targetSeconds > 3 * 3600) {
+        if (!merged.timer || !merged.timer.targetSeconds || merged.timer.targetSeconds > 3 * 3600) {
+          merged.timer = merged.timer || {};
           merged.timer.targetSeconds = 60 * 60;
         }
 
-        const now = Date.now();
-        // If timer was running, compute exact elapsed time since last tick in 0ms!
-        if (merged.timer && merged.timer.status === 'running') {
-          const lastTime = merged.timer.lastTickTime || merged.timer.startTime || now;
-          const elapsedSecs = (now - lastTime) / 1000;
-          const currentRemaining = Math.max(
-            0,
-            (merged.timer.remainingSeconds != null ? merged.timer.remainingSeconds : merged.timer.targetSeconds) - elapsedSecs
-          );
+        // The timer is 100% server-authoritative.
+        // Never restore a running timer or offline elapsed ticks from stale localStorage.
+        merged.timer.status = 'idle';
+        merged.timer.remainingSeconds = merged.timer.targetSeconds;
+        merged.timer.startTime = null;
+        merged.timer.lastTickTime = null;
+        delete merged.timer._completedWhileAway;
 
-          if (currentRemaining <= 0) {
-            merged.timer.status = 'idle';
-            merged.timer.remainingSeconds = merged.timer.targetSeconds;
-            merged.timer._completedWhileAway = true;
-          } else {
-            merged.timer.status = 'running';
-            merged.timer.remainingSeconds = currentRemaining;
-            merged.timer.lastTickTime = now;
-          }
-        } else if (merged.timer && merged.timer.status === 'paused') {
-          merged.timer.remainingSeconds = (merged.timer.remainingSeconds != null) ? merged.timer.remainingSeconds : merged.timer.targetSeconds;
-        } else {
-          merged.timer.status = 'idle';
-          merged.timer.remainingSeconds = merged.timer.targetSeconds;
-          merged.activeTaskName = null;
-        }
         return merged;
       }
     } catch (e) {
@@ -99,7 +82,16 @@
 
   function saveState() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      // Clean clone: Never persist running timer or volatile timestamps to localStorage
+      const persistentState = Object.assign({}, state);
+      if (persistentState.timer) {
+        persistentState.timer = Object.assign({}, persistentState.timer, {
+          status: 'idle',
+          startTime: null,
+          lastTickTime: null
+        });
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(persistentState));
     } catch (e) {
       console.warn('StudyArc: Could not save to localStorage:', e);
     }
@@ -163,6 +155,27 @@
     await syncWithBackend();
   }
 
+  async function fetchLatestServerTimer() {
+    try {
+      const res = await fetch(`/api/timer/live?t=${Date.now()}`, {
+        headers: { 'Cache-Control': 'no-cache, no-store', 'Pragma': 'no-cache' }
+      });
+      if (res.status === 401) return;
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success && data.timer) {
+          state.authenticated = true;
+          const sv = data.timer.version || 0;
+          if (sv > currentTimerVersion) currentTimerVersion = sv;
+          if (sv > lastAppliedVersion) lastAppliedVersion = sv;
+          applyLiveServerTimer(data.timer, true);
+        }
+      }
+    } catch (e) {
+      console.warn('StudyArc: Quick timer fetch failed:', e);
+    }
+  }
+
   // =========================================================================
   // REAL-TIME MULTI-DEVICE & MULTI-TAB SYNCHRONIZATION ENGINE v2
   // Architecture: Server-authoritative timestamps, operating-device immunity,
@@ -207,12 +220,6 @@
     const myGeneration = ++syncLoopGeneration;
 
     while (state.authenticated && myGeneration === syncLoopGeneration) {
-      // Background tab: slow-poll to save mobile battery
-      if (document.visibilityState === 'hidden') {
-        await new Promise(r => setTimeout(r, 1500));
-        continue;
-      }
-
       try {
         activeSyncAbortController = new AbortController();
         const url = `/api/timer/live?since=${currentTimerVersion}&t=${Date.now()}`;
@@ -344,10 +351,13 @@
         return;
       }
 
-      // Fast, low-calculation remaining time computation
+      // Fast, zero-drift remaining time calculation
       const now = Date.now();
-      let serverRemaining = Number(serverTimer.remainingSeconds != null ? serverTimer.remainingSeconds : 3600);
-      if (serverTimer.startedAt) {
+      let serverRemaining = (serverTimer.currentRemaining != null)
+        ? Number(serverTimer.currentRemaining)
+        : Number(serverTimer.remainingSeconds != null ? serverTimer.remainingSeconds : 3600);
+
+      if (serverTimer.currentRemaining == null && serverTimer.startedAt) {
         const elapsed = Math.max(0, (now - Number(serverTimer.startedAt)) / 1000);
         serverRemaining = Math.max(0, serverRemaining - elapsed);
       }
@@ -2809,33 +2819,13 @@
       scrollHeatmapToEnd(false);
     });
 
-    // Handle tab visibility change (instant resync when coming back to tab, save state when leaving)
+    // Handle tab visibility change (instant resync when coming back to tab)
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         if (state.authenticated) {
+          fetchLatestServerTimer();
           initRealtimeTimerSync();
         }
-        if (state.timer.status === 'running') {
-          const now = Date.now();
-          const elapsed = (now - (state.timer.lastTickTime || now)) / 1000;
-          state.timer.lastTickTime = now;
-          state.timer.remainingSeconds = Math.max(0, state.timer.remainingSeconds - elapsed);
-          if (state.timer.remainingSeconds <= 0) {
-            completeSession();
-          } else {
-            renderTimer();
-          }
-        }
-      } else {
-        if (state.timer.status === 'running') {
-          saveState();
-        }
-      }
-    });
-
-    window.addEventListener('beforeunload', () => {
-      if (state.timer.status === 'running') {
-        saveState();
       }
     });
   }
@@ -2845,29 +2835,12 @@
   // =========================================================================
   document.addEventListener('DOMContentLoaded', async () => {
     initEvents();
-
-    // Check if session completed while user was away / page closed
-    if (state.timer && state.timer._completedWhileAway) {
-      state.timer._completedWhileAway = false;
-      const targetDuration = state.timer.targetSeconds || 3600;
-      const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
-      const taskName = state.activeTaskName || 'Focus Session';
-      showToast(`Welcome back! Your focus on ${taskName} finished while away. (+${minutesCompleted} XP)`);
-      logSession(minutesCompleted, taskName);
-      state.timer.status = 'idle';
-      state.timer.remainingSeconds = state.timer.targetSeconds;
-      state.activeTaskName = null;
-      saveState();
-    }
-
-    // Immediately start live ticking in 0ms if timer was already running!
-    if (state.timer && state.timer.status === 'running' && state.timer.remainingSeconds > 0) {
-      if (!timerInterval) {
-        timerInterval = setInterval(handleTimerTick, 500);
-      }
-    }
-
     renderAll();
+
+    // Immediately fetch real-time server timer state in <5ms from RAM cache
+    fetchLatestServerTimer();
+
+    // Full authentication and state sync (subjects, history, stats)
     await checkAuthAndSync();
   });
 

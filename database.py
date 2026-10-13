@@ -459,11 +459,13 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
             new_task = active_task_name
 
     elif action == 'pause':
-        if remaining_seconds is not None:
-            new_remaining = int(remaining_seconds)
-        elif current['status'] == 'running' and current.get('startedAt'):
+        if current['status'] == 'running' and current.get('startedAt'):
             elapsed = (now_ms - int(current['startedAt'])) / 1000.0
-            new_remaining = max(0, int(current['remainingSeconds'] - elapsed))
+            new_remaining = max(0, int(current.get('remainingSeconds', 3600) - elapsed))
+        elif remaining_seconds is not None:
+            new_remaining = int(remaining_seconds)
+        else:
+            new_remaining = int(current.get('remainingSeconds', 3600))
         new_status = 'paused'
         new_started_at = None
 
