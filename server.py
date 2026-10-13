@@ -405,16 +405,23 @@ def get_state(user_id):
     """
     try:
         data = database.get_full_state(user_id)
-        hot_timer = get_cached_timer_state(user_id)
+        hot_timer = get_hot_timer_state(user_id)
         if hot_timer:
             data['timer'] = hot_timer
+
+        user_name = session.get('username')
+        if not user_name:
+            u_info = database.get_user_by_id(user_id)
+            if u_info:
+                user_name = u_info.get('username')
+                session['username'] = user_name
 
         return jsonify({
             'success': True,
             'authenticated': True,
             'user': {
                 'id': user_id,
-                'username': session.get('username')
+                'username': user_name or 'User'
             },
             'subjects': data['subjects'],
             'sessions': data['sessions'],

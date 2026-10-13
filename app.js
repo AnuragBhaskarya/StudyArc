@@ -2446,6 +2446,7 @@
   }
 
   function renderAll() {
+    updateAuthUI();
     renderTimer();
     renderStats();
     renderHeatmap();
