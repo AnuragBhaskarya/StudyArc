@@ -10,6 +10,7 @@ worker_class = 'geventwebsocket.gunicorn.workers.GeventWebSocketWorker'
 # Single worker is required for in-memory Socket.IO rooms and real-time state sync
 workers = 1
 threads = 1
+worker_connections = 1000
 timeout = 120
 keepalive = 10
 

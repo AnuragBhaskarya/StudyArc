@@ -450,67 +450,78 @@ def get_timer_state(user_id):
             'version': sequence
         }
 
-def update_timer_state(user_id, action, target_seconds=None, active_task_name=None, remaining_seconds=None):
+def update_timer_state(user_id, action, target_seconds=None, active_task_name=None, remaining_seconds=None, status=None, started_at=None, sequence=None):
     now_ms = int(datetime.now().timestamp() * 1000)
-    current = get_timer_state(user_id)
-    new_status = current['status']
-    new_target = target_seconds if target_seconds is not None else current['targetSeconds']
-    new_remaining = current['remainingSeconds']
-    new_task = active_task_name if active_task_name is not None else current['activeTaskName']
-    new_started_at = current.get('startedAt')
-    new_sequence = int(current.get('sequence') or 1) + 1
 
-    if action == 'start':
-        new_status = 'running'
-        if target_seconds:
-            new_target = int(target_seconds)
-        if remaining_seconds is not None:
-            new_remaining = int(remaining_seconds)
-        else:
-            new_remaining = new_target
-        new_started_at = now_ms
-        if active_task_name:
-            new_task = active_task_name
+    # Optimization: if caller already computed state in RAM (e.g. server.py hot cache),
+    # bypass redundant SELECT query over the network and directly persist UPSERT!
+    if status is not None and sequence is not None:
+        new_status = status
+        new_target = int(target_seconds) if target_seconds is not None else 3600
+        new_remaining = int(remaining_seconds) if remaining_seconds is not None else new_target
+        new_task = active_task_name
+        new_started_at = started_at
+        new_sequence = int(sequence)
+    else:
+        current = get_timer_state(user_id)
+        new_status = current['status']
+        new_target = target_seconds if target_seconds is not None else current['targetSeconds']
+        new_remaining = current['remainingSeconds']
+        new_task = active_task_name if active_task_name is not None else current['activeTaskName']
+        new_started_at = current.get('startedAt')
+        new_sequence = int(current.get('sequence') or 1) + 1
 
-    elif action == 'pause':
-        if current['status'] == 'running' and current.get('startedAt'):
-            elapsed = (now_ms - int(current['startedAt'])) / 1000.0
-            new_remaining = max(0, int(current.get('remainingSeconds', 3600) - elapsed))
-        elif remaining_seconds is not None:
-            new_remaining = int(remaining_seconds)
-        else:
-            new_remaining = int(current.get('remainingSeconds', 3600))
-        new_status = 'paused'
-        new_started_at = None
+        if action == 'start':
+            new_status = 'running'
+            if target_seconds:
+                new_target = int(target_seconds)
+            if remaining_seconds is not None:
+                new_remaining = int(remaining_seconds)
+            else:
+                new_remaining = new_target
+            new_started_at = now_ms
+            if active_task_name:
+                new_task = active_task_name
 
-    elif action == 'resume':
-        new_status = 'running'
-        if remaining_seconds is not None:
-            new_remaining = int(remaining_seconds)
-        else:
-            new_remaining = current.get('remainingSeconds', 3600)
-        new_started_at = now_ms
-
-    elif action == 'reset':
-        new_status = 'idle'
-        if target_seconds:
-            new_target = int(target_seconds)
-        new_remaining = new_target
-        new_started_at = None
-        new_task = None
-
-    elif action == 'adjust':
-        if target_seconds:
-            new_target = int(target_seconds)
-        if current['status'] in ('idle', 'paused'):
-            new_remaining = new_target
+        elif action == 'pause':
+            if current['status'] == 'running' and current.get('startedAt'):
+                elapsed = (now_ms - int(current['startedAt'])) / 1000.0
+                new_remaining = max(0, int(current.get('remainingSeconds', 3600) - elapsed))
+            elif remaining_seconds is not None:
+                new_remaining = int(remaining_seconds)
+            else:
+                new_remaining = int(current.get('remainingSeconds', 3600))
+            new_status = 'paused'
             new_started_at = None
 
-    elif action == 'complete':
-        new_status = 'idle'
-        new_remaining = new_target
-        new_started_at = None
-        new_task = None
+        elif action == 'resume':
+            new_status = 'running'
+            if remaining_seconds is not None:
+                new_remaining = int(remaining_seconds)
+            else:
+                new_remaining = current.get('remainingSeconds', 3600)
+            new_started_at = now_ms
+
+        elif action == 'reset':
+            new_status = 'idle'
+            if target_seconds:
+                new_target = int(target_seconds)
+            new_remaining = new_target
+            new_started_at = None
+            new_task = None
+
+        elif action == 'adjust':
+            if target_seconds:
+                new_target = int(target_seconds)
+            if current['status'] in ('idle', 'paused'):
+                new_remaining = new_target
+                new_started_at = None
+
+        elif action == 'complete':
+            new_status = 'idle'
+            new_remaining = new_target
+            new_started_at = None
+            new_task = None
 
     with get_connection() as ctx:
         ctx.execute("""

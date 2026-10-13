@@ -352,7 +352,7 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
     # 2. Push real-time event directly over WebSockets in <1ms
     broadcast_timer_state(user_id, new_state)
 
-    # 3. Persist to database asynchronously in a background thread
+    # 3. Persist to database asynchronously in a background greenlet/thread
     def persist_worker():
         try:
             database.update_timer_state(
@@ -360,7 +360,10 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
                 action,
                 target_seconds=new_target,
                 active_task_name=new_task,
-                remaining_seconds=new_remaining
+                remaining_seconds=new_remaining,
+                status=new_status,
+                started_at=new_started_at,
+                sequence=new_seq
             )
         except Exception as e:
             print(f"[TimerSync] DB persist warning: {e}")

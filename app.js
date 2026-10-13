@@ -1356,12 +1356,12 @@
 
     if (remaining <= 0) {
       completeSession();
-    } else {
+    } else if (!document.hidden) {
       renderTimer();
     }
 
     tickCounter++;
-    if (tickCounter % 20 === 0) {
+    if (tickCounter % 20 === 0 && !document.hidden) {
       saveState();
     }
   }
