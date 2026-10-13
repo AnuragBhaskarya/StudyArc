@@ -71,10 +71,11 @@ Engineered with a centered, distraction-free interface, StudyArc eliminates clut
 - **"From When to When" Session Breakdown**: Every session displays exact start and end times (e.g., `5:00 PM – 6:30 PM`), duration badge, subject color dot, and earned XP.
 - **Rest Day Recognition**: Displays an empty state card for non-study / rest days.
 
-### 💾 Persistent SQLite Architecture
-- Lightweight embedded database (`study_tracker.db`) with normalized `subjects` and `sessions` tables.
-- Pre-seeded with over **1,100+ authentic sessions across 500+ active days** from January 1, 2025 to October 2026.
-- Foreign key constraints, date/timestamp indexes, and automatic schema migrations.
+### 💾 Persistent Cloud PostgreSQL & Supabase Architecture
+- Production-ready cloud database support powered by **Supabase PostgreSQL**.
+- Normalized `subjects` and `sessions` tables with cascade deletion and indexed queries.
+- Zero data loss across cloud deploys and container sleep cycles.
+- Dual-engine fallback: automatically connects to PostgreSQL via `DATABASE_URL` (or local SQLite for lightweight offline dev).
 
 ---
 
@@ -226,11 +227,13 @@ StudyArc/
 ├── index.html                    # Semantic HTML5 app structure & SVG timer
 ├── styles.css                    # Glassmorphic dark design system & tokens
 ├── app.js                        # Client state engine, SVG bead, and canvas audio
-├── database.py                   # SQLite ORM, aggregations & real data generator
-├── server.py                     # Lightweight Flask REST server & static router
-├── study_tracker.db              # Pre-seeded SQLite database (2025–2026 data)
-├── requirements.txt              # Minimal Python dependencies
-├── .gitignore                    # Python, OS, and IDE cache exclusions
+├── database.py                   # PostgreSQL & SQLite ORM with connection pooling
+├── server.py                     # Production Flask REST server & health/ping router
+├── render.yaml                   # Render Blueprint deployment configuration
+├── Procfile                      # Gunicorn WSGI start definition
+├── requirements.txt              # Python production dependencies
+├── .env.example                  # Environment configuration template
+├── .gitignore                    # Python, OS, and local DB exclusions
 ├── LICENSE                       # MIT License
 └── README.md                     # Comprehensive documentation
 ```

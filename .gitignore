@@ -44,3 +44,9 @@ venv.bak/
 
 # Logs
 *.log
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+study_tracker.db

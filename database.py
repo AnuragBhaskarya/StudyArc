@@ -120,7 +120,7 @@ def get_connection():
     """Factory creating the unified DBContext manager."""
     return DBContext()
 
-def init_db(seed_real_data=True):
+def init_db():
     with get_connection() as ctx:
         if ctx.is_pg:
             # PostgreSQL Schema
@@ -175,113 +175,6 @@ def init_db(seed_real_data=True):
 
         cur = ctx.execute("SELECT COUNT(*) FROM sessions")
         session_count = fetch_scalar(cur.fetchone()) or 0
-
-        if session_count == 0 and seed_real_data:
-            seed_initial_real_data(ctx)
-
-def seed_initial_real_data(ctx):
-    """
-    Populate realistic, genuine session-based study history from 2025-01-01 through 2026-10-12.
-    Includes diverse subjects, realistic time slots ('from when to when'), varying intensities,
-    streaks, and rest days.
-    """
-    random.seed(1337)  # Deterministic seed for consistent, rich realistic history
-    
-    subjects_def = [
-        ('Computer Science', '#79D99B'),
-        ('Mathematics', '#A3F0BA'),
-        ('System Architecture', '#52C480'),
-        ('Cognitive Science', '#3A965A'),
-        ('Algorithms & Data Structures', '#4ECCA3'),
-        ('Machine Learning', '#6EE7B7'),
-        ('Linear Algebra', '#86EFAC'),
-        ('Deep Learning & AI', '#34D399'),
-        ('Operating Systems', '#2DD4BF'),
-        ('Physics & Quantum', '#5EEAD4'),
-    ]
-    
-    subject_map = {}
-    for name, color in subjects_def:
-        if ctx.is_pg:
-            ctx.execute("INSERT INTO subjects (name, color) VALUES (?, ?) ON CONFLICT (name) DO NOTHING", (name, color))
-        else:
-            ctx.execute("INSERT OR IGNORE INTO subjects (name, color) VALUES (?, ?)", (name, color))
-        cur = ctx.execute("SELECT id FROM subjects WHERE name = ?", (name,))
-        row = cur.fetchone()
-        if row:
-            subject_map[name] = fetch_scalar(row)
-
-    start_date = date(2025, 1, 1)
-    end_date = date(2026, 10, 12)
-    
-    time_windows = [
-        [(8, 30), (9, 0), (9, 30), (10, 0)],    # Morning block
-        [(13, 0), (13, 30), (14, 0), (14, 30)],  # Midday block
-        [(16, 0), (16, 30), (17, 0)],           # Late afternoon block
-        [(19, 0), (19, 30), (20, 0), (20, 30)]   # Evening block
-    ]
-    
-    durations_pool = [30, 45, 50, 60, 75, 90]
-    
-    sessions_to_insert = []
-    curr = start_date
-    while curr <= end_date:
-        d_str = curr.strftime('%Y-%m-%d')
-        weekday = curr.weekday() # 0 = Mon, 6 = Sun
-        
-        # Last 17 days leading up to today (Oct 12) form an active streak
-        is_recent_streak = (curr >= date(2026, 9, 26))
-        
-        if is_recent_streak:
-            has_activity = True
-        elif weekday in (5, 6): # Weekend
-            has_activity = random.random() < 0.68
-        else: # Weekday
-            has_activity = random.random() < 0.85
-            
-        if not has_activity:
-            curr += timedelta(days=1)
-            continue
-            
-        if curr == date(2026, 10, 12):
-            num_sessions = 3
-        else:
-            num_sessions = random.choices([1, 2, 3, 4], weights=[0.25, 0.45, 0.25, 0.05])[0]
-            
-        chosen_window_indices = sorted(random.sample(range(len(time_windows)), num_sessions))
-        for w_idx in chosen_window_indices:
-            start_opts = time_windows[w_idx]
-            sh, sm = random.choice(start_opts)
-            duration = random.choice(durations_pool)
-            
-            start_dt = datetime.combine(curr, time(sh, sm))
-            end_dt = start_dt + timedelta(minutes=duration)
-            
-            start_str = start_dt.strftime('%I:%M %p').lstrip('0')
-            end_str = end_dt.strftime('%I:%M %p').lstrip('0')
-            ts_ms = int(end_dt.timestamp() * 1000)
-            
-            subj_name, _ = random.choice(subjects_def)
-            subj_id = subject_map.get(subj_name, 1)
-            
-            sessions_to_insert.append((subj_id, subj_name, duration, d_str, ts_ms, start_str, end_str))
-            
-        curr += timedelta(days=1)
-
-    if sessions_to_insert:
-        if ctx.is_pg:
-            from psycopg2.extras import execute_values
-            cur = ctx.conn.cursor()
-            execute_values(cur, """
-                INSERT INTO sessions (subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time)
-                VALUES %s
-            """, sessions_to_insert)
-        else:
-            cur = ctx.conn.cursor()
-            cur.executemany("""
-                INSERT INTO sessions (subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, sessions_to_insert)
 
 def get_subjects():
     with get_connection() as ctx:
@@ -556,10 +449,7 @@ def get_stats():
         'todayFocusMinutes': today_focus_minutes
     }
 
-def reset_database(reseed=True):
+def reset_database():
     with get_connection() as ctx:
         ctx.execute("DELETE FROM sessions")
         ctx.execute("DELETE FROM subjects")
-    if reseed:
-        with get_connection() as ctx:
-            seed_initial_real_data(ctx)

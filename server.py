@@ -10,8 +10,8 @@ app = Flask(__name__, static_folder='.', static_url_path='')
 mimetypes.add_type('application/javascript', '.js')
 mimetypes.add_type('text/css', '.css')
 
-# Initialize database (PostgreSQL if DATABASE_URL is set, SQLite otherwise)
-database.init_db(seed_real_data=True)
+# Initialize database (PostgreSQL if DATABASE_URL is set, SQLite fallback)
+database.init_db()
 
 @app.route('/api/ping')
 @app.route('/ping')
@@ -143,9 +143,7 @@ def get_stats():
 
 @app.route('/api/reset', methods=['POST'])
 def reset_data():
-    data = request.get_json(force=True, silent=True) or {}
-    reseed = data.get('reseed', True)
-    database.reset_database(reseed=reseed)
+    database.reset_database()
     return jsonify({
         'success': True,
         'stats': database.get_stats(),
@@ -156,5 +154,6 @@ def reset_data():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
-    print(f"StudyArc SQLite server running at http://0.0.0.0:{port}")
+    engine = 'PostgreSQL' if database.is_postgres() else 'SQLite'
+    print(f"StudyArc {engine} server running at http://0.0.0.0:{port}")
     app.run(host='0.0.0.0', port=port, debug=False)

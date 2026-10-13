@@ -1999,25 +1999,6 @@
       });
     }
 
-    const btnLoadDemo = document.getElementById('btn-load-demo-data');
-    if (btnLoadDemo) {
-      btnLoadDemo.addEventListener('click', async () => {
-        try {
-          const res = await fetch('/api/reset', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reseed: true })
-          });
-          if (res.ok) {
-            await syncWithBackend();
-            switchView('focus');
-          }
-        } catch (e) {
-          console.error('Failed to sync starter data:', e);
-        }
-      });
-    }
-
     const btnWipeData = document.getElementById('btn-wipe-data');
     if (btnWipeData) {
       btnWipeData.addEventListener('click', async () => {
