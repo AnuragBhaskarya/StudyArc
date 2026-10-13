@@ -32,7 +32,11 @@ except ImportError:
 def is_postgres():
     """Returns True if a PostgreSQL connection URL is configured in the environment."""
     url = (os.environ.get('DATABASE_URL') or '').strip()
-    return url.startswith(('postgres://', 'postgresql://'))
+    return (
+        url.startswith(('postgres://', 'postgresql://'))
+        and '[YOUR-PASSWORD]' not in url
+        and 'your-project-ref' not in url
+    )
 
 def get_clean_database_url():
     url = (os.environ.get('DATABASE_URL') or '').strip()
