@@ -2,8 +2,6 @@ import os
 import re
 import json
 import time
-import threading
-from queue import Queue, Empty
 import mimetypes
 from datetime import datetime, timedelta
 from functools import wraps
@@ -178,216 +176,19 @@ def auth_me():
     })
 
 # =========================================================================
-# IN-MEMORY REAL-TIME HOT CACHE & MULTI-DEVICE SSE BROKER
+# REAL-TIME TIMER STATE (SYNCHRONOUS MULTI-WORKER DATABASE SINGLE SOURCE OF TRUTH)
 # =========================================================================
 
-_timer_cache_lock = threading.Lock()
-USER_TIMER_CACHE = {}
-
-_subscribers_lock = threading.Lock()
-USER_SUBSCRIBERS = {}
-
-def get_cached_timer_state(user_id):
-    """
-    Returns real-time timer state from RAM in 0.01ms.
-    Loads from database on cold cache miss.
-    """
-    now_ms = int(time.time() * 1000)
-    with _timer_cache_lock:
-        cached = USER_TIMER_CACHE.get(user_id)
-        if cached:
-            state = dict(cached)
-            if state.get('status') == 'running' and state.get('startedAt'):
-                elapsed = (now_ms - int(state['startedAt'])) / 1000.0
-                calc_rem = state['baseRemainingSeconds'] - elapsed
-                if calc_rem <= 0:
-                    state['status'] = 'idle'
-                    state['remainingSeconds'] = state['targetSeconds']
-                    state['hasCompleted'] = True
-                else:
-                    state['remainingSeconds'] = max(0, int(calc_rem))
-                    state['hasCompleted'] = False
-            return state
-
-    # Cold cache miss: fetch from database and populate RAM cache
-    db_state = database.get_timer_state(user_id)
-    with _timer_cache_lock:
-        USER_TIMER_CACHE[user_id] = {
-            'status': db_state['status'],
-            'targetSeconds': db_state['targetSeconds'],
-            'remainingSeconds': db_state['remainingSeconds'],
-            'baseRemainingSeconds': db_state['remainingSeconds'],
-            'activeTaskName': db_state.get('activeTaskName'),
-            'startedAt': db_state.get('startedAt'),
-            'updatedAt': now_ms,
-            'version': now_ms,
-            'hasCompleted': db_state.get('hasCompleted', False)
-        }
-        return dict(USER_TIMER_CACHE[user_id])
-
-def update_cached_timer_state(user_id, action, target_seconds=None, active_task_name=None, remaining_seconds=None):
-    """
-    Instantaneously updates RAM state in 0.01ms, notifies all connected devices via SSE,
-    and asynchronously persists to Supabase in a background thread.
-    """
-    now_ms = int(time.time() * 1000)
-    current = get_cached_timer_state(user_id)
-
-    new_status = current.get('status', 'idle')
-    new_target = int(target_seconds) if target_seconds is not None else int(current.get('targetSeconds', 3600))
-    new_remaining = int(current.get('remainingSeconds', 3600))
-    new_task = active_task_name if active_task_name is not None else current.get('activeTaskName')
-    new_started_at = current.get('startedAt')
-
-    if action == 'start':
-        new_status = 'running'
-        if target_seconds:
-            new_target = int(target_seconds)
-        if remaining_seconds is not None:
-            new_remaining = int(remaining_seconds)
-        else:
-            new_remaining = new_target
-        new_started_at = now_ms
-        if active_task_name:
-            new_task = active_task_name
-
-    elif action == 'pause':
-        if remaining_seconds is not None:
-            new_remaining = int(remaining_seconds)
-        elif current.get('status') == 'running' and current.get('startedAt'):
-            elapsed = (now_ms - int(current['startedAt'])) / 1000.0
-            new_remaining = max(0, int(current['baseRemainingSeconds'] - elapsed))
-        new_status = 'paused'
-        new_started_at = None
-
-    elif action == 'resume':
-        new_status = 'running'
-        if remaining_seconds is not None:
-            new_remaining = int(remaining_seconds)
-        new_started_at = now_ms
-
-    elif action == 'reset':
-        new_status = 'idle'
-        if target_seconds:
-            new_target = int(target_seconds)
-        new_remaining = new_target
-        new_started_at = None
-        new_task = None
-
-    elif action == 'adjust':
-        if target_seconds:
-            new_target = int(target_seconds)
-        if current.get('status') in ('idle', 'paused'):
-            new_remaining = new_target
-            new_started_at = None
-
-    elif action == 'complete':
-        new_status = 'idle'
-        new_remaining = new_target
-        new_started_at = None
-        new_task = None
-
-    new_state = {
-        'status': new_status,
-        'targetSeconds': new_target,
-        'remainingSeconds': new_remaining,
-        'baseRemainingSeconds': new_remaining,
-        'activeTaskName': new_task,
-        'startedAt': new_started_at,
-        'updatedAt': now_ms,
-        'version': now_ms,
-        'hasCompleted': False
-    }
-
-    # 1. Update in-memory hot cache
-    with _timer_cache_lock:
-        USER_TIMER_CACHE[user_id] = new_state
-
-    # 2. Push real-time event to all connected devices for this user
-    broadcast_timer_event(user_id, new_state)
-
-    # 3. Asynchronously persist to Supabase in a background thread
-    def persist_worker():
-        try:
-            database.update_timer_state(
-                user_id,
-                action,
-                target_seconds=new_target,
-                active_task_name=new_task,
-                remaining_seconds=new_remaining
-            )
-        except Exception as err:
-            print(f"[TimerSync] Background persist error: {err}")
-
-    threading.Thread(target=persist_worker, daemon=True).start()
-
-    return new_state
-
-def broadcast_timer_event(user_id, timer_state):
-    """Pushes event to all active SSE subscriber queues for this user."""
-    payload = json.dumps(timer_state)
-    with _subscribers_lock:
-        subs = USER_SUBSCRIBERS.get(user_id, set())
-        dead_queues = []
-        for q in subs:
-            try:
-                q.put_nowait(payload)
-            except Exception:
-                dead_queues.append(q)
-        for dq in dead_queues:
-            subs.discard(dq)
-
-@app.route('/api/timer/stream')
-@auth_required
-def timer_stream_route(user_id):
-    """
-    Server-Sent Events (SSE) real-time stream.
-    Pushes instantaneous timer changes to all connected devices (mobile, laptop, etc.)
-    without requiring page refreshes.
-    """
-    def event_stream():
-        q = Queue(maxsize=30)
-        with _subscribers_lock:
-            if user_id not in USER_SUBSCRIBERS:
-                USER_SUBSCRIBERS[user_id] = set()
-            USER_SUBSCRIBERS[user_id].add(q)
-
-        try:
-            init_state = get_cached_timer_state(user_id)
-            yield f"event: timer_state\ndata: {json.dumps(init_state)}\n\n"
-
-            while True:
-                try:
-                    payload = q.get(timeout=15.0)
-                    yield f"event: timer_state\ndata: {payload}\n\n"
-                except Empty:
-                    yield ": ping\n\n"
-        except GeneratorExit:
-            pass
-        finally:
-            with _subscribers_lock:
-                if user_id in USER_SUBSCRIBERS:
-                    USER_SUBSCRIBERS[user_id].discard(q)
-                    if not USER_SUBSCRIBERS[user_id]:
-                        del USER_SUBSCRIBERS[user_id]
-
-    response = Response(event_stream(), mimetype='text/event-stream')
-    response.headers['Cache-Control'] = 'no-cache, no-transform'
-    response.headers['X-Accel-Buffering'] = 'no'
-    response.headers['Connection'] = 'keep-alive'
-    return response
-
 @app.route('/api/timer/live', methods=['GET'])
-@auth_required
-def timer_live_route(user_id):
-    """Ultra-fast RAM endpoint for instant timer state check (0.01ms)."""
-    return jsonify({'success': True, 'timer': get_cached_timer_state(user_id)})
-
 @app.route('/api/timer/state', methods=['GET'])
 @auth_required
-def get_timer_state_route(user_id):
+def timer_live_route(user_id):
+    """
+    Ultra-fast non-blocking endpoint returning persistent timer state
+    shared across all Gunicorn worker processes and client devices.
+    """
     try:
-        timer_state = get_cached_timer_state(user_id)
+        timer_state = database.get_timer_state(user_id)
         return jsonify({'success': True, 'timer': timer_state})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -395,6 +196,10 @@ def get_timer_state_route(user_id):
 @app.route('/api/timer/action', methods=['POST'])
 @auth_required
 def timer_action_route(user_id):
+    """
+    Synchronously persists timer actions (start, pause, resume, reset, adjust)
+    directly to PostgreSQL so all workers and devices immediately see it.
+    """
     data = request.get_json(force=True, silent=True) or {}
     action = data.get('action')
     if not action:
@@ -405,7 +210,7 @@ def timer_action_route(user_id):
     active_task_name = data.get('active_task_name') or data.get('activeTaskName')
 
     try:
-        new_state = update_cached_timer_state(
+        new_state = database.update_timer_state(
             user_id,
             action,
             target_seconds=target_seconds,
@@ -415,6 +220,17 @@ def timer_action_route(user_id):
         return jsonify({'success': True, 'timer': new_state})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/timer/stream')
+@auth_required
+def timer_stream_legacy_route(user_id):
+    """
+    Legacy SSE route fallback: Returns current state and closes immediately
+    to prevent worker starvation on Gunicorn.
+    """
+    timer_state = database.get_timer_state(user_id)
+    payload = json.dumps(timer_state)
+    return Response(f"event: timer_state\ndata: {payload}\n\n", mimetype='text/event-stream')
 
 # =========================================================================
 # APPLICATION STATE & AGGREGATE METRICS

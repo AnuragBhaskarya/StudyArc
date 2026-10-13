@@ -163,62 +163,55 @@
     await syncWithBackend();
   }
 
-  let timerEventSource = null;
-  let sseReconnectTimer = null;
+  let liveTimerPollTimer = null;
+  let isTimerPolling = false;
+  let lastLocalActionTime = 0;
 
-  function initRealtimeTimerSync() {
-    if (!state.authenticated) {
-      if (timerEventSource) {
-        timerEventSource.close();
-        timerEventSource = null;
-      }
-      return;
-    }
-
-    if (timerEventSource && timerEventSource.readyState !== EventSource.CLOSED) {
-      return;
-    }
-
+  async function pollLiveTimer() {
+    if (!state.authenticated || isTimerPolling) return;
+    isTimerPolling = true;
     try {
-      if (timerEventSource) {
-        timerEventSource.close();
-      }
-
-      timerEventSource = new EventSource('/api/timer/stream');
-
-      timerEventSource.addEventListener('timer_state', (e) => {
-        try {
-          const serverTimer = JSON.parse(e.data);
-          if (serverTimer) {
-            applyLiveServerTimer(serverTimer);
-          }
-        } catch (err) {
-          console.warn('StudyArc: Realtime SSE parse error:', err);
-        }
+      const res = await fetch('/api/timer/live', {
+        headers: { 'Cache-Control': 'no-cache' }
       });
-
-      timerEventSource.onerror = () => {
-        if (timerEventSource) {
-          timerEventSource.close();
-          timerEventSource = null;
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success && data.timer) {
+          applyLiveServerTimer(data.timer);
         }
-        // Resilient auto-reconnect after 4 seconds
-        if (!sseReconnectTimer) {
-          sseReconnectTimer = setTimeout(() => {
-            sseReconnectTimer = null;
-            if (state.authenticated) {
-              initRealtimeTimerSync();
-            }
-          }, 4000);
-        }
-      };
+      }
     } catch (err) {
-      console.warn('StudyArc: EventSource setup error:', err);
+      // Non-intrusive network retry
+    } finally {
+      isTimerPolling = false;
     }
   }
 
-  function applyLiveServerTimer(serverTimer) {
+  function initRealtimeTimerSync() {
+    if (liveTimerPollTimer) {
+      clearInterval(liveTimerPollTimer);
+      liveTimerPollTimer = null;
+    }
+    if (!state.authenticated) return;
+
+    // Immediate initial sync
+    pollLiveTimer();
+
+    // Regular heartbeat: 1500ms when tab is visible
+    liveTimerPollTimer = setInterval(() => {
+      if (document.visibilityState === 'visible' && state.authenticated) {
+        pollLiveTimer();
+      }
+    }, 1500);
+  }
+
+  function applyLiveServerTimer(serverTimer, isDirectResponse = false) {
     if (!serverTimer) return;
+
+    // Guard against race conditions right after local click
+    if (!isDirectResponse && (Date.now() - lastLocalActionTime < 1000)) {
+      return;
+    }
 
     // 1. Immediately register & reflect active topic/task across devices without reloading!
     const incomingTask = serverTimer.activeTaskName || null;
@@ -252,7 +245,7 @@
       const now = Date.now();
       if (serverTimer.startedAt) {
         const elapsed = (now - Number(serverTimer.startedAt)) / 1000;
-        const baseRem = serverTimer.baseRemainingSeconds != null ? serverTimer.baseRemainingSeconds : serverTimer.remainingSeconds;
+        const baseRem = serverTimer.remainingSeconds;
         const currentRemaining = Math.max(0, baseRem - elapsed);
 
         // If local is smoothly running within 2 seconds, avoid jitter
@@ -305,8 +298,9 @@
 
   async function syncTimerAction(action, extraPayload = {}) {
     if (!state.authenticated) return;
+    lastLocalActionTime = Date.now();
     try {
-      await fetch('/api/timer/action', {
+      const res = await fetch('/api/timer/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -317,10 +311,29 @@
           ...extraPayload
         })
       });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success && data.timer) {
+          applyLiveServerTimer(data.timer, true);
+        }
+      }
     } catch (err) {
       console.warn('StudyArc: Persistent timer sync warning:', err);
     }
   }
+
+  // Instant zero-latency sync when switching back to tab
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && state.authenticated) {
+      pollLiveTimer();
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    if (state.authenticated) {
+      pollLiveTimer();
+    }
+  });
 
   function updateAuthUI() {
     const btnHeaderAuth = document.getElementById('btn-header-auth');
@@ -572,9 +585,9 @@
 
   async function handleLogout() {
     if (!confirm('Are you sure you want to sign out of StudyArc?')) return;
-    if (timerEventSource) {
-      timerEventSource.close();
-      timerEventSource = null;
+    if (liveTimerPollTimer) {
+      clearInterval(liveTimerPollTimer);
+      liveTimerPollTimer = null;
     }
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
