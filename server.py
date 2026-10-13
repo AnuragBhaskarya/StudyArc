@@ -7,12 +7,12 @@ import mimetypes
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import Flask, jsonify, request, send_from_directory, session, Response
-from flask_sock import Sock
+from flask_socketio import SocketIO, emit, join_room, disconnect
 from werkzeug.security import generate_password_hash, check_password_hash
 import database
 
 app = Flask(__name__, static_folder='.', static_url_path='')
-sock = Sock(app)
+socketio = SocketIO(app, cors_allowed_origins='*', async_mode='eventlet', ping_timeout=30, ping_interval=10)
 
 # Secret key configuration for cryptographic session signing
 app.secret_key = os.environ.get('SECRET_KEY', 'studyarc-production-super-secret-key-change-me')
@@ -192,35 +192,15 @@ _timer_lock = threading.Lock()
 _timer_condition = threading.Condition(_timer_lock)
 USER_TIMER_HOT_CACHE = {}
 
-# Active WebSocket connections per user: user_id -> set of WebSocket objects
-_ws_lock = threading.Lock()
-_active_user_sockets = {}
-
 def broadcast_timer_state(user_id, state):
     """
-    Instantly pushes timer updates to all connected WebSockets for user_id in <0.5ms.
+    Instantly pushes timer updates to all connected Socket.IO clients in user's room.
+    Socket.IO handles dead connection cleanup automatically.
     """
-    with _ws_lock:
-        clients = list(_active_user_sockets.get(user_id, []))
-    if not clients:
-        return
-
-    payload = json.dumps({
-        'type': 'TIMER_UPDATE',
+    socketio.emit('timer_update', {
         'timer': state,
         'serverTime': int(time.time() * 1000)
-    })
-    dead = []
-    for ws in clients:
-        try:
-            ws.send(payload)
-        except Exception:
-            dead.append(ws)
-    if dead:
-        with _ws_lock:
-            if user_id in _active_user_sockets:
-                for ws in dead:
-                    _active_user_sockets[user_id].discard(ws)
+    }, room=str(user_id))
 
 def get_hot_timer_state(user_id):
     """
@@ -379,71 +359,61 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
 
     return new_state
 
-@sock.route('/ws/timer')
-def ws_timer_endpoint(ws):
-    """
-    Persistent bi-directional WebSocket connection for instant 0ms cross-device timer sync.
-    Handles PING/PONG (RTT clock offset sync), ACTION dispatch, and real-time state broadcasts.
-    """
+# =========================================================================
+# SOCKET.IO EVENT HANDLERS — Industry-standard real-time engine
+# Supports WebSocket + automatic HTTP long-polling fallback
+# Works with gunicorn + eventlet on Render, Heroku, Railway, etc.
+# =========================================================================
+
+@socketio.on('connect')
+def sio_connect():
     user_id = session.get('user_id')
     if not user_id:
-        ws.close(1008, 'Unauthorized')
+        disconnect()
+        return False
+    # Join a room named after the user_id for targeted broadcasting
+    join_room(str(user_id))
+    # Send initial full state immediately upon connection
+    initial_state = get_hot_timer_state(user_id)
+    emit('timer_init', {
+        'timer': initial_state,
+        'serverTime': int(time.time() * 1000)
+    })
+
+@socketio.on('ping_server')
+def sio_ping(data):
+    """Clock offset measurement for anchor time calculations."""
+    emit('pong_server', {
+        'clientTime': data.get('clientTime') if data else None,
+        'serverTime': int(time.time() * 1000)
+    })
+
+@socketio.on('get_state')
+def sio_get_state():
+    user_id = session.get('user_id')
+    if not user_id:
         return
+    emit('timer_update', {
+        'timer': get_hot_timer_state(user_id),
+        'serverTime': int(time.time() * 1000)
+    })
 
-    with _ws_lock:
-        if user_id not in _active_user_sockets:
-            _active_user_sockets[user_id] = set()
-        _active_user_sockets[user_id].add(ws)
-
-    try:
-        # Send initial full state and current server time immediately upon connection
-        initial_state = get_hot_timer_state(user_id)
-        ws.send(json.dumps({
-            'type': 'TIMER_INIT',
-            'timer': initial_state,
-            'serverTime': int(time.time() * 1000)
-        }))
-
-        while True:
-            data = ws.receive()
-            if data is None:
-                break
-            try:
-                msg = json.loads(data)
-            except Exception:
-                continue
-
-            msg_type = msg.get('type')
-            if msg_type == 'PING':
-                ws.send(json.dumps({
-                    'type': 'PONG',
-                    'clientTime': msg.get('clientTime'),
-                    'serverTime': int(time.time() * 1000)
-                }))
-            elif msg_type == 'GET_STATE':
-                ws.send(json.dumps({
-                    'type': 'TIMER_UPDATE',
-                    'timer': get_hot_timer_state(user_id),
-                    'serverTime': int(time.time() * 1000)
-                }))
-            elif msg_type == 'ACTION':
-                action = msg.get('action')
-                if action:
-                    trigger_timer_update(
-                        user_id,
-                        action,
-                        target_seconds=msg.get('target_seconds') or msg.get('targetSeconds'),
-                        active_task_name=msg.get('active_task_name') or msg.get('activeTaskName'),
-                        remaining_seconds=msg.get('remaining_seconds') or msg.get('remainingSeconds')
-                    )
-    except Exception as e:
-        pass
-    finally:
-        with _ws_lock:
-            if user_id in _active_user_sockets:
-                _active_user_sockets[user_id].discard(ws)
-                if not _active_user_sockets[user_id]:
-                    del _active_user_sockets[user_id]
+@socketio.on('timer_action')
+def sio_timer_action(data):
+    """Handles all timer actions: start, pause, resume, reset, adjust, complete."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return
+    action = data.get('action') if data else None
+    if not action:
+        return
+    trigger_timer_update(
+        user_id,
+        action,
+        target_seconds=data.get('target_seconds') or data.get('targetSeconds'),
+        active_task_name=data.get('active_task_name') or data.get('activeTaskName'),
+        remaining_seconds=data.get('remaining_seconds') or data.get('remainingSeconds')
+    )
 
 @app.route('/api/timer/live', methods=['GET'])
 @app.route('/api/timer/state', methods=['GET'])
@@ -672,5 +642,5 @@ except Exception as e:
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     engine = 'PostgreSQL' if database.is_postgres() else 'SQLite'
-    print(f"StudyArc {engine} server running at http://0.0.0.0:{port}")
-    app.run(host='0.0.0.0', port=port, debug=False)
+    print(f"StudyArc {engine} + Socket.IO server running at http://0.0.0.0:{port}")
+    socketio.run(app, host='0.0.0.0', port=port, debug=False)

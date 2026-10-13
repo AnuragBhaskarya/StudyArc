@@ -181,15 +181,13 @@
 
   // =========================================================================
   // =========================================================================
-  // REAL-TIME MULTI-DEVICE WEBSOCKET SYNCHRONIZATION ENGINE v3
-  // Architecture: Persistent WebSockets, Monotonic Sequence Deduplication,
-  // Server-Authoritative Anchor Clocks, RTT Clock Offset Sync, Auto-Reconnect.
+  // REAL-TIME MULTI-DEVICE SOCKET.IO SYNCHRONIZATION ENGINE v4
+  // Architecture: Socket.IO (WebSocket + automatic HTTP long-polling fallback),
+  // Monotonic Sequence Deduplication, Server-Authoritative Anchor Clocks,
+  // RTT Clock Offset Sync. Works on Render, Heroku, Railway, iOS Safari, etc.
   // =========================================================================
 
-  let timerSocket = null;
-  let socketReconnectTimer = null;
-  let socketPingTimer = null;
-  let reconnectAttempts = 0;
+  let sioSocket = null;
   let serverClockOffset = 0;        // (serverTime - clientWallClock) in ms
   let lastAppliedSequence = 0;      // Monotonic server sequence counter
 
@@ -216,112 +214,98 @@
     }
   }
 
-  // 2. Persistent full-duplex WebSocket connection
+  // 2. Socket.IO persistent connection with automatic WebSocket + long-polling fallback
   function connectTimerSocket() {
     if (!state.authenticated) return;
-    if (timerSocket && (timerSocket.readyState === WebSocket.OPEN || timerSocket.readyState === WebSocket.CONNECTING)) {
-      return;
+    if (sioSocket && sioSocket.connected) return;
+
+    // Disconnect stale instance if any
+    if (sioSocket) {
+      try { sioSocket.disconnect(); } catch (_) {}
+      sioSocket = null;
     }
 
-    clearTimeout(socketReconnectTimer);
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws/timer`;
+    sioSocket = io({
+      // Auto-detect URL from current page
+      path: '/socket.io',
+      transports: ['websocket', 'polling'],  // Try WebSocket first, fallback to polling
+      reconnection: true,
+      reconnectionDelay: 300,
+      reconnectionDelayMax: 3000,
+      reconnectionAttempts: Infinity,
+      timeout: 10000,
+      withCredentials: true
+    });
 
-    try {
-      timerSocket = new WebSocket(wsUrl);
-    } catch (e) {
-      scheduleSocketReconnect();
-      return;
-    }
-
-    timerSocket.onopen = () => {
-      reconnectAttempts = 0;
-      // Immediately measure clock offset & RTT
+    sioSocket.on('connect', () => {
+      console.log('StudyArc: Socket.IO connected via', sioSocket.io.engine.transport.name);
+      // Measure clock offset immediately
       sendSocketPing();
-      // Regular heartbeat ping every 8s to keep mobile sockets alive
-      clearInterval(socketPingTimer);
-      socketPingTimer = setInterval(sendSocketPing, 8000);
-    };
 
-    timerSocket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        handleSocketMessage(data);
-      } catch (err) {
-        console.warn('StudyArc: WS message error:', err);
-      }
-    };
+      // Socket.IO upgrades polling→websocket automatically, log it
+      sioSocket.io.engine.on('upgrade', (transport) => {
+        console.log('StudyArc: Transport upgraded to', transport.name);
+      });
+    });
 
-    timerSocket.onclose = () => {
-      clearInterval(socketPingTimer);
-      timerSocket = null;
-      scheduleSocketReconnect();
-    };
-
-    timerSocket.onerror = () => {
-      try { timerSocket.close(); } catch (_) {}
-    };
-  }
-
-  function scheduleSocketReconnect() {
-    if (!state.authenticated) return;
-    clearTimeout(socketReconnectTimer);
-    reconnectAttempts++;
-    // Exponential backoff: 300ms, 600ms, 1200ms, max 3000ms with jitter
-    const delay = Math.min(3000, 300 * Math.pow(1.5, Math.min(reconnectAttempts, 6))) + Math.floor(Math.random() * 150);
-    socketReconnectTimer = setTimeout(() => {
-      connectTimerSocket();
-    }, delay);
-  }
-
-  function sendSocketPing() {
-    if (timerSocket && timerSocket.readyState === WebSocket.OPEN) {
-      try {
-        timerSocket.send(JSON.stringify({
-          type: 'PING',
-          clientTime: Date.now()
-        }));
-      } catch (_) {}
-    }
-  }
-
-  function handleSocketMessage(data) {
-    if (!data) return;
-
-    if (data.type === 'PONG') {
-      if (data.clientTime && data.serverTime) {
-        const now = Date.now();
-        const rtt = Math.max(1, now - data.clientTime);
-        const measuredOffset = data.serverTime - (data.clientTime + rtt / 2);
-        serverClockOffset = (serverClockOffset === 0) 
-          ? measuredOffset 
-          : (0.75 * serverClockOffset + 0.25 * measuredOffset);
-      }
-      return;
-    }
-
-    if (data.type === 'TIMER_INIT' || data.type === 'TIMER_UPDATE') {
-      if (data.serverTime) {
-        const now = Date.now();
-        const measuredOffset = data.serverTime - now;
+    // Server sends initial full state on connect
+    sioSocket.on('timer_init', (data) => {
+      if (data && data.serverTime) {
+        const measuredOffset = data.serverTime - Date.now();
         if (serverClockOffset === 0) serverClockOffset = measuredOffset;
       }
-      if (data.timer) {
+      if (data && data.timer) {
         applyLiveServerTimer(data.timer, false);
         broadcastLocalTimer(data.timer);
       }
+    });
+
+    // Real-time timer updates from any device
+    sioSocket.on('timer_update', (data) => {
+      if (data && data.serverTime) {
+        const measuredOffset = data.serverTime - Date.now();
+        if (serverClockOffset === 0) serverClockOffset = measuredOffset;
+      }
+      if (data && data.timer) {
+        applyLiveServerTimer(data.timer, false);
+        broadcastLocalTimer(data.timer);
+      }
+    });
+
+    // Clock offset measurement response
+    sioSocket.on('pong_server', (data) => {
+      if (data && data.clientTime && data.serverTime) {
+        const now = Date.now();
+        const rtt = Math.max(1, now - data.clientTime);
+        const measuredOffset = data.serverTime - (data.clientTime + rtt / 2);
+        serverClockOffset = (serverClockOffset === 0)
+          ? measuredOffset
+          : (0.75 * serverClockOffset + 0.25 * measuredOffset);
+      }
+    });
+
+    sioSocket.on('disconnect', (reason) => {
+      console.log('StudyArc: Socket.IO disconnected:', reason);
+    });
+
+    sioSocket.on('connect_error', (err) => {
+      console.warn('StudyArc: Socket.IO connect error:', err.message);
+    });
+  }
+
+  function sendSocketPing() {
+    if (sioSocket && sioSocket.connected) {
+      sioSocket.emit('ping_server', { clientTime: Date.now() });
     }
   }
 
   function handleTabAwakeOrFocus() {
     if (!state.authenticated) return;
-    if (!timerSocket || timerSocket.readyState === WebSocket.CLOSED || timerSocket.readyState === WebSocket.CLOSING) {
+    if (!sioSocket || !sioSocket.connected) {
       connectTimerSocket();
-    } else if (timerSocket.readyState === WebSocket.OPEN) {
+    } else {
       sendSocketPing();
-      try {
-        timerSocket.send(JSON.stringify({ type: 'GET_STATE' }));
-      } catch (_) {}
+      sioSocket.emit('get_state');
     }
     recalculateRemainingSeconds();
     renderTimer();
@@ -459,7 +443,6 @@
     if (!state.authenticated) return;
 
     const payload = {
-      type: 'ACTION',
       action,
       target_seconds: state.timer.targetSeconds,
       remaining_seconds: Math.round(state.timer.remainingSeconds),
@@ -477,14 +460,10 @@
       sequence: lastAppliedSequence + 1
     });
 
-    // 1. Instant WebSocket push (<1ms)
-    if (timerSocket && timerSocket.readyState === WebSocket.OPEN) {
-      try {
-        timerSocket.send(JSON.stringify(payload));
-        return;
-      } catch (err) {
-        console.warn('StudyArc: WS send failed, falling back to HTTP:', err);
-      }
+    // 1. Instant Socket.IO emit (<1ms)
+    if (sioSocket && sioSocket.connected) {
+      sioSocket.emit('timer_action', payload);
+      return;
     }
 
     // 2. HTTP POST fallback if socket is reconnecting
