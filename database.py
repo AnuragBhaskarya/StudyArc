@@ -235,6 +235,43 @@ def add_session(subject_name, duration_minutes, date_str=None, timestamp_ms=None
         'timeRange': f"{start_time} – {end_time}"
     }
 
+def delete_session(session_id):
+    """
+    Deletes a session by ID (accepts integer or string like 'sess_123').
+    Returns details of the deleted session if successful, or None if not found.
+    """
+    if isinstance(session_id, str) and session_id.startswith('sess_'):
+        session_id = session_id[5:]
+    try:
+        session_id = int(session_id)
+    except (ValueError, TypeError):
+        return None
+
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, subject_id, subject_name, duration_minutes, date, timestamp
+            FROM sessions
+            WHERE id = ?
+        """, (session_id,))
+        row = cursor.fetchone()
+        if not row:
+            return None
+
+        deleted = {
+            'id': f"sess_{row['id']}",
+            'numeric_id': row['id'],
+            'subject_id': row['subject_id'],
+            'subject_name': row['subject_name'],
+            'duration_minutes': row['duration_minutes'],
+            'date': row['date'],
+            'timestamp': row['timestamp']
+        }
+
+        cursor.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
+        conn.commit()
+        return deleted
+
 def get_sessions(limit=100):
     with get_connection() as conn:
         cursor = conn.cursor()

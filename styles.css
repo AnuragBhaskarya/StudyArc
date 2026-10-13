@@ -1543,6 +1543,69 @@ input:checked + .switch-slider:before {
   border-radius: var(--radius-sm);
 }
 
+/* Delete Session Button (Themed Trash Icon) */
+.day-session-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin-left: 0.15rem;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.day-session-card:hover .day-session-delete-btn {
+  opacity: 0.95;
+}
+
+.day-session-delete-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), stroke 160ms ease;
+}
+
+.day-session-delete-btn:hover {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.32);
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+  opacity: 1;
+}
+
+.day-session-delete-btn:hover svg {
+  transform: rotate(-6deg) scale(1.05);
+}
+
+.day-session-delete-btn:active {
+  transform: scale(0.92);
+}
+
+.day-session-delete-btn:focus-visible {
+  border-color: #ef4444;
+  outline: 2px solid rgba(239, 68, 68, 0.4);
+  opacity: 1;
+}
+
+.day-session-card.is-deleting {
+  opacity: 0.35;
+  transform: scale(0.97) translateX(-4px);
+  pointer-events: none;
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.06);
+  transition: all 240ms ease;
+}
+
 /* Empty State */
 .day-empty-state {
   display: flex;

@@ -116,6 +116,7 @@ The backend provides a clean RESTful interface for all timer, session, and heatm
 | `GET` | `/api/state` | Returns entire application state (subjects, recent sessions, daily activity map, and stats). |
 | `GET` | `/api/day/<YYYY-MM-DD>` | Returns full breakdown for a specific date (4 summary pills + chronological session array). |
 | `POST` | `/api/sessions` | Logs a newly completed focus block. Recalculates streaks and stats in real-time. |
+| `DELETE` | `/api/sessions/<id>` | Permanently deletes a focus session by ID and updates stats, heatmap, and day breakdown. |
 | `GET` | `/api/subjects` | Retrieves all subjects with aggregate hours and session counts. |
 | `POST` | `/api/subjects` | Creates a new subject with custom name and hex color. |
 | `GET` | `/api/activity` | Returns date-to-minutes key-value dictionary for the heatmap. |

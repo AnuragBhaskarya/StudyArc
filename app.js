@@ -1745,7 +1745,7 @@
         `;
       } else {
         listEl.innerHTML = dayData.sessions.map(s => `
-          <div class="day-session-card">
+          <div class="day-session-card" data-session-id="${escapeHtml(s.id)}">
             <div class="day-session-left">
               <span class="day-session-dot" style="background-color: ${s.color || '#79D99B'}; color: ${s.color || '#79D99B'};"></span>
               <div class="day-session-info">
@@ -1756,6 +1756,14 @@
             <div class="day-session-right">
               <span class="day-session-duration">${s.durationMinutes} mins</span>
               <span class="day-session-xp">+${s.xp || s.durationMinutes} XP</span>
+              <button class="day-session-delete-btn" data-session-id="${escapeHtml(s.id)}" data-date="${escapeHtml(dayData.date)}" title="Delete session" aria-label="Delete session">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </button>
             </div>
           </div>
         `).join('');
@@ -1768,6 +1776,82 @@
     if (dialog && dialog.open) {
       dialog.close();
     }
+  }
+
+  async function deleteSession(sessionId, dateStr) {
+    if (!sessionId) return;
+
+    // Visual feedback on the card being deleted
+    const cardEl = document.querySelector(`.day-session-card[data-session-id="${sessionId}"]`);
+    if (cardEl) {
+      cardEl.classList.add('is-deleting');
+    }
+
+    let deletedFromBackend = false;
+    let backendPayload = null;
+
+    try {
+      const res = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (res.ok) {
+        backendPayload = await res.json();
+        if (backendPayload.success) {
+          deletedFromBackend = true;
+          if (backendPayload.stats) {
+            state.streak = backendPayload.stats.streak || 0;
+            state.xp = backendPayload.stats.xp || 0;
+            state.totalFocusSeconds = backendPayload.stats.totalFocusSeconds || 0;
+          }
+          if (backendPayload.dayActivity) {
+            state.dayActivity = backendPayload.dayActivity;
+          }
+          if (backendPayload.subjects) {
+            state.subjects = backendPayload.subjects;
+          }
+          if (backendPayload.sessions) {
+            state.sessions = backendPayload.sessions;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('StudyArc: SQLite delete request error:', err);
+    }
+
+    // Offline / fallback sync if backend was unavailable or returned non-200
+    if (!deletedFromBackend) {
+      const idx = (state.sessions || []).findIndex(s =>
+        s.id === sessionId ||
+        String(s.id) === String(sessionId) ||
+        s.id === ('sess_' + sessionId) ||
+        ('sess_' + s.id) === sessionId
+      );
+      let duration = 0;
+      if (idx !== -1) {
+        duration = state.sessions[idx].durationMinutes || state.sessions[idx].duration_minutes || 0;
+        state.sessions.splice(idx, 1);
+      }
+      if (dateStr && state.dayActivity && state.dayActivity[dateStr] !== undefined) {
+        state.dayActivity[dateStr] = Math.max(0, state.dayActivity[dateStr] - duration);
+        if (state.dayActivity[dateStr] === 0) {
+          delete state.dayActivity[dateStr];
+        }
+      }
+      state.xp = Math.max(0, (state.xp || 0) - duration);
+      state.totalFocusSeconds = Math.max(0, (state.totalFocusSeconds || 0) - duration * 60);
+      updateStreak();
+    }
+
+    saveState();
+    renderAll();
+
+    // Re-render the day dialog so timeline and the 4 highlight pills update immediately
+    if (dateStr) {
+      await openDayDialog(dateStr);
+    }
+
+    showToast('Session deleted');
   }
 
   function formatTime(dateObj) {
@@ -1847,6 +1931,24 @@
           e.preventDefault();
           openDayDialog(getLocalDateString());
         }
+      });
+    }
+
+    // Day Sessions List: Delete session action via event delegation
+    const daySessionsList = document.getElementById('day-sessions-list');
+    if (daySessionsList) {
+      daySessionsList.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.day-session-delete-btn');
+        if (!btn || btn.disabled) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        const sessionId = btn.getAttribute('data-session-id');
+        const dateStr = btn.getAttribute('data-date');
+        if (!sessionId) return;
+
+        btn.disabled = true;
+        await deleteSession(sessionId, dateStr);
       });
     }
 

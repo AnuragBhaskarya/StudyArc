@@ -55,10 +55,17 @@ def handle_subjects():
     subj = database.add_or_get_subject(name, color)
     return jsonify({'success': True, 'subject': subj, 'subjects': database.get_subjects()})
 
-@app.route('/api/sessions', methods=['GET', 'POST'])
+@app.route('/api/sessions', methods=['GET', 'POST', 'DELETE'])
 def handle_sessions():
     if request.method == 'GET':
         return jsonify(database.get_sessions())
+        
+    if request.method == 'DELETE':
+        data = request.get_json(force=True, silent=True) or {}
+        session_id = data.get('id') or data.get('session_id') or request.args.get('id')
+        if not session_id:
+            return jsonify({'success': False, 'error': 'Session ID is required'}), 400
+        return delete_session_endpoint(session_id)
         
     data = request.get_json(force=True, silent=True) or {}
     subject_name = data.get('subject_name') or data.get('subject') or 'Focus Session'
@@ -79,6 +86,26 @@ def handle_sessions():
         'stats': database.get_stats(),
         'dayActivity': database.get_daily_activity(),
         'subjects': database.get_subjects()
+    })
+
+@app.route('/api/sessions/<session_id>', methods=['DELETE', 'POST'])
+@app.route('/api/sessions/<session_id>/delete', methods=['POST'])
+def delete_session_endpoint(session_id):
+    deleted = database.delete_session(session_id)
+    if not deleted:
+        return jsonify({'success': False, 'error': 'Session not found'}), 404
+        
+    date_str = deleted.get('date')
+    day_details = database.get_day_details(date_str) if date_str else None
+    
+    return jsonify({
+        'success': True,
+        'deletedSession': deleted,
+        'dayDetails': day_details,
+        'stats': database.get_stats(),
+        'dayActivity': database.get_daily_activity(),
+        'subjects': database.get_subjects(),
+        'sessions': database.get_sessions()
     })
 
 @app.route('/api/day/<date_str>', methods=['GET'])
