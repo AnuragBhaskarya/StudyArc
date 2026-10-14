@@ -2685,22 +2685,7 @@
     }
 
     // Settings actions
-    const focusInput = document.getElementById('setting-focus-mins');
     const soundToggle = document.getElementById('setting-sound-enabled');
-
-    if (focusInput) {
-      focusInput.value = Math.round(state.timer.targetSeconds / 60);
-      focusInput.addEventListener('change', () => {
-        const mins = Math.max(1, Math.min(180, parseInt(focusInput.value, 10) || 60));
-        focusInput.value = mins;
-        state.timer.targetSeconds = mins * 60;
-        if (state.timer.status === 'idle') {
-          state.timer.remainingSeconds = mins * 60;
-        }
-        saveState();
-        renderTimer();
-      });
-    }
 
     if (soundToggle) {
       soundToggle.checked = state.soundEnabled;
