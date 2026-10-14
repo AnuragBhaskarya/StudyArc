@@ -206,8 +206,8 @@ def init_db():
                 CREATE TABLE IF NOT EXISTS user_timer_state (
                     user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
                     status VARCHAR(32) NOT NULL DEFAULT 'idle',
-                    target_seconds INTEGER NOT NULL DEFAULT 3600,
-                    remaining_seconds INTEGER NOT NULL DEFAULT 3600,
+                    target_seconds INTEGER NOT NULL DEFAULT 5400,
+                    remaining_seconds INTEGER NOT NULL DEFAULT 5400,
                     active_task_name VARCHAR(255),
                     started_at BIGINT,
                     updated_at BIGINT NOT NULL,
@@ -280,8 +280,8 @@ def init_db():
                 CREATE TABLE IF NOT EXISTS user_timer_state (
                     user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
                     status TEXT NOT NULL DEFAULT 'idle',
-                    target_seconds INTEGER NOT NULL DEFAULT 3600,
-                    remaining_seconds INTEGER NOT NULL DEFAULT 3600,
+                    target_seconds INTEGER NOT NULL DEFAULT 5400,
+                    remaining_seconds INTEGER NOT NULL DEFAULT 5400,
                     active_task_name TEXT,
                     started_at INTEGER,
                     updated_at INTEGER NOT NULL,
@@ -355,7 +355,7 @@ def create_user(username, password_hash):
         # Initialize user timer state
         ctx.execute("""
             INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, updated_at)
-            VALUES (?, 'idle', 3600, 3600, ?)
+            VALUES (?, 'idle', 5400, 5400, ?)
         """, (user_id, now_ms))
 
         # Seed starter focus subjects for the user
@@ -407,12 +407,12 @@ def get_timer_state(user_id):
         if not row:
             ctx.execute("""
                 INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, updated_at, sequence)
-                VALUES (?, 'idle', 3600, 3600, ?, 1)
+                VALUES (?, 'idle', 5400, 5400, ?, 1)
             """, (user_id, now_ms))
             return {
                 'status': 'idle',
-                'targetSeconds': 3600,
-                'remainingSeconds': 3600,
+                'targetSeconds': 5400,
+                'remainingSeconds': 5400,
                 'activeTaskName': None,
                 'startedAt': None,
                 'hasCompleted': False,
@@ -457,7 +457,7 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
     # bypass redundant SELECT query over the network and directly persist UPSERT!
     if status is not None and sequence is not None:
         new_status = status
-        new_target = int(target_seconds) if target_seconds is not None else 3600
+        new_target = int(target_seconds) if target_seconds is not None else 5400
         new_remaining = int(remaining_seconds) if remaining_seconds is not None else new_target
         new_task = active_task_name
         new_started_at = started_at
@@ -486,11 +486,11 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
         elif action == 'pause':
             if current['status'] == 'running' and current.get('startedAt'):
                 elapsed = (now_ms - int(current['startedAt'])) / 1000.0
-                new_remaining = max(0, int(current.get('remainingSeconds', 3600) - elapsed))
+                new_remaining = max(0, int(current.get('remainingSeconds', 5400) - elapsed))
             elif remaining_seconds is not None:
                 new_remaining = int(remaining_seconds)
             else:
-                new_remaining = int(current.get('remainingSeconds', 3600))
+                new_remaining = int(current.get('remainingSeconds', 5400))
             new_status = 'paused'
             new_started_at = None
 
@@ -499,13 +499,12 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
             if remaining_seconds is not None:
                 new_remaining = int(remaining_seconds)
             else:
-                new_remaining = current.get('remainingSeconds', 3600)
+                new_remaining = current.get('remainingSeconds', 5400)
             new_started_at = now_ms
 
         elif action == 'reset':
             new_status = 'idle'
-            if target_seconds:
-                new_target = int(target_seconds)
+            new_target = int(target_seconds) if target_seconds else 5400
             new_remaining = new_target
             new_started_at = None
             new_task = None
@@ -519,6 +518,7 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
 
         elif action == 'complete':
             new_status = 'idle'
+            new_target = int(target_seconds) if target_seconds else 5400
             new_remaining = new_target
             new_started_at = None
             new_task = None
@@ -910,10 +910,10 @@ def get_full_state(user_id):
             }
 
     # 1. Process Timer State
-    timer_raw = data.get('timer') or {'status': 'idle', 'target_seconds': 3600, 'remaining_seconds': 3600}
+    timer_raw = data.get('timer') or {'status': 'idle', 'target_seconds': 5400, 'remaining_seconds': 5400}
     status = timer_raw.get('status', 'idle')
-    target_secs = int(timer_raw.get('target_seconds', 3600))
-    remaining_secs = int(timer_raw.get('remaining_seconds', 3600))
+    target_secs = int(timer_raw.get('target_seconds', 5400))
+    remaining_secs = int(timer_raw.get('remaining_seconds', 5400))
     started_at = timer_raw.get('started_at')
     has_completed = False
 
@@ -1011,4 +1011,4 @@ def reset_database(user_id):
                 (user_id, s_name, s_color)
             )
         # Reset timer
-        update_timer_state(user_id, 'reset', target_seconds=3600)
+        update_timer_state(user_id, 'reset', target_seconds=5400)

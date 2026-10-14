@@ -76,9 +76,9 @@
               <!-- Dark circular track -->
               <circle class="timer-track" id="timer-track" cx="210" cy="210" r="172"></circle>
               <!-- Mint green progress arc (Circumference = 2 * PI * 172 ≈ 1080.7) -->
-              <circle class="timer-arc" id="timer-arc" cx="210" cy="210" r="172" stroke-dasharray="1080.7" stroke-dashoffset="720.5" transform="rotate(-90 210 210)"></circle>
+              <circle class="timer-arc" id="timer-arc" cx="210" cy="210" r="172" stroke-dasharray="1080.7" stroke-dashoffset="540.35" transform="rotate(-90 210 210)"></circle>
               <!-- Interactive Draggable Bead -->
-              <g class="timer-bead-group" id="timer-bead-group" transform="translate(358.95, 296)">
+              <g class="timer-bead-group" id="timer-bead-group" transform="translate(210, 382)">
                 <!-- Touch target hit area for effortless mobile dragging -->
                 <circle class="bead-touch-target" cx="0" cy="0" r="26"></circle>
                 <!-- Glowing mint halo aura -->
@@ -97,7 +97,7 @@
                   </span>
                 </span>
                 <span class="timer-min-sec" id="timer-min-sec">
-                  <span class="timer-num" id="timer-mins-val">00</span><span class="timer-colon">:</span><span class="timer-num" id="timer-secs-val">00</span>
+                  <span class="timer-num" id="timer-mins-val">30</span><span class="timer-colon">:</span><span class="timer-num" id="timer-secs-val">00</span>
                 </span>
               </div>
               <div class="timer-state-dot" id="timer-state-dot" aria-hidden="true"></div>
@@ -227,9 +227,9 @@
             <div class="setting-field">
               <div class="setting-meta">
                 <span class="setting-label">Default Timer Duration</span>
-                <span class="setting-hint">Target focus time (1 to 180 minutes, default 60m)</span>
+                <span class="setting-hint">Target focus time (1 to 180 minutes, default 90m)</span>
               </div>
-              <input type="number" id="setting-focus-mins" class="num-input" value="60" min="1" max="180">
+              <input type="number" id="setting-focus-mins" class="num-input" value="90" min="1" max="180">
             </div>
 
             <div class="setting-field">
@@ -576,6 +576,6 @@
 
   <!-- JAVASCRIPT LOGIC -->
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
-  <script src="app.js?v=4.2"></script>
+  <script src="app.js?v=4.3"></script>
 </body>
 </html>

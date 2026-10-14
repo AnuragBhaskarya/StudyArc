@@ -271,8 +271,8 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
     current = get_hot_timer_state(user_id)
 
     new_status = current.get('status', 'idle')
-    new_target = int(target_seconds) if target_seconds is not None else int(current.get('targetSeconds', 3600))
-    new_remaining = int(current.get('remainingSeconds', 3600))
+    new_target = int(target_seconds) if target_seconds is not None else int(current.get('targetSeconds', 5400))
+    new_remaining = int(current.get('remainingSeconds', 5400))
     new_task = active_task_name if active_task_name is not None else current.get('activeTaskName')
     new_started_at = current.get('startedAt')
     current_seq = int(current.get('sequence') or 0)
@@ -293,11 +293,11 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
     elif action == 'pause':
         if current.get('status') == 'running' and current.get('startedAt'):
             elapsed = (now_ms - int(current['startedAt'])) / 1000.0
-            new_remaining = max(0, int(current.get('remainingSeconds', 3600) - elapsed))
+            new_remaining = max(0, int(current.get('remainingSeconds', 5400) - elapsed))
         elif remaining_seconds is not None:
             new_remaining = int(remaining_seconds)
         else:
-            new_remaining = int(current.get('remainingSeconds', 3600))
+            new_remaining = int(current.get('remainingSeconds', 5400))
         new_status = 'paused'
         new_started_at = None
 
@@ -306,13 +306,12 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
         if remaining_seconds is not None:
             new_remaining = int(remaining_seconds)
         else:
-            new_remaining = current.get('remainingSeconds', 3600)
+            new_remaining = current.get('remainingSeconds', 5400)
         new_started_at = now_ms
 
     elif action == 'reset':
         new_status = 'idle'
-        if target_seconds:
-            new_target = int(target_seconds)
+        new_target = int(target_seconds) if target_seconds else 5400
         new_remaining = new_target
         new_started_at = None
         new_task = None
@@ -326,6 +325,7 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
 
     elif action == 'complete':
         new_status = 'idle'
+        new_target = int(target_seconds) if target_seconds else 5400
         new_remaining = new_target
         new_started_at = None
         new_task = None
@@ -631,7 +631,7 @@ def get_stats(user_id):
 @auth_required
 def reset_data(user_id):
     database.reset_database(user_id)
-    timer_state = trigger_timer_update(user_id, 'reset')
+    timer_state = trigger_timer_update(user_id, 'reset', target_seconds=5400)
     return jsonify({
         'success': True,
         'stats': database.get_stats(user_id),

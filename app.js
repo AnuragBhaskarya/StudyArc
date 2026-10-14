@@ -12,12 +12,13 @@
   // =========================================================================
   // APP STATE & STORAGE
   // =========================================================================
+  const DEFAULT_TIMER_SECONDS = 90 * 60; // 5400s (1 hour 30 mins)
   const defaultState = {
-    // Focus Timer State (Max 3 hours = 10,800s, Default 1 hour = 3,600s)
+    // Focus Timer State (Max 3 hours = 10,800s, Default 1.5 hours = 5,400s / 1:30:00)
     timer: {
       status: 'idle', // 'idle' | 'running' | 'paused'
-      targetSeconds: 60 * 60, // 1 hour default
-      remainingSeconds: 60 * 60,
+      targetSeconds: DEFAULT_TIMER_SECONDS, // 1:30:00 default
+      remainingSeconds: DEFAULT_TIMER_SECONDS,
       startTime: null,
       lastTickTime: null
     },
@@ -59,9 +60,9 @@
       if (data) {
         const parsed = JSON.parse(data);
         const merged = Object.assign({}, defaultState, parsed);
-        if (!merged.timer || !merged.timer.targetSeconds || merged.timer.targetSeconds > 3 * 3600) {
+        if (!merged.timer || !merged.timer.targetSeconds || merged.timer.targetSeconds === 3600 || merged.timer.targetSeconds > 3 * 3600) {
           merged.timer = merged.timer || {};
-          merged.timer.targetSeconds = 60 * 60;
+          merged.timer.targetSeconds = DEFAULT_TIMER_SECONDS;
         }
 
         // The timer is 100% server-authoritative.
@@ -361,7 +362,7 @@
 
     // 2. Handle completed-while-away
     if (serverTimer.hasCompleted) {
-      const targetDuration = serverTimer.targetSeconds || 3600;
+      const targetDuration = serverTimer.targetSeconds || DEFAULT_TIMER_SECONDS;
       const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
       const taskName = serverTimer.activeTaskName || 'Focus Session';
       showToast(`Welcome back! Your focus on ${taskName} finished while away. (+${minutesCompleted} XP)`);
@@ -373,6 +374,8 @@
       state.timer.anchorRemainingSeconds = targetDuration;
       state.timer.anchorServerTime = null;
       state.activeTaskName = null;
+      state.activeTaskStartTime = null;
+      state.activeTaskTargetSeconds = null;
       if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
       saveState();
       renderAll();
@@ -382,7 +385,7 @@
     // 3. PAUSE SYNC (Immediate, zero-calculation!)
     if (serverTimer.status === 'paused') {
       state.timer.status = 'paused';
-      state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
+      state.timer.targetSeconds = serverTimer.targetSeconds || DEFAULT_TIMER_SECONDS;
       state.timer.remainingSeconds = Number(serverTimer.remainingSeconds != null ? serverTimer.remainingSeconds : state.timer.remainingSeconds);
       state.timer.anchorRemainingSeconds = state.timer.remainingSeconds;
       state.timer.anchorServerTime = null;
@@ -400,12 +403,14 @@
     // 4. IDLE / RESET SYNC (Immediate, zero-calculation!)
     if (serverTimer.status === 'idle') {
       state.timer.status = 'idle';
-      state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
+      state.timer.targetSeconds = serverTimer.targetSeconds || DEFAULT_TIMER_SECONDS;
       state.timer.remainingSeconds = state.timer.targetSeconds;
       state.timer.anchorRemainingSeconds = state.timer.targetSeconds;
       state.timer.anchorServerTime = null;
       state.timer.lastTickTime = null;
       state.activeTaskName = null;
+      state.activeTaskStartTime = null;
+      state.activeTaskTargetSeconds = null;
       if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
@@ -419,10 +424,11 @@
     // 5. RUNNING SYNC (Immediate play/resume!)
     if (serverTimer.status === 'running') {
       state.timer.status = 'running';
-      state.timer.targetSeconds = serverTimer.targetSeconds || 3600;
-      state.timer.anchorRemainingSeconds = Number(serverTimer.remainingSeconds != null ? serverTimer.remainingSeconds : 3600);
+      state.timer.targetSeconds = serverTimer.targetSeconds || DEFAULT_TIMER_SECONDS;
+      state.timer.anchorRemainingSeconds = Number(serverTimer.remainingSeconds != null ? serverTimer.remainingSeconds : DEFAULT_TIMER_SECONDS);
       state.timer.anchorServerTime = serverTimer.startedAt ? Number(serverTimer.startedAt) : (Date.now() + serverClockOffset);
       state.timer.lastTickTime = Date.now();
+      state.activeTaskTargetSeconds = state.timer.targetSeconds;
 
       recalculateRemainingSeconds();
 
@@ -1437,7 +1443,6 @@
   }
 
   function completeSession() {
-    isLocallyOperating = false;
     state.timer.remainingSeconds = 0;
     if (timerInterval) {
       clearInterval(timerInterval);
@@ -1665,23 +1670,21 @@
         if (navigator.vibrate) navigator.vibrate([40, 50, 40]);
         playChime('reset');
 
-        if (state.activeTaskName) {
-          const taskName = state.activeTaskName;
-          const targetSecs = state.activeTaskTargetSeconds || state.timer.targetSeconds;
-          const elapsedStudy = Math.max(0, targetSecs - holdStartRemaining);
-          const minutesLogged = Math.round(elapsedStudy / 60);
+        const taskName = state.activeTaskName || 'Focus Session';
+        const targetSecs = state.activeTaskTargetSeconds || state.timer.targetSeconds || DEFAULT_TIMER_SECONDS;
+        const elapsedStudy = Math.max(0, targetSecs - holdStartRemaining);
 
-          if (minutesLogged >= 1) {
-            logSession(minutesLogged, taskName);
-            showToast(`Saved ${minutesLogged}m of ${taskName}! (+${minutesLogged} XP)`);
-          } else {
-            showToast('Focus session ended (less than 1 minute).');
-          }
+        // Strict 1-minute rule: discard session if < 60s, save if >= 60s
+        if (elapsedStudy >= 60) {
+          const minutesLogged = Math.round(elapsedStudy / 60);
+          logSession(minutesLogged, taskName);
+          showToast(`Saved ${minutesLogged}m of ${taskName}! (+${minutesLogged} XP)`);
+        } else if (state.activeTaskName) {
+          showToast('Focus session ended (less than 1 minute).');
         } else {
-          showToast('Timer reset.');
+          showToast('Timer reset to 1:30:00.');
         }
 
-        isLocallyOperating = false;
         if (timerInterval) {
           clearInterval(timerInterval);
           timerInterval = null;
@@ -1690,10 +1693,15 @@
         state.activeTaskStartTime = null;
         state.activeTaskTargetSeconds = null;
 
-        state.timer.remainingSeconds = state.timer.targetSeconds;
+        // Reset timer back to fixed 1:30:00 default in stopped/paused state
+        state.timer.targetSeconds = DEFAULT_TIMER_SECONDS;
+        state.timer.remainingSeconds = DEFAULT_TIMER_SECONDS;
+        state.timer.anchorRemainingSeconds = DEFAULT_TIMER_SECONDS;
+        state.timer.anchorServerTime = null;
+        state.timer.lastTickTime = null;
         state.timer.status = 'idle';
         saveState();
-        syncTimerAction('reset', { target_seconds: state.timer.targetSeconds });
+        syncTimerAction('reset', { target_seconds: DEFAULT_TIMER_SECONDS });
         renderAll();
         return;
       }
@@ -1719,7 +1727,7 @@
       holdCompleted = false;
       isCenterPadHolding = true;
       pointerDownTime = performance.now();
-      holdStartRemaining = state.timer.remainingSeconds;
+      holdStartRemaining = recalculateRemainingSeconds();
 
       clearTimeout(holdDelayTimer);
       cancelAnimationFrame(holdRaf);
