@@ -342,47 +342,50 @@
         </div>
       </dialog>
 
-      <!-- TASK PROMPT MODAL (Triggered when tapping center or pressing Space while idle) -->
-      <dialog id="task-prompt-dialog" class="task-prompt-dialog" closedby="any" aria-labelledby="task-prompt-title">
-        <form class="task-prompt-shell" id="task-prompt-form" method="dialog">
-          <div class="task-prompt-top">
-            <span class="task-prompt-badge">New Focus Session</span>
-            <span class="task-prompt-duration-pill" id="task-prompt-duration">⏱️ 60 mins</span>
-          </div>
-
-          <h2 class="task-prompt-title" id="task-prompt-title">What are you focusing on?</h2>
-
-          <div class="task-input-box">
-            <input 
-              type="text" 
-              id="input-task-name" 
-              class="task-name-input" 
-              placeholder="e.g. Deep Learning, Math HW, Chapter 4..." 
-              maxlength="45"
-              autocomplete="off"
-              required
-            >
-          </div>
-
-          <!-- Quick Suggestion Chips from Subject Library -->
-          <div class="task-suggestions-section">
-            <span class="task-suggestions-label">Quick suggestions:</span>
-            <div class="task-suggestions-chips" id="task-suggestions-chips">
-              <!-- Dynamically populated from state.subjects -->
+      <!-- TASK PROMPT MODAL (Simple Fixed Overlay - Smooth & Zero Glitch) -->
+      <div id="task-prompt-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="task-prompt-title">
+        <div class="modal-backdrop" id="task-prompt-backdrop"></div>
+        <div class="task-prompt-dialog">
+          <form class="task-prompt-shell" id="task-prompt-form">
+            <div class="task-prompt-top">
+              <span class="task-prompt-badge">New Focus Session</span>
+              <span class="task-prompt-duration-pill" id="task-prompt-duration">⏱️ 60 mins</span>
             </div>
-          </div>
 
-          <div class="task-prompt-actions">
-            <button type="button" class="btn-task-cancel" id="btn-cancel-task">Cancel</button>
-            <button type="submit" class="btn-task-start" id="btn-start-task">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-              </svg>
-              Start Focus
-            </button>
-          </div>
-        </form>
-      </dialog>
+            <h2 class="task-prompt-title" id="task-prompt-title">What are you focusing on?</h2>
+
+            <div class="task-input-box">
+              <input 
+                type="text" 
+                id="input-task-name" 
+                class="task-name-input" 
+                placeholder="e.g. Deep Learning, Math HW, Chapter 4..." 
+                maxlength="45"
+                autocomplete="off"
+                required
+              >
+            </div>
+
+            <!-- Quick Suggestion Chips from Subject Library -->
+            <div class="task-suggestions-section">
+              <span class="task-suggestions-label">Quick suggestions:</span>
+              <div class="task-suggestions-chips" id="task-suggestions-chips">
+                <!-- Dynamically populated from state.subjects -->
+              </div>
+            </div>
+
+            <div class="task-prompt-actions">
+              <button type="button" class="btn-task-cancel" id="btn-cancel-task">Cancel</button>
+              <button type="submit" class="btn-task-start" id="btn-start-task">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Start Focus
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
 
       <!-- AUTHENTICATION MODAL DIALOG (Sign In & Sign Up) -->
       <dialog id="auth-dialog" class="auth-dialog" aria-labelledby="auth-modal-title">

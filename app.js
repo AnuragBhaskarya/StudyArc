@@ -1831,11 +1831,11 @@
   }
 
   function openTaskPromptDialog() {
-    const dialog = document.getElementById('task-prompt-dialog');
+    const modal = document.getElementById('task-prompt-modal');
     const input = document.getElementById('input-task-name');
     const durationPill = document.getElementById('task-prompt-duration');
     const chipsContainer = document.getElementById('task-suggestions-chips');
-    if (!dialog) return;
+    if (!modal) return;
 
     // Deselect any active text selection across document
     if (window.getSelection) {
@@ -1871,22 +1871,30 @@
         btn.addEventListener('click', () => {
           if (input) {
             input.value = btn.dataset.name;
+            input.focus();
           }
         });
       });
     }
 
-    if (typeof dialog.showModal === 'function' && !dialog.open) {
-      dialog.showModal();
-      // Ensure input is not forcefully focused to prevent keyboard popup, scroll jump, and auto-zoom
-      if (input) {
-        input.blur();
-      }
+    // Open the simple fixed overlay modal
+    modal.classList.remove('hidden');
+
+    // Automatically trigger on-screen mobile keyboard by focusing synchronously within user gesture
+    if (input) {
+      input.focus();
+      try {
+        const len = input.value.length;
+        input.setSelectionRange(len, len);
+      } catch (_) {}
+      requestAnimationFrame(() => {
+        input.focus();
+      });
     }
   }
 
   function closeTaskPromptDialog() {
-    const dialog = document.getElementById('task-prompt-dialog');
+    const modal = document.getElementById('task-prompt-modal');
     const input = document.getElementById('input-task-name');
 
     if (input) {
@@ -1902,8 +1910,8 @@
       } catch (_) {}
     }
 
-    if (dialog && dialog.open) {
-      dialog.close();
+    if (modal) {
+      modal.classList.add('hidden');
     }
 
     const centerPad = document.getElementById('timer-center-pad');
@@ -2899,20 +2907,21 @@
       btnCancelTask.addEventListener('click', closeTaskPromptDialog);
     }
 
-    // Task Prompt Dialog backdrop click light-dismiss fallback
-    const taskDialog = document.getElementById('task-prompt-dialog');
-    if (taskDialog) {
-      taskDialog.addEventListener('click', (e) => {
-        const rect = taskDialog.getBoundingClientRect();
-        const isInDialog = (
-          rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
-          rect.left <= e.clientX && e.clientX <= rect.left + rect.width
-        );
-        if (!isInDialog) {
+    // Task Prompt Modal Backdrop click
+    const taskBackdrop = document.getElementById('task-prompt-backdrop');
+    if (taskBackdrop) {
+      taskBackdrop.addEventListener('click', closeTaskPromptDialog);
+    }
+
+    // Escape key closes task prompt modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('task-prompt-modal');
+        if (modal && !modal.classList.contains('hidden')) {
           closeTaskPromptDialog();
         }
-      });
-    }
+      }
+    });
 
     // Automatic cleanup of focus outline and selections whenever any dialog closes
     document.querySelectorAll('dialog').forEach(dlg => {
