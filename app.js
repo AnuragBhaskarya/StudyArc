@@ -113,7 +113,9 @@
       if (res.status === 401) {
         state.authenticated = false;
         state.user = null;
+        document.documentElement.classList.add('unauthenticated-gate');
         updateAuthUI();
+        openAuthDialog('login');
         return;
       }
 
@@ -122,6 +124,8 @@
         if (data.success) {
           state.authenticated = true;
           state.user = data.user || null;
+          document.documentElement.classList.remove('unauthenticated-gate');
+          closeAuthDialog(true);
           state.subjects = data.subjects || [];
           state.sessions = data.sessions || [];
           dayDetailsCache.clear();
@@ -503,6 +507,7 @@
     const authDialog = document.getElementById('auth-dialog');
 
     if (state.authenticated && state.user) {
+      document.documentElement.classList.remove('unauthenticated-gate');
       const username = state.user.username || 'User';
       const initial = username.charAt(0).toUpperCase();
 
@@ -519,6 +524,7 @@
         authDialog.close();
       }
     } else {
+      document.documentElement.classList.add('unauthenticated-gate');
       if (btnHeaderAuth) btnHeaderAuth.classList.remove('hidden');
       if (headerUserBtn) headerUserBtn.classList.add('hidden');
       if (settingAvatar) settingAvatar.textContent = '?';
@@ -526,11 +532,68 @@
     }
   }
 
+  function getFaceHeight(faceEl) {
+    if (!faceEl) return 380;
+    return Math.max(faceEl.scrollHeight, faceEl.offsetHeight, 360);
+  }
+
+  function updateAuthCardHeight(mode) {
+    const scene = document.getElementById('auth-card-scene');
+    if (!scene) return;
+    const isSignup = mode !== undefined
+      ? (mode === 'signup' || mode === 'register')
+      : scene.classList.contains('is-flipped');
+    const targetFace = isSignup
+      ? document.getElementById('auth-card-back')
+      : document.getElementById('auth-card-front');
+    if (targetFace) {
+      const h = getFaceHeight(targetFace);
+      scene.style.height = `${h}px`;
+    }
+  }
+
+  function flipAuthCard(mode = 'signup', animate = true) {
+    const scene = document.getElementById('auth-card-scene');
+    if (!scene) return;
+
+    const isSignup = (mode === 'signup' || mode === 'register');
+    const targetFace = isSignup
+      ? document.getElementById('auth-card-back')
+      : document.getElementById('auth-card-front');
+
+    // On-the-fly card height shift (measures target card and transitions simultaneously)
+    if (targetFace) {
+      const targetH = getFaceHeight(targetFace);
+      scene.style.height = `${targetH}px`;
+    }
+
+    if (isSignup) {
+      scene.classList.add('is-flipped');
+      setTimeout(() => {
+        document.getElementById('register-username')?.focus();
+      }, animate ? 300 : 0);
+    } else {
+      scene.classList.remove('is-flipped');
+      setTimeout(() => {
+        document.getElementById('login-username')?.focus();
+      }, animate ? 300 : 0);
+    }
+  }
+
+  function shakeAuthCard() {
+    const scene = document.getElementById('auth-card-scene');
+    if (!scene) return;
+    scene.classList.remove('auth-shake');
+    void scene.offsetWidth;
+    scene.classList.add('auth-shake');
+    setTimeout(() => {
+      scene.classList.remove('auth-shake');
+    }, 400);
+  }
+
   function openAuthDialog(mode = 'login') {
     const dialog = document.getElementById('auth-dialog');
     if (!dialog) return;
-
-    switchAuthTab(mode);
 
     // Clear error messages
     const loginError = document.getElementById('login-error-msg');
@@ -541,14 +604,23 @@
     if (typeof dialog.showModal === 'function' && !dialog.open) {
       dialog.showModal();
     }
+
+    // Set flip state
+    const isSignup = (mode === 'register' || mode === 'signup');
+    flipAuthCard(isSignup ? 'signup' : 'login', false);
+
+    requestAnimationFrame(() => {
+      updateAuthCardHeight(isSignup ? 'signup' : 'login');
+    });
   }
 
-  function closeAuthDialog() {
+  function closeAuthDialog(force = false) {
     const dialog = document.getElementById('auth-dialog');
     if (!dialog) return;
 
-    if (!state.authenticated) {
-      showToast('Please sign in or create an account to track your sessions.');
+    if (!state.authenticated && !force) {
+      shakeAuthCard();
+      showToast('Please sign in or create an account to start tracking.');
       return;
     }
 
@@ -558,40 +630,7 @@
   }
 
   function switchAuthTab(tab) {
-    const tabLogin = document.getElementById('tab-auth-login');
-    const tabRegister = document.getElementById('tab-auth-register');
-    const formLogin = document.getElementById('form-auth-login');
-    const formRegister = document.getElementById('form-auth-register');
-    const modalTitle = document.getElementById('auth-modal-title');
-    const modalSub = document.getElementById('auth-modal-sub');
-
-    if (tab === 'login') {
-      tabLogin?.classList.add('active');
-      tabLogin?.setAttribute('aria-selected', 'true');
-      tabRegister?.classList.remove('active');
-      tabRegister?.setAttribute('aria-selected', 'false');
-
-      formLogin?.classList.remove('hidden');
-      formRegister?.classList.add('hidden');
-
-      if (modalTitle) modalTitle.textContent = 'Welcome to StudyArc';
-      if (modalSub) modalSub.textContent = 'Sign in to access your personal study records and sync timer state.';
-
-      setTimeout(() => document.getElementById('login-username')?.focus(), 50);
-    } else {
-      tabRegister?.classList.add('active');
-      tabRegister?.setAttribute('aria-selected', 'true');
-      tabLogin?.classList.remove('active');
-      tabLogin?.setAttribute('aria-selected', 'false');
-
-      formRegister?.classList.remove('hidden');
-      formLogin?.classList.add('hidden');
-
-      if (modalTitle) modalTitle.textContent = 'Create Private Account';
-      if (modalSub) modalSub.textContent = 'Set up a secure username and password for isolated study tracking.';
-
-      setTimeout(() => document.getElementById('register-username')?.focus(), 50);
-    }
+    flipAuthCard(tab === 'login' ? 'login' : 'signup');
   }
 
   async function handleLoginSubmit(e) {
@@ -608,6 +647,8 @@
       if (errorEl) {
         errorEl.textContent = 'Please enter both username and password.';
         errorEl.classList.remove('hidden');
+        updateAuthCardHeight('login');
+        shakeAuthCard();
       }
       return;
     }
@@ -616,7 +657,10 @@
       submitBtn.disabled = true;
       submitBtn.querySelector('span').textContent = 'Signing in...';
     }
-    if (errorEl) errorEl.classList.add('hidden');
+    if (errorEl) {
+      errorEl.classList.add('hidden');
+      updateAuthCardHeight('login');
+    }
 
     try {
       const res = await fetch('/api/auth/login', {
@@ -629,20 +673,25 @@
       if (res.ok && data.success) {
         state.authenticated = true;
         state.user = data.user;
+        document.documentElement.classList.remove('unauthenticated-gate');
         updateAuthUI();
-        closeAuthDialog();
+        closeAuthDialog(true);
         showToast(`Welcome back, ${data.user.username}!`);
         await syncWithBackend();
       } else {
         if (errorEl) {
           errorEl.textContent = data.error || 'Invalid username or password.';
           errorEl.classList.remove('hidden');
+          updateAuthCardHeight('login');
+          shakeAuthCard();
         }
       }
     } catch (err) {
       if (errorEl) {
         errorEl.textContent = 'Connection error. Please try again.';
         errorEl.classList.remove('hidden');
+        updateAuthCardHeight('login');
+        shakeAuthCard();
       }
     } finally {
       if (submitBtn) {
@@ -664,12 +713,17 @@
     const password = passwordInput?.value || '';
     const confirmPassword = confirmInput?.value || '';
 
-    if (errorEl) errorEl.classList.add('hidden');
+    if (errorEl) {
+      errorEl.classList.add('hidden');
+      updateAuthCardHeight('signup');
+    }
 
     if (!username || username.length < 3) {
       if (errorEl) {
         errorEl.textContent = 'Username must be at least 3 characters long.';
         errorEl.classList.remove('hidden');
+        updateAuthCardHeight('signup');
+        shakeAuthCard();
       }
       return;
     }
@@ -678,6 +732,8 @@
       if (errorEl) {
         errorEl.textContent = 'Username can only contain letters, numbers, and underscores.';
         errorEl.classList.remove('hidden');
+        updateAuthCardHeight('signup');
+        shakeAuthCard();
       }
       return;
     }
@@ -686,6 +742,8 @@
       if (errorEl) {
         errorEl.textContent = 'Password must be at least 6 characters long.';
         errorEl.classList.remove('hidden');
+        updateAuthCardHeight('signup');
+        shakeAuthCard();
       }
       return;
     }
@@ -694,6 +752,8 @@
       if (errorEl) {
         errorEl.textContent = 'Passwords do not match.';
         errorEl.classList.remove('hidden');
+        updateAuthCardHeight('signup');
+        shakeAuthCard();
       }
       return;
     }
@@ -718,20 +778,25 @@
       if (res.ok && data.success) {
         state.authenticated = true;
         state.user = data.user;
+        document.documentElement.classList.remove('unauthenticated-gate');
         updateAuthUI();
-        closeAuthDialog();
+        closeAuthDialog(true);
         showToast(`Account created! Welcome, ${data.user.username}!`);
         await syncWithBackend();
       } else {
         if (errorEl) {
           errorEl.textContent = data.error || 'Failed to create account.';
           errorEl.classList.remove('hidden');
+          updateAuthCardHeight('signup');
+          shakeAuthCard();
         }
       }
     } catch (err) {
       if (errorEl) {
         errorEl.textContent = 'Connection error. Please try again.';
         errorEl.classList.remove('hidden');
+        updateAuthCardHeight('signup');
+        shakeAuthCard();
       }
     } finally {
       if (submitBtn) {
@@ -3229,15 +3294,37 @@
       headerUserBtn.addEventListener('click', () => switchView('settings'));
     }
 
-    // Close Auth Dialog button
+    // Close Auth Dialog buttons (front and back face circular 'X' buttons)
     const btnCloseAuth = document.getElementById('btn-close-auth-dialog');
     if (btnCloseAuth) {
-      btnCloseAuth.addEventListener('click', closeAuthDialog);
+      btnCloseAuth.addEventListener('click', () => closeAuthDialog(false));
+    }
+    const btnCloseAuthBack = document.getElementById('btn-close-auth-dialog-back');
+    if (btnCloseAuthBack) {
+      btnCloseAuthBack.addEventListener('click', () => closeAuthDialog(false));
     }
 
-    // Auth Dialog backdrop click light-dismiss fallback (only if already authenticated)
+    // 3D Flip Card switch buttons ("Create account ->" & "Sign in ->")
+    const btnFlipToSignup = document.getElementById('btn-flip-to-signup');
+    if (btnFlipToSignup) {
+      btnFlipToSignup.addEventListener('click', () => flipAuthCard('signup'));
+    }
+    const btnFlipToSignin = document.getElementById('btn-flip-to-signin');
+    if (btnFlipToSignin) {
+      btnFlipToSignin.addEventListener('click', () => flipAuthCard('login'));
+    }
+
+    // Auth Dialog cancel event (Escape key) & backdrop click handler
     const authDialog = document.getElementById('auth-dialog');
     if (authDialog) {
+      authDialog.addEventListener('cancel', (e) => {
+        if (!state.authenticated) {
+          e.preventDefault();
+          shakeAuthCard();
+          showToast('Please sign in or create an account to start tracking.');
+        }
+      });
+
       authDialog.addEventListener('click', (e) => {
         const rect = authDialog.getBoundingClientRect();
         const isInDialog = (
@@ -3245,21 +3332,10 @@
           rect.left <= e.clientX && e.clientX <= rect.left + rect.width
         );
         if (!isInDialog) {
-          closeAuthDialog();
+          closeAuthDialog(false);
         }
       });
     }
-
-    // Tab buttons
-    const tabLogin = document.getElementById('tab-auth-login');
-    const tabRegister = document.getElementById('tab-auth-register');
-    if (tabLogin) tabLogin.addEventListener('click', () => switchAuthTab('login'));
-    if (tabRegister) tabRegister.addEventListener('click', () => switchAuthTab('register'));
-
-    const linkSwitchRegister = document.getElementById('link-switch-to-register');
-    const linkSwitchLogin = document.getElementById('link-switch-to-login');
-    if (linkSwitchRegister) linkSwitchRegister.addEventListener('click', () => switchAuthTab('register'));
-    if (linkSwitchLogin) linkSwitchLogin.addEventListener('click', () => switchAuthTab('login'));
 
     // Form submissions
     const formLogin = document.getElementById('form-auth-login');
@@ -3351,6 +3427,14 @@
   document.addEventListener('DOMContentLoaded', async () => {
     initEvents();
     renderAll();
+
+    // If user is not authenticated, greet them immediately with the Neon Green Sign-In modal
+    if (!state.authenticated || !state.user) {
+      document.documentElement.classList.add('unauthenticated-gate');
+      openAuthDialog('login');
+    } else {
+      document.documentElement.classList.remove('unauthenticated-gate');
+    }
 
     // Immediately fetch real-time server timer state in <5ms from RAM cache
     fetchLatestServerTimer();

@@ -12,6 +12,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="styles.css">
+  <script>
+    (function () {
+      try {
+        var s = localStorage.getItem('studyarc_store_v1');
+        if (!s || !JSON.parse(s).authenticated) {
+          document.documentElement.classList.add('unauthenticated-gate');
+        }
+      } catch (e) {
+        document.documentElement.classList.add('unauthenticated-gate');
+      }
+    })();
+  </script>
 </head>
 <body>
   <!-- AMBIENT FLUID GREEN AURA & CONSTELLATION WEB BACKGROUND -->
@@ -351,185 +363,176 @@
         </div>
       </div>
 
-      <!-- AUTHENTICATION MODAL DIALOG (Sign In & Sign Up) -->
+      <!-- AUTHENTICATION MODAL DIALOG (Neon Green 3D Flippable Modal) -->
       <dialog id="auth-dialog" class="auth-dialog" aria-labelledby="auth-modal-title">
-        <div class="auth-dialog-shell">
-          <!-- Top branding & close -->
-          <div class="auth-dialog-header">
-            <div class="auth-brand-badge">
-              <svg class="brand-leaf" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M11.5 20.5A7.5 7.5 0 0 1 10.2 5.6C16.3 4.4 17.9 3.8 20 1.2c1.1 2.1 2.1 4.5 2.1 8.6 0 5.9-5.1 10.7-10.6 10.7Z" fill="currentColor"/>
-                <path d="M1.8 21.6c0-3.2 2-5.7 5.4-6.4 2.6-.5 5.3-2.1 6.3-3.2" stroke="#080B0A" stroke-width="1.8" stroke-linecap="round"/>
-              </svg>
-              <span>StudyArc Security</span>
-            </div>
-            <button class="auth-dialog-close-btn" id="btn-close-auth-dialog" aria-label="Close Auth Dialog">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          </div>
-
-          <div class="auth-intro">
-            <h2 class="auth-modal-title" id="auth-modal-title">Welcome to StudyArc</h2>
-            <p class="auth-modal-sub" id="auth-modal-sub">Sign in to track your personal study records and sync timer state.</p>
-          </div>
-
-          <!-- Auth Tab Switcher -->
-          <div class="auth-tabs" role="tablist">
-            <button type="button" class="auth-tab active" id="tab-auth-login" role="tab" aria-selected="true">Sign In</button>
-            <button type="button" class="auth-tab" id="tab-auth-register" role="tab" aria-selected="false">Create Account</button>
-          </div>
-
-          <!-- SIGN IN FORM -->
-          <form class="auth-form" id="form-auth-login" autocomplete="on">
-            <div class="auth-error-banner hidden" id="login-error-msg"></div>
-
-            <div class="auth-field">
-              <label for="login-username" class="auth-label">Username</label>
-              <div class="auth-input-wrap">
-                <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
+        <div class="auth-card-scene" id="auth-card-scene">
+          <div class="auth-card-flipper" id="auth-card-flipper">
+            
+            <!-- FRONT FACE: SIGN IN -->
+            <div class="auth-card-face auth-card-front" id="auth-card-front">
+              <button type="button" class="auth-dialog-close-btn" id="btn-close-auth-dialog" aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
-                <input 
-                  type="text" 
-                  id="login-username" 
-                  class="auth-input" 
-                  placeholder="Enter your username" 
-                  autocomplete="username" 
-                  required
-                >
-              </div>
-            </div>
+              </button>
 
-            <div class="auth-field">
-              <label for="login-password" class="auth-label">Password</label>
-              <div class="auth-input-wrap">
-                <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-                <input 
-                  type="password" 
-                  id="login-password" 
-                  class="auth-input" 
-                  placeholder="Enter your password" 
-                  autocomplete="current-password" 
-                  required
-                >
-                <button type="button" class="btn-toggle-pw" data-target="login-password" aria-label="Toggle password visibility">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
+              <div class="auth-header-row">
+                <h2 class="auth-title" id="auth-modal-title">Sign In</h2>
+                <div class="auth-header-divider"></div>
+                <button type="button" class="auth-switch-btn" id="btn-flip-to-signup">
+                  <span>Create account</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
                   </svg>
                 </button>
               </div>
+
+              <form class="auth-form-body" id="form-auth-login" autocomplete="on">
+                <div class="auth-error-banner hidden" id="login-error-msg"></div>
+
+                <div class="auth-input-container">
+                  <svg class="auth-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  <input 
+                    type="text" 
+                    id="login-username" 
+                    class="auth-input-el" 
+                    placeholder="Username" 
+                    autocomplete="username" 
+                    required
+                  >
+                </div>
+
+                <div class="auth-input-container">
+                  <svg class="auth-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  <input 
+                    type="password" 
+                    id="login-password" 
+                    class="auth-input-el" 
+                    placeholder="Password" 
+                    autocomplete="current-password" 
+                    required
+                  >
+                  <button type="button" class="btn-toggle-pw auth-eye-btn" data-target="login-password" aria-label="Toggle password visibility">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                </div>
+
+                <button type="submit" class="auth-submit-neon" id="btn-login-submit">
+                  <span>Sign In</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </button>
+              </form>
             </div>
 
-            <button type="submit" class="btn-auth-submit" id="btn-login-submit">
-              <span>Sign In</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-
-            <div class="auth-footer-prompt">
-              <span>Don't have an account yet?</span>
-              <button type="button" class="auth-switch-link" id="link-switch-to-register">Create an account</button>
-            </div>
-          </form>
-
-          <!-- SIGN UP FORM -->
-          <form class="auth-form hidden" id="form-auth-register" autocomplete="on">
-            <div class="auth-error-banner hidden" id="register-error-msg"></div>
-
-            <div class="auth-field">
-              <label for="register-username" class="auth-label">Choose Username</label>
-              <div class="auth-input-wrap">
-                <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
+            <!-- BACK FACE: SIGN UP -->
+            <div class="auth-card-face auth-card-back" id="auth-card-back">
+              <button type="button" class="auth-dialog-close-btn" id="btn-close-auth-dialog-back" aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
-                <input 
-                  type="text" 
-                  id="register-username" 
-                  class="auth-input" 
-                  placeholder="3-30 chars (letters, numbers, _)" 
-                  autocomplete="username" 
-                  minlength="3" 
-                  maxlength="30"
-                  required
-                >
-              </div>
-            </div>
+              </button>
 
-            <div class="auth-field">
-              <label for="register-password" class="auth-label">Password</label>
-              <div class="auth-input-wrap">
-                <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-                <input 
-                  type="password" 
-                  id="register-password" 
-                  class="auth-input" 
-                  placeholder="Minimum 6 characters" 
-                  autocomplete="new-password" 
-                  minlength="6"
-                  required
-                >
-                <button type="button" class="btn-toggle-pw" data-target="register-password" aria-label="Toggle password visibility">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
+              <div class="auth-header-row">
+                <h2 class="auth-title">Sign Up</h2>
+                <div class="auth-header-divider"></div>
+                <button type="button" class="auth-switch-btn" id="btn-flip-to-signin">
+                  <span>Sign in</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
                   </svg>
                 </button>
               </div>
-            </div>
 
-            <div class="auth-field">
-              <label for="register-confirm" class="auth-label">Confirm Password</label>
-              <div class="auth-input-wrap">
-                <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                </svg>
-                <input 
-                  type="password" 
-                  id="register-confirm" 
-                  class="auth-input" 
-                  placeholder="Confirm your password" 
-                  autocomplete="new-password" 
-                  minlength="6"
-                  required
-                >
-                <button type="button" class="btn-toggle-pw" data-target="register-confirm" aria-label="Toggle password visibility">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
+              <form class="auth-form-body" id="form-auth-register" autocomplete="on">
+                <div class="auth-error-banner hidden" id="register-error-msg"></div>
+
+                <div class="auth-input-container">
+                  <svg class="auth-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  <input 
+                    type="text" 
+                    id="register-username" 
+                    class="auth-input-el" 
+                    placeholder="Username (3-30 chars)" 
+                    autocomplete="username" 
+                    minlength="3" 
+                    maxlength="30"
+                    required
+                  >
+                </div>
+
+                <div class="auth-input-container">
+                  <svg class="auth-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  <input 
+                    type="password" 
+                    id="register-password" 
+                    class="auth-input-el" 
+                    placeholder="Password (min 6 chars)" 
+                    autocomplete="new-password" 
+                    minlength="6"
+                    required
+                  >
+                  <button type="button" class="btn-toggle-pw auth-eye-btn" data-target="register-password" aria-label="Toggle password visibility">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                </div>
+
+                <div class="auth-input-container">
+                  <svg class="auth-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                  <input 
+                    type="password" 
+                    id="register-confirm" 
+                    class="auth-input-el" 
+                    placeholder="Confirm Password" 
+                    autocomplete="new-password" 
+                    minlength="6"
+                    required
+                  >
+                  <button type="button" class="btn-toggle-pw auth-eye-btn" data-target="register-confirm" aria-label="Toggle password visibility">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                </div>
+
+                <button type="submit" class="auth-submit-neon" id="btn-register-submit">
+                  <span>Create Account</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
                   </svg>
                 </button>
-              </div>
-              <span class="auth-field-hint" id="pw-match-hint"></span>
+              </form>
             </div>
 
-            <button type="submit" class="btn-auth-submit" id="btn-register-submit">
-              <span>Create Account</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-
-            <div class="auth-footer-prompt">
-              <span>Already have an account?</span>
-              <button type="button" class="auth-switch-link" id="link-switch-to-login">Sign in instead</button>
-            </div>
-          </form>
-
+          </div>
         </div>
       </dialog>
 
@@ -545,6 +548,6 @@
   <!-- JAVASCRIPT LOGIC -->
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
   <script src="aura-particles.js"></script>
-  <script src="app.js?v=4.4"></script>
+  <script src="app.js?v=4.5"></script>
 </body>
 </html>
