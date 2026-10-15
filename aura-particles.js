@@ -661,17 +661,9 @@
     constructor() {
       this.dialog = document.getElementById('auth-dialog');
       this.backdropCanvas = document.getElementById('auth-dots-canvas');
-      this.frontCanvas = document.getElementById('auth-card-dots-front');
-      this.backCanvas = document.getElementById('auth-card-dots-back');
-
       this.backdropCtx = this.backdropCanvas ? this.backdropCanvas.getContext('2d', { alpha: true }) : null;
-      this.frontCtx = this.frontCanvas ? this.frontCanvas.getContext('2d', { alpha: true }) : null;
-      this.backCtx = this.backCanvas ? this.backCanvas.getContext('2d', { alpha: true }) : null;
 
-      this.bgParticles = [];
-      this.frontParticles = [];
-      this.backParticles = [];
-
+      this.particles = [];
       this.palette = [
         { r: 16, g: 224, b: 104 }, // Neon green primary
         { r: 78, g: 250, b: 143 }, // Luminous lime
@@ -708,13 +700,11 @@
       }
     }
 
-    createSingleDot(w, h, isCard = false) {
+    createSingleDot(w, h) {
       const color = this.palette[(Math.random() * this.palette.length) | 0];
-      const speed = isCard ? (0.12 + Math.random() * 0.22) : (0.18 + Math.random() * 0.38);
+      const speed = 0.14 + Math.random() * 0.26;
       const angle = Math.random() * Math.PI * 2;
-      const baseRadius = isCard 
-        ? (0.75 + Math.random() * 1.1) 
-        : (Math.random() < 0.65 ? 1.0 + Math.random() * 0.65 : 1.8 + Math.random() * 0.85);
+      const baseRadius = Math.random() < 0.65 ? 0.9 + Math.random() * 0.6 : 1.7 + Math.random() * 0.8;
 
       return {
         x: Math.random() * Math.max(w, 200),
@@ -726,31 +716,20 @@
         r: color.r,
         g: color.g,
         b: color.b,
-        alpha: 0.35 + Math.random() * 0.45,
+        alpha: 0.28 + Math.random() * 0.38,
         pulsePhase: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.015 + Math.random() * 0.02,
-        isProminent: !isCard && baseRadius > 1.6
+        pulseSpeed: 0.012 + Math.random() * 0.018,
+        isProminent: baseRadius > 1.6
       };
     }
 
     createParticles() {
-      // Backdrop dots
-      const bgW = window.innerWidth;
-      const bgH = window.innerHeight;
-      const bgCount = window.innerWidth < 768 ? 32 : 55;
-      this.bgParticles = [];
-      for (let i = 0; i < bgCount; i++) {
-        this.bgParticles.push(this.createSingleDot(bgW, bgH, false));
-      }
-
-      // Card face dots
-      const cardW = 440;
-      const cardH = 460;
-      this.frontParticles = [];
-      this.backParticles = [];
-      for (let i = 0; i < 16; i++) {
-        this.frontParticles.push(this.createSingleDot(cardW, cardH, true));
-        this.backParticles.push(this.createSingleDot(cardW, cardH, true));
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const count = window.innerWidth < 768 ? 26 : 46;
+      this.particles = [];
+      for (let i = 0; i < count; i++) {
+        this.particles.push(this.createSingleDot(w, h));
       }
     }
 
@@ -767,22 +746,6 @@
         this.backdropCtx.setTransform(1, 0, 0, 1, 0, 0);
         this.backdropCtx.scale(this.dpr, this.dpr);
       }
-
-      const resizeCard = (canvas, ctx) => {
-        if (!canvas || !ctx) return;
-        const rect = canvas.getBoundingClientRect();
-        const cw = rect.width || 440;
-        const ch = rect.height || 460;
-        canvas.width = Math.round(cw * this.dpr);
-        canvas.height = Math.round(ch * this.dpr);
-        canvas.style.width = `${cw}px`;
-        canvas.style.height = `${ch}px`;
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.scale(this.dpr, this.dpr);
-      };
-
-      resizeCard(this.frontCanvas, this.frontCtx);
-      resizeCard(this.backCanvas, this.backCtx);
     }
 
     start() {
@@ -809,57 +772,44 @@
 
       const w = window.innerWidth;
       const h = window.innerHeight;
-
-      this.updateAndRenderGroup(this.backdropCtx, this.bgParticles, w, h, true);
-
-      // Render front or back card face particles
-      const scene = document.getElementById('auth-card-scene');
-      const isFlipped = scene ? scene.classList.contains('is-flipped') : false;
-      if (!isFlipped && this.frontCtx && this.frontCanvas) {
-        const rect = this.frontCanvas.getBoundingClientRect();
-        this.updateAndRenderGroup(this.frontCtx, this.frontParticles, rect.width || 440, rect.height || 400, false);
-      } else if (isFlipped && this.backCtx && this.backCanvas) {
-        const rect = this.backCanvas.getBoundingClientRect();
-        this.updateAndRenderGroup(this.backCtx, this.backParticles, rect.width || 440, rect.height || 460, false);
-      }
+      this.updateAndRender(w, h);
 
       this.rafId = requestAnimationFrame(() => this.loop());
     }
 
-    updateAndRenderGroup(ctx, particles, w, h, drawLines) {
-      if (!ctx || !particles || particles.length === 0) return;
+    updateAndRender(w, h) {
+      const ctx = this.backdropCtx;
+      if (!ctx || !this.particles || this.particles.length === 0) return;
       ctx.clearRect(0, 0, w, h);
 
-      const n = particles.length;
+      const n = this.particles.length;
 
-      // Subtle connection lines (only for backdrop group)
-      if (drawLines) {
-        ctx.lineWidth = 0.65;
-        for (let i = 0; i < n; i++) {
-          const p1 = particles[i];
-          for (let j = i + 1; j < n; j++) {
-            const p2 = particles[j];
-            const dx = p2.x - p1.x;
-            if (dx > 105 || dx < -105) continue;
-            const dy = p2.y - p1.y;
-            if (dy > 105 || dy < -105) continue;
-            const distSq = dx * dx + dy * dy;
-            if (distSq < 105 * 105) {
-              const dist = Math.sqrt(distSq);
-              const alpha = (1.0 - dist / 105) * 0.16;
-              ctx.strokeStyle = `rgba(16, 224, 104, ${alpha.toFixed(3)})`;
-              ctx.beginPath();
-              ctx.moveTo(p1.x, p1.y);
-              ctx.lineTo(p2.x, p2.y);
-              ctx.stroke();
-            }
+      // Delicate constellation web lines
+      ctx.lineWidth = 0.65;
+      for (let i = 0; i < n; i++) {
+        const p1 = this.particles[i];
+        for (let j = i + 1; j < n; j++) {
+          const p2 = this.particles[j];
+          const dx = p2.x - p1.x;
+          if (dx > 95 || dx < -95) continue;
+          const dy = p2.y - p1.y;
+          if (dy > 95 || dy < -95) continue;
+          const distSq = dx * dx + dy * dy;
+          if (distSq < 95 * 95) {
+            const dist = Math.sqrt(distSq);
+            const alpha = (1.0 - dist / 95) * 0.14;
+            ctx.strokeStyle = `rgba(16, 224, 104, ${alpha.toFixed(3)})`;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
           }
         }
       }
 
       // Draw dots
       for (let i = 0; i < n; i++) {
-        const p = particles[i];
+        const p = this.particles[i];
         p.x += p.vx;
         p.y += p.vy;
 
@@ -872,13 +822,13 @@
         p.pulsePhase += p.pulseSpeed;
         const pulse = Math.sin(p.pulsePhase) * 0.2;
         const curRadius = Math.max(0.6, p.baseRadius + pulse);
-        const curAlpha = Math.min(1.0, Math.max(0.1, p.alpha + pulse * 0.3));
+        const curAlpha = Math.min(1.0, Math.max(0.1, p.alpha + pulse * 0.25));
 
-        // Prominent halo
+        // Soft halo for prominent dots
         if (p.isProminent) {
           ctx.beginPath();
-          ctx.arc(p.x, p.y, curRadius * 2.8, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${p.r}, ${p.g}, ${p.b}, ${(curAlpha * 0.18).toFixed(3)})`;
+          ctx.arc(p.x, p.y, curRadius * 2.6, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${p.r}, ${p.g}, ${p.b}, ${(curAlpha * 0.16).toFixed(3)})`;
           ctx.fill();
         }
 
