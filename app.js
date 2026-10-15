@@ -3063,6 +3063,9 @@
         if (!sessionId) return;
 
         btn.disabled = true;
+        if (typeof btn.blur === 'function') {
+          btn.blur();
+        }
         await deleteSession(sessionId, dateStr);
       });
     }

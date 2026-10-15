@@ -1847,13 +1847,10 @@ input:checked + .switch-slider:before {
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  opacity: 0.6;
+  opacity: 0.7;
   transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
   outline: none;
-}
-
-.day-session-card:hover .day-session-delete-btn {
-  opacity: 0.95;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .day-session-delete-btn svg {
@@ -1864,27 +1861,69 @@ input:checked + .switch-slider:before {
   transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), stroke 160ms ease;
 }
 
-.day-session-delete-btn:hover {
-  color: #f87171;
-  background: rgba(239, 68, 68, 0.14);
-  border-color: rgba(239, 68, 68, 0.32);
-  transform: scale(1.08);
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
-  opacity: 1;
-}
-
-.day-session-delete-btn:hover svg {
-  transform: rotate(-6deg) scale(1.05);
-}
-
 .day-session-delete-btn:active {
   transform: scale(0.92);
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.14);
 }
 
 .day-session-delete-btn:focus-visible {
   border-color: #ef4444;
   outline: 2px solid rgba(239, 68, 68, 0.4);
   opacity: 1;
+}
+
+/* Only enable card & button hover effects on devices with true mouse hover capability */
+@media (hover: hover) and (pointer: fine) and (min-width: 769px) {
+  .day-session-card:hover {
+    border-color: rgba(16, 224, 104, 0.22);
+    background: var(--bg-elevated);
+    transform: translateX(2px);
+  }
+
+  .day-session-card:hover .day-session-delete-btn {
+    opacity: 0.95;
+  }
+
+  .day-session-delete-btn:hover {
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.14);
+    border-color: rgba(239, 68, 68, 0.32);
+    transform: scale(1.08);
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+    opacity: 1;
+  }
+
+  .day-session-delete-btn:hover svg {
+    transform: rotate(-6deg) scale(1.05);
+  }
+}
+
+/* Explicit fallback for mobile devices and touch screens to prevent sticky hover states */
+@media (hover: none), (max-width: 768px), (pointer: coarse) {
+  .day-session-card:hover {
+    border-color: var(--border-subtle);
+    background: var(--bg-card);
+    transform: none;
+  }
+
+  .day-session-card .day-session-delete-btn {
+    opacity: 0.7;
+  }
+
+  .day-session-card:hover .day-session-delete-btn,
+  .day-session-delete-btn:hover {
+    color: var(--text-muted);
+    background: transparent;
+    border-color: transparent;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.7;
+  }
+
+  .day-session-delete-btn:hover svg {
+    transform: none;
+  }
 }
 
 /* Empty State */
