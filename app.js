@@ -2842,7 +2842,7 @@
           cardEl.style.transform = 'translateX(-50%) scale(0.85)';
           cardEl.style.opacity = '0';
           cardEl.style.height = '0px';
-          cardEl.style.marginBottom = '-0.65rem';
+          cardEl.style.marginBottom = '-0.55rem';
           cardEl.style.paddingTop = '0px';
           cardEl.style.paddingBottom = '0px';
           cardEl.style.borderTopWidth = '0px';
