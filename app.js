@@ -2580,14 +2580,26 @@
         listEl.innerHTML = dayData.sessions.map(s => `
           <div class="day-session-card" data-session-id="${escapeHtml(s.id)}" data-duration="${s.durationMinutes}">
             <div class="day-session-left">
-              <span class="day-session-dot" style="background-color: ${s.color || '#10E068'}; color: ${s.color || '#10E068'};"></span>
+              <div class="day-session-timeline">
+                <span class="day-session-track-line"></span>
+                <span class="day-session-track-node"></span>
+              </div>
+              <div class="day-session-orb-wrapper">
+                <span class="day-session-orb" style="background-color: ${s.color || '#00ff87'};"></span>
+              </div>
               <div class="day-session-info">
                 <span class="day-session-subject">${escapeHtml(s.subject)}</span>
                 <span class="day-session-timerange">${escapeHtml(s.timeRange || '')}</span>
               </div>
             </div>
             <div class="day-session-right">
-              <span class="day-session-duration">${s.durationMinutes} mins</span>
+              <div class="day-session-duration">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>${s.durationMinutes} mins</span>
+              </div>
               <span class="day-session-xp">+${s.xp || s.durationMinutes} XP</span>
               <button class="day-session-delete-btn" data-session-id="${escapeHtml(s.id)}" data-date="${escapeHtml(dayData.date)}" title="Delete session" aria-label="Delete session">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -2804,11 +2816,17 @@
       const h = cardEl.offsetHeight;
       cardEl.style.height = h + 'px';
 
-      const dot = cardEl.querySelector('.day-session-dot');
+      const dot = cardEl.querySelector('.day-session-orb') || cardEl.querySelector('.day-session-dot');
       if (dot) {
         dot.style.transition = 'background-color 0.2s, box-shadow 0.2s';
         dot.style.backgroundColor = '#ef4444';
         dot.style.boxShadow = '0 0 8px #ef4444';
+      }
+      const trackNode = cardEl.querySelector('.day-session-track-node');
+      if (trackNode) {
+        trackNode.style.transition = 'background-color 0.2s, box-shadow 0.2s';
+        trackNode.style.backgroundColor = '#ef4444';
+        trackNode.style.boxShadow = '0 0 8px #ef4444';
       }
       const subj = cardEl.querySelector('.day-session-subject');
       if (subj) {
