@@ -176,15 +176,15 @@ def get_connection():
     return DBContext()
 
 DEFAULT_STARTER_SUBJECTS = [
-    ('Deep Work', '#79D99B'),
-    ('Reading', '#34D399'),
-    ('Problem Solving', '#2DD4BF'),
-    ('Learning', '#52C480')
+    ('Deep Work', '#10E068'),
+    ('Reading', '#34E87C'),
+    ('Problem Solving', '#05DF63'),
+    ('Learning', '#4EFA8F')
 ]
 
 SUBJECT_PALETTE = [
-    '#79D99B', '#A3F0BA', '#52C480', '#3A965A', '#4ECCA3',
-    '#6EE7B7', '#86EFAC', '#34D399', '#2DD4BF', '#5EEAD4'
+    '#10E068', '#4EFA8F', '#22C55E', '#16A34A', '#05DF63',
+    '#34E87C', '#6EFF9F', '#00C853', '#10B981', '#00E676'
 ]
 
 def init_db():
@@ -222,7 +222,7 @@ def init_db():
                     id SERIAL PRIMARY KEY,
                     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                     name VARCHAR(255) NOT NULL,
-                    color VARCHAR(32) NOT NULL DEFAULT '#79D99B',
+                    color VARCHAR(32) NOT NULL DEFAULT '#10E068',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -299,7 +299,7 @@ def init_db():
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                     name TEXT NOT NULL,
-                    color TEXT NOT NULL DEFAULT '#79D99B',
+                    color TEXT NOT NULL DEFAULT '#10E068',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -600,7 +600,7 @@ def add_or_get_subject(user_id, name, color=None):
         if row:
             return dict(row)
 
-        if not color or color == '#79D99B':
+        if not color or color == '#10E068':
             idx = abs(hash(clean_name)) % len(SUBJECT_PALETTE)
             color = SUBJECT_PALETTE[idx]
 
@@ -707,7 +707,7 @@ def get_sessions(user_id, limit=100):
                 'id': f"sess_{r['id']}",
                 'subject_id': r['subject_id'],
                 'subject': r['subject_name'],
-                'color': r['color'] or '#79D99B',
+                'color': r['color'] or '#10E068',
                 'durationMinutes': duration,
                 'date': r['date'],
                 'timestamp': ts,
@@ -746,7 +746,7 @@ def get_day_details(user_id, date_str):
             'id': f"sess_{r['id']}",
             'subject_id': r['subject_id'],
             'subject': r['subject_name'],
-            'color': r['color'] or '#79D99B',
+            'color': r['color'] or '#10E068',
             'durationMinutes': duration,
             'date': r['date'],
             'timestamp': ts,
@@ -941,7 +941,7 @@ def get_full_state(user_id):
         subjects_res.append({
             'id': s['id'],
             'name': s['name'],
-            'color': s.get('color', '#79D99B'),
+            'color': s.get('color', '#10E068'),
             'total_minutes': tot,
             'hours': round(tot / 60.0, 1),
             'session_count': int(s.get('session_count') or 0)
@@ -960,7 +960,7 @@ def get_full_state(user_id):
             'id': f"sess_{r['id']}",
             'subject_id': r['subject_id'],
             'subject': r['subject_name'],
-            'color': r.get('color') or '#79D99B',
+            'color': r.get('color') or '#10E068',
             'durationMinutes': duration,
             'date': r['date'],
             'timestamp': ts,

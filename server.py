@@ -544,7 +544,7 @@ def handle_subjects(user_id):
 
     data = request.get_json(force=True, silent=True) or {}
     name = data.get('name', '').strip()
-    color = data.get('color', '#79D99B')
+    color = data.get('color', '#10E068')
     if not name:
         return jsonify({'error': 'Subject name is required'}), 400
 

@@ -1230,7 +1230,13 @@
         headerTopicName.textContent = state.activeTaskName;
       }
 
-      if (state.timer.status === 'running') {
+      // Keep AmbientAura and body synchronized with timer running/amber state
+      const isRunning = state.timer.status === 'running';
+      document.body.classList.toggle('is-timer-amber', !isRunning);
+      document.body.classList.toggle('is-timer-paused', state.timer.status === 'paused');
+      window.AmbientAura?.setTimerStatus(state.timer.status);
+
+      if (isRunning) {
         timerSection?.classList.add('is-running');
         timerSection?.classList.remove('is-paused');
         centerPad?.setAttribute('aria-label', `Focusing on ${state.activeTaskName}. Tap to pause, hold 1.2s to save.`);
@@ -1246,6 +1252,9 @@
         document.title = `StudyArc — Minimal Focus & Habit Tracker`;
       }
     } else {
+      document.body.classList.add('is-timer-amber');
+      document.body.classList.remove('is-timer-paused');
+      window.AmbientAura?.setTimerStatus('idle');
       timerSection?.classList.remove('is-session-locked', 'is-running', 'is-paused');
 
       // Top bar topic pill: completely hidden when idle, keeping top bar empty!
@@ -1652,6 +1661,9 @@
       const elapsed = now - drainStartTime;
       const progress = Math.min(1, elapsed / DRAIN_MS);
 
+      // Accelerate background ambient aura and constellation particles as hold progresses!
+      window.AmbientAura?.setHoldProgress(progress);
+
       // 1. The green timer arc visibly drains to empty over DRAIN_MS!
       const visualSeconds = Math.max(0, holdStartRemaining * (1 - progress));
       updateTimerRing(visualSeconds);
@@ -1666,6 +1678,9 @@
         isCenterPadHolding = false;
         document.body.classList.remove('is-holding');
         pad.classList.remove('holding');
+        window.AmbientAura?.onReset?.();
+        window.AmbientAura?.setHolding(false);
+        window.AmbientAura?.setHoldProgress(0);
 
         if (navigator.vibrate) navigator.vibrate([40, 50, 40]);
         playChime('reset');
@@ -1715,6 +1730,8 @@
       drainStartTime = performance.now();
       document.body.classList.add('is-holding');
       pad.classList.add('holding');
+      window.AmbientAura?.setHolding(true);
+      window.AmbientAura?.setHoldProgress(0.08);
 
       cancelAnimationFrame(holdRaf);
       holdRaf = requestAnimationFrame(stepHold);
@@ -1755,6 +1772,8 @@
       isCenterPadHolding = false;
       document.body.classList.remove('is-holding');
       pad.classList.remove('holding');
+      window.AmbientAura?.setHolding(false);
+      window.AmbientAura?.setHoldProgress(0);
 
       if (holdCompleted) {
         return;
@@ -1886,24 +1905,24 @@
   // Default general highest focus threshold in a day (4 hours = 240 mins)
   const DEFAULT_PEAK_MINUTES = 240;
 
-  // Multi-tier color stops calibrated for dark mode: from subtle dark jade to peak luminous mint
+  // Multi-tier color stops calibrated for dark mode: from deep obsidian pine to peak radiant neon green
   const HEATMAP_COLOR_STOPS = [
-    { mins: 0,   r: 20,  g: 27,  b: 24  }, // #141B18 (Empty tile)
-    { mins: 12,  r: 21,  g: 51,  b: 34  }, // #153322 (Quick 10-15m burst: subtle deep jade)
-    { mins: 25,  r: 24,  g: 69,  b: 43  }, // #18452B (25m Pomodoro: light pine)
-    { mins: 45,  r: 28,  g: 88,  b: 54  }, // #1C5836 (45m solid focus: forest green)
-    { mins: 70,  r: 33,  g: 110, b: 67  }, // #216E43 (~1.1h: medium emerald)
-    { mins: 100, r: 40,  g: 136, b: 82  }, // #288852 (~1.6h: rich emerald)
-    { mins: 135, r: 50,  g: 164, b: 98  }, // #32A462 (~2.25h: vivid spring mint)
-    { mins: 175, r: 66,  g: 194, b: 118 }, // #42C276 (~2.9h: vibrant mint)
-    { mins: 210, r: 96,  g: 220, b: 146 }, // #60DC92 (~3.5h: bright electric mint)
-    { mins: 240, r: 163, g: 240, b: 186 }  // #A3F0BA (4.0h+ peak highest focus: radiant mint)
+    { mins: 0,   r: 18,  g: 24,  b: 21  }, // #121815 (Empty tile)
+    { mins: 12,  r: 13,  g: 46,  b: 24  }, // #0D2E18 (Quick 10-15m burst: subtle deep pine)
+    { mins: 25,  r: 15,  g: 61,  b: 32  }, // #0F3D20 (25m Pomodoro: rich deep green)
+    { mins: 45,  r: 19,  g: 79,  b: 42  }, // #134F2A (45m solid focus: forest green)
+    { mins: 70,  r: 23,  g: 100, b: 53  }, // #176435 (~1.1h: deep emerald)
+    { mins: 100, r: 27,  g: 124, b: 66  }, // #1B7C42 (~1.6h: rich green)
+    { mins: 135, r: 31,  g: 152, b: 81  }, // #1F9851 (~2.25h: vivid green)
+    { mins: 175, r: 36,  g: 184, b: 98  }, // #24B862 (~2.9h: bold electric green)
+    { mins: 210, r: 16,  g: 224, b: 104 }, // #10E068 (~3.5h: luminous neon green)
+    { mins: 240, r: 78,  g: 250, b: 143 }  // #4EFA8F (4.0h+ peak highest focus: radiant neon green)
   ];
 
   // Mathematical smooth-step interpolation yielding a distinct, flexible shade per minute
   function getHeatmapCellColor(minutes, customPeak = 240) {
     if (!minutes || minutes <= 0) {
-      return { color: 'rgb(20, 27, 24)', level: 0, isPeak: false };
+      return { color: 'rgb(18, 24, 21)', level: 0, isPeak: false };
     }
 
     const peakMins = Math.max(60, customPeak || DEFAULT_PEAK_MINUTES);
@@ -1938,7 +1957,7 @@
       }
     }
 
-    return { color: 'rgb(20, 27, 24)', level: 0, isPeak: false };
+    return { color: 'rgb(18, 24, 21)', level: 0, isPeak: false };
   }
 
   function createMonthBlock(year, monthIndex) {
@@ -2422,7 +2441,7 @@
           return {
             id: s.id,
             subject: s.subject || s.subject_name || 'Focus Session',
-            color: s.color || '#79D99B',
+            color: s.color || '#10E068',
             durationMinutes: duration,
             timeRange: timeRange,
             xp: duration
@@ -2457,7 +2476,7 @@
         listEl.innerHTML = dayData.sessions.map(s => `
           <div class="day-session-card" data-session-id="${escapeHtml(s.id)}">
             <div class="day-session-left">
-              <span class="day-session-dot" style="background-color: ${s.color || '#79D99B'}; color: ${s.color || '#79D99B'};"></span>
+              <span class="day-session-dot" style="background-color: ${s.color || '#10E068'}; color: ${s.color || '#10E068'};"></span>
               <div class="day-session-info">
                 <span class="day-session-subject">${escapeHtml(s.subject)}</span>
                 <span class="day-session-timerange">${escapeHtml(s.timeRange || '')}</span>
