@@ -651,9 +651,252 @@
     }
   }
 
+  // =========================================================================
+  // AUTH MODAL SIMPLE DOTS BACKGROUND ENGINE
+  // Simple floating glowing dots & constellation web for the Sign In / Sign Up modal
+  // (Zero hold-to-reset, zero dial mapping — pure organic luminous drifting particles)
+  // =========================================================================
+
+  class ModalSimpleDots {
+    constructor() {
+      this.dialog = document.getElementById('auth-dialog');
+      this.backdropCanvas = document.getElementById('auth-dots-canvas');
+      this.frontCanvas = document.getElementById('auth-card-dots-front');
+      this.backCanvas = document.getElementById('auth-card-dots-back');
+
+      this.backdropCtx = this.backdropCanvas ? this.backdropCanvas.getContext('2d', { alpha: true }) : null;
+      this.frontCtx = this.frontCanvas ? this.frontCanvas.getContext('2d', { alpha: true }) : null;
+      this.backCtx = this.backCanvas ? this.backCanvas.getContext('2d', { alpha: true }) : null;
+
+      this.bgParticles = [];
+      this.frontParticles = [];
+      this.backParticles = [];
+
+      this.palette = [
+        { r: 16, g: 224, b: 104 }, // Neon green primary
+        { r: 78, g: 250, b: 143 }, // Luminous lime
+        { r: 36, g: 232, b: 124 }, // Electric emerald
+        { r: 14, g: 200, b: 96 }   // Deep vivid green
+      ];
+
+      this.rafId = null;
+      this.running = false;
+      this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      this.init();
+    }
+
+    init() {
+      this.resize();
+      window.addEventListener('resize', () => this.resize(), { passive: true });
+      this.createParticles();
+
+      // Mutation observer to detect modal open/close automatically
+      if (this.dialog && window.MutationObserver) {
+        this.observer = new MutationObserver(() => {
+          if (this.dialog.open) {
+            this.start();
+          } else {
+            this.stop();
+          }
+        });
+        this.observer.observe(this.dialog, { attributes: true, attributeFilter: ['open'] });
+      }
+
+      if (this.dialog && this.dialog.open) {
+        this.start();
+      }
+    }
+
+    createSingleDot(w, h, isCard = false) {
+      const color = this.palette[(Math.random() * this.palette.length) | 0];
+      const speed = isCard ? (0.12 + Math.random() * 0.22) : (0.18 + Math.random() * 0.38);
+      const angle = Math.random() * Math.PI * 2;
+      const baseRadius = isCard 
+        ? (0.75 + Math.random() * 1.1) 
+        : (Math.random() < 0.65 ? 1.0 + Math.random() * 0.65 : 1.8 + Math.random() * 0.85);
+
+      return {
+        x: Math.random() * Math.max(w, 200),
+        y: Math.random() * Math.max(h, 200),
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        radius: baseRadius,
+        baseRadius,
+        r: color.r,
+        g: color.g,
+        b: color.b,
+        alpha: 0.35 + Math.random() * 0.45,
+        pulsePhase: Math.random() * Math.PI * 2,
+        pulseSpeed: 0.015 + Math.random() * 0.02,
+        isProminent: !isCard && baseRadius > 1.6
+      };
+    }
+
+    createParticles() {
+      // Backdrop dots
+      const bgW = window.innerWidth;
+      const bgH = window.innerHeight;
+      const bgCount = window.innerWidth < 768 ? 32 : 55;
+      this.bgParticles = [];
+      for (let i = 0; i < bgCount; i++) {
+        this.bgParticles.push(this.createSingleDot(bgW, bgH, false));
+      }
+
+      // Card face dots
+      const cardW = 440;
+      const cardH = 460;
+      this.frontParticles = [];
+      this.backParticles = [];
+      for (let i = 0; i < 16; i++) {
+        this.frontParticles.push(this.createSingleDot(cardW, cardH, true));
+        this.backParticles.push(this.createSingleDot(cardW, cardH, true));
+      }
+    }
+
+    resize() {
+      this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      if (this.backdropCanvas && this.backdropCtx) {
+        this.backdropCanvas.width = Math.round(w * this.dpr);
+        this.backdropCanvas.height = Math.round(h * this.dpr);
+        this.backdropCanvas.style.width = `${w}px`;
+        this.backdropCanvas.style.height = `${h}px`;
+        this.backdropCtx.setTransform(1, 0, 0, 1, 0, 0);
+        this.backdropCtx.scale(this.dpr, this.dpr);
+      }
+
+      const resizeCard = (canvas, ctx) => {
+        if (!canvas || !ctx) return;
+        const rect = canvas.getBoundingClientRect();
+        const cw = rect.width || 440;
+        const ch = rect.height || 460;
+        canvas.width = Math.round(cw * this.dpr);
+        canvas.height = Math.round(ch * this.dpr);
+        canvas.style.width = `${cw}px`;
+        canvas.style.height = `${ch}px`;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(this.dpr, this.dpr);
+      };
+
+      resizeCard(this.frontCanvas, this.frontCtx);
+      resizeCard(this.backCanvas, this.backCtx);
+    }
+
+    start() {
+      if (this.running) return;
+      this.running = true;
+      this.resize();
+      this.loop();
+    }
+
+    stop() {
+      this.running = false;
+      if (this.rafId) {
+        cancelAnimationFrame(this.rafId);
+        this.rafId = null;
+      }
+    }
+
+    loop() {
+      if (!this.running) return;
+      if (this.dialog && !this.dialog.open) {
+        this.stop();
+        return;
+      }
+
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      this.updateAndRenderGroup(this.backdropCtx, this.bgParticles, w, h, true);
+
+      // Render front or back card face particles
+      const scene = document.getElementById('auth-card-scene');
+      const isFlipped = scene ? scene.classList.contains('is-flipped') : false;
+      if (!isFlipped && this.frontCtx && this.frontCanvas) {
+        const rect = this.frontCanvas.getBoundingClientRect();
+        this.updateAndRenderGroup(this.frontCtx, this.frontParticles, rect.width || 440, rect.height || 400, false);
+      } else if (isFlipped && this.backCtx && this.backCanvas) {
+        const rect = this.backCanvas.getBoundingClientRect();
+        this.updateAndRenderGroup(this.backCtx, this.backParticles, rect.width || 440, rect.height || 460, false);
+      }
+
+      this.rafId = requestAnimationFrame(() => this.loop());
+    }
+
+    updateAndRenderGroup(ctx, particles, w, h, drawLines) {
+      if (!ctx || !particles || particles.length === 0) return;
+      ctx.clearRect(0, 0, w, h);
+
+      const n = particles.length;
+
+      // Subtle connection lines (only for backdrop group)
+      if (drawLines) {
+        ctx.lineWidth = 0.65;
+        for (let i = 0; i < n; i++) {
+          const p1 = particles[i];
+          for (let j = i + 1; j < n; j++) {
+            const p2 = particles[j];
+            const dx = p2.x - p1.x;
+            if (dx > 105 || dx < -105) continue;
+            const dy = p2.y - p1.y;
+            if (dy > 105 || dy < -105) continue;
+            const distSq = dx * dx + dy * dy;
+            if (distSq < 105 * 105) {
+              const dist = Math.sqrt(distSq);
+              const alpha = (1.0 - dist / 105) * 0.16;
+              ctx.strokeStyle = `rgba(16, 224, 104, ${alpha.toFixed(3)})`;
+              ctx.beginPath();
+              ctx.moveTo(p1.x, p1.y);
+              ctx.lineTo(p2.x, p2.y);
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      // Draw dots
+      for (let i = 0; i < n; i++) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+
+        // Wrap around boundaries
+        if (p.x < -10) p.x = w + 10;
+        else if (p.x > w + 10) p.x = -10;
+        if (p.y < -10) p.y = h + 10;
+        else if (p.y > h + 10) p.y = -10;
+
+        p.pulsePhase += p.pulseSpeed;
+        const pulse = Math.sin(p.pulsePhase) * 0.2;
+        const curRadius = Math.max(0.6, p.baseRadius + pulse);
+        const curAlpha = Math.min(1.0, Math.max(0.1, p.alpha + pulse * 0.3));
+
+        // Prominent halo
+        if (p.isProminent) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, curRadius * 2.8, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${p.r}, ${p.g}, ${p.b}, ${(curAlpha * 0.18).toFixed(3)})`;
+          ctx.fill();
+        }
+
+        // Core bead
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, curRadius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.r}, ${p.g}, ${p.b}, ${curAlpha.toFixed(3)})`;
+        ctx.fill();
+      }
+    }
+  }
+
   function initAmbientAura() {
     if (document.getElementById('ambient-constellation-canvas')) {
       window.AmbientAura = new AuraConstellation('ambient-constellation-canvas');
+    }
+    if (document.getElementById('auth-dots-canvas')) {
+      window.AuthModalDots = new ModalSimpleDots();
     }
   }
 

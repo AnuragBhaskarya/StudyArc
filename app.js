@@ -605,12 +605,19 @@
       dialog.showModal();
     }
 
+    if (window.AuthModalDots && typeof window.AuthModalDots.start === 'function') {
+      window.AuthModalDots.start();
+    }
+
     // Set flip state
     const isSignup = (mode === 'register' || mode === 'signup');
     flipAuthCard(isSignup ? 'signup' : 'login', false);
 
     requestAnimationFrame(() => {
       updateAuthCardHeight(isSignup ? 'signup' : 'login');
+      if (window.AuthModalDots && typeof window.AuthModalDots.resize === 'function') {
+        window.AuthModalDots.resize();
+      }
     });
   }
 
@@ -626,6 +633,9 @@
 
     if (dialog.open) {
       dialog.close();
+      if (window.AuthModalDots && typeof window.AuthModalDots.stop === 'function') {
+        window.AuthModalDots.stop();
+      }
     }
   }
 

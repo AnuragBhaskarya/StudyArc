@@ -365,11 +365,18 @@
 
       <!-- AUTHENTICATION MODAL DIALOG (Neon Green 3D Flippable Modal) -->
       <dialog id="auth-dialog" class="auth-dialog" aria-labelledby="auth-modal-title">
+        <!-- Floating Ambient Dots Background Canvas -->
+        <canvas id="auth-dots-canvas" class="auth-dots-canvas" aria-hidden="true"></canvas>
+
+        <!-- Top Green Ambient Light Glow (Neon Green Modal Style) -->
+        <div class="auth-top-ambient-glow" aria-hidden="true"></div>
+
         <div class="auth-card-scene" id="auth-card-scene">
           <div class="auth-card-flipper" id="auth-card-flipper">
             
             <!-- FRONT FACE: SIGN IN -->
             <div class="auth-card-face auth-card-front" id="auth-card-front">
+              <canvas class="auth-card-dots-canvas" id="auth-card-dots-front" aria-hidden="true"></canvas>
               <button type="button" class="auth-dialog-close-btn" id="btn-close-auth-dialog" aria-label="Close">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -440,6 +447,7 @@
 
             <!-- BACK FACE: SIGN UP -->
             <div class="auth-card-face auth-card-back" id="auth-card-back">
+              <canvas class="auth-card-dots-canvas" id="auth-card-dots-back" aria-hidden="true"></canvas>
               <button type="button" class="auth-dialog-close-btn" id="btn-close-auth-dialog-back" aria-label="Close">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -547,7 +555,7 @@
 
   <!-- JAVASCRIPT LOGIC -->
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
-  <script src="aura-particles.js"></script>
-  <script src="app.js?v=4.5"></script>
+  <script src="aura-particles.js?v=2.5"></script>
+  <script src="app.js?v=4.6"></script>
 </body>
 </html>
