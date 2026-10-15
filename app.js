@@ -1837,6 +1837,16 @@
     const chipsContainer = document.getElementById('task-suggestions-chips');
     if (!dialog) return;
 
+    // Deselect any active text selection across document
+    if (window.getSelection) {
+      try {
+        window.getSelection().removeAllRanges();
+      } catch (_) {}
+    }
+
+    const centerPad = document.getElementById('timer-center-pad');
+    centerPad?.blur?.();
+
     const targetMins = Math.round(state.timer.targetSeconds / 60);
     if (durationPill) {
       durationPill.textContent = `⏱️ ${targetMins} mins`;
@@ -1875,13 +1885,60 @@
 
   function closeTaskPromptDialog() {
     const dialog = document.getElementById('task-prompt-dialog');
+    const input = document.getElementById('input-task-name');
+
+    if (input) {
+      try {
+        input.setSelectionRange?.(0, 0);
+      } catch (_) {}
+      input.blur();
+    }
+
+    if (window.getSelection) {
+      try {
+        window.getSelection().removeAllRanges();
+      } catch (_) {}
+    }
+
     if (dialog && dialog.open) {
       dialog.close();
     }
+
+    const centerPad = document.getElementById('timer-center-pad');
+    centerPad?.blur?.();
+    document.activeElement?.blur?.();
+
+    // Async cleanup to prevent browser dialog-dismiss focus bounce onto timer numbers
+    setTimeout(() => {
+      if (window.getSelection) {
+        try {
+          window.getSelection().removeAllRanges();
+        } catch (_) {}
+      }
+      centerPad?.blur?.();
+      if (document.activeElement === centerPad) {
+        centerPad.blur();
+      }
+    }, 15);
   }
 
   function startTaskSession(taskName) {
     const cleanName = (taskName || '').trim() || 'Focus Session';
+    const input = document.getElementById('input-task-name');
+
+    if (input) {
+      try {
+        input.setSelectionRange?.(0, 0);
+      } catch (_) {}
+      input.blur();
+    }
+
+    if (window.getSelection) {
+      try {
+        window.getSelection().removeAllRanges();
+      } catch (_) {}
+    }
+
     state.activeTaskName = cleanName;
     state.activeTaskStartTime = Date.now();
     state.activeTaskTargetSeconds = state.timer.targetSeconds;
@@ -1891,6 +1948,10 @@
     startTimer();
     renderTimer();
     showToast(`Focus session started: ${cleanName}`);
+
+    const centerPad = document.getElementById('timer-center-pad');
+    centerPad?.blur?.();
+    document.activeElement?.blur?.();
   }
 
   let toastTimeout = null;
@@ -2801,6 +2862,34 @@
         }
       });
     }
+
+    // Automatic cleanup of focus outline and selections whenever any dialog closes
+    document.querySelectorAll('dialog').forEach(dlg => {
+      const handleDialogDismiss = () => {
+        if (window.getSelection) {
+          try {
+            window.getSelection().removeAllRanges();
+          } catch (_) {}
+        }
+        const centerPad = document.getElementById('timer-center-pad');
+        centerPad?.blur?.();
+        document.activeElement?.blur?.();
+        setTimeout(() => {
+          if (window.getSelection) {
+            try {
+              window.getSelection().removeAllRanges();
+            } catch (_) {}
+          }
+          centerPad?.blur?.();
+          if (document.activeElement === centerPad) {
+            centerPad.blur();
+          }
+        }, 15);
+      };
+
+      dlg.addEventListener('close', handleDialogDismiss);
+      dlg.addEventListener('cancel', handleDialogDismiss);
+    });
 
 
     // -------------------------------------------------------------------------
