@@ -2704,13 +2704,9 @@
   function deleteSession(sessionId, dateStr) {
     if (!sessionId) return;
 
-    // 1. Instant Visual Feedback: Smooth slide left + scale down + red tint
     const cardEl = document.querySelector(`.day-session-card[data-session-id="${sessionId}"]`);
-    if (cardEl) {
-      cardEl.classList.add('is-deleting');
-    }
 
-    // 2. Identify session duration from client state or card dataset
+    // 1. Identify session duration from client state or card dataset
     const idx = (state.sessions || []).findIndex(s =>
       s.id === sessionId ||
       String(s.id) === String(sessionId) ||
@@ -2725,7 +2721,7 @@
       duration = parseInt(cardEl.dataset.duration || cardEl.querySelector('.day-session-duration')?.textContent || '0', 10) || 0;
     }
 
-    // 3. Update day activity and gamification stats immediately
+    // 2. Update day activity and gamification stats immediately
     if (dateStr && state.dayActivity && state.dayActivity[dateStr] !== undefined) {
       state.dayActivity[dateStr] = Math.max(0, state.dayActivity[dateStr] - duration);
       if (state.dayActivity[dateStr] === 0) {
@@ -2736,7 +2732,7 @@
     state.totalFocusSeconds = Math.max(0, (state.totalFocusSeconds || 0) - duration * 60);
     updateStreak();
 
-    // 4. Update or invalidate dayDetailsCache
+    // 3. Update or invalidate dayDetailsCache
     if (dateStr && dayDetailsCache.has(dateStr)) {
       const cached = dayDetailsCache.get(dateStr);
       if (cached && Array.isArray(cached.sessions)) {
@@ -2759,7 +2755,7 @@
       dayDetailsCache.delete(dateStr);
     }
 
-    // 5. Update open modal pills and count synchronously
+    // 4. Update open modal pills and count synchronously
     const timeEl = document.getElementById('day-pill-time');
     const sessEl = document.getElementById('day-pill-sessions');
     const avgEl = document.getElementById('day-pill-avg');
@@ -2798,33 +2794,83 @@
     renderHeatmap();
     updateTodayLiveStat();
 
-    // 6. After the smooth sliding animation completes, remove card from DOM
-    setTimeout(() => {
-      if (cardEl && cardEl.parentNode) {
-        cardEl.remove();
+    // 5. Exact dismiss animation from Taski:
+    // Lock measured natural height, then double-rAF to transition height to 0, margin-bottom to -0.65rem,
+    // transform translateX(-50%) scale(0.85), opacity to 0, and red tint
+    if (cardEl) {
+      cardEl.style.pointerEvents = 'none';
+      cardEl.style.overflow = 'hidden';
+
+      const h = cardEl.offsetHeight;
+      cardEl.style.height = h + 'px';
+
+      const dot = cardEl.querySelector('.day-session-dot');
+      if (dot) {
+        dot.style.transition = 'background-color 0.2s, box-shadow 0.2s';
+        dot.style.backgroundColor = '#ef4444';
+        dot.style.boxShadow = '0 0 8px #ef4444';
       }
-      if (dayTotalSess === 0 && listEl) {
-        const isToday = (dateStr === getLocalDateString());
-        listEl.innerHTML = `
-          <div class="day-empty-state" style="animation: dialog-pop-in 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;">
-            <div class="day-empty-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
+      const subj = cardEl.querySelector('.day-session-subject');
+      if (subj) {
+        subj.style.transition = 'color 0.2s';
+        subj.style.color = '#fca5a5';
+      }
+
+      // Double-rAF batching: set transition in frame 1, animate in frame 2
+      requestAnimationFrame(() => {
+        cardEl.style.transition = 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease-out, height 0.28s cubic-bezier(0.22, 1, 0.36, 1), margin-bottom 0.28s cubic-bezier(0.22, 1, 0.36, 1), padding 0.28s cubic-bezier(0.22, 1, 0.36, 1), border-width 0.22s ease-out, background 0.2s, border-color 0.2s';
+
+        requestAnimationFrame(() => {
+          cardEl.style.transform = 'translateX(-50%) scale(0.85)';
+          cardEl.style.opacity = '0';
+          cardEl.style.height = '0px';
+          cardEl.style.marginBottom = '-0.65rem';
+          cardEl.style.paddingTop = '0px';
+          cardEl.style.paddingBottom = '0px';
+          cardEl.style.borderTopWidth = '0px';
+          cardEl.style.borderBottomWidth = '0px';
+          cardEl.style.background = 'rgba(239, 68, 68, 0.18)';
+          cardEl.style.borderColor = 'rgba(239, 68, 68, 0.45)';
+        });
+      });
+
+      let cleanedUp = false;
+      const finishDismiss = () => {
+        if (cleanedUp) return;
+        cleanedUp = true;
+        if (cardEl && cardEl.parentNode) {
+          cardEl.remove();
+        }
+        if (dayTotalSess === 0 && listEl) {
+          const isToday = (dateStr === getLocalDateString());
+          listEl.innerHTML = `
+            <div class="day-empty-state" style="animation: dialog-pop-in 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+              <div class="day-empty-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
+              <div class="day-empty-title">No sessions on this day</div>
+              <div class="day-empty-sub">${isToday ? 'Start the timer to record your first focus block today!' : 'Rest day recorded. Zero minutes studied.'}</div>
             </div>
-            <div class="day-empty-title">No sessions on this day</div>
-            <div class="day-empty-sub">${isToday ? 'Start the timer to record your first focus block today!' : 'Rest day recorded. Zero minutes studied.'}</div>
-          </div>
-        `;
-      }
-    }, 330);
+          `;
+        }
+      };
+
+      cardEl.addEventListener('transitionend', function handler(e) {
+        if (e.propertyName !== 'height') return;
+        cardEl.removeEventListener('transitionend', handler);
+        finishDismiss();
+      });
+      setTimeout(finishDismiss, 350);
+    }
 
     showToast('Session deleted');
 
-    // 7. Fire backend deletion in the background (non-blocking)
+    // 6. Fire backend deletion in the background (non-blocking)
     fetch(`/api/sessions/${encodeURIComponent(sessionId)}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' }
