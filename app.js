@@ -53,6 +53,7 @@
   };
 
   let state = loadState();
+  const dayDetailsCache = new Map();
 
   function loadState() {
     try {
@@ -123,6 +124,7 @@
           state.user = data.user || null;
           state.subjects = data.subjects || [];
           state.sessions = data.sessions || [];
+          dayDetailsCache.clear();
 
           const oldActivityStr = JSON.stringify(state.dayActivity);
           const newActivityStr = JSON.stringify(data.dayActivity || {});
@@ -1409,6 +1411,7 @@
       timeRange: timeRangeStr,
       xp: minutesCompleted
     });
+    dayDetailsCache.delete(todayStr);
 
     updateStreak();
     saveState();
@@ -2449,70 +2452,71 @@
   // =========================================================================
   // DAY DETAIL MODAL DIALOG (TODAY & PAST CELL CHRONICLE)
   // =========================================================================
-  async function openDayDialog(dateStr) {
-    const dialog = document.getElementById('day-detail-dialog');
-    if (!dialog) return;
+  let currentDialogDate = null;
 
-    const todayStr = getLocalDateString();
-    const isToday = (dateStr === todayStr);
-
-    const badgeEl = document.getElementById('day-dialog-badge');
-    const titleEl = document.getElementById('day-dialog-title');
-    const timeEl = document.getElementById('day-pill-time');
-    const sessEl = document.getElementById('day-pill-sessions');
-    const avgEl = document.getElementById('day-pill-avg');
-    const xpEl = document.getElementById('day-pill-xp');
-    const countEl = document.getElementById('day-timeline-count');
-    const listEl = document.getElementById('day-sessions-list');
-
-    if (badgeEl) badgeEl.textContent = isToday ? "Today's Record" : "Day Record";
-
-    let formattedDate = dateStr;
+  function formatDayDateHeader(dateStr) {
     try {
       const parts = dateStr.split('-');
       const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-      formattedDate = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    } catch (_) {}
-    if (titleEl) titleEl.textContent = formattedDate;
+      return d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    } catch (_) {
+      return dateStr;
+    }
+  }
 
-    // Show modal immediately
-    if (typeof dialog.showModal === 'function' && !dialog.open) {
-      dialog.showModal();
+  function getDayDataFromClient(dateStr) {
+    // 1. Check in-memory cache first
+    if (dayDetailsCache.has(dateStr)) {
+      return dayDetailsCache.get(dateStr);
     }
 
-    let dayData = null;
-    try {
-      const res = await fetch(`/api/day/${dateStr}`);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && json.data) {
-          dayData = json.data;
-        }
-      }
-    } catch (e) {
-      console.warn('StudyArc: Error fetching day data from SQLite:', e);
+    const todayStr = getLocalDateString();
+    const isToday = (dateStr === todayStr);
+    const formattedDate = formatDayDateHeader(dateStr);
+    const activityMins = (state.dayActivity && state.dayActivity[dateStr]) || 0;
+
+    // 2. Zero-minute day: 100% complete rest day, no network needed
+    if (activityMins === 0) {
+      const emptyData = {
+        date: dateStr,
+        formattedDate,
+        isToday,
+        totalMinutes: 0,
+        totalTimeFormatted: '0m',
+        totalSessions: 0,
+        avgFocusMinutes: 0,
+        totalXp: 0,
+        sessions: []
+      };
+      dayDetailsCache.set(dateStr, emptyData);
+      return emptyData;
     }
 
-    if (!dayData) {
-      const matching = (state.sessions || []).filter(s => s.date === dateStr);
-      let totalMins = 0;
-      matching.forEach(s => totalMins += (s.durationMinutes || s.duration_minutes || 0));
+    // 3. Check if state.sessions has all records for this date
+    const matching = (state.sessions || []).filter(s => s.date === dateStr);
+    let matchingMins = 0;
+    matching.forEach(s => matchingMins += (s.durationMinutes || s.duration_minutes || 0));
+
+    // If the sum of durations in state.sessions matches known dayActivity minutes, we have all records!
+    if (matchingMins >= activityMins && matching.length > 0) {
       const totalSess = matching.length;
-      const avgMins = totalSess > 0 ? Math.round(totalMins / totalSess) : 0;
-      const hrs = Math.floor(totalMins / 60);
-      const mins = totalMins % 60;
+      const avgMins = Math.round(matchingMins / totalSess);
+      const hrs = Math.floor(matchingMins / 60);
+      const mins = matchingMins % 60;
       const formattedTotal = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
 
-      dayData = {
+      const sortedMatching = [...matching].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+      const fullData = {
         date: dateStr,
-        formattedDate: formattedDate,
-        isToday: isToday,
-        totalMinutes: totalMins,
+        formattedDate,
+        isToday,
+        totalMinutes: matchingMins,
         totalTimeFormatted: formattedTotal,
         totalSessions: totalSess,
         avgFocusMinutes: avgMins,
-        totalXp: totalMins,
-        sessions: matching.map(s => {
+        totalXp: matchingMins,
+        sessions: sortedMatching.map(s => {
           const duration = s.durationMinutes || s.duration_minutes || 0;
           const ts = s.timestamp || Date.now();
           const endD = new Date(ts);
@@ -2528,13 +2532,33 @@
           };
         })
       };
+      dayDetailsCache.set(dateStr, fullData);
+      return fullData;
     }
 
-    if (timeEl) timeEl.textContent = dayData.totalTimeFormatted || `${dayData.totalMinutes}m`;
-    if (sessEl) sessEl.textContent = dayData.totalSessions;
-    if (avgEl) avgEl.textContent = `${dayData.avgFocusMinutes}m`;
-    if (xpEl) xpEl.textContent = `+${dayData.totalXp} XP`;
-    if (countEl) countEl.textContent = `${dayData.totalSessions} session${dayData.totalSessions === 1 ? '' : 's'}`;
+    return null;
+  }
+
+  function renderDayDialogDOM(dayData) {
+    const badgeEl = document.getElementById('day-dialog-badge');
+    const titleEl = document.getElementById('day-dialog-title');
+    const timeEl = document.getElementById('day-pill-time');
+    const sessEl = document.getElementById('day-pill-sessions');
+    const avgEl = document.getElementById('day-pill-avg');
+    const xpEl = document.getElementById('day-pill-xp');
+    const countEl = document.getElementById('day-timeline-count');
+    const listEl = document.getElementById('day-sessions-list');
+
+    if (badgeEl) badgeEl.textContent = dayData.isToday ? "Today's Record" : "Day Record";
+    if (titleEl) titleEl.textContent = dayData.formattedDate || dayData.date;
+    if (timeEl) timeEl.textContent = dayData.totalTimeFormatted || `${dayData.totalMinutes || 0}m`;
+    if (sessEl) sessEl.textContent = dayData.totalSessions || 0;
+    if (avgEl) avgEl.textContent = `${dayData.avgFocusMinutes || 0}m`;
+    if (xpEl) xpEl.textContent = `+${dayData.totalXp || 0} XP`;
+    if (countEl) {
+      const sessCount = dayData.totalSessions || 0;
+      countEl.textContent = `${sessCount} session${sessCount === 1 ? '' : 's'}`;
+    }
 
     if (listEl) {
       if (!dayData.sessions || dayData.sessions.length === 0) {
@@ -2549,7 +2573,7 @@
               </svg>
             </div>
             <div class="day-empty-title">No sessions on this day</div>
-            <div class="day-empty-sub">${isToday ? 'Start the timer to record your first focus block today!' : 'Rest day recorded. Zero minutes studied.'}</div>
+            <div class="day-empty-sub">${dayData.isToday ? 'Start the timer to record your first focus block today!' : 'Rest day recorded. Zero minutes studied.'}</div>
           </div>
         `;
       } else {
@@ -2580,7 +2604,97 @@
     }
   }
 
+  function renderDayDialogSkeleton(dateStr) {
+    const todayStr = getLocalDateString();
+    const isToday = (dateStr === todayStr);
+    const formattedDate = formatDayDateHeader(dateStr);
+    const activityMins = (state.dayActivity && state.dayActivity[dateStr]) || 0;
+    const hrs = Math.floor(activityMins / 60);
+    const mins = activityMins % 60;
+    const formattedTotal = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+
+    const badgeEl = document.getElementById('day-dialog-badge');
+    const titleEl = document.getElementById('day-dialog-title');
+    const timeEl = document.getElementById('day-pill-time');
+    const sessEl = document.getElementById('day-pill-sessions');
+    const avgEl = document.getElementById('day-pill-avg');
+    const xpEl = document.getElementById('day-pill-xp');
+    const countEl = document.getElementById('day-timeline-count');
+    const listEl = document.getElementById('day-sessions-list');
+
+    if (badgeEl) badgeEl.textContent = isToday ? "Today's Record" : "Day Record";
+    if (titleEl) titleEl.textContent = formattedDate;
+    if (timeEl) timeEl.textContent = activityMins > 0 ? formattedTotal : '...';
+    if (sessEl) sessEl.textContent = '...';
+    if (avgEl) avgEl.textContent = '...';
+    if (xpEl) xpEl.textContent = activityMins > 0 ? `+${activityMins} XP` : '...';
+    if (countEl) countEl.textContent = 'Loading...';
+    if (listEl) {
+      listEl.innerHTML = `
+        <div class="day-session-skeleton"></div>
+        <div class="day-session-skeleton" style="opacity: 0.6;"></div>
+      `;
+    }
+  }
+
+  async function openDayDialog(dateStr) {
+    const dialog = document.getElementById('day-detail-dialog');
+    if (!dialog) return;
+
+    currentDialogDate = dateStr;
+
+    // 1. Instant Synchronous Resolution: Cache, Zero-Minute Rest Day, or Already in state.sessions
+    let dayData = getDayDataFromClient(dateStr);
+    if (dayData) {
+      renderDayDialogDOM(dayData);
+      if (typeof dialog.showModal === 'function' && !dialog.open) {
+        dialog.showModal();
+      }
+      return;
+    }
+
+    // 2. Fallback for older dates outside recent memory:
+    // Pre-populate with known activity stats & skeleton feed immediately so NO PREVIOUS DAY DATA IS EVER SHOWN
+    renderDayDialogSkeleton(dateStr);
+    if (typeof dialog.showModal === 'function' && !dialog.open) {
+      dialog.showModal();
+    }
+
+    // 3. Fetch full session details from SQLite/Postgres backend
+    try {
+      const res = await fetch(`/api/day/${dateStr}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          dayData = json.data;
+          dayDetailsCache.set(dateStr, dayData);
+        }
+      }
+    } catch (e) {
+      console.warn('StudyArc: Error fetching day data from backend:', e);
+    }
+
+    // 4. Ensure user hasn't switched to another date before applying
+    if (currentDialogDate === dateStr) {
+      if (!dayData) {
+        dayData = getDayDataFromClient(dateStr) || {
+          date: dateStr,
+          formattedDate: formatDayDateHeader(dateStr),
+          isToday: dateStr === getLocalDateString(),
+          totalMinutes: 0,
+          totalTimeFormatted: '0m',
+          totalSessions: 0,
+          avgFocusMinutes: 0,
+          totalXp: 0,
+          sessions: []
+        };
+      }
+      renderDayDialogDOM(dayData);
+    }
+  }
+
   function closeDayDialog() {
+    currentDialogDate = null;
     const dialog = document.getElementById('day-detail-dialog');
     if (dialog && dialog.open) {
       dialog.close();
@@ -2657,6 +2771,7 @@
 
     // Re-render the day dialog so timeline and the 4 highlight pills update immediately
     if (dateStr) {
+      dayDetailsCache.delete(dateStr);
       await openDayDialog(dateStr);
     }
 
@@ -2877,6 +2992,7 @@
               state.dayActivity = {};
               state.sessions = [];
               state.subjects = [];
+              dayDetailsCache.clear();
               state.timer.targetSeconds = 60 * 60;
               state.timer.remainingSeconds = 60 * 60;
               state.timer.status = 'idle';

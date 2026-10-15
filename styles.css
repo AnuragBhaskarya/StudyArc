@@ -1744,6 +1744,21 @@ input:checked + .switch-slider:before {
   border-radius: 4px;
 }
 
+/* Skeleton Shimmer for Day Detail Session Feed */
+.day-session-skeleton {
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.02) 25%, rgba(16, 224, 104, 0.06) 50%, rgba(255, 255, 255, 0.02) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border: 1px solid var(--border-subtle);
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* Session Item in Day Tab */
 .day-session-card {
   display: flex;
