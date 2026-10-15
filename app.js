@@ -1749,6 +1749,13 @@
       clearTimeout(holdDelayTimer);
       cancelAnimationFrame(holdRaf);
 
+      // Deselect any accidental active text selection immediately
+      if (window.getSelection) {
+        try {
+          window.getSelection().removeAllRanges();
+        } catch (_) {}
+      }
+
       // Capture pointer so movement or mouse drift does not interrupt hold/click
       pad.setPointerCapture?.(e.pointerId);
 
@@ -1795,8 +1802,9 @@
     pad.addEventListener('pointerup', handlePointerRelease);
     pad.addEventListener('pointercancel', handlePointerRelease);
 
-    // Prevent default context menu on long press on mobile
+    // Prevent default context menu & text selection on long press on mobile
     pad.addEventListener('contextmenu', (e) => e.preventDefault());
+    pad.addEventListener('selectstart', (e) => e.preventDefault());
 
     // Keyboard accessibility: Space or Enter toggles timer
     pad.addEventListener('keydown', (e) => {
@@ -2609,6 +2617,24 @@
   // EVENT LISTENERS & SETUP
   // =========================================================================
   function initEvents() {
+    // Disable accidental mobile long-press text selection across the website (excluding text inputs)
+    document.addEventListener('selectstart', (e) => {
+      if (e.target && e.target.closest && e.target.closest('input, textarea, [contenteditable="true"], .selectable-text')) {
+        return;
+      }
+      e.preventDefault();
+    });
+
+    // Prevent long-press contextmenu / text selection callout on the timer and general UI
+    document.addEventListener('contextmenu', (e) => {
+      if (e.target && e.target.closest && e.target.closest('input, textarea, [contenteditable="true"], .selectable-text')) {
+        return;
+      }
+      if (document.body.classList.contains('is-holding') || (e.target && e.target.closest && e.target.closest('#timer-center-pad, .timer-wrapper, .timer-section, .view-panel'))) {
+        e.preventDefault();
+      }
+    });
+
     // Interactive Draggable Bead & Central Click-to-Play/Hold-to-Reset Pad
     initBeadDragging();
     initCenterPadInteraction();

@@ -83,6 +83,21 @@ html, body {
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.45;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure text inputs, textareas, and editable fields remain fully selectable and interactive */
+input, textarea, [contenteditable="true"], .selectable-text {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 /* ==========================================================================
@@ -458,6 +473,18 @@ body.is-timer-paused .aura-blob-center {
   transition: none !important;
 }
 
+/* Global hold & drag protection against mobile text selection / callouts */
+body.is-holding,
+body.is-holding *,
+body.is-dragging,
+body.is-dragging * {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+}
+
 /* Active / Running Focus Timer Palette (Vibrant Green) */
 .timer-section.is-running .timer-outer-rim {
   stroke: var(--timer-rim-green);
@@ -476,6 +503,10 @@ body.is-timer-paused .aura-blob-center {
 .timer-bead-group {
   cursor: grab;
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
 }
 
@@ -548,7 +579,12 @@ body.is-dragging .timer-bead {
   align-items: center;
   justify-content: center;
   z-index: 5;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
+  touch-action: none;
   text-align: center;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -575,6 +611,10 @@ body.is-dragging .timer-bead {
   line-height: 1;
   margin: 0;
   font-feature-settings: "tnum" on, "lnum" on;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
   pointer-events: none;
   text-align: center;
@@ -655,6 +695,10 @@ body.is-dragging .timer-bead {
 
 .dial-layout-holder {
   visibility: hidden;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
   pointer-events: none;
   line-height: 1;
@@ -675,6 +719,11 @@ body.is-dragging .timer-bead {
   backface-visibility: hidden;
   line-height: 1;
   pointer-events: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 /* Random Subtle High-Speed Tremor / Wiggle Shake While Holding to Reset */
