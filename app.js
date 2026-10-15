@@ -2578,7 +2578,7 @@
         `;
       } else {
         listEl.innerHTML = dayData.sessions.map(s => `
-          <div class="day-session-card" data-session-id="${escapeHtml(s.id)}">
+          <div class="day-session-card" data-session-id="${escapeHtml(s.id)}" data-duration="${s.durationMinutes}">
             <div class="day-session-left">
               <span class="day-session-dot" style="background-color: ${s.color || '#10E068'}; color: ${s.color || '#10E068'};"></span>
               <div class="day-session-info">
@@ -2701,27 +2701,137 @@
     }
   }
 
-  async function deleteSession(sessionId, dateStr) {
+  function deleteSession(sessionId, dateStr) {
     if (!sessionId) return;
 
-    // Visual feedback on the card being deleted
+    // 1. Instant Visual Feedback: Smooth slide left + scale down + red tint
     const cardEl = document.querySelector(`.day-session-card[data-session-id="${sessionId}"]`);
     if (cardEl) {
       cardEl.classList.add('is-deleting');
     }
 
-    let deletedFromBackend = false;
-    let backendPayload = null;
+    // 2. Identify session duration from client state or card dataset
+    const idx = (state.sessions || []).findIndex(s =>
+      s.id === sessionId ||
+      String(s.id) === String(sessionId) ||
+      s.id === ('sess_' + sessionId) ||
+      ('sess_' + s.id) === String(sessionId)
+    );
+    let duration = 0;
+    if (idx !== -1) {
+      duration = state.sessions[idx].durationMinutes || state.sessions[idx].duration_minutes || 0;
+      state.sessions.splice(idx, 1);
+    } else if (cardEl) {
+      duration = parseInt(cardEl.dataset.duration || cardEl.querySelector('.day-session-duration')?.textContent || '0', 10) || 0;
+    }
 
-    try {
-      const res = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
-      });
+    // 3. Update day activity and gamification stats immediately
+    if (dateStr && state.dayActivity && state.dayActivity[dateStr] !== undefined) {
+      state.dayActivity[dateStr] = Math.max(0, state.dayActivity[dateStr] - duration);
+      if (state.dayActivity[dateStr] === 0) {
+        delete state.dayActivity[dateStr];
+      }
+    }
+    state.xp = Math.max(0, (state.xp || 0) - duration);
+    state.totalFocusSeconds = Math.max(0, (state.totalFocusSeconds || 0) - duration * 60);
+    updateStreak();
+
+    // 4. Update or invalidate dayDetailsCache
+    if (dateStr && dayDetailsCache.has(dateStr)) {
+      const cached = dayDetailsCache.get(dateStr);
+      if (cached && Array.isArray(cached.sessions)) {
+        cached.sessions = cached.sessions.filter(s =>
+          s.id !== sessionId && String(s.id) !== String(sessionId) &&
+          s.id !== ('sess_' + sessionId) && ('sess_' + s.id) !== String(sessionId)
+        );
+        cached.totalMinutes = Math.max(0, (cached.totalMinutes || 0) - duration);
+        cached.totalSessions = cached.sessions.length;
+        cached.avgFocusMinutes = cached.totalSessions > 0 ? Math.round(cached.totalMinutes / cached.totalSessions) : 0;
+        const hrs = Math.floor(cached.totalMinutes / 60);
+        const mins = cached.totalMinutes % 60;
+        cached.totalTimeFormatted = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+        cached.totalXp = cached.totalMinutes;
+        dayDetailsCache.set(dateStr, cached);
+      } else {
+        dayDetailsCache.delete(dateStr);
+      }
+    } else if (dateStr) {
+      dayDetailsCache.delete(dateStr);
+    }
+
+    // 5. Update open modal pills and count synchronously
+    const timeEl = document.getElementById('day-pill-time');
+    const sessEl = document.getElementById('day-pill-sessions');
+    const avgEl = document.getElementById('day-pill-avg');
+    const xpEl = document.getElementById('day-pill-xp');
+    const countEl = document.getElementById('day-timeline-count');
+    const listEl = document.getElementById('day-sessions-list');
+
+    let dayTotalMins = 0;
+    let dayTotalSess = 0;
+    let dayAvgMins = 0;
+
+    if (dateStr && dayDetailsCache.has(dateStr)) {
+      const c = dayDetailsCache.get(dateStr);
+      dayTotalMins = c.totalMinutes || 0;
+      dayTotalSess = c.totalSessions || 0;
+      dayAvgMins = c.avgFocusMinutes || 0;
+    } else {
+      const matching = (state.sessions || []).filter(s => s.date === dateStr);
+      matching.forEach(s => dayTotalMins += (s.durationMinutes || s.duration_minutes || 0));
+      dayTotalSess = matching.length;
+      dayAvgMins = dayTotalSess > 0 ? Math.round(dayTotalMins / dayTotalSess) : 0;
+    }
+
+    const hrs = Math.floor(dayTotalMins / 60);
+    const mins = dayTotalMins % 60;
+    const formattedTotal = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+
+    if (timeEl) timeEl.textContent = formattedTotal;
+    if (sessEl) sessEl.textContent = dayTotalSess;
+    if (avgEl) avgEl.textContent = `${dayAvgMins}m`;
+    if (xpEl) xpEl.textContent = `+${dayTotalMins} XP`;
+    if (countEl) countEl.textContent = `${dayTotalSess} session${dayTotalSess === 1 ? '' : 's'}`;
+
+    saveState();
+    renderStats();
+    renderHeatmap();
+    updateTodayLiveStat();
+
+    // 6. After the smooth sliding animation completes, remove card from DOM
+    setTimeout(() => {
+      if (cardEl && cardEl.parentNode) {
+        cardEl.remove();
+      }
+      if (dayTotalSess === 0 && listEl) {
+        const isToday = (dateStr === getLocalDateString());
+        listEl.innerHTML = `
+          <div class="day-empty-state" style="animation: dialog-pop-in 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+            <div class="day-empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <div class="day-empty-title">No sessions on this day</div>
+            <div class="day-empty-sub">${isToday ? 'Start the timer to record your first focus block today!' : 'Rest day recorded. Zero minutes studied.'}</div>
+          </div>
+        `;
+      }
+    }, 330);
+
+    showToast('Session deleted');
+
+    // 7. Fire backend deletion in the background (non-blocking)
+    fetch(`/api/sessions/${encodeURIComponent(sessionId)}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    }).then(async (res) => {
       if (res.ok) {
-        backendPayload = await res.json();
-        if (backendPayload.success) {
-          deletedFromBackend = true;
+        const backendPayload = await res.json();
+        if (backendPayload && backendPayload.success) {
           if (backendPayload.stats) {
             state.streak = backendPayload.stats.streak || 0;
             state.xp = backendPayload.stats.xp || 0;
@@ -2736,46 +2846,14 @@
           if (backendPayload.sessions) {
             state.sessions = backendPayload.sessions;
           }
+          saveState();
+          renderStats();
+          renderHeatmap();
         }
       }
-    } catch (err) {
-      console.warn('StudyArc: SQLite delete request error:', err);
-    }
-
-    // Offline / fallback sync if backend was unavailable or returned non-200
-    if (!deletedFromBackend) {
-      const idx = (state.sessions || []).findIndex(s =>
-        s.id === sessionId ||
-        String(s.id) === String(sessionId) ||
-        s.id === ('sess_' + sessionId) ||
-        ('sess_' + s.id) === sessionId
-      );
-      let duration = 0;
-      if (idx !== -1) {
-        duration = state.sessions[idx].durationMinutes || state.sessions[idx].duration_minutes || 0;
-        state.sessions.splice(idx, 1);
-      }
-      if (dateStr && state.dayActivity && state.dayActivity[dateStr] !== undefined) {
-        state.dayActivity[dateStr] = Math.max(0, state.dayActivity[dateStr] - duration);
-        if (state.dayActivity[dateStr] === 0) {
-          delete state.dayActivity[dateStr];
-        }
-      }
-      state.xp = Math.max(0, (state.xp || 0) - duration);
-      state.totalFocusSeconds = Math.max(0, (state.totalFocusSeconds || 0) - duration * 60);
-      updateStreak();
-    }
-
-    saveState();
-    renderAll();
-
-    // Re-render the day dialog so timeline and the 4 highlight pills update immediately
-    if (dateStr) {
-      dayDetailsCache.delete(dateStr);
-      await openDayDialog(dateStr);
-    }
-
-    showToast('Session deleted');
+    }).catch((err) => {
+      console.warn('StudyArc: Background session deletion notice:', err);
+    });
   }
 
   function formatTime(dateObj) {
