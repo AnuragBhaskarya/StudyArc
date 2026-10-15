@@ -1871,7 +1871,6 @@
         btn.addEventListener('click', () => {
           if (input) {
             input.value = btn.dataset.name;
-            input.focus();
           }
         });
       });
@@ -1879,7 +1878,10 @@
 
     if (typeof dialog.showModal === 'function' && !dialog.open) {
       dialog.showModal();
-      setTimeout(() => input?.focus(), 50);
+      // Ensure input is not forcefully focused to prevent keyboard popup, scroll jump, and auto-zoom
+      if (input) {
+        input.blur();
+      }
     }
   }
 
@@ -2693,6 +2695,54 @@
         return;
       }
       if (document.body.classList.contains('is-holding') || (e.target && e.target.closest && e.target.closest('#timer-center-pad, .timer-wrapper, .timer-section, .view-panel'))) {
+        e.preventDefault();
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // ANTI-SCROLL & ANTI-ZOOM SHIELDING (Zero vertical scrolling, zero pinch/double-tap zoom)
+    // -------------------------------------------------------------------------
+    // 1. Prevent iOS Safari gesture pinch zoom
+    document.addEventListener('gesturestart', (e) => e.preventDefault());
+    document.addEventListener('gesturechange', (e) => e.preventDefault());
+    document.addEventListener('gestureend', (e) => e.preventDefault());
+
+    // 2. Prevent multi-finger pinch zoom on mobile
+    document.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches.length > 1) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    // 3. Prevent double-tap to zoom
+    let lastTouchEndTime = 0;
+    document.addEventListener('touchend', (e) => {
+      const now = performance.now();
+      if (now - lastTouchEndTime <= 320) {
+        if (!e.target.closest('input, textarea, [contenteditable="true"]')) {
+          e.preventDefault();
+        }
+      }
+      lastTouchEndTime = now;
+    }, { passive: false });
+
+    // 4. Prevent vertical document scroll, bounce, and rubberbanding on mobile
+    document.addEventListener('touchmove', (e) => {
+      if (e.target && e.target.closest && e.target.closest('#view-settings, .panel-inner, .day-detail-dialog, .heatmap-scroll-area')) {
+        return;
+      }
+      e.preventDefault();
+    }, { passive: false });
+
+    // 5. Prevent desktop Ctrl+Wheel or Ctrl +/- zooming
+    window.addEventListener('wheel', (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) {
         e.preventDefault();
       }
     });
