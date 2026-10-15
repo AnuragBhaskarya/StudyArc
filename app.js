@@ -2297,6 +2297,7 @@
     }
 
     if (viewName === 'focus') {
+      window.AmbientAura?.updateTimerCenter?.();
       requestAnimationFrame(() => scrollHeatmapToEnd(false));
     }
   }

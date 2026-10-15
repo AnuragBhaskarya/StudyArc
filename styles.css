@@ -118,11 +118,18 @@ input, textarea, [contenteditable="true"], .selectable-text {
 .aura-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(100px);
+  filter: blur(48px);
   opacity: 0.45;
   pointer-events: none;
+  transform: translate3d(0, 0, 0);
   transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1), transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform, opacity;
+}
+
+@media (max-width: 768px) {
+  .aura-blob {
+    filter: blur(30px);
+  }
 }
 
 .aura-blob-primary {
@@ -183,8 +190,14 @@ input, textarea, [contenteditable="true"], .selectable-text {
 /* Hold-to-reset: Speeding up & Intense Aura charge */
 body.is-holding .aura-blob {
   opacity: 0.85;
-  filter: blur(80px);
+  filter: blur(42px);
   transform-origin: center;
+}
+
+@media (max-width: 768px) {
+  body.is-holding .aura-blob {
+    filter: blur(28px);
+  }
 }
 
 body.is-holding .aura-blob-primary {
