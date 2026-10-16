@@ -44,5 +44,14 @@
       "type": "image/png",
       "purpose": "any"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "/assets/banner-social.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "StudyArc Focus & Heatmap Dashboard"
+    }
   ]
 }
