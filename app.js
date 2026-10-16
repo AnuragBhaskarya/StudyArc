@@ -2271,7 +2271,7 @@
     return { color: 'rgb(18, 24, 21)', level: 0, isPeak: false };
   }
 
-  function createMonthBlock(year, monthIndex) {
+  function createMonthBlock(year, monthIndex, isFirstInGroup = false) {
     const monthBlock = document.createElement('div');
     monthBlock.className = 'month-block';
     monthBlock.dataset.year = year;
@@ -2292,6 +2292,11 @@
     const firstDayOfWeek = (new Date(year, monthIndex, 1).getDay() + 6) % 7;
     const totalSlots = firstDayOfWeek + daysInMonth;
     const numCols = Math.ceil(totalSlots / 7);
+
+    // If month starts mid-week (Tue-Sun), join with previous month's ending column like a puzzle piece!
+    if (!isFirstInGroup && firstDayOfWeek > 0) {
+      monthBlock.classList.add('month-interlocked');
+    }
 
     const todayStr = getLocalDateString();
 
@@ -2381,7 +2386,8 @@
       monthsWrap.className = 'year-months-wrap';
 
       for (let m = startMonth; m <= endMonth; m++) {
-        const block = createMonthBlock(year, m);
+        const isFirst = (m === startMonth);
+        const block = createMonthBlock(year, m, isFirst);
         monthsWrap.appendChild(block);
       }
 

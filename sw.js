@@ -1,14 +1,14 @@
 // StudyArc Progressive Web App (PWA) Service Worker
-const CACHE_NAME = 'studyarc-pwa-v1';
+const CACHE_NAME = 'studyarc-pwa-v2';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/styles.css',
-  '/styles.css?v=5.0',
+  '/styles.css?v=5.1',
   '/app.js',
-  '/app.js?v=5.0',
+  '/app.js?v=5.1',
   '/aura-particles.js',
-  '/aura-particles.js?v=5.0',
+  '/aura-particles.js?v=5.1',
   '/manifest.webmanifest',
   '/manifest.json',
   '/assets/favicon-32x32.png',

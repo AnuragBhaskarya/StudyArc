@@ -49,6 +49,11 @@
   --lvl-8: #10E068; /* ~210m: Luminous neon green */
   --lvl-9: #4EFA8F; /* 240m+: Peak radiant neon green */
 
+  /* Heatmap Layout Metrics */
+  --hm-cell-size: 13.5px;
+  --hm-col-gap: 3.5px;
+  --hm-month-gap: 4px;
+
   /* Typography */
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-serif: 'Newsreader', 'Playfair Display', Georgia, serif;
@@ -1161,7 +1166,7 @@ body.is-dragging .timer-bead-rim {
 .year-months-wrap {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: var(--hm-month-gap, 4px);
 }
 
 /* Each Month as an accurate, self-contained calendar grouping snapped to the end */
@@ -1173,6 +1178,11 @@ body.is-dragging .timer-bead-rim {
   scroll-snap-align: end;
   scroll-snap-stop: normal;
   align-items: center;
+}
+
+/* Interlocking puzzle piece: when month starts mid-week, it slides seamlessly into the previous month's final column */
+.month-block.month-interlocked {
+  margin-left: calc(-1 * (var(--hm-cell-size, 13.5px) + var(--hm-month-gap, 4px)));
 }
 
 .month-label {
@@ -1193,7 +1203,7 @@ body.is-dragging .timer-bead-rim {
 
 .month-weeks {
   display: flex;
-  gap: 3.5px;
+  gap: var(--hm-col-gap, 3.5px);
   filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 14px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 22px rgba(0, 0, 0, 0.5));
 }
 
@@ -1201,13 +1211,13 @@ body.is-dragging .timer-bead-rim {
 .week-col {
   display: flex;
   flex-direction: column;
-  gap: 3.5px;
+  gap: var(--hm-col-gap, 3.5px);
 }
 
 /* Cells */
 .cell {
-  width: 13.5px;
-  height: 13.5px;
+  width: var(--hm-cell-size, 13.5px);
+  height: var(--hm-cell-size, 13.5px);
   border-radius: 3.5px;
   background-color: var(--lvl-0);
   transition: transform 120ms ease, background-color 140ms ease;
