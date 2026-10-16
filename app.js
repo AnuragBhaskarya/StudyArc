@@ -883,6 +883,57 @@
     return `${h}h ${m}m`;
   }
 
+  function formatCompactNumber(num) {
+    if (num === null || num === undefined || isNaN(num)) return '0';
+    const val = Number(num);
+    const sign = val < 0 ? '-' : '';
+    const abs = Math.abs(val);
+
+    if (abs < 1000) return `${sign}${abs}`;
+
+    const tiers = [
+      { threshold: 1e9, suffix: 'B' },
+      { threshold: 1e6, suffix: 'M' },
+      { threshold: 1e3, suffix: 'k' },
+    ];
+
+    for (const { threshold, suffix } of tiers) {
+      if (abs >= threshold) {
+        const scaled = abs / threshold;
+        let formatted;
+        if (scaled >= 100) {
+          formatted = Math.floor(scaled).toString();
+        } else {
+          const rounded = Math.round(scaled * 10) / 10;
+          formatted = rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1);
+        }
+        return `${sign}${formatted}${suffix}`;
+      }
+    }
+    return `${sign}${abs}`;
+  }
+
+  function adjustStatFontFit() {
+    const items = [
+      { id: 'stat-streak', maxLen: 4, shrinkLen: 6 },
+      { id: 'stat-xp', maxLen: 4, shrinkLen: 6 },
+      { id: 'stat-today-focus', maxLen: 8, shrinkLen: 10 }
+    ];
+
+    for (const item of items) {
+      const el = document.getElementById(item.id);
+      if (!el) continue;
+      const len = (el.textContent || '').trim().length;
+      if (len > item.shrinkLen) {
+        el.style.fontSize = item.id === 'stat-today-focus' ? '0.62rem' : '0.72rem';
+      } else if (len > item.maxLen) {
+        el.style.fontSize = item.id === 'stat-today-focus' ? '0.68rem' : '0.80rem';
+      } else {
+        el.style.fontSize = '';
+      }
+    }
+  }
+
   // =========================================================================
   // AUDIO SYNTHESIZER (Web Audio API Chimes)
   // =========================================================================
@@ -1380,6 +1431,8 @@
       statItemToday.classList.toggle('is-running', state.timer.status === 'running');
       statItemToday.classList.toggle('is-paused', state.timer.status === 'paused');
     }
+
+    adjustStatFontFit();
   }
 
   function startTimer() {
@@ -2534,11 +2587,20 @@
     const xpEl = document.getElementById('stat-xp');
     const settingTotalFocusEl = document.getElementById('setting-total-focus');
 
-    if (streakEl) streakEl.textContent = state.streak;
-    if (xpEl) xpEl.textContent = state.xp.toLocaleString();
-    if (settingTotalFocusEl) settingTotalFocusEl.textContent = formatHoursMinutes(state.totalFocusSeconds);
+    if (streakEl) {
+      streakEl.textContent = formatCompactNumber(state.streak);
+      streakEl.title = `${Number(state.streak || 0).toLocaleString()} Day Streak`;
+    }
+    if (xpEl) {
+      xpEl.textContent = formatCompactNumber(state.xp);
+      xpEl.title = `${Number(state.xp || 0).toLocaleString()} XP`;
+    }
+    if (settingTotalFocusEl) {
+      settingTotalFocusEl.textContent = formatHoursMinutes(state.totalFocusSeconds);
+    }
 
     updateTodayLiveStat();
+    adjustStatFontFit();
   }
 
   // =========================================================================
@@ -2646,7 +2708,7 @@
     if (timeEl) timeEl.textContent = dayData.totalTimeFormatted || `${dayData.totalMinutes || 0}m`;
     if (sessEl) sessEl.textContent = dayData.totalSessions || 0;
     if (avgEl) avgEl.textContent = `${dayData.avgFocusMinutes || 0}m`;
-    if (xpEl) xpEl.textContent = `+${dayData.totalXp || 0} XP`;
+    if (xpEl) xpEl.textContent = `+${formatCompactNumber(dayData.totalXp || 0)} XP`;
     if (countEl) {
       const sessCount = dayData.totalSessions || 0;
       countEl.textContent = `${sessCount} session${sessCount === 1 ? '' : 's'}`;
@@ -2692,7 +2754,7 @@
                 </svg>
                 <span>${s.durationMinutes} mins</span>
               </div>
-              <span class="day-session-xp">+${s.xp || s.durationMinutes} XP</span>
+              <span class="day-session-xp">+${formatCompactNumber(s.xp || s.durationMinutes)} XP</span>
               <button class="day-session-delete-btn" data-session-id="${escapeHtml(s.id)}" data-date="${escapeHtml(dayData.date)}" title="Delete session" aria-label="Delete session">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="3 6 5 6 21 6"></polyline>
@@ -2731,7 +2793,7 @@
     if (timeEl) timeEl.textContent = activityMins > 0 ? formattedTotal : '...';
     if (sessEl) sessEl.textContent = '...';
     if (avgEl) avgEl.textContent = '...';
-    if (xpEl) xpEl.textContent = activityMins > 0 ? `+${activityMins} XP` : '...';
+    if (xpEl) xpEl.textContent = activityMins > 0 ? `+${formatCompactNumber(activityMins)} XP` : '...';
     if (countEl) countEl.textContent = 'Loading...';
     if (listEl) {
       listEl.innerHTML = `
@@ -2890,7 +2952,7 @@
     if (timeEl) timeEl.textContent = formattedTotal;
     if (sessEl) sessEl.textContent = dayTotalSess;
     if (avgEl) avgEl.textContent = `${dayAvgMins}m`;
-    if (xpEl) xpEl.textContent = `+${dayTotalMins} XP`;
+    if (xpEl) xpEl.textContent = `+${formatCompactNumber(dayTotalMins)} XP`;
     if (countEl) countEl.textContent = `${dayTotalSess} session${dayTotalSess === 1 ? '' : 's'}`;
 
     saveState();
