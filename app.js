@@ -3607,9 +3607,9 @@
   }
 
   // =========================================================================
-  // BOOTSTRAP
+  // BOOTSTRAP (Safe for both pre-parsed and async/cached script execution)
   // =========================================================================
-  document.addEventListener('DOMContentLoaded', async () => {
+  async function bootstrapApp() {
     initEvents();
     renderAll();
 
@@ -3626,6 +3626,12 @@
 
     // Full authentication and state sync (subjects, history, stats)
     await checkAuthAndSync();
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrapApp);
+  } else {
+    bootstrapApp();
+  }
 
 })();

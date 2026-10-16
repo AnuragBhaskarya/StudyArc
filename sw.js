@@ -1,14 +1,14 @@
-// StudyArc Progressive Web App (PWA) Service Worker
-const CACHE_NAME = 'studyarc-pwa-v2';
+// StudyArc Progressive Web App (PWA) Service Worker — iOS Safari Bulletproof Edition
+const CACHE_NAME = 'studyarc-pwa-v3';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/styles.css',
-  '/styles.css?v=5.1',
+  '/styles.css?v=5.2',
   '/app.js',
-  '/app.js?v=5.1',
+  '/app.js?v=5.2',
   '/aura-particles.js',
-  '/aura-particles.js?v=5.1',
+  '/aura-particles.js?v=5.2',
   '/manifest.webmanifest',
   '/manifest.json',
   '/assets/favicon-32x32.png',
@@ -22,14 +22,23 @@ const PRECACHE_ASSETS = [
   '/assets/banner-social.png'
 ];
 
+// 1. Install: Resilient caching with Promise.allSettled so no single asset can fail the installation
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => {
+      return Promise.allSettled(
+        PRECACHE_ASSETS.map((assetUrl) =>
+          cache.add(assetUrl).catch((err) => {
+            console.warn('[PWA SW] Precache skipped for:', assetUrl, err);
+          })
+        )
+      );
+    })
   );
 });
 
+// 2. Activate: Clear old caches and claim existing clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -40,34 +49,27 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Listen for skip waiting messages from the page
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// 3. Fetch: Bulletproof request routing
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
 
-  // Cross-origin caching for Google Fonts
+  // IMPORTANT FOR SAFARI: NEVER intercept cross-origin requests (Google Fonts, CDNs, Catbox, Socket.IO)
+  // Let the browser handle cross-origin requests natively to avoid Safari CORS/opaque response failures
   if (url.origin !== self.location.origin) {
-    if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
-      event.respondWith(
-        caches.match(req).then((cached) => {
-          const fetchPromise = fetch(req)
-            .then((networkRes) => {
-              if (networkRes && networkRes.status === 200) {
-                const copy = networkRes.clone();
-                caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
-              }
-              return networkRes;
-            })
-            .catch(() => cached);
-          return cached || fetchPromise;
-        })
-      );
-    }
     return;
   }
 
-  // Never cache API or real-time WebSockets
+  // Never intercept dynamic backend REST APIs, WebSockets, or health pings
   if (
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/socket.io/') ||
@@ -77,36 +79,55 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML page navigation: Network-first with cache fallback
-  if (req.mode === 'navigate') {
+  // Navigation requests: Detect navigation across all mobile browsers (iOS Safari PWA & standard tabs)
+  const isNavigation =
+    req.mode === 'navigate' ||
+    req.destination === 'document' ||
+    (req.headers.get('accept') && req.headers.get('accept').includes('text/html'));
+
+  if (isNavigation) {
     event.respondWith(
       fetch(req)
         .then((resp) => {
-          if (resp && resp.status === 200) {
+          if (resp && (resp.status === 200 || resp.type === 'basic')) {
             const copy = resp.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {});
           }
           return resp;
         })
-        .catch(() => caches.match('/index.html').then((res) => res || caches.match('/')))
+        .catch(async () => {
+          // If network is offline or fails, return cached index.html or fallback to root
+          const cache = await caches.open(CACHE_NAME);
+          const cached = (await cache.match('/index.html')) || (await cache.match('/'));
+          if (cached) return cached;
+          return fetch('/');
+        })
     );
     return;
   }
 
-  // Core static assets: Cache-first with background network revalidation
+  // Static Assets (CSS, JS, images, icons): Cache-first with network fallback
+  // ALWAYS resolves to a valid Response (never null or undefined, which crashes Safari)
   event.respondWith(
     caches.match(req).then((cached) => {
-      const fetchPromise = fetch(req)
+      if (cached) return cached;
+
+      return fetch(req)
         .then((networkRes) => {
           if (networkRes && networkRes.status === 200) {
             const copy = networkRes.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {});
           }
           return networkRes;
         })
-        .catch(() => null);
-
-      return cached || fetchPromise;
+        .catch(async () => {
+          // If offline and not in cache, try matching without query params
+          const cleanUrl = url.pathname;
+          const cleanCached = await caches.match(cleanUrl);
+          if (cleanCached) return cleanCached;
+          // Final fallback Response instead of throwing or returning null
+          return new Response('', { status: 408, statusText: 'Request Timeout' });
+        });
     })
   );
 });

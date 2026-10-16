@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=5.1">
+  <link rel="stylesheet" href="styles.css?v=5.2">
   <script>
     (function () {
       try {
@@ -634,8 +634,8 @@
 
   <!-- JAVASCRIPT LOGIC -->
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
-  <script src="aura-particles.js?v=5.1"></script>
-  <script src="app.js?v=5.1"></script>
+  <script src="aura-particles.js?v=5.2"></script>
+  <script src="app.js?v=5.2"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>
@@ -644,6 +644,10 @@
         navigator.serviceWorker.register('/sw.js', { scope: '/' })
           .then(function(registration) {
             console.log('[StudyArc PWA] Service worker registered with scope:', registration.scope);
+            registration.update();
+            if (registration.waiting) {
+              registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
           })
           .catch(function(error) {
             console.warn('[StudyArc PWA] Service worker registration failed:', error);
