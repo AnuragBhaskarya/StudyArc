@@ -58,12 +58,6 @@
             <span class="header-topic-name" id="header-topic-name"></span>
           </div>
 
-          <!-- User Badge / Pill (Visible when authenticated) -->
-          <button class="header-user-btn hidden" id="header-user-btn" title="Account profile &amp; settings">
-            <span class="user-avatar-dot" id="header-user-initial">A</span>
-            <span class="header-username" id="header-username-text">User</span>
-          </button>
-
           <!-- Sign In button (Visible when unauthenticated) -->
           <button class="btn-header-auth hidden" id="btn-header-auth" title="Sign In or Create Account">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -74,8 +68,10 @@
             <span>Sign In</span>
           </button>
 
+          <!-- Minimal Profile Avatar Button (Toggles Settings & displays user initial when signed in) -->
           <button class="profile-avatar-btn" id="btn-profile" title="Settings &amp; Preferences" aria-label="Settings">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <span class="user-avatar-dot hidden" id="header-user-initial">A</span>
+            <svg class="profile-avatar-default-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <circle cx="12" cy="10" r="3"></circle>
               <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"></path>

@@ -499,9 +499,9 @@
 
   function updateAuthUI() {
     const btnHeaderAuth = document.getElementById('btn-header-auth');
-    const headerUserBtn = document.getElementById('header-user-btn');
     const headerUserInitial = document.getElementById('header-user-initial');
-    const headerUsernameText = document.getElementById('header-username-text');
+    const profileBtn = document.getElementById('btn-profile');
+    const profileSvg = profileBtn ? profileBtn.querySelector('.profile-avatar-default-icon') : null;
     const settingAvatar = document.getElementById('setting-user-avatar');
     const settingUsername = document.getElementById('setting-username-display');
     const authDialog = document.getElementById('auth-dialog');
@@ -512,11 +512,12 @@
       const initial = username.charAt(0).toUpperCase();
 
       if (btnHeaderAuth) btnHeaderAuth.classList.add('hidden');
-      if (headerUserBtn) {
-        headerUserBtn.classList.remove('hidden');
-        if (headerUserInitial) headerUserInitial.textContent = initial;
-        if (headerUsernameText) headerUsernameText.textContent = username;
+      if (headerUserInitial) {
+        headerUserInitial.textContent = initial;
+        headerUserInitial.classList.remove('hidden');
       }
+      if (profileSvg) profileSvg.classList.add('hidden');
+      if (profileBtn) profileBtn.title = `${username} • Settings & Preferences`;
       if (settingAvatar) settingAvatar.textContent = initial;
       if (settingUsername) settingUsername.textContent = username;
 
@@ -526,7 +527,9 @@
     } else {
       document.documentElement.classList.add('unauthenticated-gate');
       if (btnHeaderAuth) btnHeaderAuth.classList.remove('hidden');
-      if (headerUserBtn) headerUserBtn.classList.add('hidden');
+      if (headerUserInitial) headerUserInitial.classList.add('hidden');
+      if (profileSvg) profileSvg.classList.remove('hidden');
+      if (profileBtn) profileBtn.title = 'Settings & Preferences';
       if (settingAvatar) settingAvatar.textContent = '?';
       if (settingUsername) settingUsername.textContent = 'Not Signed In';
     }
@@ -3377,11 +3380,6 @@
       btnHeaderAuth.addEventListener('click', () => openAuthDialog('login'));
     }
 
-    // Header User pill button (opens settings)
-    const headerUserBtn = document.getElementById('header-user-btn');
-    if (headerUserBtn) {
-      headerUserBtn.addEventListener('click', () => switchView('settings'));
-    }
 
     // 3D Flip Card switch buttons ("Create account ->" & "Sign in ->")
     const btnFlipToSignup = document.getElementById('btn-flip-to-signup');
