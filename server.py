@@ -27,6 +27,9 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 # Ensure correct MIME types
 mimetypes.add_type('application/javascript', '.js')
 mimetypes.add_type('text/css', '.css')
+mimetypes.add_type('application/manifest+json', '.webmanifest')
+mimetypes.add_type('image/webp', '.webp')
+mimetypes.add_type('image/x-icon', '.ico')
 
 # Initialize database (PostgreSQL if DATABASE_URL is set, SQLite fallback)
 database.init_db()
@@ -79,10 +82,31 @@ def index():
     resp.headers['Pragma'] = 'no-cache'
     return resp
 
+@app.route('/sw.js')
+def service_worker():
+    resp = make_response(send_from_directory('.', 'sw.js'))
+    resp.headers['Content-Type'] = 'application/javascript; charset=utf-8'
+    resp.headers['Service-Worker-Allowed'] = '/'
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    return resp
+
+@app.route('/manifest.webmanifest')
+@app.route('/manifest.json')
+def web_manifest():
+    resp = make_response(send_from_directory('.', 'manifest.webmanifest'))
+    resp.headers['Content-Type'] = 'application/manifest+json; charset=utf-8'
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    return resp
+
+@app.route('/favicon.ico')
+def favicon_root():
+    return send_from_directory('assets', 'favicon.ico', mimetype='image/x-icon')
+
 @app.route('/<path:filename>')
 def static_files(filename):
     resp = make_response(send_from_directory('.', filename))
-    if filename.endswith(('.js', '.html', '.css')):
+    if filename.endswith(('.js', '.html', '.css', '.webmanifest')):
         resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
         resp.headers['Pragma'] = 'no-cache'
     return resp

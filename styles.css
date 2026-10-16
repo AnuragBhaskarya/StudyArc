@@ -113,7 +113,9 @@ input, textarea, [contenteditable="true"], .selectable-text {
   position: fixed;
   inset: 0;
   width: 100vw;
+  width: 100dvw;
   height: 100vh;
+  height: 100dvh;
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
@@ -257,6 +259,10 @@ body.is-timer-paused .aura-blob-center {
   display: flex;
   flex-direction: column;
   padding: 1.25rem 2rem 1.25rem;
+  padding-top: calc(1.25rem + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(2rem + env(safe-area-inset-left, 0px));
+  padding-right: calc(2rem + env(safe-area-inset-right, 0px));
   overflow: hidden !important;
   overscroll-behavior: none !important;
   position: relative;
@@ -422,7 +428,7 @@ body.is-timer-paused .aura-blob-center {
   overflow-y: hidden !important;
   overflow-x: hidden !important;
   overscroll-behavior: none !important;
-  padding: clamp(0.6rem, 2vh, 1.8rem) 0 0.5rem 0;
+  padding: clamp(0.6rem, 2dvh, 1.8rem) 0 0.5rem 0;
   box-sizing: border-box;
 }
 
@@ -462,8 +468,8 @@ body.is-timer-paused .aura-blob-center {
 
 .timer-wrapper {
   position: relative;
-  width: clamp(280px, 36vh, 410px);
-  height: clamp(280px, 36vh, 410px);
+  width: clamp(280px, 36dvh, 410px);
+  height: clamp(280px, 36dvh, 410px);
   display: grid;
   place-items: center;
   outline: none !important;
@@ -681,7 +687,7 @@ body.is-dragging .timer-bead-rim {
   align-items: center;
   justify-content: center;
   font-family: var(--font-timer);
-  font-size: clamp(3rem, 5.8vh, 4rem);
+  font-size: clamp(3rem, 5.8dvh, 4rem);
   font-weight: 400;
   color: var(--text-primary);
   line-height: 1;
@@ -1760,6 +1766,10 @@ input:checked + .switch-slider:before {
 
   .main-viewport {
     padding: 0.75rem 1rem 0.65rem;
+    padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(0.65rem + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(1rem + env(safe-area-inset-left, 0px));
+    padding-right: calc(1rem + env(safe-area-inset-right, 0px));
     height: 100%;
     max-height: 100dvh;
     overflow: hidden !important;
@@ -1767,7 +1777,7 @@ input:checked + .switch-slider:before {
 
   .view-panel {
     gap: 0.65rem;
-    padding: clamp(0.4rem, 1.6vh, 1.2rem) 0 0.35rem 0;
+    padding: clamp(0.4rem, 1.6dvh, 1.2rem) 0 0.35rem 0;
     overflow: hidden !important;
     overflow-y: hidden !important;
   }
@@ -1812,6 +1822,7 @@ input:checked + .switch-slider:before {
   width: 92vw;
   max-width: 530px;
   max-height: 86vh;
+  max-height: 86dvh;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.05);
   margin: auto;
   outline: none;
@@ -1848,6 +1859,7 @@ input:checked + .switch-slider:before {
   flex-direction: column;
   gap: 0.95rem;
   max-height: 86vh;
+  max-height: 86dvh;
   box-sizing: border-box;
 }
 
@@ -2349,7 +2361,7 @@ input:checked + .switch-slider:before {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: clamp(36px, 8vh, 72px) 1rem 1rem;
+  padding: calc(clamp(36px, 8dvh, 72px) + env(safe-area-inset-top, 0px)) calc(1rem + env(safe-area-inset-right, 0px)) calc(1rem + env(safe-area-inset-bottom, 0px)) calc(1rem + env(safe-area-inset-left, 0px));
   box-sizing: border-box;
   overscroll-behavior: contain;
 }
@@ -2793,7 +2805,9 @@ input:checked + .switch-slider:before {
   top: 0;
   left: 0;
   width: 100vw;
+  width: 100dvw;
   height: 100vh;
+  height: 100dvh;
   pointer-events: none;
   z-index: 0;
 }

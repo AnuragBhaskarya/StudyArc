@@ -6,6 +6,24 @@
   <title>StudyArc — Minimal Focus & Habit Tracker</title>
   <meta name="description" content="StudyArc is a minimal, elegant study time tracker featuring a circular focus timer, GitHub-style consistency heatmap, XP, and streak progression.">
   
+  <!-- PWA & Mobile Configuration -->
+  <meta name="theme-color" content="#070D09">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="StudyArc">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="StudyArc">
+  <link rel="manifest" href="/manifest.webmanifest">
+
+  <!-- Favicons and Apple Touch Icons -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icon-180.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/assets/icon-152.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/assets/icon-120.png">
+  
   <!-- Typography: Plus Jakarta Sans for UI, Lilita One & Titan One for bold rounded thick numerals -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -595,5 +613,20 @@
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
   <script src="aura-particles.js?v=5.0"></script>
   <script src="app.js?v=5.0"></script>
+
+  <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .then(function(registration) {
+            console.log('[StudyArc PWA] Service worker registered with scope:', registration.scope);
+          })
+          .catch(function(error) {
+            console.warn('[StudyArc PWA] Service worker registration failed:', error);
+          });
+      });
+    }
+  </script>
 </body>
 </html>
