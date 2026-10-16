@@ -2515,13 +2515,13 @@ input:checked + .switch-slider:before {
 /* Subtle Top Green Ambient Light (matching Neon Green Sign-In Modal.png) */
 .auth-top-ambient-glow {
   position: absolute;
-  top: -65px;
+  top: -24px;
   left: 50%;
   transform: translateX(-50%);
-  width: 280px;
-  height: 110px;
-  background: radial-gradient(ellipse at 50% 60%, rgba(16, 224, 104, 0.16) 0%, rgba(16, 224, 104, 0.04) 50%, transparent 75%);
-  filter: blur(28px);
+  width: 220px;
+  height: 60px;
+  background: radial-gradient(ellipse at 50% 60%, rgba(0, 230, 118, 0.15) 0%, rgba(0, 230, 118, 0.03) 60%, transparent 80%);
+  filter: blur(18px);
   pointer-events: none;
   z-index: 1;
   border-radius: 50%;
@@ -2559,23 +2559,35 @@ input:checked + .switch-slider:before {
   width: 100%;
   min-height: 100%;
   box-sizing: border-box;
-  background: rgba(6, 12, 9, 0.72);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(16, 224, 104, 0.28);
-  border-top: 1px solid rgba(78, 250, 143, 0.5);
+  background: rgba(7, 13, 10, 0.68);
+  backdrop-filter: blur(28px) saturate(145%);
+  -webkit-backdrop-filter: blur(28px) saturate(145%);
+  border: 1px solid rgba(0, 230, 118, 0.16);
+  border-top: 1px solid rgba(0, 230, 118, 0.42);
   border-radius: 24px;
   padding: 2.2rem 2.2rem 2.4rem;
   box-shadow: 
-    0 30px 80px rgba(0, 0, 0, 0.85),
-    0 0 35px -8px rgba(16, 224, 104, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    0 35px 90px rgba(0, 0, 0, 0.9),
+    0 0 45px -10px rgba(0, 230, 118, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+/* Soft Emerald Back-Lighting inside the glass card */
+.auth-card-glass-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 130px;
+  background: radial-gradient(ellipse 70% 65% at 50% 0%, rgba(0, 230, 118, 0.13) 0%, rgba(0, 230, 118, 0.03) 55%, transparent 100%);
+  pointer-events: none;
+  border-radius: 24px 24px 0 0;
+  z-index: 1;
 }
 
 /* Subtle Top Rim Light Streak (matching Neon Green Sign-In Modal.png) */
@@ -2583,12 +2595,25 @@ input:checked + .switch-slider:before {
   content: '';
   position: absolute;
   top: 0;
-  left: 18%;
-  right: 18%;
+  left: 16%;
+  right: 16%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(78, 250, 143, 0.35) 20%, rgba(16, 224, 104, 0.6) 50%, rgba(78, 250, 143, 0.35) 80%, transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 230, 118, 0.4) 25%, #00e676 50%, rgba(0, 230, 118, 0.4) 75%, transparent);
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
+}
+
+/* Subtle Bottom Rim Glow */
+.auth-card-face::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 28%;
+  right: 28%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 230, 118, 0.22) 50%, transparent);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .auth-card-front {
@@ -2623,64 +2648,37 @@ input:checked + .switch-slider:before {
   transition: visibility 0s linear;
 }
 
-/* Close button (Circular X) */
-.auth-dialog-close-btn {
-  position: absolute;
-  top: 1.8rem;
-  right: 1.8rem;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #94a3b8;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: all 140ms ease;
-  outline: none;
-  z-index: 3;
-}
-
-.auth-dialog-close-btn svg {
-  width: 15px;
-  height: 15px;
-  stroke: currentColor;
-}
-
-.auth-dialog-close-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(16, 224, 104, 0.45);
-  color: #ffffff;
-  transform: scale(1.06);
-}
-
-/* Header Row (Sign In | Create account ->) */
+/* Header Row (Sign In on left, | Create account -> on right) */
 .auth-header-row {
   position: relative;
   z-index: 2;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
   margin-top: 0.2rem;
-  margin-bottom: 1.85rem;
+  margin-bottom: 2rem;
 }
 
 .auth-title {
-  font-size: 1.85rem;
+  font-size: 2.1rem;
   font-weight: 700;
   color: #ffffff;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   margin: 0;
   line-height: 1;
 }
 
+.auth-switch-group {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+
 .auth-header-divider {
   width: 1px;
-  height: 24px;
-  background: rgba(255, 255, 255, 0.14);
-  margin: 0 1.15rem;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.12);
   flex-shrink: 0;
 }
 
@@ -2690,19 +2688,20 @@ input:checked + .switch-slider:before {
   padding: 0;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
   color: #94a3b8;
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: color 150ms ease;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 .auth-switch-btn svg {
-  width: 17px;
-  height: 17px;
-  stroke: #10e068;
+  width: 18px;
+  height: 18px;
+  stroke: #00e676;
   stroke-width: 2.2;
   transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -2721,7 +2720,7 @@ input:checked + .switch-slider:before {
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 0.95rem;
 }
 
 /* Inputs & Neon Focus Glow (Glassmorphism) */
@@ -2740,9 +2739,9 @@ input:checked + .switch-slider:before {
 }
 
 .auth-input-container:focus-within {
-  border: 1.5px solid #10e068;
-  box-shadow: 0 0 18px rgba(16, 224, 104, 0.32), inset 0 0 12px rgba(16, 224, 104, 0.08);
-  background: rgba(10, 26, 15, 0.78);
+  border: 1.5px solid #00e676;
+  box-shadow: 0 0 16px rgba(0, 230, 118, 0.28), inset 0 0 10px rgba(0, 230, 118, 0.06);
+  background: rgba(10, 24, 15, 0.72);
 }
 
 .auth-field-icon {
@@ -2756,7 +2755,7 @@ input:checked + .switch-slider:before {
 }
 
 .auth-input-container:focus-within .auth-field-icon {
-  color: #10e068;
+  color: #00e676;
 }
 
 .auth-input-el {
@@ -2808,9 +2807,9 @@ input:checked + .switch-slider:before {
   width: 100%;
   height: 52px;
   border-radius: 14px;
-  background: #10e068;
+  background: #00e676;
   border: none;
-  color: #04150c;
+  color: #05140b;
   font-weight: 700;
   font-size: 1.05rem;
   display: inline-flex;
@@ -2820,7 +2819,7 @@ input:checked + .switch-slider:before {
   cursor: pointer;
   margin-top: 0.5rem;
   transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 0 24px rgba(16, 224, 104, 0.35);
+  box-shadow: 0 4px 22px rgba(0, 230, 118, 0.38);
   font-family: inherit;
   outline: none;
 }
@@ -2833,13 +2832,13 @@ input:checked + .switch-slider:before {
 }
 
 .auth-submit-neon:hover {
-  background: #00ff87;
+  background: #0aff82;
   transform: translateY(-1px);
-  box-shadow: 0 0 32px rgba(16, 224, 104, 0.55);
+  box-shadow: 0 6px 28px rgba(0, 230, 118, 0.52);
 }
 
 .auth-submit-neon:active {
-  transform: scale(0.98);
+  transform: scale(0.985);
 }
 
 .auth-submit-neon:disabled {

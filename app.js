@@ -817,12 +817,10 @@
   }
 
   async function handleLogout() {
-    if (timerSocket) {
-      try { timerSocket.close(); } catch (_) {}
-      timerSocket = null;
+    if (sioSocket) {
+      try { sioSocket.disconnect(); } catch (_) {}
+      sioSocket = null;
     }
-    clearTimeout(socketReconnectTimer);
-    clearInterval(socketPingTimer);
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch (e) {
@@ -842,6 +840,9 @@
       clearInterval(timerInterval);
       timerInterval = null;
     }
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (_) {}
     saveState();
     renderAll();
     updateAuthUI();
@@ -3304,16 +3305,6 @@
       headerUserBtn.addEventListener('click', () => switchView('settings'));
     }
 
-    // Close Auth Dialog buttons (front and back face circular 'X' buttons)
-    const btnCloseAuth = document.getElementById('btn-close-auth-dialog');
-    if (btnCloseAuth) {
-      btnCloseAuth.addEventListener('click', () => closeAuthDialog(false));
-    }
-    const btnCloseAuthBack = document.getElementById('btn-close-auth-dialog-back');
-    if (btnCloseAuthBack) {
-      btnCloseAuthBack.addEventListener('click', () => closeAuthDialog(false));
-    }
-
     // 3D Flip Card switch buttons ("Create account ->" & "Sign in ->")
     const btnFlipToSignup = document.getElementById('btn-flip-to-signup');
     if (btnFlipToSignup) {
@@ -3336,6 +3327,17 @@
       });
 
       authDialog.addEventListener('click', (e) => {
+        if (!state.authenticated) {
+          const rect = authDialog.getBoundingClientRect();
+          const isInDialog = (
+            rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+            rect.left <= e.clientX && e.clientX <= rect.left + rect.width
+          );
+          if (!isInDialog) {
+            shakeAuthCard();
+          }
+          return;
+        }
         const rect = authDialog.getBoundingClientRect();
         const isInDialog = (
           rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&

@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=5.0">
   <script>
     (function () {
       try {
@@ -376,23 +376,20 @@
             
             <!-- FRONT FACE: SIGN IN -->
             <div class="auth-card-face auth-card-front" id="auth-card-front">
-              <button type="button" class="auth-dialog-close-btn" id="btn-close-auth-dialog" aria-label="Close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
+              <div class="auth-card-glass-glow" aria-hidden="true"></div>
 
               <div class="auth-header-row">
                 <h2 class="auth-title" id="auth-modal-title">Sign In</h2>
-                <div class="auth-header-divider"></div>
-                <button type="button" class="auth-switch-btn" id="btn-flip-to-signup">
-                  <span>Create account</span>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-                  </svg>
-                </button>
+                <div class="auth-switch-group">
+                  <div class="auth-header-divider"></div>
+                  <button type="button" class="auth-switch-btn" id="btn-flip-to-signup">
+                    <span>Create account</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               <form class="auth-form-body" id="form-auth-login" autocomplete="on">
@@ -446,23 +443,20 @@
 
             <!-- BACK FACE: SIGN UP -->
             <div class="auth-card-face auth-card-back" id="auth-card-back">
-              <button type="button" class="auth-dialog-close-btn" id="btn-close-auth-dialog-back" aria-label="Close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
+              <div class="auth-card-glass-glow" aria-hidden="true"></div>
 
               <div class="auth-header-row">
                 <h2 class="auth-title">Sign Up</h2>
-                <div class="auth-header-divider"></div>
-                <button type="button" class="auth-switch-btn" id="btn-flip-to-signin">
-                  <span>Sign in</span>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-                  </svg>
-                </button>
+                <div class="auth-switch-group">
+                  <div class="auth-header-divider"></div>
+                  <button type="button" class="auth-switch-btn" id="btn-flip-to-signin">
+                    <span>Sign in</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               <form class="auth-form-body" id="form-auth-register" autocomplete="on">
@@ -553,7 +547,7 @@
 
   <!-- JAVASCRIPT LOGIC -->
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
-  <script src="aura-particles.js?v=2.5"></script>
-  <script src="app.js?v=4.6"></script>
+  <script src="aura-particles.js?v=5.0"></script>
+  <script src="app.js?v=5.0"></script>
 </body>
 </html>

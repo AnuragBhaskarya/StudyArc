@@ -665,10 +665,10 @@
 
       this.particles = [];
       this.palette = [
-        { r: 16, g: 224, b: 104 }, // Neon green primary
-        { r: 78, g: 250, b: 143 }, // Luminous lime
-        { r: 36, g: 232, b: 124 }, // Electric emerald
-        { r: 14, g: 200, b: 96 }   // Deep vivid green
+        { r: 0, g: 230, b: 118 },   // Vivid neon green (#00e676)
+        { r: 10, g: 255, b: 130 },  // Electric neon lime
+        { r: 16, g: 220, b: 110 },  // Pure emerald
+        { r: 34, g: 197, b: 94 }    // Deep lush neon
       ];
 
       this.rafId = null;
@@ -700,36 +700,81 @@
       }
     }
 
-    createSingleDot(w, h) {
-      const color = this.palette[(Math.random() * this.palette.length) | 0];
-      const speed = 0.14 + Math.random() * 0.26;
-      const angle = Math.random() * Math.PI * 2;
-      const baseRadius = Math.random() < 0.65 ? 0.9 + Math.random() * 0.6 : 1.7 + Math.random() * 0.8;
-
-      return {
-        x: Math.random() * Math.max(w, 200),
-        y: Math.random() * Math.max(h, 200),
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        radius: baseRadius,
-        baseRadius,
-        r: color.r,
-        g: color.g,
-        b: color.b,
-        alpha: 0.28 + Math.random() * 0.38,
-        pulsePhase: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.012 + Math.random() * 0.018,
-        isProminent: baseRadius > 1.6
-      };
-    }
-
     createParticles() {
       const w = window.innerWidth;
       const h = window.innerHeight;
-      const count = window.innerWidth < 768 ? 26 : 46;
       this.particles = [];
-      for (let i = 0; i < count; i++) {
-        this.particles.push(this.createSingleDot(w, h));
+
+      // 1. Soft Large Bokeh Orbs (diffused background green spheres)
+      const bokehCount = w < 768 ? 5 : 8;
+      for (let i = 0; i < bokehCount; i++) {
+        const color = this.palette[(Math.random() * this.palette.length) | 0];
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.06 + Math.random() * 0.12;
+        const radius = 35 + Math.random() * 45;
+        this.particles.push({
+          type: 'bokeh',
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          radius,
+          baseRadius: radius,
+          r: color.r,
+          g: color.g,
+          b: color.b,
+          alpha: 0.07 + Math.random() * 0.08,
+          pulsePhase: Math.random() * Math.PI * 2,
+          pulseSpeed: 0.006 + Math.random() * 0.01
+        });
+      }
+
+      // 2. Medium Glowing Orbs (visible behind and around the modal card)
+      const mediumCount = w < 768 ? 10 : 16;
+      for (let i = 0; i < mediumCount; i++) {
+        const color = this.palette[(Math.random() * this.palette.length) | 0];
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.1 + Math.random() * 0.18;
+        const radius = 10 + Math.random() * 16;
+        this.particles.push({
+          type: 'medium',
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          radius,
+          baseRadius: radius,
+          r: color.r,
+          g: color.g,
+          b: color.b,
+          alpha: 0.18 + Math.random() * 0.22,
+          pulsePhase: Math.random() * Math.PI * 2,
+          pulseSpeed: 0.01 + Math.random() * 0.016
+        });
+      }
+
+      // 3. Small Sharp Neon Beads (sparkling ambient particles)
+      const smallCount = w < 768 ? 16 : 26;
+      for (let i = 0; i < smallCount; i++) {
+        const color = this.palette[(Math.random() * this.palette.length) | 0];
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.12 + Math.random() * 0.22;
+        const radius = 1.4 + Math.random() * 2.2;
+        this.particles.push({
+          type: 'small',
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          radius,
+          baseRadius: radius,
+          r: color.r,
+          g: color.g,
+          b: color.b,
+          alpha: 0.35 + Math.random() * 0.45,
+          pulsePhase: Math.random() * Math.PI * 2,
+          pulseSpeed: 0.014 + Math.random() * 0.02
+        });
       }
     }
 
@@ -784,59 +829,61 @@
 
       const n = this.particles.length;
 
-      // Delicate constellation web lines
-      ctx.lineWidth = 0.65;
-      for (let i = 0; i < n; i++) {
-        const p1 = this.particles[i];
-        for (let j = i + 1; j < n; j++) {
-          const p2 = this.particles[j];
-          const dx = p2.x - p1.x;
-          if (dx > 95 || dx < -95) continue;
-          const dy = p2.y - p1.y;
-          if (dy > 95 || dy < -95) continue;
-          const distSq = dx * dx + dy * dy;
-          if (distSq < 95 * 95) {
-            const dist = Math.sqrt(distSq);
-            const alpha = (1.0 - dist / 95) * 0.14;
-            ctx.strokeStyle = `rgba(16, 224, 104, ${alpha.toFixed(3)})`;
-            ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.stroke();
-          }
-        }
-      }
-
-      // Draw dots
       for (let i = 0; i < n; i++) {
         const p = this.particles[i];
         p.x += p.vx;
         p.y += p.vy;
 
-        // Wrap around boundaries
-        if (p.x < -10) p.x = w + 10;
-        else if (p.x > w + 10) p.x = -10;
-        if (p.y < -10) p.y = h + 10;
-        else if (p.y > h + 10) p.y = -10;
+        // Wrap around viewport edges smoothly
+        const pad = p.radius + 20;
+        if (p.x < -pad) p.x = w + pad;
+        else if (p.x > w + pad) p.x = -pad;
+        if (p.y < -pad) p.y = h + pad;
+        else if (p.y > h + pad) p.y = -pad;
 
         p.pulsePhase += p.pulseSpeed;
-        const pulse = Math.sin(p.pulsePhase) * 0.2;
-        const curRadius = Math.max(0.6, p.baseRadius + pulse);
-        const curAlpha = Math.min(1.0, Math.max(0.1, p.alpha + pulse * 0.25));
+        const pulse = Math.sin(p.pulsePhase);
+        const curRadius = Math.max(0.8, p.baseRadius + pulse * (p.type === 'bokeh' ? 6 : p.type === 'medium' ? 2 : 0.4));
+        const curAlpha = Math.min(1.0, Math.max(0.04, p.alpha + pulse * 0.1));
 
-        // Soft halo for prominent dots
-        if (p.isProminent) {
+        if (p.type === 'bokeh') {
+          // Large soft diffused background glow
+          const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, curRadius);
+          grad.addColorStop(0, `rgba(${p.r}, ${p.g}, ${p.b}, ${curAlpha.toFixed(3)})`);
+          grad.addColorStop(0.5, `rgba(${p.r}, ${p.g}, ${p.b}, ${(curAlpha * 0.45).toFixed(3)})`);
+          grad.addColorStop(1, `rgba(${p.r}, ${p.g}, ${p.b}, 0)`);
           ctx.beginPath();
-          ctx.arc(p.x, p.y, curRadius * 2.6, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${p.r}, ${p.g}, ${p.b}, ${(curAlpha * 0.16).toFixed(3)})`;
+          ctx.arc(p.x, p.y, curRadius, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
+          ctx.fill();
+        } else if (p.type === 'medium') {
+          // Glowing orb with illuminated halo and bright center
+          const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, curRadius);
+          grad.addColorStop(0, `rgba(${p.r}, ${p.g}, ${p.b}, ${(curAlpha * 1.2).toFixed(3)})`);
+          grad.addColorStop(0.4, `rgba(${p.r}, ${p.g}, ${p.b}, ${(curAlpha * 0.55).toFixed(3)})`);
+          grad.addColorStop(1, `rgba(${p.r}, ${p.g}, ${p.b}, 0)`);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, curRadius, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
+          ctx.fill();
+
+          // Delicate bright core bead
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, Math.max(1.2, curRadius * 0.22), 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${(curAlpha * 0.65).toFixed(3)})`;
+          ctx.fill();
+        } else {
+          // Crisp neon dot with soft halo
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, curRadius * 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${p.r}, ${p.g}, ${p.b}, ${(curAlpha * 0.22).toFixed(3)})`;
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, curRadius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${p.r}, ${p.g}, ${p.b}, ${curAlpha.toFixed(3)})`;
           ctx.fill();
         }
-
-        // Core bead
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, curRadius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${p.r}, ${p.g}, ${p.b}, ${curAlpha.toFixed(3)})`;
-        ctx.fill();
       }
     }
   }
