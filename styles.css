@@ -1203,13 +1203,17 @@ body.is-dragging .timer-bead-rim {
   height: 13.5px;
   border-radius: 3.5px;
   background-color: var(--lvl-0);
-  transition: transform 120ms ease, background-color 140ms ease;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.85);
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.75));
+  transition: transform 120ms ease, background-color 140ms ease, box-shadow 140ms ease, filter 140ms ease;
   cursor: pointer;
   flex-shrink: 0;
 }
 
 .cell:hover {
   transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.95);
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.9));
   z-index: 10;
 }
 
@@ -1217,6 +1221,8 @@ body.is-dragging .timer-bead-rim {
   opacity: 0;
   pointer-events: none;
   visibility: hidden;
+  box-shadow: none !important;
+  filter: none !important;
 }
 
 .cell-lvl-0 { background-color: var(--lvl-0); }
@@ -1231,7 +1237,7 @@ body.is-dragging .timer-bead-rim {
 .cell-lvl-9 { background-color: var(--lvl-9); }
 
 .cell.cell-peak {
-  box-shadow: 0 0 6px rgba(78, 250, 143, 0.45);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.85), 0 0 7px rgba(78, 250, 143, 0.5);
 }
 
 .cell.is-today {
