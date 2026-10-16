@@ -226,22 +226,30 @@
 
       <!-- VIEW 4: SETTINGS & PREFERENCES -->
       <section class="view-panel hidden" id="view-settings">
-        <div class="panel-inner">
-          <div class="panel-header-row">
-            <h2 class="panel-heading">Settings &amp; Preferences</h2>
-            <button class="btn-subtle" id="btn-close-settings" title="Back to Timer">← Back to Timer</button>
+        <div class="panel-inner settings-panel-inner">
+          <div class="settings-header-row">
+            <h2 class="settings-heading">Settings</h2>
+            <button class="settings-close-btn" id="btn-close-settings" title="Back to Timer" aria-label="Back to Timer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           </div>
 
-          <!-- User Profile & Account Card -->
-          <div class="user-profile-card" id="user-profile-card">
-            <div class="user-profile-info">
-              <div class="user-profile-avatar" id="setting-user-avatar">U</div>
-              <div class="user-profile-meta">
-                <span class="user-profile-name" id="setting-username-display">Signed In User</span>
-                <span class="user-profile-status">🔒 Private Cloud Database (Supabase)</span>
+          <!-- Minimal User Profile Card -->
+          <div class="settings-profile-card" id="user-profile-card">
+            <div class="settings-profile-left">
+              <div class="settings-user-avatar" id="setting-user-avatar">U</div>
+              <div class="settings-user-meta">
+                <span class="settings-username" id="setting-username-display">Signed In User</span>
+                <span class="settings-status-pill">
+                  <span class="settings-status-dot" aria-hidden="true"></span>
+                  <span>Cloud Sync</span>
+                </span>
               </div>
             </div>
-            <button class="btn-logout" id="btn-logout" title="Sign Out of StudyArc">
+            <button class="settings-logout-btn" id="btn-logout" title="Sign Out of StudyArc">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                 <polyline points="16 17 21 12 16 7"></polyline>
@@ -251,20 +259,32 @@
             </button>
           </div>
 
-          <div class="settings-form">
-            <div class="setting-field">
-              <div class="setting-meta">
-                <span class="setting-label">All-Time Total Focus</span>
-                <span class="setting-hint">Total cumulative study time recorded across all sessions</span>
+          <!-- Compact Preferences Group -->
+          <div class="settings-group">
+            <!-- Row 1: Total Focus -->
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="settings-row-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
+                <span class="settings-row-label">Total Focus</span>
               </div>
-              <span class="setting-badge-value" id="setting-total-focus">0h 0m</span>
+              <span class="settings-value-pill" id="setting-total-focus">0h 0m</span>
             </div>
 
-
-            <div class="setting-field">
-              <div class="setting-meta">
-                <span class="setting-label">Sound Effects</span>
-                <span class="setting-hint">Synthesized gentle audio chimes on session finish</span>
+            <!-- Row 2: Sound Effects -->
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="settings-row-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  </svg>
+                </div>
+                <span class="settings-row-label">Sound Effects</span>
               </div>
               <label class="switch">
                 <input type="checkbox" id="setting-sound-enabled" checked>
@@ -272,12 +292,19 @@
               </label>
             </div>
 
-            <div class="setting-field danger-field">
-              <div class="setting-meta">
-                <span class="setting-label text-danger">Reset All Progress</span>
-                <span class="setting-hint">Permanently wipe all session logs, streaks, and XP in SQL database</span>
+            <!-- Row 3: Danger Wipe Progress -->
+            <div class="settings-row settings-row-danger">
+              <div class="settings-row-left">
+                <div class="settings-row-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18"></path>
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                  </svg>
+                </div>
+                <span class="settings-row-label">Reset Progress</span>
               </div>
-              <button class="btn-danger-outline" id="btn-wipe-data">Reset All</button>
+              <button class="settings-danger-btn" id="btn-wipe-data">Reset</button>
             </div>
           </div>
         </div>
