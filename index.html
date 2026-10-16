@@ -91,20 +91,56 @@
         <div class="timer-section">
           <div class="timer-wrapper">
             <svg class="timer-svg" id="timer-svg" viewBox="0 0 420 420">
-              <!-- Outer subtle depth outline -->
-              <circle class="timer-outer-rim" cx="210" cy="210" r="184"></circle>
-              <!-- Dark circular track -->
+              <defs>
+                <!-- Liquid Emerald Gradient -->
+                <linearGradient id="liquid-flow-green" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#6EFEB0" />
+                  <stop offset="35%" stop-color="#14F572" />
+                  <stop offset="70%" stop-color="#05DB65" />
+                  <stop offset="100%" stop-color="#02A346" />
+                </linearGradient>
+
+                <!-- Liquid Amber Gradient -->
+                <linearGradient id="liquid-flow-amber" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#FFE4A0" />
+                  <stop offset="35%" stop-color="#F5B258" />
+                  <stop offset="70%" stop-color="#E59432" />
+                  <stop offset="100%" stop-color="#C26A14" />
+                </linearGradient>
+
+                <!-- Liquid Bead Jewel Green Gradient -->
+                <radialGradient id="liquid-bead-green" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stop-color="#C9FFE3" />
+                  <stop offset="40%" stop-color="#4EFA8F" />
+                  <stop offset="85%" stop-color="#10E068" />
+                  <stop offset="100%" stop-color="#059942" />
+                </radialGradient>
+
+                <!-- Liquid Bead Jewel Amber Gradient -->
+                <radialGradient id="liquid-bead-amber" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stop-color="#FFF2D6" />
+                  <stop offset="40%" stop-color="#FCE1A8" />
+                  <stop offset="85%" stop-color="#E5A958" />
+                  <stop offset="100%" stop-color="#B86C18" />
+                </radialGradient>
+              </defs>
+
+              <!-- Dark circular liquid conduit track -->
               <circle class="timer-track" id="timer-track" cx="210" cy="210" r="172"></circle>
-              <!-- Mint green progress arc (Circumference = 2 * PI * 172 ≈ 1080.7) -->
+              <!-- Luminous liquid progress arc (Circumference = 2 * PI * 172 ≈ 1080.7) -->
               <circle class="timer-arc" id="timer-arc" cx="210" cy="210" r="172" stroke-dasharray="1080.7" stroke-dashoffset="540.35" transform="rotate(-90 210 210)"></circle>
-              <!-- Interactive Draggable Bead -->
+              <!-- Interactive Draggable Liquid Droplet Bead -->
               <g class="timer-bead-group" id="timer-bead-group" transform="translate(210, 382)">
                 <!-- Touch target hit area for effortless mobile dragging -->
-                <circle class="bead-touch-target" cx="0" cy="0" r="26"></circle>
-                <!-- Glowing mint halo aura -->
-                <circle class="timer-bead-glow" cx="0" cy="0" r="12"></circle>
-                <!-- Central bead jewel -->
-                <circle class="timer-bead" id="timer-bead" cx="0" cy="0" r="7"></circle>
+                <circle class="bead-touch-target" cx="0" cy="0" r="32"></circle>
+                <!-- Glowing liquid halo aura -->
+                <circle class="timer-bead-glow" cx="0" cy="0" r="20"></circle>
+                <!-- Liquid surface tension rim -->
+                <circle class="timer-bead-rim" cx="0" cy="0" r="13.5"></circle>
+                <!-- Central thick liquid bead droplet -->
+                <circle class="timer-bead" id="timer-bead" cx="0" cy="0" r="11"></circle>
+                <!-- Specular liquid highlight reflection glint -->
+                <circle class="timer-bead-highlight" cx="-3.5" cy="-3.5" r="3"></circle>
               </g>
             </svg>
 
@@ -140,8 +176,6 @@
             </div>
           </div>
 
-          <div class="stat-divider" aria-hidden="true"></div>
-
           <!-- Total XP -->
           <div class="stat-item">
             <div class="stat-icon-box">
@@ -154,8 +188,6 @@
               <span class="stat-title">Total XP</span>
             </div>
           </div>
-
-          <div class="stat-divider" aria-hidden="true"></div>
 
           <!-- Today's Focus (Live Ticking) -->
           <div class="stat-item stat-item-clickable" id="stat-item-today" title="Today's Focus • Click to view Day Record" role="button" tabindex="0">
@@ -174,33 +206,21 @@
 
         <!-- COMPACT MONTHLY ACTIVITY HEATMAP CARD -->
         <div class="heatmap-card" aria-label="Activity Consistency Heatmap">
-          <div class="heatmap-card-header">
-            <div class="heatmap-year-controls">
-              <button class="nav-arrow-btn" id="btn-prev-period" aria-label="Previous Period">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-              </button>
-              <span class="heatmap-year-badge" id="heatmap-year-badge">2026</span>
-              <button class="nav-arrow-btn" id="btn-next-period" aria-label="Next Period">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Heatmap Viewport (Months header + Mon/Wed/Fri + multi-month grid) -->
+          <!-- Heatmap Viewport (Weekdays column + multi-month grid) -->
           <div class="heatmap-body-wrap">
-            <div class="heatmap-weekdays">
-              <span class="weekday-label weekday-mon">Mon</span>
-              <span class="weekday-label weekday-wed">Wed</span>
-              <span class="weekday-label weekday-fri">Fri</span>
+            <div class="heatmap-weekdays" aria-hidden="true">
+              <span class="weekday-label">M</span>
+              <span class="weekday-label">T</span>
+              <span class="weekday-label">W</span>
+              <span class="weekday-label">T</span>
+              <span class="weekday-label">F</span>
+              <span class="weekday-label">S</span>
+              <span class="weekday-label">S</span>
             </div>
 
             <div class="heatmap-scroll-area" id="heatmap-scroll-area">
               <div class="heatmap-track" id="heatmap-track">
-                <!-- Dynamically populated accurate monthly calendar blocks by app.js -->
+                <!-- Dynamically populated accurate monthly calendar blocks with sticky year by app.js -->
               </div>
             </div>
           </div>

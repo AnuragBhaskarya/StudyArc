@@ -2211,17 +2211,36 @@
       state.viewedYear = currentYear;
     }
 
-    // 1. Build previous year's 12 months (Jan to Dec) as past history
-    for (let m = 0; m < 12; m++) {
-      const block = createMonthBlock(currentYear - 1, m);
-      trackEl.appendChild(block);
+    function createYearGroup(year, startMonth, endMonth) {
+      const yearGroup = document.createElement('div');
+      yearGroup.className = 'year-group';
+      yearGroup.dataset.year = year;
+
+      const stickyHeader = document.createElement('div');
+      stickyHeader.className = 'year-sticky-header';
+      const badge = document.createElement('span');
+      badge.className = 'year-sticky-badge';
+      badge.textContent = year;
+      stickyHeader.appendChild(badge);
+      yearGroup.appendChild(stickyHeader);
+
+      const monthsWrap = document.createElement('div');
+      monthsWrap.className = 'year-months-wrap';
+
+      for (let m = startMonth; m <= endMonth; m++) {
+        const block = createMonthBlock(year, m);
+        monthsWrap.appendChild(block);
+      }
+
+      yearGroup.appendChild(monthsWrap);
+      return yearGroup;
     }
 
-    // 2. Build current year's months up to current month (so current month is the recent month in last place!)
-    for (let m = 0; m <= currentMonth; m++) {
-      const block = createMonthBlock(currentYear, m);
-      trackEl.appendChild(block);
-    }
+    // 1. Build previous year's 12 months (Jan to Dec) as past history
+    trackEl.appendChild(createYearGroup(currentYear - 1, 0, 11));
+
+    // 2. Build current year's months up to current month (so current month is in last place!)
+    trackEl.appendChild(createYearGroup(currentYear, 0, currentMonth));
 
     // By default: scroll to the end so the current month is in the last place and history shows to the left
     requestAnimationFrame(() => {
@@ -2301,19 +2320,16 @@
   function updateYearBadgeFromScroll() {
     const scrollArea = document.getElementById('heatmap-scroll-area');
     const trackEl = document.getElementById('heatmap-track');
-    const yearBadge = document.getElementById('heatmap-year-badge');
-    if (!scrollArea || !trackEl || !yearBadge) return;
+    if (!scrollArea || !trackEl) return;
 
-    const blocks = trackEl.querySelectorAll('.month-block');
-    // Sample point at right side of visible viewport (showing current period)
+    const yearGroups = trackEl.querySelectorAll('.year-group');
     const sampleX = scrollArea.scrollLeft + Math.min(scrollArea.clientWidth - 40, scrollArea.clientWidth * 0.75);
 
-    for (let i = blocks.length - 1; i >= 0; i--) {
-      const b = blocks[i];
-      if (b.offsetLeft <= sampleX) {
-        const yr = b.dataset.year;
-        if (yr && yearBadge.textContent !== yr) {
-          yearBadge.textContent = yr;
+    for (let i = yearGroups.length - 1; i >= 0; i--) {
+      const g = yearGroups[i];
+      if (g.offsetLeft <= sampleX) {
+        const yr = g.dataset.year;
+        if (yr) {
           state.viewedYear = parseInt(yr, 10);
         }
         break;
