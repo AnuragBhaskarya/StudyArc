@@ -930,7 +930,15 @@ body.is-dragging .timer-bead-rim {
 }
 
 .star-svg {
-  color: #F0F5F1;
+  color: #FBBF24;
+  fill: rgba(251, 191, 36, 0.2);
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.45));
+}
+
+.stat-xp-number {
+  color: #FCD34D !important;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.35);
 }
 
 .bars-svg {
@@ -2611,6 +2619,26 @@ input:checked + .switch-slider:before {
   white-space: nowrap;
   will-change: transform, opacity;
   animation: flying-pill-swing var(--fly-duration, 1400ms) cubic-bezier(0.14, 0.85, 0.35, 1) forwards;
+}
+
+/* XP Golden Yellow Pill */
+.flying-pill.pill-xp,
+.flying-pill.pill-yellow {
+  background: rgba(24, 20, 6, 0.94);
+  border-color: rgba(251, 191, 36, 0.65);
+  color: #FCD34D;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.9), 0 0 16px rgba(251, 191, 36, 0.4);
+}
+
+/* Streak Bonus (SB) Emerald Green Pill */
+.flying-pill.pill-sb,
+.flying-pill.pill-green {
+  background: rgba(8, 22, 14, 0.94);
+  border-color: rgba(16, 224, 104, 0.55);
+  color: #10E068;
+  text-shadow: 0 0 10px rgba(16, 224, 104, 0.7);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.9), 0 0 16px rgba(16, 224, 104, 0.35);
 }
 
 @keyframes flying-pill-swing {

@@ -2197,13 +2197,13 @@
 
   function spawnRewardPills(minutes, xp, streakBonus) {
     const pills = [
-      `+${minutes}m`,
-      `+${xp} XP`,
-      `+${streakBonus} SB`
+      { text: `+${minutes}m`, class: 'pill-green' },
+      { text: `+${xp} XP`, class: 'pill-xp' },
+      { text: `+${streakBonus} SB`, class: 'pill-sb' }
     ];
-    pills.forEach((text, i) => {
+    pills.forEach((p, i) => {
       setTimeout(() => {
-        spawnFlyingPill(text);
+        spawnFlyingPill(p.text, { extraClass: p.class });
       }, i * 130);
     });
   }
