@@ -2576,6 +2576,67 @@ input:checked + .switch-slider:before {
 }
 
 /* ==========================================================================
+   VIDEO-GAME STYLE FLOATING / FLYING PILL NOTIFICATIONS
+   ========================================================================== */
+.timer-flying-pills-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+  overflow: visible;
+}
+
+.flying-pill {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.32rem 0.8rem;
+  background: rgba(8, 22, 14, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(16, 224, 104, 0.55);
+  border-radius: 9999px;
+  color: #10E068;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 10px rgba(16, 224, 104, 0.7);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.9), 0 0 16px rgba(16, 224, 104, 0.35);
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  will-change: transform, opacity;
+  animation: flying-pill-swing var(--fly-duration, 1400ms) cubic-bezier(0.14, 0.85, 0.35, 1) forwards;
+}
+
+@keyframes flying-pill-swing {
+  0% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--start-x, 0px)), calc(-50% + var(--start-y, 0px))) scale(0.6) rotate(var(--start-rot, 0deg));
+  }
+  14% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--mid-x, 0px)), calc(-50% + var(--mid-y, -32px))) scale(1.08) rotate(var(--mid-rot, 4deg));
+  }
+  35% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--drift1-x, 0px)), calc(-50% + var(--drift1-y, -60px))) scale(1) rotate(var(--drift1-rot, -3deg));
+  }
+  65% {
+    opacity: 0.85;
+    transform: translate(calc(-50% + var(--drift2-x, 0px)), calc(-50% + var(--drift2-y, -90px))) scale(0.96) rotate(var(--drift2-rot, 2deg));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--end-x, 0px)), calc(-50% + var(--end-y, -125px))) scale(0.82) rotate(var(--end-rot, -2deg));
+  }
+}
+
+/* ==========================================================================
    TOAST NOTIFICATION
    ========================================================================== */
 .toast-notification {

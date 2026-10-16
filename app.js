@@ -370,8 +370,8 @@
     if (serverTimer.hasCompleted) {
       const targetDuration = serverTimer.targetSeconds || DEFAULT_TIMER_SECONDS;
       const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
-      const taskName = serverTimer.activeTaskName || 'Focus Session';
-      showToast(`Welcome back! Your focus on ${taskName} finished while away. (+${minutesCompleted} XP)`);
+      const streakBonus = Math.max(1, state.streak || 1);
+      spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
       logSession(minutesCompleted, taskName);
 
       state.timer.status = 'idle';
@@ -629,8 +629,6 @@
     if (!dialog) return;
 
     if (!state.authenticated && !force) {
-      shakeAuthCard();
-      showToast('Please sign in or create an account to start tracking.');
       return;
     }
 
@@ -689,7 +687,6 @@
         document.documentElement.classList.remove('unauthenticated-gate');
         updateAuthUI();
         closeAuthDialog(true);
-        showToast(`Welcome back, ${data.user.username}!`);
         await syncWithBackend();
       } else {
         if (errorEl) {
@@ -794,7 +791,6 @@
         document.documentElement.classList.remove('unauthenticated-gate');
         updateAuthUI();
         closeAuthDialog(true);
-        showToast(`Account created! Welcome, ${data.user.username}!`);
         await syncWithBackend();
       } else {
         if (errorEl) {
@@ -850,7 +846,6 @@
     renderAll();
     updateAuthUI();
     switchView('focus');
-    showToast('Signed out successfully.');
     openAuthDialog('login');
   }
 
@@ -1599,7 +1594,8 @@
     const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
     logSession(minutesCompleted, taskName);
 
-    showToast(`Completed ${minutesCompleted}m focus on ${taskName}! (+${minutesCompleted} XP)`);
+    const streakBonus = Math.max(1, state.streak || 1);
+    spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
 
     state.activeTaskName = null;
     state.activeTaskStartTime = null;
@@ -1729,7 +1725,6 @@
 
       // If in an active task session, dragging bead or rim is locked!
       if (state.activeTaskName || state.timer.status !== 'idle') {
-        showToast('Timer locked in session. Hold 1.2s to save & exit before changing time.');
         return;
       }
 
@@ -1828,11 +1823,12 @@
         if (elapsedStudy >= 60) {
           const minutesLogged = Math.round(elapsedStudy / 60);
           logSession(minutesLogged, taskName);
-          showToast(`Saved ${minutesLogged}m of ${taskName}! (+${minutesLogged} XP)`);
+          const streakBonus = Math.max(1, state.streak || 1);
+          spawnRewardPills(minutesLogged, minutesLogged, streakBonus);
         } else if (state.activeTaskName) {
-          showToast('Focus session ended (less than 1 minute).');
+          spawnFlyingPill('Session Ended');
         } else {
-          showToast('Timer reset to 1:30:00.');
+          spawnFlyingPill('Timer Reset');
         }
 
         if (timerInterval) {
@@ -2139,6 +2135,77 @@
     toastTimeout = setTimeout(() => {
       toast.classList.add('hidden');
     }, 3200);
+  }
+
+  // =========================================================================
+  // VIDEO-GAME STYLE FLOATING / FLYING PILL NOTIFICATIONS (FROM TIMER NUMERALS)
+  // =========================================================================
+  function spawnFlyingPill(text, options = {}) {
+    const layer = document.getElementById('timer-flying-pills-layer');
+    if (!layer) return;
+
+    const pill = document.createElement('div');
+    pill.className = 'flying-pill';
+    if (options.extraClass) pill.classList.add(options.extraClass);
+    pill.textContent = text;
+
+    // Random start position around center of digits (-24px to +24px horizontally, -10px to +10px vertically)
+    const startX = (Math.random() - 0.5) * 48;
+    const startY = (Math.random() - 0.5) * 20;
+
+    // Direction: 1 (right) or -1 (left)
+    const side = Math.random() > 0.5 ? 1 : -1;
+    const drift1Dist = (16 + Math.random() * 24) * side;
+    const drift2Dist = drift1Dist + (Math.random() * 18 * side);
+    const endDist = drift2Dist + (Math.random() * 14 * side);
+
+    // Dynamic swing angles
+    const baseRot = (Math.random() - 0.5) * 12; // -6 to +6 deg
+    const startRot = baseRot;
+    const midRot = baseRot + side * (8 + Math.random() * 8);
+    const drift1Rot = baseRot - side * (6 + Math.random() * 7);
+    const drift2Rot = baseRot + side * (4 + Math.random() * 5);
+    const endRot = baseRot - side * (2 + Math.random() * 4);
+
+    const totalRise = 95 + Math.random() * 40; // 95px to 135px rise
+    const duration = 1350 + Math.random() * 250; // ~1.4s
+
+    pill.style.setProperty('--start-x', `${startX.toFixed(1)}px`);
+    pill.style.setProperty('--start-y', `${startY.toFixed(1)}px`);
+    pill.style.setProperty('--mid-x', `${(startX + drift1Dist * 0.4).toFixed(1)}px`);
+    pill.style.setProperty('--mid-y', `${(startY - totalRise * 0.32).toFixed(1)}px`);
+    pill.style.setProperty('--drift1-x', `${(startX + drift1Dist).toFixed(1)}px`);
+    pill.style.setProperty('--drift1-y', `${(startY - totalRise * 0.58).toFixed(1)}px`);
+    pill.style.setProperty('--drift2-x', `${(startX + drift2Dist).toFixed(1)}px`);
+    pill.style.setProperty('--drift2-y', `${(startY - totalRise * 0.82).toFixed(1)}px`);
+    pill.style.setProperty('--end-x', `${(startX + endDist).toFixed(1)}px`);
+    pill.style.setProperty('--end-y', `${(startY - totalRise).toFixed(1)}px`);
+
+    pill.style.setProperty('--start-rot', `${startRot.toFixed(1)}deg`);
+    pill.style.setProperty('--mid-rot', `${midRot.toFixed(1)}deg`);
+    pill.style.setProperty('--drift1-rot', `${drift1Rot.toFixed(1)}deg`);
+    pill.style.setProperty('--drift2-rot', `${drift2Rot.toFixed(1)}deg`);
+    pill.style.setProperty('--end-rot', `${endRot.toFixed(1)}deg`);
+    pill.style.setProperty('--fly-duration', `${Math.round(duration)}ms`);
+
+    layer.appendChild(pill);
+
+    pill.addEventListener('animationend', () => {
+      pill.remove();
+    });
+  }
+
+  function spawnRewardPills(minutes, xp, streakBonus) {
+    const pills = [
+      `+${minutes}m`,
+      `+${xp} XP`,
+      `+${streakBonus} SB`
+    ];
+    pills.forEach((text, i) => {
+      setTimeout(() => {
+        spawnFlyingPill(text);
+      }, i * 130);
+    });
   }
 
   // =========================================================================
@@ -3073,8 +3140,6 @@
       setTimeout(finishDismiss, 350);
     }
 
-    showToast('Session deleted');
-
     // 6. Fire backend deletion in the background (non-blocking)
     fetch(`/api/sessions/${encodeURIComponent(sessionId)}`, {
       method: 'DELETE',
@@ -3361,9 +3426,14 @@
       taskBackdrop.addEventListener('click', closeTaskPromptDialog);
     }
 
-    // Escape key closes task prompt modal
+    // Escape key handling
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        if (!state.authenticated) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
         const modal = document.getElementById('task-prompt-modal');
         if (modal && !modal.classList.contains('hidden')) {
           closeTaskPromptDialog();
@@ -3421,27 +3491,18 @@
       btnFlipToSignin.addEventListener('click', () => flipAuthCard('login'));
     }
 
-    // Auth Dialog cancel event (Escape key) & backdrop click handler
+    // Auth Dialog: strictly uncloseable when unauthenticated
     const authDialog = document.getElementById('auth-dialog');
     if (authDialog) {
       authDialog.addEventListener('cancel', (e) => {
         if (!state.authenticated) {
           e.preventDefault();
-          shakeAuthCard();
-          showToast('Please sign in or create an account to start tracking.');
         }
       });
 
       authDialog.addEventListener('click', (e) => {
         if (!state.authenticated) {
-          const rect = authDialog.getBoundingClientRect();
-          const isInDialog = (
-            rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
-            rect.left <= e.clientX && e.clientX <= rect.left + rect.width
-          );
-          if (!isInDialog) {
-            shakeAuthCard();
-          }
+          e.stopPropagation();
           return;
         }
         const rect = authDialog.getBoundingClientRect();
