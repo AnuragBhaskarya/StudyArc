@@ -1984,7 +1984,7 @@
 
     const targetMins = Math.round(state.timer.targetSeconds / 60);
     if (durationPill) {
-      durationPill.textContent = `⏱️ ${targetMins} mins`;
+      durationPill.textContent = `${targetMins}m Focus`;
     }
 
     if (input) {
@@ -1992,13 +1992,43 @@
     }
 
     if (chipsContainer) {
-      const subjectsList = (state.subjects && state.subjects.length > 0)
-        ? state.subjects.map(s => s.name || s)
-        : ['Computer Science', 'Mathematics', 'System Architecture', 'Cognitive Science', 'Machine Learning'];
+      // Gather up to 4 most recent unique subjects (from sessions, then saved subjects, then clean defaults)
+      const recentUnique = [];
+      const seen = new Set();
 
-      const uniqueNames = Array.from(new Set(subjectsList)).slice(0, 8);
+      const sessionList = (state.sessions && state.sessions.length > 0) ? state.sessions : [];
+      for (const s of sessionList) {
+        const name = (s.subject || s.subject_name || s.subjectName || '').trim();
+        if (name && !seen.has(name.toLowerCase())) {
+          seen.add(name.toLowerCase());
+          recentUnique.push(name);
+          if (recentUnique.length >= 4) break;
+        }
+      }
 
-      chipsContainer.innerHTML = uniqueNames.map(name => `
+      if (recentUnique.length < 4 && state.subjects && state.subjects.length > 0) {
+        for (const subj of state.subjects) {
+          const name = (typeof subj === 'string' ? subj : (subj.name || subj.title || '')).trim();
+          if (name && !seen.has(name.toLowerCase())) {
+            seen.add(name.toLowerCase());
+            recentUnique.push(name);
+            if (recentUnique.length >= 4) break;
+          }
+        }
+      }
+
+      const defaultSuggestions = ['Deep Work', 'Mathematics', 'Reading', 'Coding'];
+      for (const def of defaultSuggestions) {
+        if (recentUnique.length >= 4) break;
+        if (!seen.has(def.toLowerCase())) {
+          seen.add(def.toLowerCase());
+          recentUnique.push(def);
+        }
+      }
+
+      const final4 = recentUnique.slice(0, 4);
+
+      chipsContainer.innerHTML = final4.map(name => `
         <button type="button" class="task-chip" data-name="${escapeHtml(name)}">${escapeHtml(name)}</button>
       `).join('');
 

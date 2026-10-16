@@ -361,46 +361,46 @@
         </div>
       </dialog>
 
-      <!-- TASK PROMPT MODAL (Simple Fixed Overlay - Smooth & Zero Glitch) -->
-      <div id="task-prompt-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="task-prompt-title">
+      <!-- TASK PROMPT MODAL (Minimal, Ultra-Compact Floating Card) -->
+      <div id="task-prompt-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Start Focus Session">
         <div class="modal-backdrop" id="task-prompt-backdrop"></div>
         <div class="task-prompt-dialog">
           <form class="task-prompt-shell" id="task-prompt-form">
-            <div class="task-prompt-top">
-              <span class="task-prompt-badge">New Focus Session</span>
-              <span class="task-prompt-duration-pill" id="task-prompt-duration">⏱️ 60 mins</span>
+            <!-- Compact Header Row -->
+            <div class="task-prompt-header">
+              <div class="task-prompt-header-left">
+                <span class="task-prompt-pulse-dot" aria-hidden="true"></span>
+                <span class="task-prompt-duration-pill" id="task-prompt-duration">60m Focus</span>
+              </div>
+              <button type="button" class="task-prompt-close-btn" id="btn-cancel-task" title="Close" aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
 
-            <h2 class="task-prompt-title" id="task-prompt-title">What are you focusing on?</h2>
-
-            <div class="task-input-box">
+            <!-- Integrated Input Field with Start Button -->
+            <div class="task-input-wrapper">
               <input 
                 type="text" 
                 id="input-task-name" 
                 class="task-name-input" 
-                placeholder="e.g. Deep Learning, Math HW, Chapter 4..." 
+                placeholder="What are you focusing on?" 
                 maxlength="45"
                 autocomplete="off"
-                required
               >
-            </div>
-
-            <!-- Quick Suggestion Chips from Subject Library -->
-            <div class="task-suggestions-section">
-              <span class="task-suggestions-label">Quick suggestions:</span>
-              <div class="task-suggestions-chips" id="task-suggestions-chips">
-                <!-- Dynamically populated from state.subjects -->
-              </div>
-            </div>
-
-            <div class="task-prompt-actions">
-              <button type="button" class="btn-task-cancel" id="btn-cancel-task">Cancel</button>
-              <button type="submit" class="btn-task-start" id="btn-start-task">
+              <button type="submit" class="btn-task-start" id="btn-start-task" title="Start Focus" aria-label="Start Focus">
                 <svg viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5 3 19 12 5 21 5 3"></polygon>
                 </svg>
-                Start Focus
+                <span>Start</span>
               </button>
+            </div>
+
+            <!-- 4 Recent Quick Chips (No wordy label) -->
+            <div class="task-suggestions-chips" id="task-suggestions-chips">
+              <!-- Dynamically populated with 4 most recent subjects -->
             </div>
           </form>
         </div>
