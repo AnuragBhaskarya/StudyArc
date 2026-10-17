@@ -2417,6 +2417,11 @@
             cell.classList.add('month-edge-right');
           }
 
+          // Puzzle piece bottom boundary: only added to the last active cell of the rightmost column in past months
+          if (!isCurrentMonth && dayNum === daysInMonth) {
+            cell.classList.add('month-edge-bottom');
+          }
+
           cell.dataset.date = dStr;
           cell.dataset.minutes = mins;
 

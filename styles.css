@@ -1269,6 +1269,26 @@ body.is-dragging .timer-bead-rim {
   z-index: 4;
 }
 
+/* Puzzle piece bottom boundary: golden-yellow line along the bottom of the last active cell in the month's final column */
+.cell.month-edge-bottom {
+  position: relative;
+}
+
+.cell.month-edge-bottom::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: #FBBF24;
+  border-bottom-left-radius: 3.5px;
+  border-bottom-right-radius: 3.5px;
+  box-shadow: 0 1px 4px rgba(251, 191, 36, 0.7);
+  pointer-events: none;
+  z-index: 4;
+}
+
 .cell-lvl-0 { background-color: var(--lvl-0); }
 .cell-lvl-1 { background-color: var(--lvl-1); }
 .cell-lvl-2 { background-color: var(--lvl-2); }
