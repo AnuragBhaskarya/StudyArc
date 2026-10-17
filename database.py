@@ -436,6 +436,17 @@ def get_timer_state(user_id):
             if calc_remaining <= 0:
                 calc_remaining = 0
                 has_completed = True
+                status = 'idle'
+                remaining_secs = target_secs
+                started_at = None
+                try:
+                    ctx.execute("""
+                        UPDATE user_timer_state
+                        SET status = 'idle', remaining_seconds = target_seconds, started_at = NULL, sequence = sequence + 1
+                        WHERE user_id = ?
+                    """, (user_id,))
+                except Exception as e:
+                    print(f"[Timer] DB auto-idle update warning: {e}")
             current_rem = max(0, int(calc_remaining))
 
         return {
@@ -923,7 +934,20 @@ def get_full_state(user_id):
         if calc_rem <= 0:
             calc_rem = 0
             has_completed = True
-        remaining_secs = max(0, int(calc_rem))
+            status = 'idle'
+            remaining_secs = target_secs
+            started_at = None
+            try:
+                with get_connection() as c2:
+                    c2.execute("""
+                        UPDATE user_timer_state
+                        SET status = 'idle', remaining_seconds = target_seconds, started_at = NULL, sequence = sequence + 1
+                        WHERE user_id = ?
+                    """, (user_id,))
+            except Exception as e:
+                print(f"[Timer] DB full_state auto-idle warning: {e}")
+        else:
+            remaining_secs = max(0, int(calc_rem))
 
     timer_res = {
         'status': status,

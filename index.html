@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=5.2">
+  <link rel="stylesheet" href="styles.css?v=5.3">
   <script>
     (function () {
       try {
@@ -632,10 +632,10 @@
   <!-- TOAST NOTIFICATION FOR SAVED / COMPLETED SESSIONS -->
   <div id="toast-notification" class="toast-notification hidden" role="status" aria-live="polite"></div>
 
-  <!-- JAVASCRIPT LOGIC -->
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
-  <script src="aura-particles.js?v=5.2"></script>
-  <script src="app.js?v=5.2"></script>
+  <!-- JAVASCRIPT LOGIC (Local zero-latency assets, resilient against CDN outages and content blockers) -->
+  <script src="assets/socket.io.min.js"></script>
+  <script src="aura-particles.js?v=5.3"></script>
+  <script src="app.js?v=5.3"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

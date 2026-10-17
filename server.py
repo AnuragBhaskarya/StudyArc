@@ -256,6 +256,19 @@ def get_hot_timer_state(user_id):
                     state['currentRemaining'] = state['targetSeconds']
                     state['hasCompleted'] = True
                     state['startedAt'] = None
+                    # Hot cache in RAM transitions to idle with hasCompleted=False for subsequent requests
+                    USER_TIMER_HOT_CACHE[user_id] = {**state, 'hasCompleted': False}
+                    def persist_auto_complete():
+                        try:
+                            database.update_timer_state(
+                                user_id, 'complete',
+                                target_seconds=state['targetSeconds'],
+                                remaining_seconds=state['targetSeconds'],
+                                status='idle'
+                            )
+                        except Exception as ex:
+                            print(f"[TimerSync] Auto-complete persist error: {ex}")
+                    threading.Thread(target=persist_auto_complete, daemon=True).start()
                 else:
                     state['currentRemaining'] = max(0.0, calc_rem)
                     state['hasCompleted'] = False

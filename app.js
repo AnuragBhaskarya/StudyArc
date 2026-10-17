@@ -225,6 +225,10 @@
   function connectTimerSocket() {
     if (!state.authenticated) return;
     if (sioSocket && sioSocket.connected) return;
+    if (typeof io !== 'function') {
+      console.warn('StudyArc: Socket.IO library not loaded, using HTTP fallback');
+      return;
+    }
 
     // Disconnect stale instance if any
     if (sioSocket) {
@@ -368,6 +372,7 @@
 
     // 2. Handle completed-while-away
     if (serverTimer.hasCompleted) {
+      const taskName = serverTimer.activeTaskName || state.activeTaskName || (state.subjects && state.subjects.length > 0 ? state.subjects[0].name : 'Focus Session');
       const targetDuration = serverTimer.targetSeconds || DEFAULT_TIMER_SECONDS;
       const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
       const streakBonus = Math.max(1, state.streak || 1);
@@ -3609,7 +3614,11 @@
   // =========================================================================
   // BOOTSTRAP (Safe for both pre-parsed and async/cached script execution)
   // =========================================================================
+  let appBootstrapped = false;
   async function bootstrapApp() {
+    if (appBootstrapped) return;
+    appBootstrapped = true;
+
     initEvents();
     renderAll();
 
