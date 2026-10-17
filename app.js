@@ -2412,14 +2412,14 @@
             cell.classList.add('is-today');
           }
 
-          // Puzzle piece right boundary: only added to past/previous months (current month boundary activates once next month begins)
-          if (!isCurrentMonth && (dayNum + 7 > daysInMonth)) {
+          // Puzzle piece right boundary: only added to past/previous months (excluding December and current month)
+          if (!isCurrentMonth && monthIndex !== 11 && (dayNum + 7 > daysInMonth)) {
             cell.classList.add('month-edge-right');
           }
 
           // Puzzle piece bottom boundary: only added when the month ends mid-week (r < 6)
-          // to connect the step to the next interlocked month. Skipped when the month ends on the last row (r === 6, straight vertical line).
-          if (!isCurrentMonth && dayNum === daysInMonth && r < 6) {
+          // to connect the step to the next interlocked month. Skipped for December, current month, or Sunday ends (r === 6).
+          if (!isCurrentMonth && monthIndex !== 11 && dayNum === daysInMonth && r < 6) {
             cell.classList.add('month-edge-bottom');
           }
 
