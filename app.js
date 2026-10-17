@@ -375,7 +375,7 @@
       const taskName = serverTimer.activeTaskName || state.activeTaskName || (state.subjects && state.subjects.length > 0 ? state.subjects[0].name : 'Focus Session');
       const targetDuration = serverTimer.targetSeconds || DEFAULT_TIMER_SECONDS;
       const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
-      const streakBonus = Math.max(1, state.streak || 1);
+      const streakBonus = Math.max(0, state.streak || 0);
       spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
       logSession(minutesCompleted, taskName);
 
@@ -1599,7 +1599,7 @@
     const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
     logSession(minutesCompleted, taskName);
 
-    const streakBonus = Math.max(1, state.streak || 1);
+    const streakBonus = Math.max(0, state.streak || 0);
     spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
 
     state.activeTaskName = null;
@@ -1828,7 +1828,7 @@
         if (elapsedStudy >= 60) {
           const minutesLogged = Math.round(elapsedStudy / 60);
           logSession(minutesLogged, taskName);
-          const streakBonus = Math.max(1, state.streak || 1);
+          const streakBonus = Math.max(0, state.streak || 0);
           spawnRewardPills(minutesLogged, minutesLogged, streakBonus);
         } else if (state.activeTaskName) {
           spawnFlyingPill('Session Ended');
@@ -2200,12 +2200,14 @@
     });
   }
 
-  function spawnRewardPills(minutes, xp, streakBonus) {
+  function spawnRewardPills(minutes, xp, streakBonus = 0) {
     const pills = [
       { text: `+${minutes}m`, class: 'pill-green' },
-      { text: `+${xp} XP`, class: 'pill-xp' },
-      { text: `+${streakBonus} SB`, class: 'pill-sb' }
+      { text: `+${xp} XP`, class: 'pill-xp' }
     ];
+    if (streakBonus > 0) {
+      pills.push({ text: `+${streakBonus} SB`, class: 'pill-sb' });
+    }
     pills.forEach((p, i) => {
       setTimeout(() => {
         spawnFlyingPill(p.text, { extraClass: p.class });
