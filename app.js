@@ -2145,6 +2145,22 @@
   // =========================================================================
   // VIDEO-GAME STYLE FLOATING / FLYING PILL NOTIFICATIONS (FROM TIMER NUMERALS)
   // =========================================================================
+  let lastPillTime = 0;
+  let autoLaneIndex = 0;
+  const AUTO_LANES = ['center', 'left', 'right'];
+
+  function getAutoPillLane() {
+    const now = Date.now();
+    if (now - lastPillTime > 1200) {
+      autoLaneIndex = 0;
+      lastPillTime = now;
+      return 'center';
+    }
+    autoLaneIndex = (autoLaneIndex + 1) % AUTO_LANES.length;
+    lastPillTime = now;
+    return AUTO_LANES[autoLaneIndex];
+  }
+
   function spawnFlyingPill(text, options = {}) {
     const layer = document.getElementById('timer-flying-pills-layer');
     if (!layer) return;
@@ -2154,36 +2170,85 @@
     if (options.extraClass) pill.classList.add(options.extraClass);
     pill.textContent = text;
 
-    // Random start position around center of digits (-24px to +24px horizontally, -10px to +10px vertically)
-    const startX = (Math.random() - 0.5) * 48;
-    const startY = (Math.random() - 0.5) * 20;
+    // Determine directional corridor / lane: 'left' | 'center' | 'right'
+    const lane = options.lane || getAutoPillLane();
 
-    // Direction: 1 (right) or -1 (left)
-    const side = Math.random() > 0.5 ? 1 : -1;
-    const drift1Dist = (16 + Math.random() * 24) * side;
-    const drift2Dist = drift1Dist + (Math.random() * 18 * side);
-    const endDist = drift2Dist + (Math.random() * 14 * side);
+    let startX = 0;
+    let midX = 0;
+    let drift1X = 0;
+    let drift2X = 0;
+    let endX = 0;
 
-    // Dynamic swing angles
-    const baseRot = (Math.random() - 0.5) * 12; // -6 to +6 deg
-    const startRot = baseRot;
-    const midRot = baseRot + side * (8 + Math.random() * 8);
-    const drift1Rot = baseRot - side * (6 + Math.random() * 7);
-    const drift2Rot = baseRot + side * (4 + Math.random() * 5);
-    const endRot = baseRot - side * (2 + Math.random() * 4);
+    let startRot = 0;
+    let midRot = 0;
+    let drift1Rot = 0;
+    let drift2Rot = 0;
+    let endRot = 0;
 
-    const totalRise = 95 + Math.random() * 40; // 95px to 135px rise
-    const duration = 1350 + Math.random() * 250; // ~1.4s
+    let totalRise = 112;
+    let duration = 1400;
+
+    const startY = (Math.random() - 0.5) * 8; // Subtle vertical jitter (-4px to +4px)
+
+    if (lane === 'left') {
+      // Sweeps strongly towards upper-left: strictly negative X corridor
+      startX = -36 + (Math.random() - 0.5) * 8;
+      midX = startX - (22 + (Math.random() - 0.5) * 6);
+      drift1X = startX - (48 + (Math.random() - 0.5) * 8);
+      drift2X = startX - (68 + (Math.random() - 0.5) * 8);
+      endX = startX - (84 + (Math.random() - 0.5) * 8);
+
+      startRot = -3 + (Math.random() - 0.5) * 2;
+      midRot = -9 + (Math.random() - 0.5) * 3;
+      drift1Rot = -7 + (Math.random() - 0.5) * 2;
+      drift2Rot = -4 + (Math.random() - 0.5) * 2;
+      endRot = -2 + (Math.random() - 0.5) * 2;
+
+      totalRise = 110 + Math.random() * 12;
+      duration = 1380 + Math.random() * 80;
+    } else if (lane === 'right') {
+      // Sweeps strongly towards upper-right: strictly positive X corridor
+      startX = 36 + (Math.random() - 0.5) * 8;
+      midX = startX + (22 + (Math.random() - 0.5) * 6);
+      drift1X = startX + (48 + (Math.random() - 0.5) * 8);
+      drift2X = startX + (68 + (Math.random() - 0.5) * 8);
+      endX = startX + (84 + (Math.random() - 0.5) * 8);
+
+      startRot = 3 + (Math.random() - 0.5) * 2;
+      midRot = 9 + (Math.random() - 0.5) * 3;
+      drift1Rot = 7 + (Math.random() - 0.5) * 2;
+      drift2Rot = 4 + (Math.random() - 0.5) * 2;
+      endRot = 2 + (Math.random() - 0.5) * 2;
+
+      totalRise = 110 + Math.random() * 12;
+      duration = 1380 + Math.random() * 80;
+    } else {
+      // 'center' lane: ascends straight up through the middle, lofting higher
+      startX = (Math.random() - 0.5) * 6;
+      midX = (Math.random() - 0.5) * 4;
+      drift1X = (Math.random() - 0.5) * 6;
+      drift2X = (Math.random() - 0.5) * 6;
+      endX = (Math.random() - 0.5) * 6;
+
+      startRot = (Math.random() - 0.5) * 2;
+      midRot = 2.5 + (Math.random() - 0.5) * 1.5;
+      drift1Rot = -2.5 + (Math.random() - 0.5) * 1.5;
+      drift2Rot = 1.5 + (Math.random() - 0.5) * 1.5;
+      endRot = 0;
+
+      totalRise = 142 + Math.random() * 12; // Reaches ~30px higher elevation
+      duration = 1460 + Math.random() * 80;
+    }
 
     pill.style.setProperty('--start-x', `${startX.toFixed(1)}px`);
     pill.style.setProperty('--start-y', `${startY.toFixed(1)}px`);
-    pill.style.setProperty('--mid-x', `${(startX + drift1Dist * 0.4).toFixed(1)}px`);
+    pill.style.setProperty('--mid-x', `${midX.toFixed(1)}px`);
     pill.style.setProperty('--mid-y', `${(startY - totalRise * 0.32).toFixed(1)}px`);
-    pill.style.setProperty('--drift1-x', `${(startX + drift1Dist).toFixed(1)}px`);
+    pill.style.setProperty('--drift1-x', `${drift1X.toFixed(1)}px`);
     pill.style.setProperty('--drift1-y', `${(startY - totalRise * 0.58).toFixed(1)}px`);
-    pill.style.setProperty('--drift2-x', `${(startX + drift2Dist).toFixed(1)}px`);
+    pill.style.setProperty('--drift2-x', `${drift2X.toFixed(1)}px`);
     pill.style.setProperty('--drift2-y', `${(startY - totalRise * 0.82).toFixed(1)}px`);
-    pill.style.setProperty('--end-x', `${(startX + endDist).toFixed(1)}px`);
+    pill.style.setProperty('--end-x', `${endX.toFixed(1)}px`);
     pill.style.setProperty('--end-y', `${(startY - totalRise).toFixed(1)}px`);
 
     pill.style.setProperty('--start-rot', `${startRot.toFixed(1)}deg`);
@@ -2201,17 +2266,22 @@
   }
 
   function spawnRewardPills(minutes, xp, streakBonus = 0) {
-    const pills = [
-      { text: `+${minutes}m`, class: 'pill-green' },
-      { text: `+${xp} XP`, class: 'pill-xp' }
-    ];
+    const pills = [];
     if (streakBonus > 0) {
-      pills.push({ text: `+${streakBonus} SB`, class: 'pill-sb' });
+      // 3 pills: Left wing (+minutes), Center-high crown (+XP), Right wing (+Streak Bonus)
+      pills.push({ text: `+${minutes}m`, class: 'pill-green', lane: 'left' });
+      pills.push({ text: `+${xp} XP`, class: 'pill-xp', lane: 'center' });
+      pills.push({ text: `+${streakBonus} SB`, class: 'pill-sb', lane: 'right' });
+    } else {
+      // 2 pills: Symmetrical V-wings (Left and Right)
+      pills.push({ text: `+${minutes}m`, class: 'pill-green', lane: 'left' });
+      pills.push({ text: `+${xp} XP`, class: 'pill-xp', lane: 'right' });
     }
+
     pills.forEach((p, i) => {
       setTimeout(() => {
-        spawnFlyingPill(p.text, { extraClass: p.class });
-      }, i * 130);
+        spawnFlyingPill(p.text, { extraClass: p.class, lane: p.lane });
+      }, i * 90);
     });
   }
 
