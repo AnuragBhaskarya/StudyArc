@@ -1248,7 +1248,7 @@ body.is-dragging .timer-bead-rim {
   z-index: 0 !important;
 }
 
-/* Puzzle piece right boundary: solid black seam along the right side of the month's last cell in each row */
+/* Puzzle piece right boundary: subtle etched glass hairline seam along the right side of the month's last cell in each row */
 .cell.month-edge-right {
   position: relative;
 }
@@ -1259,8 +1259,8 @@ body.is-dragging .timer-bead-rim {
   top: 0;
   bottom: 0;
   right: 0;
-  width: 2px;
-  background: #000000;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.14);
   border-top-right-radius: 3.5px;
   border-bottom-right-radius: 3.5px;
   box-shadow: none;
@@ -1268,7 +1268,7 @@ body.is-dragging .timer-bead-rim {
   z-index: 4;
 }
 
-/* Puzzle piece bottom boundary: solid black seam along the bottom of the last active cell in the month's final column */
+/* Puzzle piece bottom boundary: subtle etched glass hairline seam along the bottom of the last active cell in the month's final column */
 .cell.month-edge-bottom {
   position: relative;
 }
@@ -1279,8 +1279,8 @@ body.is-dragging .timer-bead-rim {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 2px;
-  background: #000000;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.14);
   border-bottom-left-radius: 3.5px;
   border-bottom-right-radius: 3.5px;
   box-shadow: none;
