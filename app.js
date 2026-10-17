@@ -2417,8 +2417,9 @@
             cell.classList.add('month-edge-right');
           }
 
-          // Puzzle piece bottom boundary: only added to the last active cell of the rightmost column in past months
-          if (!isCurrentMonth && dayNum === daysInMonth) {
+          // Puzzle piece bottom boundary: only added when the month ends mid-week (r < 6)
+          // to connect the step to the next interlocked month. Skipped when the month ends on the last row (r === 6, straight vertical line).
+          if (!isCurrentMonth && dayNum === daysInMonth && r < 6) {
             cell.classList.add('month-edge-bottom');
           }
 
