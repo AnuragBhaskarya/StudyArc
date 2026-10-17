@@ -2370,6 +2370,10 @@
     const totalSlots = firstDayOfWeek + daysInMonth;
     const numCols = Math.ceil(totalSlots / 7);
 
+    // If month starts mid-week (Tue-Sun), offset spacer column so gap is measured purely between valid cells
+    if (!isFirstInGroup && firstDayOfWeek > 0) {
+      monthBlock.classList.add('month-interlocked');
+    }
 
     const todayStr = getLocalDateString();
     const now = new Date();

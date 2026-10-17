@@ -53,7 +53,7 @@
   --hm-cell-size: 13.5px;
   --hm-col-gap: 3.5px;
   --hm-month-gap: 12px;
-  --hm-year-gap: 28px;
+  --hm-year-gap: 32px;
 
   /* Typography */
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -1113,7 +1113,7 @@ body.is-dragging .timer-bead-rim {
 .heatmap-track {
   display: flex;
   align-items: flex-start;
-  gap: var(--hm-year-gap, 28px);
+  gap: var(--hm-year-gap, 32px);
   width: max-content;
   padding: 4px 8px 10px 8px;
   background: transparent;
@@ -1182,7 +1182,10 @@ body.is-dragging .timer-bead-rim {
   pointer-events: none; /* Allows click events to pass through seamlessly to underlying cells */
 }
 
-
+/* Interlocking puzzle transition: offsets spacer column so gap is measured uniformly between valid cells */
+.month-block.month-interlocked {
+  margin-left: calc(-1 * (var(--hm-cell-size, 13.5px) + var(--hm-col-gap, 3.5px)));
+}
 
 .month-label {
   font-size: 0.7rem;
