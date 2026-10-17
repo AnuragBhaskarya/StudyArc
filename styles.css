@@ -1249,7 +1249,7 @@ body.is-dragging .timer-bead-rim {
   z-index: 0 !important;
 }
 
-/* Puzzle piece right boundary: golden-yellow line along the right side of the month's last cell in each row */
+/* Puzzle piece right boundary: radiant bright green line with neon glow along the right side of the month's last cell in each row */
 .cell.month-edge-right {
   position: relative;
 }
@@ -1261,15 +1261,15 @@ body.is-dragging .timer-bead-rim {
   bottom: 0;
   right: 0;
   width: 2px;
-  background: #FBBF24;
+  background: #4EFA8F;
   border-top-right-radius: 3.5px;
   border-bottom-right-radius: 3.5px;
-  box-shadow: 1px 0 4px rgba(251, 191, 36, 0.7);
+  box-shadow: 1px 0 5px rgba(78, 250, 143, 0.9), 0 0 8px rgba(16, 224, 104, 0.55);
   pointer-events: none;
   z-index: 4;
 }
 
-/* Puzzle piece bottom boundary: golden-yellow line along the bottom of the last active cell in the month's final column */
+/* Puzzle piece bottom boundary: radiant bright green line with neon glow along the bottom of the last active cell in the month's final column */
 .cell.month-edge-bottom {
   position: relative;
 }
@@ -1281,10 +1281,10 @@ body.is-dragging .timer-bead-rim {
   right: 0;
   bottom: 0;
   height: 2px;
-  background: #FBBF24;
+  background: #4EFA8F;
   border-bottom-left-radius: 3.5px;
   border-bottom-right-radius: 3.5px;
-  box-shadow: 0 1px 4px rgba(251, 191, 36, 0.7);
+  box-shadow: 0 1px 5px rgba(78, 250, 143, 0.9), 0 0 8px rgba(16, 224, 104, 0.55);
   pointer-events: none;
   z-index: 4;
 }
