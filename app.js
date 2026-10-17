@@ -2123,7 +2123,6 @@
     closeTaskPromptDialog();
     startTimer();
     renderTimer();
-    showToast(`Focus session started: ${cleanName}`);
 
     const centerPad = document.getElementById('timer-center-pad');
     centerPad?.blur?.();
