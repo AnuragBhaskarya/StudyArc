@@ -1209,6 +1209,10 @@ body.is-dragging .timer-bead-rim {
   gap: var(--hm-col-gap, 3.5px);
   position: relative;
   pointer-events: none;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.7))
+          drop-shadow(0 6px 18px rgba(0, 0, 0, 0.5))
+          drop-shadow(0 12px 30px rgba(0, 0, 0, 0.35))
+          drop-shadow(0 0 24px rgba(0, 0, 0, 0.45));
 }
 
 /* Week column: 7 cells stacked */
@@ -1235,6 +1239,7 @@ body.is-dragging .timer-bead-rim {
 
 .cell:hover {
   transform: scale(1.3);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.95);
   z-index: 30;
 }
 
