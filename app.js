@@ -2123,6 +2123,7 @@
     closeTaskPromptDialog();
     startTimer();
     renderTimer();
+    spawnFlyingPill('Session Started');
 
     const centerPad = document.getElementById('timer-center-pad');
     centerPad?.blur?.();
