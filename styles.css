@@ -1215,21 +1215,6 @@ body.is-dragging .timer-bead-rim {
   pointer-events: none;
 }
 
-/* Distinct golden-yellow month separator line in the last gap of the month */
-.month-block:not(:last-child) .month-weeks::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: calc(-1 * (var(--hm-month-gap, 4px) / 2) - 0.75px);
-  width: 1.5px;
-  background: linear-gradient(180deg, rgba(251, 191, 36, 0.25) 0%, rgba(251, 191, 36, 0.85) 50%, rgba(251, 191, 36, 0.25) 100%);
-  box-shadow: 0 0 6px rgba(251, 191, 36, 0.45);
-  border-radius: 9999px;
-  pointer-events: none;
-  z-index: 5;
-}
-
 /* Week column: 7 cells stacked */
 .week-col {
   display: flex;
@@ -1268,9 +1253,24 @@ body.is-dragging .timer-bead-rim {
   z-index: 0 !important;
 }
 
-/* Distinct golden-yellow accent on the final day of each month */
-.cell.cell-month-end {
-  box-shadow: inset -2px 0 0 rgba(251, 191, 36, 0.95), inset 0 -1.5px 0 rgba(251, 191, 36, 0.75), 0 0 6px rgba(251, 191, 36, 0.45);
+/* Puzzle piece right boundary: golden-yellow line along the right side of the month's last cell in each row */
+.cell.month-edge-right {
+  position: relative;
+}
+
+.cell.month-edge-right::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 2px;
+  background: #FBBF24;
+  border-top-right-radius: 3.5px;
+  border-bottom-right-radius: 3.5px;
+  box-shadow: 1px 0 4px rgba(251, 191, 36, 0.7);
+  pointer-events: none;
+  z-index: 4;
 }
 
 .cell-lvl-0 { background-color: var(--lvl-0); }

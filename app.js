@@ -2410,8 +2410,9 @@
             cell.classList.add('is-today');
           }
 
-          if (dayNum === daysInMonth) {
-            cell.classList.add('cell-month-end');
+          // Puzzle piece right edge: last cell of each row in this month
+          if (dayNum + 7 > daysInMonth) {
+            cell.classList.add('month-edge-right');
           }
 
           cell.dataset.date = dStr;
