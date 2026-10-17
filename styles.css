@@ -52,7 +52,7 @@
   /* Heatmap Layout Metrics */
   --hm-cell-size: 13.5px;
   --hm-col-gap: 3.5px;
-  --hm-month-gap: 4px;
+  --hm-month-gap: 3.5px;
 
   /* Typography */
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -1248,7 +1248,7 @@ body.is-dragging .timer-bead-rim {
   z-index: 0 !important;
 }
 
-/* Puzzle piece right boundary: subtle etched glass hairline seam along the right side of the month's last cell in each row */
+/* Puzzle piece right boundary: fills the actual gap between months on the right side */
 .cell.month-edge-right {
   position: relative;
 }
@@ -1257,18 +1257,27 @@ body.is-dragging .timer-bead-rim {
   content: '';
   position: absolute;
   top: 0;
-  bottom: 0;
-  right: 0;
-  width: 1px;
+  bottom: calc(-1 * var(--hm-col-gap, 3.5px));
+  left: 100%;
+  width: var(--hm-col-gap, 3.5px);
   background: rgba(255, 255, 255, 0.14);
-  border-top-right-radius: 3.5px;
-  border-bottom-right-radius: 3.5px;
-  box-shadow: none;
   pointer-events: none;
-  z-index: 4;
+  z-index: 1;
 }
 
-/* Puzzle piece bottom boundary: subtle etched glass hairline seam along the bottom of the last active cell in the month's final column */
+/* On the bottom-most cell of the week (Sunday), do not extend past the bottom of the grid */
+.week-col .cell.month-edge-right:last-child::after {
+  bottom: 0;
+  border-bottom-right-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+.week-col .cell.month-edge-right:first-child::after {
+  border-top-right-radius: 2px;
+  border-top-left-radius: 2px;
+}
+
+/* Puzzle piece bottom boundary: fills the actual vertical gap below the last active cell in the month's final column */
 .cell.month-edge-bottom {
   position: relative;
 }
@@ -1276,16 +1285,13 @@ body.is-dragging .timer-bead-rim {
 .cell.month-edge-bottom::before {
   content: '';
   position: absolute;
+  top: 100%;
   left: 0;
   right: 0;
-  bottom: 0;
-  height: 1px;
+  height: var(--hm-col-gap, 3.5px);
   background: rgba(255, 255, 255, 0.14);
-  border-bottom-left-radius: 3.5px;
-  border-bottom-right-radius: 3.5px;
-  box-shadow: none;
   pointer-events: none;
-  z-index: 4;
+  z-index: 1;
 }
 
 .cell-lvl-0 { background-color: var(--lvl-0); }
