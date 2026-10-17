@@ -1206,7 +1206,6 @@ body.is-dragging .timer-bead-rim {
 .month-weeks {
   display: flex;
   gap: var(--hm-col-gap, 3.5px);
-  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 14px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 22px rgba(0, 0, 0, 0.5));
   position: relative;
   pointer-events: none;
 }

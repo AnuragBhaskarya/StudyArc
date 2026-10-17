@@ -1,10 +1,10 @@
 // StudyArc Progressive Web App (PWA) Service Worker — iOS Safari Bulletproof Edition
-const CACHE_NAME = 'studyarc-pwa-v17';
+const CACHE_NAME = 'studyarc-pwa-v18';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/styles.css',
-  '/styles.css?v=6.1',
+  '/styles.css?v=6.2',
   '/app.js',
   '/app.js?v=6.2',
   '/aura-particles.js',
