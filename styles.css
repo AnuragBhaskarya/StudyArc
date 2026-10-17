@@ -1181,10 +1181,6 @@ body.is-dragging .timer-bead-rim {
   pointer-events: none; /* Allows click events to pass through seamlessly to underlying cells */
 }
 
-.month-block:hover {
-  z-index: 15;
-}
-
 /* Interlocking puzzle piece: when month starts mid-week, it slides seamlessly into the previous month's final column */
 .month-block.month-interlocked {
   margin-left: calc(-1 * (var(--hm-cell-size, 13.5px) + var(--hm-month-gap, 4px)));

@@ -2376,6 +2376,8 @@
     }
 
     const todayStr = getLocalDateString();
+    const now = new Date();
+    const isCurrentMonth = (year === now.getFullYear() && monthIndex === now.getMonth());
 
     for (let c = 0; c < numCols; c++) {
       const col = document.createElement('div');
@@ -2410,8 +2412,8 @@
             cell.classList.add('is-today');
           }
 
-          // Puzzle piece right edge: last cell of each row in this month
-          if (dayNum + 7 > daysInMonth) {
+          // Puzzle piece right boundary: only added to past/previous months (current month boundary activates once next month begins)
+          if (!isCurrentMonth && (dayNum + 7 > daysInMonth)) {
             cell.classList.add('month-edge-right');
           }
 
@@ -2596,17 +2598,8 @@
       year: 'numeric'
     });
 
-    let focusText = 'No study logged';
-    if (mins > 0) {
-      if (mins >= 60) {
-        const hrs = Math.floor(mins / 60);
-        const rem = mins % 60;
-        focusText = rem > 0 ? `${mins}m (${hrs}h ${rem}m) focus time` : `${mins}m (${hrs}h) focus time`;
-      } else {
-        focusText = `${mins}m focus time`;
-      }
-    }
-    tooltipEl.textContent = `${formatted} • ${focusText}`;
+    const focusMins = isNaN(mins) ? 0 : mins;
+    tooltipEl.textContent = `${formatted} • ${focusMins}m`;
 
     const rect = cell.getBoundingClientRect();
     tooltipEl.style.left = `${rect.left + rect.width / 2}px`;
