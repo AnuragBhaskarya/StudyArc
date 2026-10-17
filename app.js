@@ -2380,6 +2380,9 @@
     for (let c = 0; c < numCols; c++) {
       const col = document.createElement('div');
       col.className = 'week-col';
+      if (c === numCols - 1) {
+        col.classList.add('last-month-col');
+      }
 
       for (let r = 0; r < 7; r++) {
         const dayNum = c * 7 + r - firstDayOfWeek + 1;
@@ -2405,6 +2408,10 @@
 
           if (dStr === todayStr) {
             cell.classList.add('is-today');
+          }
+
+          if (dayNum === daysInMonth) {
+            cell.classList.add('cell-month-end');
           }
 
           cell.dataset.date = dStr;
