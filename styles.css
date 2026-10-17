@@ -1277,7 +1277,8 @@ body.is-dragging .timer-bead-rim {
   border-top-left-radius: 2px;
 }
 
-/* Puzzle piece bottom boundary: fills the actual vertical gap below the last active cell in the month's final column */
+/* Puzzle piece bottom boundary: fills the actual vertical gap below the last active cell in the month's final column,
+   extending left to seamlessly connect with the inner corner of the previous column */
 .cell.month-edge-bottom {
   position: relative;
 }
@@ -1286,12 +1287,17 @@ body.is-dragging .timer-bead-rim {
   content: '';
   position: absolute;
   top: 100%;
-  left: 0;
+  left: calc(-1 * var(--hm-col-gap, 3.5px));
   right: 0;
   height: var(--hm-col-gap, 3.5px);
   background: rgba(255, 255, 255, 0.14);
   pointer-events: none;
   z-index: 1;
+}
+
+/* Outer corner radius for the step */
+.cell.month-edge-bottom.month-edge-right::after {
+  border-bottom-right-radius: 2px;
 }
 
 .cell-lvl-0 { background-color: var(--lvl-0); }
