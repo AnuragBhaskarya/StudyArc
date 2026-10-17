@@ -1255,10 +1255,6 @@ body.is-dragging .timer-bead-rim {
   box-shadow: 0 0 6px rgba(78, 250, 143, 0.45);
 }
 
-.cell.is-today {
-  outline: 1.5px solid rgba(255, 255, 255, 0.85);
-  outline-offset: 1px;
-}
 
 /* Tooltip */
 .heatmap-tooltip {
