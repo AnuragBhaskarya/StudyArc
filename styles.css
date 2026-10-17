@@ -1056,6 +1056,7 @@ body.is-dragging .timer-bead-rim {
   max-width: 1080px;
   margin: 0 auto;
   user-select: none;
+  overflow: visible;
 }
 
 /* Heatmap Body Wrap */
@@ -1063,7 +1064,7 @@ body.is-dragging .timer-bead-rim {
   display: flex;
   align-items: flex-start;
   gap: 0.65rem;
-  overflow: hidden;
+  overflow: visible;
   width: 100%;
 }
 
@@ -1096,9 +1097,12 @@ body.is-dragging .timer-bead-rim {
   overflow-y: hidden;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  padding-bottom: 6px;
+  padding-bottom: 24px;
+  margin-bottom: -24px;
+  padding-right: 20px;
+  margin-right: -20px;
   scroll-snap-type: x mandatory;
-  scroll-padding-inline-end: 4px;
+  scroll-padding-inline-end: 24px;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
 }
@@ -1115,7 +1119,7 @@ body.is-dragging .timer-bead-rim {
   align-items: flex-start;
   gap: var(--hm-year-gap, 32px);
   width: max-content;
-  padding: 4px 8px 10px 8px;
+  padding: 4px 32px 36px 12px;
   background: transparent;
   border: none;
   border-radius: 0;
