@@ -52,7 +52,7 @@
   /* Heatmap Layout Metrics */
   --hm-cell-size: 13.5px;
   --hm-col-gap: 3.5px;
-  --hm-month-gap: 8px;
+  --hm-month-gap: 5px;
 
   /* Typography */
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -1165,7 +1165,7 @@ body.is-dragging .timer-bead-rim {
 .year-months-wrap {
   display: flex;
   align-items: flex-start;
-  gap: var(--hm-month-gap, 4px);
+  gap: var(--hm-month-gap, 5px);
 }
 
 /* Each Month as an accurate, self-contained calendar grouping snapped to the end */
@@ -1181,7 +1181,10 @@ body.is-dragging .timer-bead-rim {
   pointer-events: none; /* Allows click events to pass through seamlessly to underlying cells */
 }
 
-
+/* Interlocking puzzle piece: when month starts mid-week, it slides seamlessly into the previous month's final column */
+.month-block.month-interlocked {
+  margin-left: calc(-1 * (var(--hm-cell-size, 13.5px) + var(--hm-month-gap, 5px)));
+}
 
 .month-label {
   font-size: 0.7rem;
@@ -1245,7 +1248,60 @@ body.is-dragging .timer-bead-rim {
   z-index: 0 !important;
 }
 
+/* Puzzle piece right boundary: fills the actual gap between months on the right side */
+.cell.month-edge-right {
+  position: relative;
+}
 
+.cell.month-edge-right::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: calc(-1 * var(--hm-col-gap, 3.5px));
+  left: 100%;
+  width: var(--hm-col-gap, 3.5px);
+  background: rgba(251, 191, 36, 0.35);
+  box-shadow: 0 0 3px rgba(251, 191, 36, 0.15);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* On the bottom-most cell of the week (Sunday), do not extend past the bottom of the grid */
+.week-col .cell.month-edge-right:last-child::after {
+  bottom: 0;
+  border-bottom-right-radius: 3.5px;
+  border-bottom-left-radius: 3.5px;
+}
+
+.week-col .cell.month-edge-right:first-child::after {
+  border-top-right-radius: 3.5px;
+  border-top-left-radius: 3.5px;
+}
+
+/* Puzzle piece bottom boundary: fills the actual vertical gap below the last active cell in the month's final column,
+   extending left to seamlessly connect with the inner corner of the previous column */
+.cell.month-edge-bottom {
+  position: relative;
+}
+
+.cell.month-edge-bottom::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: calc(-1 * var(--hm-col-gap, 3.5px));
+  right: 0;
+  height: var(--hm-col-gap, 3.5px);
+  background: rgba(251, 191, 36, 0.35);
+  box-shadow: 0 0 3px rgba(251, 191, 36, 0.15);
+  border-top-left-radius: 3.5px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Outer corner radius for the step matching the 3.5px cell corner radius */
+.cell.month-edge-bottom.month-edge-right::after {
+  border-bottom-right-radius: 3.5px;
+}
 
 .cell-lvl-0 { background-color: var(--lvl-0); }
 .cell-lvl-1 { background-color: var(--lvl-1); }

@@ -2370,6 +2370,10 @@
     const totalSlots = firstDayOfWeek + daysInMonth;
     const numCols = Math.ceil(totalSlots / 7);
 
+    // If month starts mid-week (Tue-Sun), join with previous month's ending column like a puzzle piece!
+    if (!isFirstInGroup && firstDayOfWeek > 0) {
+      monthBlock.classList.add('month-interlocked');
+    }
 
     const todayStr = getLocalDateString();
     const now = new Date();
@@ -2408,6 +2412,16 @@
             cell.classList.add('is-today');
           }
 
+          // Puzzle piece right boundary: only added to past/previous months (excluding December and current month)
+          if (!isCurrentMonth && monthIndex !== 11 && (dayNum + 7 > daysInMonth)) {
+            cell.classList.add('month-edge-right');
+          }
+
+          // Puzzle piece bottom boundary: only added when the month ends mid-week (r < 6)
+          // to connect the step to the next interlocked month. Skipped for December, current month, or Sunday ends (r === 6).
+          if (!isCurrentMonth && monthIndex !== 11 && dayNum === daysInMonth && r < 6) {
+            cell.classList.add('month-edge-bottom');
+          }
 
           cell.dataset.date = dStr;
           cell.dataset.minutes = mins;
