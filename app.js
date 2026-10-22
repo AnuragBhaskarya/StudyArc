@@ -27,6 +27,7 @@
     streak: 0,
     xp: 0,
     totalFocusSeconds: 0,
+    levelClearHistory: {},
 
     // Activity Records & Sessions (Loaded from SQLite database)
     dayActivity: {},
@@ -838,6 +839,7 @@
     state.streak = 0;
     state.xp = 0;
     state.totalFocusSeconds = 0;
+    state.levelClearHistory = {};
     state.timer.status = 'idle';
     state.timer.remainingSeconds = state.timer.targetSeconds;
     if (timerInterval) {
@@ -1605,6 +1607,12 @@
     spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
 
     if (newLevelInfo.level > prevLevel) {
+      state.levelClearHistory = state.levelClearHistory || {};
+      state.levelClearHistory[newLevelInfo.level] = {
+        date: todayStr,
+        timestamp: Date.now()
+      };
+      saveState();
       setTimeout(() => {
         spawnFlyingPill(`🎉 Lv. ${newLevelInfo.level}!`, { extraClass: 'pill-xp', lane: 'center' });
         showToast(`Level Up! Reached Level ${newLevelInfo.level}: ${newLevelInfo.title}! ✨`);
@@ -2992,6 +3000,11 @@
 
     updateTodayLiveStat();
     adjustStatFontFit();
+
+    const levelsDlg = document.getElementById('levels-dialog');
+    if (levelsDlg && levelsDlg.open) {
+      renderLevelsDialogDOM();
+    }
   }
 
   // =========================================================================
@@ -3255,6 +3268,215 @@
     const dialog = document.getElementById('day-detail-dialog');
     if (dialog && dialog.open) {
       dialog.close();
+    }
+  }
+
+  // =========================================================================
+  // RPG LEVEL & MASTERY MODAL DIALOG
+  // =========================================================================
+  let showAllLevelsView = false;
+
+  function calculateLevelClearDates() {
+    const dates = Object.assign({}, state.levelClearHistory || {});
+    const sessions = (state.sessions || []).slice();
+    sessions.sort((a, b) => {
+      const tA = a.timestamp || (a.date ? new Date(a.date).getTime() : 0);
+      const tB = b.timestamp || (b.date ? new Date(b.date).getTime() : 0);
+      return tA - tB;
+    });
+
+    let cum = 0;
+    for (const s of sessions) {
+      cum += Number(s.xp || s.durationMinutes || 0);
+      for (const l of RPG_LEVELS) {
+        if (cum >= l.maxXp && !dates[l.level]) {
+          dates[l.level] = {
+            date: s.date,
+            timestamp: s.timestamp,
+            formatted: s.date ? formatDayDateHeader(s.date) : 'Cleared'
+          };
+        }
+      }
+    }
+
+    // Fallback for any cleared level where sessions were truncated
+    const currentLvl = getLevelInfo(state.xp).level;
+    for (const l of RPG_LEVELS) {
+      if (l.level < currentLvl && !dates[l.level]) {
+        dates[l.level] = {
+          formatted: 'Milestone Cleared'
+        };
+      }
+    }
+    return dates;
+  }
+
+  function openLevelsDialog() {
+    const dialog = document.getElementById('levels-dialog');
+    if (!dialog) return;
+    renderLevelsDialogDOM();
+    if (typeof dialog.showModal === 'function' && !dialog.open) {
+      dialog.showModal();
+    }
+  }
+
+  function closeLevelsDialog() {
+    const dialog = document.getElementById('levels-dialog');
+    if (dialog && dialog.open) {
+      dialog.close();
+    }
+  }
+
+  function renderLevelsDialogDOM() {
+    const dialog = document.getElementById('levels-dialog');
+    if (!dialog) return;
+
+    const lvlInfo = getLevelInfo(state.xp);
+    const clearDates = calculateLevelClearDates();
+
+    // Title & Badge
+    const titleEl = document.getElementById('levels-dialog-title');
+    const badgeEl = document.getElementById('levels-dialog-badge');
+    const toggleBtnText = document.getElementById('toggle-levels-text');
+    const toggleBtn = document.getElementById('btn-toggle-all-levels');
+
+    if (titleEl) {
+      titleEl.textContent = `Level ${lvlInfo.level} — ${lvlInfo.title}`;
+    }
+    if (badgeEl) {
+      badgeEl.textContent = `${lvlInfo.tier}`;
+    }
+    if (toggleBtnText) {
+      toggleBtnText.textContent = showAllLevelsView ? 'My Journey' : 'All Levels';
+    }
+    if (toggleBtn) {
+      toggleBtn.classList.toggle('is-active-view', showAllLevelsView);
+      toggleBtn.title = showAllLevelsView
+        ? 'Switch back to your cleared levels and current progress'
+        : 'View the complete catalog of all 100 RPG Levels and XP requirements';
+    }
+
+    // 3 Metric Cards
+    const pillLevel = document.getElementById('levels-pill-level');
+    const pillTier = document.getElementById('levels-pill-tier');
+    const pillNext = document.getElementById('levels-pill-next');
+
+    if (pillLevel) pillLevel.textContent = `Lv. ${lvlInfo.level}`;
+    if (pillTier) pillTier.textContent = lvlInfo.tier;
+    if (pillNext) {
+      if (lvlInfo.isMax) {
+        pillNext.textContent = 'Max Rank';
+      } else {
+        const remaining = Math.max(0, lvlInfo.xpRequired - lvlInfo.currentLevelXp);
+        pillNext.textContent = `${formatCompactNumber(remaining)} XP`;
+      }
+    }
+
+    // Progress Bar Card
+    const progressFractionEl = document.getElementById('levels-progress-fraction');
+    const progressPercentEl = document.getElementById('levels-progress-percent');
+    const barFillEl = document.getElementById('levels-bar-fill');
+    const totalXpEl = document.getElementById('levels-total-xp');
+
+    if (progressFractionEl) {
+      progressFractionEl.textContent = `${formatCompactNumber(lvlInfo.currentLevelXp)} / ${formatCompactNumber(lvlInfo.xpRequired)} XP (${lvlInfo.progressPercent.toFixed(1)}%)`;
+    }
+    if (progressPercentEl) {
+      progressPercentEl.textContent = lvlInfo.isMax ? 'MAX' : `${lvlInfo.progressPercent.toFixed(0)}%`;
+    }
+    if (barFillEl) {
+      barFillEl.style.width = `${lvlInfo.progressPercent.toFixed(1)}%`;
+    }
+    if (totalXpEl) {
+      totalXpEl.textContent = `${Number(state.xp || 0).toLocaleString()} XP`;
+    }
+
+    // Heading & Count
+    const headingEl = document.getElementById('levels-feed-heading');
+    const countEl = document.getElementById('levels-feed-count');
+    const feedList = document.getElementById('levels-feed-list');
+    if (!feedList) return;
+
+    let itemsToRender = [];
+    if (showAllLevelsView) {
+      if (headingEl) headingEl.textContent = 'All 100 Mastery Levels';
+      if (countEl) countEl.textContent = '100 Levels • 10 Tiers';
+      itemsToRender = RPG_LEVELS;
+    } else {
+      if (headingEl) headingEl.textContent = 'Cleared Milestones & Rank';
+      const clearedCount = Math.max(0, lvlInfo.level - 1);
+      if (countEl) countEl.textContent = `${clearedCount} Cleared • Lv. ${lvlInfo.level}`;
+      const maxPreview = Math.min(RPG_LEVELS.length, lvlInfo.level + 2);
+      itemsToRender = RPG_LEVELS.slice(0, maxPreview);
+    }
+
+    feedList.innerHTML = '';
+    const frag = document.createDocumentFragment();
+
+    itemsToRender.forEach((l) => {
+      const isCleared = l.level < lvlInfo.level || (l.level === 100 && lvlInfo.isMax);
+      const isCurrent = l.level === lvlInfo.level && !lvlInfo.isMax;
+      const isLocked = l.level > lvlInfo.level;
+
+      const card = document.createElement('div');
+      card.className = `level-card ${isCurrent ? 'is-current' : ''} ${isLocked ? 'is-locked' : ''}`;
+      if (isCurrent) {
+        card.setAttribute('data-current-level', 'true');
+      }
+
+      let subtitle = '';
+      let badgeHtml = '';
+
+      if (isCleared) {
+        const clearRecord = clearDates[l.level];
+        const dateStr = clearRecord?.formatted || (clearRecord?.date ? formatDayDateHeader(clearRecord.date) : 'Cleared Milestone');
+        subtitle = `Cleared on ${dateStr} • ${formatCompactNumber(l.xpRequired)} XP`;
+        badgeHtml = `<span class="level-badge-status level-badge-cleared">Cleared ✓</span>`;
+      } else if (isCurrent) {
+        const remaining = Math.max(0, l.xpRequired - lvlInfo.currentLevelXp);
+        subtitle = `Current Level • ${formatCompactNumber(lvlInfo.currentLevelXp)} / ${formatCompactNumber(l.xpRequired)} XP (${remaining} XP to next)`;
+        badgeHtml = `<span class="level-badge-status level-badge-current">${lvlInfo.progressPercent.toFixed(0)}%</span>`;
+      } else {
+        const diff = Math.max(0, l.minXp - state.xp);
+        subtitle = `Unlocks at ${formatCompactNumber(l.minXp)} XP total (${formatCompactNumber(diff)} XP needed)`;
+        badgeHtml = `<span class="level-badge-status level-badge-locked">${formatCompactNumber(l.xpRequired)} XP</span>`;
+      }
+
+      card.innerHTML = `
+        <div class="level-left">
+          <div class="level-timeline">
+            <span class="level-track-line"></span>
+            <span class="level-track-node"></span>
+          </div>
+          <div class="level-orb-wrapper">
+            <span class="level-orb"></span>
+          </div>
+          <div class="level-info">
+            <div class="level-title-row">
+              <span class="level-item-lvl">Lv. ${l.level}</span>
+              <span class="level-item-name">${escapeHtml(l.title)}</span>
+              <span class="level-item-tier">${escapeHtml(l.tier)}</span>
+            </div>
+            <span class="level-item-subtitle">${subtitle}</span>
+          </div>
+        </div>
+        <div class="level-right">
+          ${badgeHtml}
+        </div>
+      `;
+
+      frag.appendChild(card);
+    });
+
+    feedList.appendChild(frag);
+
+    if (showAllLevelsView) {
+      setTimeout(() => {
+        const currentCard = feedList.querySelector('[data-current-level="true"]');
+        if (currentCard) {
+          currentCard.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+      }, 50);
     }
   }
 
@@ -3648,6 +3870,50 @@
         );
         if (!isInDialog) {
           closeDayDialog();
+        }
+      });
+    }
+
+    // RPG Levels Dialog: Open via clicking or Enter on XP pill
+    const statItemXp = document.getElementById('stat-item-xp');
+    if (statItemXp) {
+      statItemXp.addEventListener('click', () => {
+        openLevelsDialog();
+      });
+      statItemXp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openLevelsDialog();
+        }
+      });
+    }
+
+    // RPG Levels Dialog: Close button
+    const btnCloseLevels = document.getElementById('btn-close-levels-dialog');
+    if (btnCloseLevels) {
+      btnCloseLevels.addEventListener('click', closeLevelsDialog);
+    }
+
+    // RPG Levels Dialog: Toggle between My Journey and All Levels catalog
+    const btnToggleAllLevels = document.getElementById('btn-toggle-all-levels');
+    if (btnToggleAllLevels) {
+      btnToggleAllLevels.addEventListener('click', () => {
+        showAllLevelsView = !showAllLevelsView;
+        renderLevelsDialogDOM();
+      });
+    }
+
+    // RPG Levels Dialog: backdrop click light-dismiss fallback
+    const levelsDialog = document.getElementById('levels-dialog');
+    if (levelsDialog) {
+      levelsDialog.addEventListener('click', (e) => {
+        const rect = levelsDialog.getBoundingClientRect();
+        const isInDialog = (
+          rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+          rect.left <= e.clientX && e.clientX <= rect.left + rect.width
+        );
+        if (!isInDialog) {
+          closeLevelsDialog();
         }
       });
     }
