@@ -1,0 +1,136 @@
+================================================================================
+  STUDYARC RPG PROGRESSION — 100 TIERS & LEVELS OF MASTERY
+================================================================================
+
+LVL   | TITLE                      | TIER               | XP NEEDED  | XP RANGE (TOTAL)
+--------------------------------------------------------------------------------
+
+>>> TIER: THE INITIATE <<<
+--------------------------------------------------
+1     | Novice Seeker              | The Initiate       | 25         | 0 -> 25 XP
+2     | Curious Scribe             | The Initiate       | 40         | 25 -> 65 XP
+3     | Mindful Page               | The Initiate       | 55         | 65 -> 120 XP
+4     | Quiet Observer             | The Initiate       | 70         | 120 -> 190 XP
+5     | Dedicated Apprentice       | The Initiate       | 90         | 190 -> 280 XP
+6     | Steady Cogitator           | The Initiate       | 110        | 280 -> 390 XP
+7     | Focus Neophyte             | The Initiate       | 130        | 390 -> 520 XP
+8     | Habit Builder              | The Initiate       | 150        | 520 -> 670 XP
+9     | Diligent Scholar           | The Initiate       | 175        | 670 -> 845 XP
+10    | Disciplined Mind           | The Initiate       | 200        | 845 -> 1,045 XP
+
+>>> TIER: THE PRACTITIONER <<<
+--------------------------------------------------
+11    | Deep Diver                 | The Practitioner   | 225        | 1,045 -> 1,270 XP
+12    | Concept Weaver             | The Practitioner   | 250        | 1,270 -> 1,520 XP
+13    | Logic Smith                | The Practitioner   | 280        | 1,520 -> 1,800 XP
+14    | Insight Seeker             | The Practitioner   | 305        | 1,800 -> 2,105 XP
+15    | Focus Alchemist            | The Practitioner   | 335        | 2,105 -> 2,440 XP
+16    | Knowledge Artisan          | The Practitioner   | 365        | 2,440 -> 2,805 XP
+17    | Syntax Walker              | The Practitioner   | 395        | 2,805 -> 3,200 XP
+18    | Theory Crafter             | The Practitioner   | 425        | 3,200 -> 3,625 XP
+19    | Rhythm Finder              | The Practitioner   | 455        | 3,625 -> 4,080 XP
+20    | Flow State Adept           | The Practitioner   | 490        | 4,080 -> 4,570 XP
+
+>>> TIER: THE SCHOLAR <<<
+--------------------------------------------------
+21    | Intellect Forger           | The Scholar        | 520        | 4,570 -> 5,090 XP
+22    | Thesis Crafter             | The Scholar        | 555        | 5,090 -> 5,645 XP
+23    | Pattern Analyst            | The Scholar        | 585        | 5,645 -> 6,230 XP
+24    | Memory Architect           | The Scholar        | 620        | 6,230 -> 6,850 XP
+25    | Relentless Scribe          | The Scholar        | 655        | 6,850 -> 7,505 XP
+26    | Archive Explorer           | The Scholar        | 690        | 7,505 -> 8,195 XP
+27    | Methodical Thinker         | The Scholar        | 730        | 8,195 -> 8,925 XP
+28    | Abstract Weaver            | The Scholar        | 765        | 8,925 -> 9,690 XP
+29    | Keystone Scholar           | The Scholar        | 800        | 9,690 -> 10,490 XP
+30    | Master of Fundamentals     | The Scholar        | 840        | 10,490 -> 11,330 XP
+
+>>> TIER: THE SAGE <<<
+--------------------------------------------------
+31    | Synapse Sculptor           | The Sage           | 875        | 11,330 -> 12,205 XP
+32    | Deep Work Strategist       | The Sage           | 915        | 12,205 -> 13,120 XP
+33    | Erudite Inquirer           | The Sage           | 955        | 13,120 -> 14,075 XP
+34    | Clarity Harbinger          | The Sage           | 995        | 14,075 -> 15,070 XP
+35    | Principle Master           | The Sage           | 1035       | 15,070 -> 16,105 XP
+36    | Cognitive Architect        | The Sage           | 1075       | 16,105 -> 17,180 XP
+37    | Knowledge Sentinel         | The Sage           | 1115       | 17,180 -> 18,295 XP
+38    | Rigor Specialist           | The Sage           | 1155       | 18,295 -> 19,450 XP
+39    | Wisdom Seeker              | The Sage           | 1195       | 19,450 -> 20,645 XP
+40    | High Scholar               | The Sage           | 1240       | 20,645 -> 21,885 XP
+
+>>> TIER: THE PHILOSOPHER <<<
+--------------------------------------------------
+41    | Iron Will                  | The Philosopher    | 1280       | 21,885 -> 23,165 XP
+42    | Silent Polymath            | The Philosopher    | 1325       | 23,165 -> 24,490 XP
+43    | Insight Catalyst           | The Philosopher    | 1365       | 24,490 -> 25,855 XP
+44    | Epiphany Engineer          | The Philosopher    | 1410       | 25,855 -> 27,265 XP
+45    | Archive Guardian           | The Philosopher    | 1455       | 27,265 -> 28,720 XP
+46    | Focus Vanguard             | The Philosopher    | 1495       | 28,720 -> 30,215 XP
+47    | Thought Synthesizer        | The Philosopher    | 1540       | 30,215 -> 31,755 XP
+48    | Tenacious Sage             | The Philosopher    | 1585       | 31,755 -> 33,340 XP
+49    | Horizon Gazer              | The Philosopher    | 1630       | 33,340 -> 34,970 XP
+50    | Grand Philosopher          | The Philosopher    | 1680       | 34,970 -> 36,650 XP
+
+>>> TIER: THE VIRTUOSO <<<
+--------------------------------------------------
+51    | Flow Sovereign             | The Virtuoso       | 1725       | 36,650 -> 38,375 XP
+52    | Mind Over Distraction      | The Virtuoso       | 1770       | 38,375 -> 40,145 XP
+53    | Zenith Apprentice          | The Virtuoso       | 1815       | 40,145 -> 41,960 XP
+54    | Nexus Thinker              | The Virtuoso       | 1865       | 41,960 -> 43,825 XP
+55    | Neural Virtuoso            | The Virtuoso       | 1910       | 43,825 -> 45,735 XP
+56    | Precision Craftsman        | The Virtuoso       | 1960       | 45,735 -> 47,695 XP
+57    | Quantum Logician           | The Virtuoso       | 2005       | 47,695 -> 49,700 XP
+58    | Unbroken Will              | The Virtuoso       | 2055       | 49,700 -> 51,755 XP
+59    | Arcane Polymath            | The Virtuoso       | 2105       | 51,755 -> 53,860 XP
+60    | Focus Grandmaster          | The Virtuoso       | 2150       | 53,860 -> 56,010 XP
+
+>>> TIER: THE LUMINARY <<<
+--------------------------------------------------
+61    | Astral Chronicler          | The Luminary       | 2200       | 56,010 -> 58,210 XP
+62    | Wisdom Luminary            | The Luminary       | 2250       | 58,210 -> 60,460 XP
+63    | Clarity Paragon            | The Luminary       | 2300       | 60,460 -> 62,760 XP
+64    | Hyperfocus Titan           | The Luminary       | 2350       | 62,760 -> 65,110 XP
+65    | Concept Sovereign          | The Luminary       | 2400       | 65,110 -> 67,510 XP
+66    | Thought Harmonizer         | The Luminary       | 2450       | 67,510 -> 69,960 XP
+67    | Epoch Observer             | The Luminary       | 2505       | 69,960 -> 72,465 XP
+68    | Truth Illuminator          | The Luminary       | 2555       | 72,465 -> 75,020 XP
+69    | Pinnacle Scholar           | The Luminary       | 2605       | 75,020 -> 77,625 XP
+70    | Ascendant Luminary         | The Luminary       | 2660       | 77,625 -> 80,285 XP
+
+>>> TIER: THE ARCHMAGE <<<
+--------------------------------------------------
+71    | Ethereal Savant            | The Archmage       | 2710       | 80,285 -> 82,995 XP
+72    | Dimensional Scholar        | The Archmage       | 2760       | 82,995 -> 85,755 XP
+73    | Mind of Stillness          | The Archmage       | 2815       | 85,755 -> 88,570 XP
+74    | Synthesis Paragon          | The Archmage       | 2870       | 88,570 -> 91,440 XP
+75    | Focus Archmage             | The Archmage       | 2920       | 91,440 -> 94,360 XP
+76    | Master of Insight          | The Archmage       | 2975       | 94,360 -> 97,335 XP
+77    | Continuum Seeker           | The Archmage       | 3030       | 97,335 -> 100,365 XP
+78    | Infinite Discipline        | The Archmage       | 3085       | 100,365 -> 103,450 XP
+79    | The Silent Beacon          | The Archmage       | 3135       | 103,450 -> 106,585 XP
+80    | Sovereign Polymath         | The Archmage       | 3190       | 106,585 -> 109,775 XP
+
+>>> TIER: THE ETERNAL <<<
+--------------------------------------------------
+81    | Timeless Intellect         | The Eternal        | 3245       | 109,775 -> 113,020 XP
+82    | Primordial Sage            | The Eternal        | 3300       | 113,020 -> 116,320 XP
+83    | Nexus of Knowledge         | The Eternal        | 3355       | 116,320 -> 119,675 XP
+84    | Infinity Adept             | The Eternal        | 3410       | 119,675 -> 123,085 XP
+85    | Unwavering Pillar          | The Eternal        | 3470       | 123,085 -> 126,555 XP
+86    | Celestial Scribe           | The Eternal        | 3525       | 126,555 -> 130,080 XP
+87    | Cosmic Polymath            | The Eternal        | 3580       | 130,080 -> 133,660 XP
+88    | Continuum Weaver           | The Eternal        | 3635       | 133,660 -> 137,295 XP
+89    | Eternal Thinker            | The Eternal        | 3695       | 137,295 -> 140,990 XP
+90    | Master of the Arc          | The Eternal        | 3750       | 140,990 -> 144,740 XP
+
+>>> TIER: THE MYTHIC <<<
+--------------------------------------------------
+91    | Epoch Sovereign            | The Mythic         | 3810       | 144,740 -> 148,550 XP
+92    | Transcendent Mind          | The Mythic         | 3865       | 148,550 -> 152,415 XP
+93    | Boundless Intellect        | The Mythic         | 3925       | 152,415 -> 156,340 XP
+94    | Sovereign of Will          | The Mythic         | 3980       | 156,340 -> 160,320 XP
+95    | Omniscient Sentinel        | The Mythic         | 4040       | 160,320 -> 164,360 XP
+96    | Nexus of Truth             | The Mythic         | 4100       | 164,360 -> 168,460 XP
+97    | Master of Eternity         | The Mythic         | 4160       | 168,460 -> 172,620 XP
+98    | Zen Transcendent           | The Mythic         | 4215       | 172,620 -> 176,835 XP
+99    | The Absolute Mind          | The Mythic         | 4275       | 176,835 -> 181,110 XP
+100   | Grand Chronomancer         | The Mythic         | 4335       | 181,110 -> 185,445 XP

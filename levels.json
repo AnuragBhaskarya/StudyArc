@@ -1,0 +1,802 @@
+[
+  {
+    "level": 1,
+    "title": "Novice Seeker",
+    "tier": "The Initiate",
+    "xpRequired": 25,
+    "minXp": 0,
+    "maxXp": 25
+  },
+  {
+    "level": 2,
+    "title": "Curious Scribe",
+    "tier": "The Initiate",
+    "xpRequired": 40,
+    "minXp": 25,
+    "maxXp": 65
+  },
+  {
+    "level": 3,
+    "title": "Mindful Page",
+    "tier": "The Initiate",
+    "xpRequired": 55,
+    "minXp": 65,
+    "maxXp": 120
+  },
+  {
+    "level": 4,
+    "title": "Quiet Observer",
+    "tier": "The Initiate",
+    "xpRequired": 70,
+    "minXp": 120,
+    "maxXp": 190
+  },
+  {
+    "level": 5,
+    "title": "Dedicated Apprentice",
+    "tier": "The Initiate",
+    "xpRequired": 90,
+    "minXp": 190,
+    "maxXp": 280
+  },
+  {
+    "level": 6,
+    "title": "Steady Cogitator",
+    "tier": "The Initiate",
+    "xpRequired": 110,
+    "minXp": 280,
+    "maxXp": 390
+  },
+  {
+    "level": 7,
+    "title": "Focus Neophyte",
+    "tier": "The Initiate",
+    "xpRequired": 130,
+    "minXp": 390,
+    "maxXp": 520
+  },
+  {
+    "level": 8,
+    "title": "Habit Builder",
+    "tier": "The Initiate",
+    "xpRequired": 150,
+    "minXp": 520,
+    "maxXp": 670
+  },
+  {
+    "level": 9,
+    "title": "Diligent Scholar",
+    "tier": "The Initiate",
+    "xpRequired": 175,
+    "minXp": 670,
+    "maxXp": 845
+  },
+  {
+    "level": 10,
+    "title": "Disciplined Mind",
+    "tier": "The Initiate",
+    "xpRequired": 200,
+    "minXp": 845,
+    "maxXp": 1045
+  },
+  {
+    "level": 11,
+    "title": "Deep Diver",
+    "tier": "The Practitioner",
+    "xpRequired": 225,
+    "minXp": 1045,
+    "maxXp": 1270
+  },
+  {
+    "level": 12,
+    "title": "Concept Weaver",
+    "tier": "The Practitioner",
+    "xpRequired": 250,
+    "minXp": 1270,
+    "maxXp": 1520
+  },
+  {
+    "level": 13,
+    "title": "Logic Smith",
+    "tier": "The Practitioner",
+    "xpRequired": 280,
+    "minXp": 1520,
+    "maxXp": 1800
+  },
+  {
+    "level": 14,
+    "title": "Insight Seeker",
+    "tier": "The Practitioner",
+    "xpRequired": 305,
+    "minXp": 1800,
+    "maxXp": 2105
+  },
+  {
+    "level": 15,
+    "title": "Focus Alchemist",
+    "tier": "The Practitioner",
+    "xpRequired": 335,
+    "minXp": 2105,
+    "maxXp": 2440
+  },
+  {
+    "level": 16,
+    "title": "Knowledge Artisan",
+    "tier": "The Practitioner",
+    "xpRequired": 365,
+    "minXp": 2440,
+    "maxXp": 2805
+  },
+  {
+    "level": 17,
+    "title": "Syntax Walker",
+    "tier": "The Practitioner",
+    "xpRequired": 395,
+    "minXp": 2805,
+    "maxXp": 3200
+  },
+  {
+    "level": 18,
+    "title": "Theory Crafter",
+    "tier": "The Practitioner",
+    "xpRequired": 425,
+    "minXp": 3200,
+    "maxXp": 3625
+  },
+  {
+    "level": 19,
+    "title": "Rhythm Finder",
+    "tier": "The Practitioner",
+    "xpRequired": 455,
+    "minXp": 3625,
+    "maxXp": 4080
+  },
+  {
+    "level": 20,
+    "title": "Flow State Adept",
+    "tier": "The Practitioner",
+    "xpRequired": 490,
+    "minXp": 4080,
+    "maxXp": 4570
+  },
+  {
+    "level": 21,
+    "title": "Intellect Forger",
+    "tier": "The Scholar",
+    "xpRequired": 520,
+    "minXp": 4570,
+    "maxXp": 5090
+  },
+  {
+    "level": 22,
+    "title": "Thesis Crafter",
+    "tier": "The Scholar",
+    "xpRequired": 555,
+    "minXp": 5090,
+    "maxXp": 5645
+  },
+  {
+    "level": 23,
+    "title": "Pattern Analyst",
+    "tier": "The Scholar",
+    "xpRequired": 585,
+    "minXp": 5645,
+    "maxXp": 6230
+  },
+  {
+    "level": 24,
+    "title": "Memory Architect",
+    "tier": "The Scholar",
+    "xpRequired": 620,
+    "minXp": 6230,
+    "maxXp": 6850
+  },
+  {
+    "level": 25,
+    "title": "Relentless Scribe",
+    "tier": "The Scholar",
+    "xpRequired": 655,
+    "minXp": 6850,
+    "maxXp": 7505
+  },
+  {
+    "level": 26,
+    "title": "Archive Explorer",
+    "tier": "The Scholar",
+    "xpRequired": 690,
+    "minXp": 7505,
+    "maxXp": 8195
+  },
+  {
+    "level": 27,
+    "title": "Methodical Thinker",
+    "tier": "The Scholar",
+    "xpRequired": 730,
+    "minXp": 8195,
+    "maxXp": 8925
+  },
+  {
+    "level": 28,
+    "title": "Abstract Weaver",
+    "tier": "The Scholar",
+    "xpRequired": 765,
+    "minXp": 8925,
+    "maxXp": 9690
+  },
+  {
+    "level": 29,
+    "title": "Keystone Scholar",
+    "tier": "The Scholar",
+    "xpRequired": 800,
+    "minXp": 9690,
+    "maxXp": 10490
+  },
+  {
+    "level": 30,
+    "title": "Master of Fundamentals",
+    "tier": "The Scholar",
+    "xpRequired": 840,
+    "minXp": 10490,
+    "maxXp": 11330
+  },
+  {
+    "level": 31,
+    "title": "Synapse Sculptor",
+    "tier": "The Sage",
+    "xpRequired": 875,
+    "minXp": 11330,
+    "maxXp": 12205
+  },
+  {
+    "level": 32,
+    "title": "Deep Work Strategist",
+    "tier": "The Sage",
+    "xpRequired": 915,
+    "minXp": 12205,
+    "maxXp": 13120
+  },
+  {
+    "level": 33,
+    "title": "Erudite Inquirer",
+    "tier": "The Sage",
+    "xpRequired": 955,
+    "minXp": 13120,
+    "maxXp": 14075
+  },
+  {
+    "level": 34,
+    "title": "Clarity Harbinger",
+    "tier": "The Sage",
+    "xpRequired": 995,
+    "minXp": 14075,
+    "maxXp": 15070
+  },
+  {
+    "level": 35,
+    "title": "Principle Master",
+    "tier": "The Sage",
+    "xpRequired": 1035,
+    "minXp": 15070,
+    "maxXp": 16105
+  },
+  {
+    "level": 36,
+    "title": "Cognitive Architect",
+    "tier": "The Sage",
+    "xpRequired": 1075,
+    "minXp": 16105,
+    "maxXp": 17180
+  },
+  {
+    "level": 37,
+    "title": "Knowledge Sentinel",
+    "tier": "The Sage",
+    "xpRequired": 1115,
+    "minXp": 17180,
+    "maxXp": 18295
+  },
+  {
+    "level": 38,
+    "title": "Rigor Specialist",
+    "tier": "The Sage",
+    "xpRequired": 1155,
+    "minXp": 18295,
+    "maxXp": 19450
+  },
+  {
+    "level": 39,
+    "title": "Wisdom Seeker",
+    "tier": "The Sage",
+    "xpRequired": 1195,
+    "minXp": 19450,
+    "maxXp": 20645
+  },
+  {
+    "level": 40,
+    "title": "High Scholar",
+    "tier": "The Sage",
+    "xpRequired": 1240,
+    "minXp": 20645,
+    "maxXp": 21885
+  },
+  {
+    "level": 41,
+    "title": "Iron Will",
+    "tier": "The Philosopher",
+    "xpRequired": 1280,
+    "minXp": 21885,
+    "maxXp": 23165
+  },
+  {
+    "level": 42,
+    "title": "Silent Polymath",
+    "tier": "The Philosopher",
+    "xpRequired": 1325,
+    "minXp": 23165,
+    "maxXp": 24490
+  },
+  {
+    "level": 43,
+    "title": "Insight Catalyst",
+    "tier": "The Philosopher",
+    "xpRequired": 1365,
+    "minXp": 24490,
+    "maxXp": 25855
+  },
+  {
+    "level": 44,
+    "title": "Epiphany Engineer",
+    "tier": "The Philosopher",
+    "xpRequired": 1410,
+    "minXp": 25855,
+    "maxXp": 27265
+  },
+  {
+    "level": 45,
+    "title": "Archive Guardian",
+    "tier": "The Philosopher",
+    "xpRequired": 1455,
+    "minXp": 27265,
+    "maxXp": 28720
+  },
+  {
+    "level": 46,
+    "title": "Focus Vanguard",
+    "tier": "The Philosopher",
+    "xpRequired": 1495,
+    "minXp": 28720,
+    "maxXp": 30215
+  },
+  {
+    "level": 47,
+    "title": "Thought Synthesizer",
+    "tier": "The Philosopher",
+    "xpRequired": 1540,
+    "minXp": 30215,
+    "maxXp": 31755
+  },
+  {
+    "level": 48,
+    "title": "Tenacious Sage",
+    "tier": "The Philosopher",
+    "xpRequired": 1585,
+    "minXp": 31755,
+    "maxXp": 33340
+  },
+  {
+    "level": 49,
+    "title": "Horizon Gazer",
+    "tier": "The Philosopher",
+    "xpRequired": 1630,
+    "minXp": 33340,
+    "maxXp": 34970
+  },
+  {
+    "level": 50,
+    "title": "Grand Philosopher",
+    "tier": "The Philosopher",
+    "xpRequired": 1680,
+    "minXp": 34970,
+    "maxXp": 36650
+  },
+  {
+    "level": 51,
+    "title": "Flow Sovereign",
+    "tier": "The Virtuoso",
+    "xpRequired": 1725,
+    "minXp": 36650,
+    "maxXp": 38375
+  },
+  {
+    "level": 52,
+    "title": "Mind Over Distraction",
+    "tier": "The Virtuoso",
+    "xpRequired": 1770,
+    "minXp": 38375,
+    "maxXp": 40145
+  },
+  {
+    "level": 53,
+    "title": "Zenith Apprentice",
+    "tier": "The Virtuoso",
+    "xpRequired": 1815,
+    "minXp": 40145,
+    "maxXp": 41960
+  },
+  {
+    "level": 54,
+    "title": "Nexus Thinker",
+    "tier": "The Virtuoso",
+    "xpRequired": 1865,
+    "minXp": 41960,
+    "maxXp": 43825
+  },
+  {
+    "level": 55,
+    "title": "Neural Virtuoso",
+    "tier": "The Virtuoso",
+    "xpRequired": 1910,
+    "minXp": 43825,
+    "maxXp": 45735
+  },
+  {
+    "level": 56,
+    "title": "Precision Craftsman",
+    "tier": "The Virtuoso",
+    "xpRequired": 1960,
+    "minXp": 45735,
+    "maxXp": 47695
+  },
+  {
+    "level": 57,
+    "title": "Quantum Logician",
+    "tier": "The Virtuoso",
+    "xpRequired": 2005,
+    "minXp": 47695,
+    "maxXp": 49700
+  },
+  {
+    "level": 58,
+    "title": "Unbroken Will",
+    "tier": "The Virtuoso",
+    "xpRequired": 2055,
+    "minXp": 49700,
+    "maxXp": 51755
+  },
+  {
+    "level": 59,
+    "title": "Arcane Polymath",
+    "tier": "The Virtuoso",
+    "xpRequired": 2105,
+    "minXp": 51755,
+    "maxXp": 53860
+  },
+  {
+    "level": 60,
+    "title": "Focus Grandmaster",
+    "tier": "The Virtuoso",
+    "xpRequired": 2150,
+    "minXp": 53860,
+    "maxXp": 56010
+  },
+  {
+    "level": 61,
+    "title": "Astral Chronicler",
+    "tier": "The Luminary",
+    "xpRequired": 2200,
+    "minXp": 56010,
+    "maxXp": 58210
+  },
+  {
+    "level": 62,
+    "title": "Wisdom Luminary",
+    "tier": "The Luminary",
+    "xpRequired": 2250,
+    "minXp": 58210,
+    "maxXp": 60460
+  },
+  {
+    "level": 63,
+    "title": "Clarity Paragon",
+    "tier": "The Luminary",
+    "xpRequired": 2300,
+    "minXp": 60460,
+    "maxXp": 62760
+  },
+  {
+    "level": 64,
+    "title": "Hyperfocus Titan",
+    "tier": "The Luminary",
+    "xpRequired": 2350,
+    "minXp": 62760,
+    "maxXp": 65110
+  },
+  {
+    "level": 65,
+    "title": "Concept Sovereign",
+    "tier": "The Luminary",
+    "xpRequired": 2400,
+    "minXp": 65110,
+    "maxXp": 67510
+  },
+  {
+    "level": 66,
+    "title": "Thought Harmonizer",
+    "tier": "The Luminary",
+    "xpRequired": 2450,
+    "minXp": 67510,
+    "maxXp": 69960
+  },
+  {
+    "level": 67,
+    "title": "Epoch Observer",
+    "tier": "The Luminary",
+    "xpRequired": 2505,
+    "minXp": 69960,
+    "maxXp": 72465
+  },
+  {
+    "level": 68,
+    "title": "Truth Illuminator",
+    "tier": "The Luminary",
+    "xpRequired": 2555,
+    "minXp": 72465,
+    "maxXp": 75020
+  },
+  {
+    "level": 69,
+    "title": "Pinnacle Scholar",
+    "tier": "The Luminary",
+    "xpRequired": 2605,
+    "minXp": 75020,
+    "maxXp": 77625
+  },
+  {
+    "level": 70,
+    "title": "Ascendant Luminary",
+    "tier": "The Luminary",
+    "xpRequired": 2660,
+    "minXp": 77625,
+    "maxXp": 80285
+  },
+  {
+    "level": 71,
+    "title": "Ethereal Savant",
+    "tier": "The Archmage",
+    "xpRequired": 2710,
+    "minXp": 80285,
+    "maxXp": 82995
+  },
+  {
+    "level": 72,
+    "title": "Dimensional Scholar",
+    "tier": "The Archmage",
+    "xpRequired": 2760,
+    "minXp": 82995,
+    "maxXp": 85755
+  },
+  {
+    "level": 73,
+    "title": "Mind of Stillness",
+    "tier": "The Archmage",
+    "xpRequired": 2815,
+    "minXp": 85755,
+    "maxXp": 88570
+  },
+  {
+    "level": 74,
+    "title": "Synthesis Paragon",
+    "tier": "The Archmage",
+    "xpRequired": 2870,
+    "minXp": 88570,
+    "maxXp": 91440
+  },
+  {
+    "level": 75,
+    "title": "Focus Archmage",
+    "tier": "The Archmage",
+    "xpRequired": 2920,
+    "minXp": 91440,
+    "maxXp": 94360
+  },
+  {
+    "level": 76,
+    "title": "Master of Insight",
+    "tier": "The Archmage",
+    "xpRequired": 2975,
+    "minXp": 94360,
+    "maxXp": 97335
+  },
+  {
+    "level": 77,
+    "title": "Continuum Seeker",
+    "tier": "The Archmage",
+    "xpRequired": 3030,
+    "minXp": 97335,
+    "maxXp": 100365
+  },
+  {
+    "level": 78,
+    "title": "Infinite Discipline",
+    "tier": "The Archmage",
+    "xpRequired": 3085,
+    "minXp": 100365,
+    "maxXp": 103450
+  },
+  {
+    "level": 79,
+    "title": "The Silent Beacon",
+    "tier": "The Archmage",
+    "xpRequired": 3135,
+    "minXp": 103450,
+    "maxXp": 106585
+  },
+  {
+    "level": 80,
+    "title": "Sovereign Polymath",
+    "tier": "The Archmage",
+    "xpRequired": 3190,
+    "minXp": 106585,
+    "maxXp": 109775
+  },
+  {
+    "level": 81,
+    "title": "Timeless Intellect",
+    "tier": "The Eternal",
+    "xpRequired": 3245,
+    "minXp": 109775,
+    "maxXp": 113020
+  },
+  {
+    "level": 82,
+    "title": "Primordial Sage",
+    "tier": "The Eternal",
+    "xpRequired": 3300,
+    "minXp": 113020,
+    "maxXp": 116320
+  },
+  {
+    "level": 83,
+    "title": "Nexus of Knowledge",
+    "tier": "The Eternal",
+    "xpRequired": 3355,
+    "minXp": 116320,
+    "maxXp": 119675
+  },
+  {
+    "level": 84,
+    "title": "Infinity Adept",
+    "tier": "The Eternal",
+    "xpRequired": 3410,
+    "minXp": 119675,
+    "maxXp": 123085
+  },
+  {
+    "level": 85,
+    "title": "Unwavering Pillar",
+    "tier": "The Eternal",
+    "xpRequired": 3470,
+    "minXp": 123085,
+    "maxXp": 126555
+  },
+  {
+    "level": 86,
+    "title": "Celestial Scribe",
+    "tier": "The Eternal",
+    "xpRequired": 3525,
+    "minXp": 126555,
+    "maxXp": 130080
+  },
+  {
+    "level": 87,
+    "title": "Cosmic Polymath",
+    "tier": "The Eternal",
+    "xpRequired": 3580,
+    "minXp": 130080,
+    "maxXp": 133660
+  },
+  {
+    "level": 88,
+    "title": "Continuum Weaver",
+    "tier": "The Eternal",
+    "xpRequired": 3635,
+    "minXp": 133660,
+    "maxXp": 137295
+  },
+  {
+    "level": 89,
+    "title": "Eternal Thinker",
+    "tier": "The Eternal",
+    "xpRequired": 3695,
+    "minXp": 137295,
+    "maxXp": 140990
+  },
+  {
+    "level": 90,
+    "title": "Master of the Arc",
+    "tier": "The Eternal",
+    "xpRequired": 3750,
+    "minXp": 140990,
+    "maxXp": 144740
+  },
+  {
+    "level": 91,
+    "title": "Epoch Sovereign",
+    "tier": "The Mythic",
+    "xpRequired": 3810,
+    "minXp": 144740,
+    "maxXp": 148550
+  },
+  {
+    "level": 92,
+    "title": "Transcendent Mind",
+    "tier": "The Mythic",
+    "xpRequired": 3865,
+    "minXp": 148550,
+    "maxXp": 152415
+  },
+  {
+    "level": 93,
+    "title": "Boundless Intellect",
+    "tier": "The Mythic",
+    "xpRequired": 3925,
+    "minXp": 152415,
+    "maxXp": 156340
+  },
+  {
+    "level": 94,
+    "title": "Sovereign of Will",
+    "tier": "The Mythic",
+    "xpRequired": 3980,
+    "minXp": 156340,
+    "maxXp": 160320
+  },
+  {
+    "level": 95,
+    "title": "Omniscient Sentinel",
+    "tier": "The Mythic",
+    "xpRequired": 4040,
+    "minXp": 160320,
+    "maxXp": 164360
+  },
+  {
+    "level": 96,
+    "title": "Nexus of Truth",
+    "tier": "The Mythic",
+    "xpRequired": 4100,
+    "minXp": 164360,
+    "maxXp": 168460
+  },
+  {
+    "level": 97,
+    "title": "Master of Eternity",
+    "tier": "The Mythic",
+    "xpRequired": 4160,
+    "minXp": 168460,
+    "maxXp": 172620
+  },
+  {
+    "level": 98,
+    "title": "Zen Transcendent",
+    "tier": "The Mythic",
+    "xpRequired": 4215,
+    "minXp": 172620,
+    "maxXp": 176835
+  },
+  {
+    "level": 99,
+    "title": "The Absolute Mind",
+    "tier": "The Mythic",
+    "xpRequired": 4275,
+    "minXp": 176835,
+    "maxXp": 181110
+  },
+  {
+    "level": 100,
+    "title": "Grand Chronomancer",
+    "tier": "The Mythic",
+    "xpRequired": 4335,
+    "minXp": 181110,
+    "maxXp": 185445
+  }
+]

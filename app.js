@@ -1594,13 +1594,22 @@
     }
     playChime('complete');
 
+    const prevLevel = getLevelInfo(state.xp).level;
     const taskName = state.activeTaskName || 'Focus Session';
     const targetDuration = state.activeTaskTargetSeconds || state.timer.targetSeconds;
     const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
     logSession(minutesCompleted, taskName);
 
+    const newLevelInfo = getLevelInfo(state.xp);
     const streakBonus = Math.max(0, state.streak || 0);
     spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
+
+    if (newLevelInfo.level > prevLevel) {
+      setTimeout(() => {
+        spawnFlyingPill(`🎉 Lv. ${newLevelInfo.level}!`, { extraClass: 'pill-xp', lane: 'center' });
+        showToast(`Level Up! Reached Level ${newLevelInfo.level}: ${newLevelInfo.title}! ✨`);
+      }, 550);
+    }
 
     state.activeTaskName = null;
     state.activeTaskStartTime = null;
@@ -2762,19 +2771,221 @@
     requestAnimationFrame(step);
   }
 
+  // =========================================================================
+  // RPG PROGRESSION SYSTEM (100 LEVELS & TIERS)
+  // =========================================================================
+  const RPG_LEVEL_TITLES = [
+    // Tier 1: The Initiate (1-10)
+    ['Novice Seeker', 'The Initiate'],
+    ['Curious Scribe', 'The Initiate'],
+    ['Mindful Page', 'The Initiate'],
+    ['Quiet Observer', 'The Initiate'],
+    ['Dedicated Apprentice', 'The Initiate'],
+    ['Steady Cogitator', 'The Initiate'],
+    ['Focus Neophyte', 'The Initiate'],
+    ['Habit Builder', 'The Initiate'],
+    ['Diligent Scholar', 'The Initiate'],
+    ['Disciplined Mind', 'The Initiate'],
+
+    // Tier 2: The Practitioner (11-20)
+    ['Deep Diver', 'The Practitioner'],
+    ['Concept Weaver', 'The Practitioner'],
+    ['Logic Smith', 'The Practitioner'],
+    ['Insight Seeker', 'The Practitioner'],
+    ['Focus Alchemist', 'The Practitioner'],
+    ['Knowledge Artisan', 'The Practitioner'],
+    ['Syntax Walker', 'The Practitioner'],
+    ['Theory Crafter', 'The Practitioner'],
+    ['Rhythm Finder', 'The Practitioner'],
+    ['Flow State Adept', 'The Practitioner'],
+
+    // Tier 3: The Scholar (21-30)
+    ['Intellect Forger', 'The Scholar'],
+    ['Thesis Crafter', 'The Scholar'],
+    ['Pattern Analyst', 'The Scholar'],
+    ['Memory Architect', 'The Scholar'],
+    ['Relentless Scribe', 'The Scholar'],
+    ['Archive Explorer', 'The Scholar'],
+    ['Methodical Thinker', 'The Scholar'],
+    ['Abstract Weaver', 'The Scholar'],
+    ['Keystone Scholar', 'The Scholar'],
+    ['Master of Fundamentals', 'The Scholar'],
+
+    // Tier 4: The Sage (31-40)
+    ['Synapse Sculptor', 'The Sage'],
+    ['Deep Work Strategist', 'The Sage'],
+    ['Erudite Inquirer', 'The Sage'],
+    ['Clarity Harbinger', 'The Sage'],
+    ['Principle Master', 'The Sage'],
+    ['Cognitive Architect', 'The Sage'],
+    ['Knowledge Sentinel', 'The Sage'],
+    ['Rigor Specialist', 'The Sage'],
+    ['Wisdom Seeker', 'The Sage'],
+    ['High Scholar', 'The Sage'],
+
+    // Tier 5: The Philosopher (41-50)
+    ['Iron Will', 'The Philosopher'],
+    ['Silent Polymath', 'The Philosopher'],
+    ['Insight Catalyst', 'The Philosopher'],
+    ['Epiphany Engineer', 'The Philosopher'],
+    ['Archive Guardian', 'The Philosopher'],
+    ['Focus Vanguard', 'The Philosopher'],
+    ['Thought Synthesizer', 'The Philosopher'],
+    ['Tenacious Sage', 'The Philosopher'],
+    ['Horizon Gazer', 'The Philosopher'],
+    ['Grand Philosopher', 'The Philosopher'],
+
+    // Tier 6: The Virtuoso (51-60)
+    ['Flow Sovereign', 'The Virtuoso'],
+    ['Mind Over Distraction', 'The Virtuoso'],
+    ['Zenith Apprentice', 'The Virtuoso'],
+    ['Nexus Thinker', 'The Virtuoso'],
+    ['Neural Virtuoso', 'The Virtuoso'],
+    ['Precision Craftsman', 'The Virtuoso'],
+    ['Quantum Logician', 'The Virtuoso'],
+    ['Unbroken Will', 'The Virtuoso'],
+    ['Arcane Polymath', 'The Virtuoso'],
+    ['Focus Grandmaster', 'The Virtuoso'],
+
+    // Tier 7: The Luminary (61-70)
+    ['Astral Chronicler', 'The Luminary'],
+    ['Wisdom Luminary', 'The Luminary'],
+    ['Clarity Paragon', 'The Luminary'],
+    ['Hyperfocus Titan', 'The Luminary'],
+    ['Concept Sovereign', 'The Luminary'],
+    ['Thought Harmonizer', 'The Luminary'],
+    ['Epoch Observer', 'The Luminary'],
+    ['Truth Illuminator', 'The Luminary'],
+    ['Pinnacle Scholar', 'The Luminary'],
+    ['Ascendant Luminary', 'The Luminary'],
+
+    // Tier 8: The Archmage (71-80)
+    ['Ethereal Savant', 'The Archmage'],
+    ['Dimensional Scholar', 'The Archmage'],
+    ['Mind of Stillness', 'The Archmage'],
+    ['Synthesis Paragon', 'The Archmage'],
+    ['Focus Archmage', 'The Archmage'],
+    ['Master of Insight', 'The Archmage'],
+    ['Continuum Seeker', 'The Archmage'],
+    ['Infinite Discipline', 'The Archmage'],
+    ['The Silent Beacon', 'The Archmage'],
+    ['Sovereign Polymath', 'The Archmage'],
+
+    // Tier 9: The Eternal (81-90)
+    ['Timeless Intellect', 'The Eternal'],
+    ['Primordial Sage', 'The Eternal'],
+    ['Nexus of Knowledge', 'The Eternal'],
+    ['Infinity Adept', 'The Eternal'],
+    ['Unwavering Pillar', 'The Eternal'],
+    ['Celestial Scribe', 'The Eternal'],
+    ['Cosmic Polymath', 'The Eternal'],
+    ['Continuum Weaver', 'The Eternal'],
+    ['Eternal Thinker', 'The Eternal'],
+    ['Master of the Arc', 'The Eternal'],
+
+    // Tier 10: The Mythic (91-100)
+    ['Epoch Sovereign', 'The Mythic'],
+    ['Transcendent Mind', 'The Mythic'],
+    ['Boundless Intellect', 'The Mythic'],
+    ['Sovereign of Will', 'The Mythic'],
+    ['Omniscient Sentinel', 'The Mythic'],
+    ['Nexus of Truth', 'The Mythic'],
+    ['Master of Eternity', 'The Mythic'],
+    ['Zen Transcendent', 'The Mythic'],
+    ['The Absolute Mind', 'The Mythic'],
+    ['Grand Chronomancer', 'The Mythic']
+  ];
+
+  const RPG_LEVELS = (() => {
+    const list = [];
+    let cum = 0;
+    for (let i = 0; i < RPG_LEVEL_TITLES.length; i++) {
+      const lvl = i + 1;
+      const xpReq = lvl === 1 ? 25 : Math.max(25, Math.round((20 + Math.floor(7.5 * Math.pow(lvl, 1.38))) / 5) * 5);
+      const minXp = cum;
+      const maxXp = cum + xpReq;
+      cum = maxXp;
+      list.push({
+        level: lvl,
+        title: RPG_LEVEL_TITLES[i][0],
+        tier: RPG_LEVEL_TITLES[i][1],
+        xpRequired: xpReq,
+        minXp: minXp,
+        maxXp: maxXp
+      });
+    }
+    return list;
+  })();
+
+  function getLevelInfo(totalXp) {
+    const xp = Math.max(0, Math.floor(totalXp || 0));
+    for (let i = 0; i < RPG_LEVELS.length; i++) {
+      const l = RPG_LEVELS[i];
+      if (xp < l.maxXp || l.level === 100) {
+        const currentLevelXp = Math.max(0, xp - l.minXp);
+        const xpRequired = l.xpRequired;
+        const progressPercent = Math.min(100, Math.max(0, (currentLevelXp / xpRequired) * 100));
+        return {
+          level: l.level,
+          title: l.title,
+          tier: l.tier,
+          currentLevelXp: currentLevelXp,
+          xpRequired: xpRequired,
+          progressPercent: progressPercent,
+          totalXp: xp,
+          isMax: l.level === 100 && xp >= l.maxXp
+        };
+      }
+    }
+    const maxL = RPG_LEVELS[RPG_LEVELS.length - 1];
+    return {
+      level: maxL.level,
+      title: maxL.title,
+      tier: maxL.tier,
+      currentLevelXp: maxL.xpRequired,
+      xpRequired: maxL.xpRequired,
+      progressPercent: 100,
+      totalXp: xp,
+      isMax: true
+    };
+  }
+
   function renderStats() {
     const streakEl = document.getElementById('stat-streak');
     const xpEl = document.getElementById('stat-xp');
+    const levelNumEl = document.getElementById('stat-level-num');
+    const levelNameEl = document.getElementById('stat-level-name');
+    const xpFractionEl = document.getElementById('stat-xp-fraction');
+    const xpBarFillEl = document.getElementById('stat-xp-bar-fill');
+    const xpItemEl = document.getElementById('stat-item-xp');
     const settingTotalFocusEl = document.getElementById('setting-total-focus');
 
     if (streakEl) {
       streakEl.textContent = formatCompactNumber(state.streak);
       streakEl.title = `${Number(state.streak || 0).toLocaleString()} Day Streak`;
     }
+
+    const lvlInfo = getLevelInfo(state.xp);
+
     if (xpEl) {
       xpEl.textContent = formatCompactNumber(state.xp);
-      xpEl.title = `${Number(state.xp || 0).toLocaleString()} XP`;
     }
+    if (levelNumEl) {
+      levelNumEl.textContent = `Lv. ${lvlInfo.level}`;
+    }
+    if (levelNameEl) {
+      levelNameEl.textContent = lvlInfo.title;
+    }
+    if (xpFractionEl) {
+      xpFractionEl.textContent = `${formatCompactNumber(lvlInfo.currentLevelXp)} / ${formatCompactNumber(lvlInfo.xpRequired)} XP`;
+    }
+    if (xpBarFillEl) {
+      xpBarFillEl.style.width = `${lvlInfo.progressPercent.toFixed(1)}%`;
+    }
+    if (xpItemEl) {
+      xpItemEl.title = `Level ${lvlInfo.level}: ${lvlInfo.title} (${lvlInfo.tier})\nCollected: ${lvlInfo.currentLevelXp.toLocaleString()} / ${lvlInfo.xpRequired.toLocaleString()} XP (${lvlInfo.progressPercent.toFixed(1)}%)\nTotal Studied: ${Number(state.xp || 0).toLocaleString()} XP`;
+    }
+
     if (settingTotalFocusEl) {
       settingTotalFocusEl.textContent = formatHoursMinutes(state.totalFocusSeconds);
     }

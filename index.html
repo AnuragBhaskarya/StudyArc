@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=7.3">
+  <link rel="stylesheet" href="styles.css?v=7.4">
   <script>
     (function () {
       try {
@@ -216,16 +216,27 @@
             </div>
           </div>
 
-          <!-- Total XP -->
-          <div class="stat-item stat-item-xp">
+          <!-- Total XP & RPG Level Progression -->
+          <div class="stat-item stat-item-xp" id="stat-item-xp" title="Level 1: Novice Seeker">
             <div class="stat-icon-box">
               <svg class="star-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"></path>
               </svg>
             </div>
-            <div class="stat-data">
-              <span class="stat-number stat-xp-number" id="stat-xp">0</span>
-              <span class="stat-title">Total XP</span>
+            <div class="stat-data stat-data-xp">
+              <div class="stat-xp-top-row">
+                <span class="stat-number stat-xp-number" id="stat-xp">0</span>
+                <span class="stat-level-badge" id="stat-level-num">Lv. 1</span>
+              </div>
+              <div class="stat-xp-sub-row">
+                <span class="stat-level-name" id="stat-level-name">Novice Seeker</span>
+                <span class="stat-xp-sep" aria-hidden="true">•</span>
+                <span class="stat-xp-fraction" id="stat-xp-fraction">0 / 25 XP</span>
+              </div>
+            </div>
+            <!-- Ultra-thin yellow progress bar clipped at the bottom curve of the pill -->
+            <div class="xp-stat-bar-track" aria-hidden="true">
+              <div class="xp-stat-bar-fill" id="stat-xp-bar-fill" style="width: 0%;"></div>
             </div>
           </div>
 
@@ -635,7 +646,7 @@
   <!-- JAVASCRIPT LOGIC (Local zero-latency assets, resilient against CDN outages and content blockers) -->
   <script src="assets/socket.io.min.js"></script>
   <script src="aura-particles.js?v=5.3"></script>
-  <script src="app.js?v=6.7"></script>
+  <script src="app.js?v=6.8"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

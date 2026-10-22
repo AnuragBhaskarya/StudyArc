@@ -112,6 +112,14 @@ def static_files(filename):
         resp.headers['Pragma'] = 'no-cache'
     return resp
 
+@app.route('/api/levels')
+def api_levels():
+    levels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'levels.json')
+    if os.path.exists(levels_path):
+        with open(levels_path, 'r', encoding='utf-8') as f:
+            return jsonify({'success': True, 'levels': json.load(f)})
+    return jsonify({'success': False, 'error': 'Levels configuration not found'}), 404
+
 # =========================================================================
 # AUTHENTICATION REST API
 # =========================================================================
