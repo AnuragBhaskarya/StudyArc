@@ -1,802 +1,9002 @@
 [
   {
     "level": 1,
-    "title": "Novice Seeker",
-    "tier": "The Initiate",
-    "xpRequired": 25,
+    "title": "Novice I",
+    "tier": "Novice",
+    "tierIndex": 1,
+    "xpRequired": 50,
     "minXp": 0,
-    "maxXp": 25
+    "maxXp": 50
   },
   {
     "level": 2,
-    "title": "Curious Scribe",
-    "tier": "The Initiate",
-    "xpRequired": 40,
-    "minXp": 25,
-    "maxXp": 65
+    "title": "Novice II",
+    "tier": "Novice",
+    "tierIndex": 1,
+    "xpRequired": 60,
+    "minXp": 50,
+    "maxXp": 110
   },
   {
     "level": 3,
-    "title": "Mindful Page",
-    "tier": "The Initiate",
-    "xpRequired": 55,
-    "minXp": 65,
-    "maxXp": 120
+    "title": "Novice III",
+    "tier": "Novice",
+    "tierIndex": 1,
+    "xpRequired": 65,
+    "minXp": 110,
+    "maxXp": 175
   },
   {
     "level": 4,
-    "title": "Quiet Observer",
-    "tier": "The Initiate",
-    "xpRequired": 70,
-    "minXp": 120,
-    "maxXp": 190
+    "title": "Novice IV",
+    "tier": "Novice",
+    "tierIndex": 1,
+    "xpRequired": 75,
+    "minXp": 175,
+    "maxXp": 250
   },
   {
     "level": 5,
-    "title": "Dedicated Apprentice",
-    "tier": "The Initiate",
-    "xpRequired": 90,
-    "minXp": 190,
-    "maxXp": 280
+    "title": "Novice V",
+    "tier": "Novice",
+    "tierIndex": 1,
+    "xpRequired": 85,
+    "minXp": 250,
+    "maxXp": 335
   },
   {
     "level": 6,
-    "title": "Steady Cogitator",
-    "tier": "The Initiate",
-    "xpRequired": 110,
-    "minXp": 280,
-    "maxXp": 390
+    "title": "Novice VI",
+    "tier": "Novice",
+    "tierIndex": 1,
+    "xpRequired": 90,
+    "minXp": 335,
+    "maxXp": 425
   },
   {
     "level": 7,
-    "title": "Focus Neophyte",
-    "tier": "The Initiate",
-    "xpRequired": 130,
-    "minXp": 390,
-    "maxXp": 520
+    "title": "Novice VII",
+    "tier": "Novice",
+    "tierIndex": 1,
+    "xpRequired": 100,
+    "minXp": 425,
+    "maxXp": 525
   },
   {
     "level": 8,
-    "title": "Habit Builder",
-    "tier": "The Initiate",
-    "xpRequired": 150,
-    "minXp": 520,
-    "maxXp": 670
+    "title": "Novice VIII",
+    "tier": "Novice",
+    "tierIndex": 1,
+    "xpRequired": 110,
+    "minXp": 525,
+    "maxXp": 635
   },
   {
     "level": 9,
-    "title": "Diligent Scholar",
-    "tier": "The Initiate",
-    "xpRequired": 175,
-    "minXp": 670,
-    "maxXp": 845
+    "title": "Novice IX",
+    "tier": "Novice",
+    "tierIndex": 1,
+    "xpRequired": 115,
+    "minXp": 635,
+    "maxXp": 750
   },
   {
     "level": 10,
-    "title": "Disciplined Mind",
-    "tier": "The Initiate",
-    "xpRequired": 200,
-    "minXp": 845,
-    "maxXp": 1045
+    "title": "Novice X",
+    "tier": "Novice",
+    "tierIndex": 1,
+    "xpRequired": 125,
+    "minXp": 750,
+    "maxXp": 875
   },
   {
     "level": 11,
-    "title": "Deep Diver",
-    "tier": "The Practitioner",
-    "xpRequired": 225,
-    "minXp": 1045,
-    "maxXp": 1270
+    "title": "Trainee I",
+    "tier": "Trainee",
+    "tierIndex": 2,
+    "xpRequired": 135,
+    "minXp": 875,
+    "maxXp": 1010
   },
   {
     "level": 12,
-    "title": "Concept Weaver",
-    "tier": "The Practitioner",
-    "xpRequired": 250,
-    "minXp": 1270,
-    "maxXp": 1520
+    "title": "Trainee II",
+    "tier": "Trainee",
+    "tierIndex": 2,
+    "xpRequired": 140,
+    "minXp": 1010,
+    "maxXp": 1150
   },
   {
     "level": 13,
-    "title": "Logic Smith",
-    "tier": "The Practitioner",
-    "xpRequired": 280,
-    "minXp": 1520,
-    "maxXp": 1800
+    "title": "Trainee III",
+    "tier": "Trainee",
+    "tierIndex": 2,
+    "xpRequired": 150,
+    "minXp": 1150,
+    "maxXp": 1300
   },
   {
     "level": 14,
-    "title": "Insight Seeker",
-    "tier": "The Practitioner",
-    "xpRequired": 305,
-    "minXp": 1800,
-    "maxXp": 2105
+    "title": "Trainee IV",
+    "tier": "Trainee",
+    "tierIndex": 2,
+    "xpRequired": 160,
+    "minXp": 1300,
+    "maxXp": 1460
   },
   {
     "level": 15,
-    "title": "Focus Alchemist",
-    "tier": "The Practitioner",
-    "xpRequired": 335,
-    "minXp": 2105,
-    "maxXp": 2440
+    "title": "Trainee V",
+    "tier": "Trainee",
+    "tierIndex": 2,
+    "xpRequired": 165,
+    "minXp": 1460,
+    "maxXp": 1625
   },
   {
     "level": 16,
-    "title": "Knowledge Artisan",
-    "tier": "The Practitioner",
-    "xpRequired": 365,
-    "minXp": 2440,
-    "maxXp": 2805
+    "title": "Trainee VI",
+    "tier": "Trainee",
+    "tierIndex": 2,
+    "xpRequired": 175,
+    "minXp": 1625,
+    "maxXp": 1800
   },
   {
     "level": 17,
-    "title": "Syntax Walker",
-    "tier": "The Practitioner",
-    "xpRequired": 395,
-    "minXp": 2805,
-    "maxXp": 3200
+    "title": "Trainee VII",
+    "tier": "Trainee",
+    "tierIndex": 2,
+    "xpRequired": 185,
+    "minXp": 1800,
+    "maxXp": 1985
   },
   {
     "level": 18,
-    "title": "Theory Crafter",
-    "tier": "The Practitioner",
-    "xpRequired": 425,
-    "minXp": 3200,
-    "maxXp": 3625
+    "title": "Trainee VIII",
+    "tier": "Trainee",
+    "tierIndex": 2,
+    "xpRequired": 190,
+    "minXp": 1985,
+    "maxXp": 2175
   },
   {
     "level": 19,
-    "title": "Rhythm Finder",
-    "tier": "The Practitioner",
-    "xpRequired": 455,
-    "minXp": 3625,
-    "maxXp": 4080
+    "title": "Trainee IX",
+    "tier": "Trainee",
+    "tierIndex": 2,
+    "xpRequired": 200,
+    "minXp": 2175,
+    "maxXp": 2375
   },
   {
     "level": 20,
-    "title": "Flow State Adept",
-    "tier": "The Practitioner",
-    "xpRequired": 490,
-    "minXp": 4080,
-    "maxXp": 4570
+    "title": "Trainee X",
+    "tier": "Trainee",
+    "tierIndex": 2,
+    "xpRequired": 210,
+    "minXp": 2375,
+    "maxXp": 2585
   },
   {
     "level": 21,
-    "title": "Intellect Forger",
-    "tier": "The Scholar",
-    "xpRequired": 520,
-    "minXp": 4570,
-    "maxXp": 5090
+    "title": "Apprentice I",
+    "tier": "Apprentice",
+    "tierIndex": 3,
+    "xpRequired": 220,
+    "minXp": 2585,
+    "maxXp": 2805
   },
   {
     "level": 22,
-    "title": "Thesis Crafter",
-    "tier": "The Scholar",
-    "xpRequired": 555,
-    "minXp": 5090,
-    "maxXp": 5645
+    "title": "Apprentice II",
+    "tier": "Apprentice",
+    "tierIndex": 3,
+    "xpRequired": 225,
+    "minXp": 2805,
+    "maxXp": 3030
   },
   {
     "level": 23,
-    "title": "Pattern Analyst",
-    "tier": "The Scholar",
-    "xpRequired": 585,
-    "minXp": 5645,
-    "maxXp": 6230
+    "title": "Apprentice III",
+    "tier": "Apprentice",
+    "tierIndex": 3,
+    "xpRequired": 235,
+    "minXp": 3030,
+    "maxXp": 3265
   },
   {
     "level": 24,
-    "title": "Memory Architect",
-    "tier": "The Scholar",
-    "xpRequired": 620,
-    "minXp": 6230,
-    "maxXp": 6850
+    "title": "Apprentice IV",
+    "tier": "Apprentice",
+    "tierIndex": 3,
+    "xpRequired": 245,
+    "minXp": 3265,
+    "maxXp": 3510
   },
   {
     "level": 25,
-    "title": "Relentless Scribe",
-    "tier": "The Scholar",
-    "xpRequired": 655,
-    "minXp": 6850,
-    "maxXp": 7505
+    "title": "Apprentice V",
+    "tier": "Apprentice",
+    "tierIndex": 3,
+    "xpRequired": 250,
+    "minXp": 3510,
+    "maxXp": 3760
   },
   {
     "level": 26,
-    "title": "Archive Explorer",
-    "tier": "The Scholar",
-    "xpRequired": 690,
-    "minXp": 7505,
-    "maxXp": 8195
+    "title": "Apprentice VI",
+    "tier": "Apprentice",
+    "tierIndex": 3,
+    "xpRequired": 260,
+    "minXp": 3760,
+    "maxXp": 4020
   },
   {
     "level": 27,
-    "title": "Methodical Thinker",
-    "tier": "The Scholar",
-    "xpRequired": 730,
-    "minXp": 8195,
-    "maxXp": 8925
+    "title": "Apprentice VII",
+    "tier": "Apprentice",
+    "tierIndex": 3,
+    "xpRequired": 270,
+    "minXp": 4020,
+    "maxXp": 4290
   },
   {
     "level": 28,
-    "title": "Abstract Weaver",
-    "tier": "The Scholar",
-    "xpRequired": 765,
-    "minXp": 8925,
-    "maxXp": 9690
+    "title": "Apprentice VIII",
+    "tier": "Apprentice",
+    "tierIndex": 3,
+    "xpRequired": 275,
+    "minXp": 4290,
+    "maxXp": 4565
   },
   {
     "level": 29,
-    "title": "Keystone Scholar",
-    "tier": "The Scholar",
-    "xpRequired": 800,
-    "minXp": 9690,
-    "maxXp": 10490
+    "title": "Apprentice IX",
+    "tier": "Apprentice",
+    "tierIndex": 3,
+    "xpRequired": 285,
+    "minXp": 4565,
+    "maxXp": 4850
   },
   {
     "level": 30,
-    "title": "Master of Fundamentals",
-    "tier": "The Scholar",
-    "xpRequired": 840,
-    "minXp": 10490,
-    "maxXp": 11330
+    "title": "Apprentice X",
+    "tier": "Apprentice",
+    "tierIndex": 3,
+    "xpRequired": 295,
+    "minXp": 4850,
+    "maxXp": 5145
   },
   {
     "level": 31,
-    "title": "Synapse Sculptor",
-    "tier": "The Sage",
-    "xpRequired": 875,
-    "minXp": 11330,
-    "maxXp": 12205
+    "title": "Initiate I",
+    "tier": "Initiate",
+    "tierIndex": 4,
+    "xpRequired": 305,
+    "minXp": 5145,
+    "maxXp": 5450
   },
   {
     "level": 32,
-    "title": "Deep Work Strategist",
-    "tier": "The Sage",
-    "xpRequired": 915,
-    "minXp": 12205,
-    "maxXp": 13120
+    "title": "Initiate II",
+    "tier": "Initiate",
+    "tierIndex": 4,
+    "xpRequired": 310,
+    "minXp": 5450,
+    "maxXp": 5760
   },
   {
     "level": 33,
-    "title": "Erudite Inquirer",
-    "tier": "The Sage",
-    "xpRequired": 955,
-    "minXp": 13120,
-    "maxXp": 14075
+    "title": "Initiate III",
+    "tier": "Initiate",
+    "tierIndex": 4,
+    "xpRequired": 320,
+    "minXp": 5760,
+    "maxXp": 6080
   },
   {
     "level": 34,
-    "title": "Clarity Harbinger",
-    "tier": "The Sage",
-    "xpRequired": 995,
-    "minXp": 14075,
-    "maxXp": 15070
+    "title": "Initiate IV",
+    "tier": "Initiate",
+    "tierIndex": 4,
+    "xpRequired": 330,
+    "minXp": 6080,
+    "maxXp": 6410
   },
   {
     "level": 35,
-    "title": "Principle Master",
-    "tier": "The Sage",
-    "xpRequired": 1035,
-    "minXp": 15070,
-    "maxXp": 16105
+    "title": "Initiate V",
+    "tier": "Initiate",
+    "tierIndex": 4,
+    "xpRequired": 335,
+    "minXp": 6410,
+    "maxXp": 6745
   },
   {
     "level": 36,
-    "title": "Cognitive Architect",
-    "tier": "The Sage",
-    "xpRequired": 1075,
-    "minXp": 16105,
-    "maxXp": 17180
+    "title": "Initiate VI",
+    "tier": "Initiate",
+    "tierIndex": 4,
+    "xpRequired": 345,
+    "minXp": 6745,
+    "maxXp": 7090
   },
   {
     "level": 37,
-    "title": "Knowledge Sentinel",
-    "tier": "The Sage",
-    "xpRequired": 1115,
-    "minXp": 17180,
-    "maxXp": 18295
+    "title": "Initiate VII",
+    "tier": "Initiate",
+    "tierIndex": 4,
+    "xpRequired": 355,
+    "minXp": 7090,
+    "maxXp": 7445
   },
   {
     "level": 38,
-    "title": "Rigor Specialist",
-    "tier": "The Sage",
-    "xpRequired": 1155,
-    "minXp": 18295,
-    "maxXp": 19450
+    "title": "Initiate VIII",
+    "tier": "Initiate",
+    "tierIndex": 4,
+    "xpRequired": 365,
+    "minXp": 7445,
+    "maxXp": 7810
   },
   {
     "level": 39,
-    "title": "Wisdom Seeker",
-    "tier": "The Sage",
-    "xpRequired": 1195,
-    "minXp": 19450,
-    "maxXp": 20645
+    "title": "Initiate IX",
+    "tier": "Initiate",
+    "tierIndex": 4,
+    "xpRequired": 370,
+    "minXp": 7810,
+    "maxXp": 8180
   },
   {
     "level": 40,
-    "title": "High Scholar",
-    "tier": "The Sage",
-    "xpRequired": 1240,
-    "minXp": 20645,
-    "maxXp": 21885
+    "title": "Initiate X",
+    "tier": "Initiate",
+    "tierIndex": 4,
+    "xpRequired": 380,
+    "minXp": 8180,
+    "maxXp": 8560
   },
   {
     "level": 41,
-    "title": "Iron Will",
-    "tier": "The Philosopher",
-    "xpRequired": 1280,
-    "minXp": 21885,
-    "maxXp": 23165
+    "title": "Recruit I",
+    "tier": "Recruit",
+    "tierIndex": 5,
+    "xpRequired": 390,
+    "minXp": 8560,
+    "maxXp": 8950
   },
   {
     "level": 42,
-    "title": "Silent Polymath",
-    "tier": "The Philosopher",
-    "xpRequired": 1325,
-    "minXp": 23165,
-    "maxXp": 24490
+    "title": "Recruit II",
+    "tier": "Recruit",
+    "tierIndex": 5,
+    "xpRequired": 395,
+    "minXp": 8950,
+    "maxXp": 9345
   },
   {
     "level": 43,
-    "title": "Insight Catalyst",
-    "tier": "The Philosopher",
-    "xpRequired": 1365,
-    "minXp": 24490,
-    "maxXp": 25855
+    "title": "Recruit III",
+    "tier": "Recruit",
+    "tierIndex": 5,
+    "xpRequired": 405,
+    "minXp": 9345,
+    "maxXp": 9750
   },
   {
     "level": 44,
-    "title": "Epiphany Engineer",
-    "tier": "The Philosopher",
-    "xpRequired": 1410,
-    "minXp": 25855,
-    "maxXp": 27265
+    "title": "Recruit IV",
+    "tier": "Recruit",
+    "tierIndex": 5,
+    "xpRequired": 415,
+    "minXp": 9750,
+    "maxXp": 10165
   },
   {
     "level": 45,
-    "title": "Archive Guardian",
-    "tier": "The Philosopher",
-    "xpRequired": 1455,
-    "minXp": 27265,
-    "maxXp": 28720
+    "title": "Recruit V",
+    "tier": "Recruit",
+    "tierIndex": 5,
+    "xpRequired": 425,
+    "minXp": 10165,
+    "maxXp": 10590
   },
   {
     "level": 46,
-    "title": "Focus Vanguard",
-    "tier": "The Philosopher",
-    "xpRequired": 1495,
-    "minXp": 28720,
-    "maxXp": 30215
+    "title": "Recruit VI",
+    "tier": "Recruit",
+    "tierIndex": 5,
+    "xpRequired": 430,
+    "minXp": 10590,
+    "maxXp": 11020
   },
   {
     "level": 47,
-    "title": "Thought Synthesizer",
-    "tier": "The Philosopher",
-    "xpRequired": 1540,
-    "minXp": 30215,
-    "maxXp": 31755
+    "title": "Recruit VII",
+    "tier": "Recruit",
+    "tierIndex": 5,
+    "xpRequired": 440,
+    "minXp": 11020,
+    "maxXp": 11460
   },
   {
     "level": 48,
-    "title": "Tenacious Sage",
-    "tier": "The Philosopher",
-    "xpRequired": 1585,
-    "minXp": 31755,
-    "maxXp": 33340
+    "title": "Recruit VIII",
+    "tier": "Recruit",
+    "tierIndex": 5,
+    "xpRequired": 450,
+    "minXp": 11460,
+    "maxXp": 11910
   },
   {
     "level": 49,
-    "title": "Horizon Gazer",
-    "tier": "The Philosopher",
-    "xpRequired": 1630,
-    "minXp": 33340,
-    "maxXp": 34970
+    "title": "Recruit IX",
+    "tier": "Recruit",
+    "tierIndex": 5,
+    "xpRequired": 460,
+    "minXp": 11910,
+    "maxXp": 12370
   },
   {
     "level": 50,
-    "title": "Grand Philosopher",
-    "tier": "The Philosopher",
-    "xpRequired": 1680,
-    "minXp": 34970,
-    "maxXp": 36650
+    "title": "Recruit X",
+    "tier": "Recruit",
+    "tierIndex": 5,
+    "xpRequired": 465,
+    "minXp": 12370,
+    "maxXp": 12835
   },
   {
     "level": 51,
-    "title": "Flow Sovereign",
-    "tier": "The Virtuoso",
-    "xpRequired": 1725,
-    "minXp": 36650,
-    "maxXp": 38375
+    "title": "Scout I",
+    "tier": "Scout",
+    "tierIndex": 6,
+    "xpRequired": 475,
+    "minXp": 12835,
+    "maxXp": 13310
   },
   {
     "level": 52,
-    "title": "Mind Over Distraction",
-    "tier": "The Virtuoso",
-    "xpRequired": 1770,
-    "minXp": 38375,
-    "maxXp": 40145
+    "title": "Scout II",
+    "tier": "Scout",
+    "tierIndex": 6,
+    "xpRequired": 485,
+    "minXp": 13310,
+    "maxXp": 13795
   },
   {
     "level": 53,
-    "title": "Zenith Apprentice",
-    "tier": "The Virtuoso",
-    "xpRequired": 1815,
-    "minXp": 40145,
-    "maxXp": 41960
+    "title": "Scout III",
+    "tier": "Scout",
+    "tierIndex": 6,
+    "xpRequired": 490,
+    "minXp": 13795,
+    "maxXp": 14285
   },
   {
     "level": 54,
-    "title": "Nexus Thinker",
-    "tier": "The Virtuoso",
-    "xpRequired": 1865,
-    "minXp": 41960,
-    "maxXp": 43825
+    "title": "Scout IV",
+    "tier": "Scout",
+    "tierIndex": 6,
+    "xpRequired": 500,
+    "minXp": 14285,
+    "maxXp": 14785
   },
   {
     "level": 55,
-    "title": "Neural Virtuoso",
-    "tier": "The Virtuoso",
-    "xpRequired": 1910,
-    "minXp": 43825,
-    "maxXp": 45735
+    "title": "Scout V",
+    "tier": "Scout",
+    "tierIndex": 6,
+    "xpRequired": 510,
+    "minXp": 14785,
+    "maxXp": 15295
   },
   {
     "level": 56,
-    "title": "Precision Craftsman",
-    "tier": "The Virtuoso",
-    "xpRequired": 1960,
-    "minXp": 45735,
-    "maxXp": 47695
+    "title": "Scout VI",
+    "tier": "Scout",
+    "tierIndex": 6,
+    "xpRequired": 520,
+    "minXp": 15295,
+    "maxXp": 15815
   },
   {
     "level": 57,
-    "title": "Quantum Logician",
-    "tier": "The Virtuoso",
-    "xpRequired": 2005,
-    "minXp": 47695,
-    "maxXp": 49700
+    "title": "Scout VII",
+    "tier": "Scout",
+    "tierIndex": 6,
+    "xpRequired": 525,
+    "minXp": 15815,
+    "maxXp": 16340
   },
   {
     "level": 58,
-    "title": "Unbroken Will",
-    "tier": "The Virtuoso",
-    "xpRequired": 2055,
-    "minXp": 49700,
-    "maxXp": 51755
+    "title": "Scout VIII",
+    "tier": "Scout",
+    "tierIndex": 6,
+    "xpRequired": 535,
+    "minXp": 16340,
+    "maxXp": 16875
   },
   {
     "level": 59,
-    "title": "Arcane Polymath",
-    "tier": "The Virtuoso",
-    "xpRequired": 2105,
-    "minXp": 51755,
-    "maxXp": 53860
+    "title": "Scout IX",
+    "tier": "Scout",
+    "tierIndex": 6,
+    "xpRequired": 545,
+    "minXp": 16875,
+    "maxXp": 17420
   },
   {
     "level": 60,
-    "title": "Focus Grandmaster",
-    "tier": "The Virtuoso",
-    "xpRequired": 2150,
-    "minXp": 53860,
-    "maxXp": 56010
+    "title": "Scout X",
+    "tier": "Scout",
+    "tierIndex": 6,
+    "xpRequired": 555,
+    "minXp": 17420,
+    "maxXp": 17975
   },
   {
     "level": 61,
-    "title": "Astral Chronicler",
-    "tier": "The Luminary",
-    "xpRequired": 2200,
-    "minXp": 56010,
-    "maxXp": 58210
+    "title": "Pathfinder I",
+    "tier": "Pathfinder",
+    "tierIndex": 7,
+    "xpRequired": 560,
+    "minXp": 17975,
+    "maxXp": 18535
   },
   {
     "level": 62,
-    "title": "Wisdom Luminary",
-    "tier": "The Luminary",
-    "xpRequired": 2250,
-    "minXp": 58210,
-    "maxXp": 60460
+    "title": "Pathfinder II",
+    "tier": "Pathfinder",
+    "tierIndex": 7,
+    "xpRequired": 570,
+    "minXp": 18535,
+    "maxXp": 19105
   },
   {
     "level": 63,
-    "title": "Clarity Paragon",
-    "tier": "The Luminary",
-    "xpRequired": 2300,
-    "minXp": 60460,
-    "maxXp": 62760
+    "title": "Pathfinder III",
+    "tier": "Pathfinder",
+    "tierIndex": 7,
+    "xpRequired": 580,
+    "minXp": 19105,
+    "maxXp": 19685
   },
   {
     "level": 64,
-    "title": "Hyperfocus Titan",
-    "tier": "The Luminary",
-    "xpRequired": 2350,
-    "minXp": 62760,
-    "maxXp": 65110
+    "title": "Pathfinder IV",
+    "tier": "Pathfinder",
+    "tierIndex": 7,
+    "xpRequired": 585,
+    "minXp": 19685,
+    "maxXp": 20270
   },
   {
     "level": 65,
-    "title": "Concept Sovereign",
-    "tier": "The Luminary",
-    "xpRequired": 2400,
-    "minXp": 65110,
-    "maxXp": 67510
+    "title": "Pathfinder V",
+    "tier": "Pathfinder",
+    "tierIndex": 7,
+    "xpRequired": 595,
+    "minXp": 20270,
+    "maxXp": 20865
   },
   {
     "level": 66,
-    "title": "Thought Harmonizer",
-    "tier": "The Luminary",
-    "xpRequired": 2450,
-    "minXp": 67510,
-    "maxXp": 69960
+    "title": "Pathfinder VI",
+    "tier": "Pathfinder",
+    "tierIndex": 7,
+    "xpRequired": 605,
+    "minXp": 20865,
+    "maxXp": 21470
   },
   {
     "level": 67,
-    "title": "Epoch Observer",
-    "tier": "The Luminary",
-    "xpRequired": 2505,
-    "minXp": 69960,
-    "maxXp": 72465
+    "title": "Pathfinder VII",
+    "tier": "Pathfinder",
+    "tierIndex": 7,
+    "xpRequired": 615,
+    "minXp": 21470,
+    "maxXp": 22085
   },
   {
     "level": 68,
-    "title": "Truth Illuminator",
-    "tier": "The Luminary",
-    "xpRequired": 2555,
-    "minXp": 72465,
-    "maxXp": 75020
+    "title": "Pathfinder VIII",
+    "tier": "Pathfinder",
+    "tierIndex": 7,
+    "xpRequired": 620,
+    "minXp": 22085,
+    "maxXp": 22705
   },
   {
     "level": 69,
-    "title": "Pinnacle Scholar",
-    "tier": "The Luminary",
-    "xpRequired": 2605,
-    "minXp": 75020,
-    "maxXp": 77625
+    "title": "Pathfinder IX",
+    "tier": "Pathfinder",
+    "tierIndex": 7,
+    "xpRequired": 630,
+    "minXp": 22705,
+    "maxXp": 23335
   },
   {
     "level": 70,
-    "title": "Ascendant Luminary",
-    "tier": "The Luminary",
-    "xpRequired": 2660,
-    "minXp": 77625,
-    "maxXp": 80285
+    "title": "Pathfinder X",
+    "tier": "Pathfinder",
+    "tierIndex": 7,
+    "xpRequired": 640,
+    "minXp": 23335,
+    "maxXp": 23975
   },
   {
     "level": 71,
-    "title": "Ethereal Savant",
-    "tier": "The Archmage",
-    "xpRequired": 2710,
-    "minXp": 80285,
-    "maxXp": 82995
+    "title": "Adventurer I",
+    "tier": "Adventurer",
+    "tierIndex": 8,
+    "xpRequired": 650,
+    "minXp": 23975,
+    "maxXp": 24625
   },
   {
     "level": 72,
-    "title": "Dimensional Scholar",
-    "tier": "The Archmage",
-    "xpRequired": 2760,
-    "minXp": 82995,
-    "maxXp": 85755
+    "title": "Adventurer II",
+    "tier": "Adventurer",
+    "tierIndex": 8,
+    "xpRequired": 655,
+    "minXp": 24625,
+    "maxXp": 25280
   },
   {
     "level": 73,
-    "title": "Mind of Stillness",
-    "tier": "The Archmage",
-    "xpRequired": 2815,
-    "minXp": 85755,
-    "maxXp": 88570
+    "title": "Adventurer III",
+    "tier": "Adventurer",
+    "tierIndex": 8,
+    "xpRequired": 665,
+    "minXp": 25280,
+    "maxXp": 25945
   },
   {
     "level": 74,
-    "title": "Synthesis Paragon",
-    "tier": "The Archmage",
-    "xpRequired": 2870,
-    "minXp": 88570,
-    "maxXp": 91440
+    "title": "Adventurer IV",
+    "tier": "Adventurer",
+    "tierIndex": 8,
+    "xpRequired": 675,
+    "minXp": 25945,
+    "maxXp": 26620
   },
   {
     "level": 75,
-    "title": "Focus Archmage",
-    "tier": "The Archmage",
-    "xpRequired": 2920,
-    "minXp": 91440,
-    "maxXp": 94360
+    "title": "Adventurer V",
+    "tier": "Adventurer",
+    "tierIndex": 8,
+    "xpRequired": 685,
+    "minXp": 26620,
+    "maxXp": 27305
   },
   {
     "level": 76,
-    "title": "Master of Insight",
-    "tier": "The Archmage",
-    "xpRequired": 2975,
-    "minXp": 94360,
-    "maxXp": 97335
+    "title": "Adventurer VI",
+    "tier": "Adventurer",
+    "tierIndex": 8,
+    "xpRequired": 690,
+    "minXp": 27305,
+    "maxXp": 27995
   },
   {
     "level": 77,
-    "title": "Continuum Seeker",
-    "tier": "The Archmage",
-    "xpRequired": 3030,
-    "minXp": 97335,
-    "maxXp": 100365
+    "title": "Adventurer VII",
+    "tier": "Adventurer",
+    "tierIndex": 8,
+    "xpRequired": 700,
+    "minXp": 27995,
+    "maxXp": 28695
   },
   {
     "level": 78,
-    "title": "Infinite Discipline",
-    "tier": "The Archmage",
-    "xpRequired": 3085,
-    "minXp": 100365,
-    "maxXp": 103450
+    "title": "Adventurer VIII",
+    "tier": "Adventurer",
+    "tierIndex": 8,
+    "xpRequired": 710,
+    "minXp": 28695,
+    "maxXp": 29405
   },
   {
     "level": 79,
-    "title": "The Silent Beacon",
-    "tier": "The Archmage",
-    "xpRequired": 3135,
-    "minXp": 103450,
-    "maxXp": 106585
+    "title": "Adventurer IX",
+    "tier": "Adventurer",
+    "tierIndex": 8,
+    "xpRequired": 720,
+    "minXp": 29405,
+    "maxXp": 30125
   },
   {
     "level": 80,
-    "title": "Sovereign Polymath",
-    "tier": "The Archmage",
-    "xpRequired": 3190,
-    "minXp": 106585,
-    "maxXp": 109775
+    "title": "Adventurer X",
+    "tier": "Adventurer",
+    "tierIndex": 8,
+    "xpRequired": 725,
+    "minXp": 30125,
+    "maxXp": 30850
   },
   {
     "level": 81,
-    "title": "Timeless Intellect",
-    "tier": "The Eternal",
-    "xpRequired": 3245,
-    "minXp": 109775,
-    "maxXp": 113020
+    "title": "Explorer I",
+    "tier": "Explorer",
+    "tierIndex": 9,
+    "xpRequired": 735,
+    "minXp": 30850,
+    "maxXp": 31585
   },
   {
     "level": 82,
-    "title": "Primordial Sage",
-    "tier": "The Eternal",
-    "xpRequired": 3300,
-    "minXp": 113020,
-    "maxXp": 116320
+    "title": "Explorer II",
+    "tier": "Explorer",
+    "tierIndex": 9,
+    "xpRequired": 745,
+    "minXp": 31585,
+    "maxXp": 32330
   },
   {
     "level": 83,
-    "title": "Nexus of Knowledge",
-    "tier": "The Eternal",
-    "xpRequired": 3355,
-    "minXp": 116320,
-    "maxXp": 119675
+    "title": "Explorer III",
+    "tier": "Explorer",
+    "tierIndex": 9,
+    "xpRequired": 755,
+    "minXp": 32330,
+    "maxXp": 33085
   },
   {
     "level": 84,
-    "title": "Infinity Adept",
-    "tier": "The Eternal",
-    "xpRequired": 3410,
-    "minXp": 119675,
-    "maxXp": 123085
+    "title": "Explorer IV",
+    "tier": "Explorer",
+    "tierIndex": 9,
+    "xpRequired": 760,
+    "minXp": 33085,
+    "maxXp": 33845
   },
   {
     "level": 85,
-    "title": "Unwavering Pillar",
-    "tier": "The Eternal",
-    "xpRequired": 3470,
-    "minXp": 123085,
-    "maxXp": 126555
+    "title": "Explorer V",
+    "tier": "Explorer",
+    "tierIndex": 9,
+    "xpRequired": 770,
+    "minXp": 33845,
+    "maxXp": 34615
   },
   {
     "level": 86,
-    "title": "Celestial Scribe",
-    "tier": "The Eternal",
-    "xpRequired": 3525,
-    "minXp": 126555,
-    "maxXp": 130080
+    "title": "Explorer VI",
+    "tier": "Explorer",
+    "tierIndex": 9,
+    "xpRequired": 780,
+    "minXp": 34615,
+    "maxXp": 35395
   },
   {
     "level": 87,
-    "title": "Cosmic Polymath",
-    "tier": "The Eternal",
-    "xpRequired": 3580,
-    "minXp": 130080,
-    "maxXp": 133660
+    "title": "Explorer VII",
+    "tier": "Explorer",
+    "tierIndex": 9,
+    "xpRequired": 790,
+    "minXp": 35395,
+    "maxXp": 36185
   },
   {
     "level": 88,
-    "title": "Continuum Weaver",
-    "tier": "The Eternal",
-    "xpRequired": 3635,
-    "minXp": 133660,
-    "maxXp": 137295
+    "title": "Explorer VIII",
+    "tier": "Explorer",
+    "tierIndex": 9,
+    "xpRequired": 795,
+    "minXp": 36185,
+    "maxXp": 36980
   },
   {
     "level": 89,
-    "title": "Eternal Thinker",
-    "tier": "The Eternal",
-    "xpRequired": 3695,
-    "minXp": 137295,
-    "maxXp": 140990
+    "title": "Explorer IX",
+    "tier": "Explorer",
+    "tierIndex": 9,
+    "xpRequired": 805,
+    "minXp": 36980,
+    "maxXp": 37785
   },
   {
     "level": 90,
-    "title": "Master of the Arc",
-    "tier": "The Eternal",
-    "xpRequired": 3750,
-    "minXp": 140990,
-    "maxXp": 144740
+    "title": "Explorer X",
+    "tier": "Explorer",
+    "tierIndex": 9,
+    "xpRequired": 815,
+    "minXp": 37785,
+    "maxXp": 38600
   },
   {
     "level": 91,
-    "title": "Epoch Sovereign",
-    "tier": "The Mythic",
-    "xpRequired": 3810,
-    "minXp": 144740,
-    "maxXp": 148550
+    "title": "Pioneer I",
+    "tier": "Pioneer",
+    "tierIndex": 10,
+    "xpRequired": 825,
+    "minXp": 38600,
+    "maxXp": 39425
   },
   {
     "level": 92,
-    "title": "Transcendent Mind",
-    "tier": "The Mythic",
-    "xpRequired": 3865,
-    "minXp": 148550,
-    "maxXp": 152415
+    "title": "Pioneer II",
+    "tier": "Pioneer",
+    "tierIndex": 10,
+    "xpRequired": 830,
+    "minXp": 39425,
+    "maxXp": 40255
   },
   {
     "level": 93,
-    "title": "Boundless Intellect",
-    "tier": "The Mythic",
-    "xpRequired": 3925,
-    "minXp": 152415,
-    "maxXp": 156340
+    "title": "Pioneer III",
+    "tier": "Pioneer",
+    "tierIndex": 10,
+    "xpRequired": 840,
+    "minXp": 40255,
+    "maxXp": 41095
   },
   {
     "level": 94,
-    "title": "Sovereign of Will",
-    "tier": "The Mythic",
-    "xpRequired": 3980,
-    "minXp": 156340,
-    "maxXp": 160320
+    "title": "Pioneer IV",
+    "tier": "Pioneer",
+    "tierIndex": 10,
+    "xpRequired": 850,
+    "minXp": 41095,
+    "maxXp": 41945
   },
   {
     "level": 95,
-    "title": "Omniscient Sentinel",
-    "tier": "The Mythic",
-    "xpRequired": 4040,
-    "minXp": 160320,
-    "maxXp": 164360
+    "title": "Pioneer V",
+    "tier": "Pioneer",
+    "tierIndex": 10,
+    "xpRequired": 860,
+    "minXp": 41945,
+    "maxXp": 42805
   },
   {
     "level": 96,
-    "title": "Nexus of Truth",
-    "tier": "The Mythic",
-    "xpRequired": 4100,
-    "minXp": 164360,
-    "maxXp": 168460
+    "title": "Pioneer VI",
+    "tier": "Pioneer",
+    "tierIndex": 10,
+    "xpRequired": 865,
+    "minXp": 42805,
+    "maxXp": 43670
   },
   {
     "level": 97,
-    "title": "Master of Eternity",
-    "tier": "The Mythic",
-    "xpRequired": 4160,
-    "minXp": 168460,
-    "maxXp": 172620
+    "title": "Pioneer VII",
+    "tier": "Pioneer",
+    "tierIndex": 10,
+    "xpRequired": 875,
+    "minXp": 43670,
+    "maxXp": 44545
   },
   {
     "level": 98,
-    "title": "Zen Transcendent",
-    "tier": "The Mythic",
-    "xpRequired": 4215,
-    "minXp": 172620,
-    "maxXp": 176835
+    "title": "Pioneer VIII",
+    "tier": "Pioneer",
+    "tierIndex": 10,
+    "xpRequired": 885,
+    "minXp": 44545,
+    "maxXp": 45430
   },
   {
     "level": 99,
-    "title": "The Absolute Mind",
-    "tier": "The Mythic",
-    "xpRequired": 4275,
-    "minXp": 176835,
-    "maxXp": 181110
+    "title": "Pioneer IX",
+    "tier": "Pioneer",
+    "tierIndex": 10,
+    "xpRequired": 895,
+    "minXp": 45430,
+    "maxXp": 46325
   },
   {
     "level": 100,
-    "title": "Grand Chronomancer",
-    "tier": "The Mythic",
-    "xpRequired": 4335,
-    "minXp": 181110,
-    "maxXp": 185445
+    "title": "Pioneer X",
+    "tier": "Pioneer",
+    "tierIndex": 10,
+    "xpRequired": 900,
+    "minXp": 46325,
+    "maxXp": 47225
+  },
+  {
+    "level": 101,
+    "title": "Iron Initiate I",
+    "tier": "Iron Initiate",
+    "tierIndex": 11,
+    "xpRequired": 910,
+    "minXp": 47225,
+    "maxXp": 48135
+  },
+  {
+    "level": 102,
+    "title": "Iron Initiate II",
+    "tier": "Iron Initiate",
+    "tierIndex": 11,
+    "xpRequired": 920,
+    "minXp": 48135,
+    "maxXp": 49055
+  },
+  {
+    "level": 103,
+    "title": "Iron Initiate III",
+    "tier": "Iron Initiate",
+    "tierIndex": 11,
+    "xpRequired": 930,
+    "minXp": 49055,
+    "maxXp": 49985
+  },
+  {
+    "level": 104,
+    "title": "Iron Initiate IV",
+    "tier": "Iron Initiate",
+    "tierIndex": 11,
+    "xpRequired": 935,
+    "minXp": 49985,
+    "maxXp": 50920
+  },
+  {
+    "level": 105,
+    "title": "Iron Initiate V",
+    "tier": "Iron Initiate",
+    "tierIndex": 11,
+    "xpRequired": 945,
+    "minXp": 50920,
+    "maxXp": 51865
+  },
+  {
+    "level": 106,
+    "title": "Iron Initiate VI",
+    "tier": "Iron Initiate",
+    "tierIndex": 11,
+    "xpRequired": 955,
+    "minXp": 51865,
+    "maxXp": 52820
+  },
+  {
+    "level": 107,
+    "title": "Iron Initiate VII",
+    "tier": "Iron Initiate",
+    "tierIndex": 11,
+    "xpRequired": 965,
+    "minXp": 52820,
+    "maxXp": 53785
+  },
+  {
+    "level": 108,
+    "title": "Iron Initiate VIII",
+    "tier": "Iron Initiate",
+    "tierIndex": 11,
+    "xpRequired": 970,
+    "minXp": 53785,
+    "maxXp": 54755
+  },
+  {
+    "level": 109,
+    "title": "Iron Initiate IX",
+    "tier": "Iron Initiate",
+    "tierIndex": 11,
+    "xpRequired": 980,
+    "minXp": 54755,
+    "maxXp": 55735
+  },
+  {
+    "level": 110,
+    "title": "Iron Initiate X",
+    "tier": "Iron Initiate",
+    "tierIndex": 11,
+    "xpRequired": 990,
+    "minXp": 55735,
+    "maxXp": 56725
+  },
+  {
+    "level": 111,
+    "title": "Iron Guard I",
+    "tier": "Iron Guard",
+    "tierIndex": 12,
+    "xpRequired": 1000,
+    "minXp": 56725,
+    "maxXp": 57725
+  },
+  {
+    "level": 112,
+    "title": "Iron Guard II",
+    "tier": "Iron Guard",
+    "tierIndex": 12,
+    "xpRequired": 1005,
+    "minXp": 57725,
+    "maxXp": 58730
+  },
+  {
+    "level": 113,
+    "title": "Iron Guard III",
+    "tier": "Iron Guard",
+    "tierIndex": 12,
+    "xpRequired": 1015,
+    "minXp": 58730,
+    "maxXp": 59745
+  },
+  {
+    "level": 114,
+    "title": "Iron Guard IV",
+    "tier": "Iron Guard",
+    "tierIndex": 12,
+    "xpRequired": 1025,
+    "minXp": 59745,
+    "maxXp": 60770
+  },
+  {
+    "level": 115,
+    "title": "Iron Guard V",
+    "tier": "Iron Guard",
+    "tierIndex": 12,
+    "xpRequired": 1035,
+    "minXp": 60770,
+    "maxXp": 61805
+  },
+  {
+    "level": 116,
+    "title": "Iron Guard VI",
+    "tier": "Iron Guard",
+    "tierIndex": 12,
+    "xpRequired": 1040,
+    "minXp": 61805,
+    "maxXp": 62845
+  },
+  {
+    "level": 117,
+    "title": "Iron Guard VII",
+    "tier": "Iron Guard",
+    "tierIndex": 12,
+    "xpRequired": 1050,
+    "minXp": 62845,
+    "maxXp": 63895
+  },
+  {
+    "level": 118,
+    "title": "Iron Guard VIII",
+    "tier": "Iron Guard",
+    "tierIndex": 12,
+    "xpRequired": 1060,
+    "minXp": 63895,
+    "maxXp": 64955
+  },
+  {
+    "level": 119,
+    "title": "Iron Guard IX",
+    "tier": "Iron Guard",
+    "tierIndex": 12,
+    "xpRequired": 1070,
+    "minXp": 64955,
+    "maxXp": 66025
+  },
+  {
+    "level": 120,
+    "title": "Iron Guard X",
+    "tier": "Iron Guard",
+    "tierIndex": 12,
+    "xpRequired": 1080,
+    "minXp": 66025,
+    "maxXp": 67105
+  },
+  {
+    "level": 121,
+    "title": "Iron Vanguard I",
+    "tier": "Iron Vanguard",
+    "tierIndex": 13,
+    "xpRequired": 1085,
+    "minXp": 67105,
+    "maxXp": 68190
+  },
+  {
+    "level": 122,
+    "title": "Iron Vanguard II",
+    "tier": "Iron Vanguard",
+    "tierIndex": 13,
+    "xpRequired": 1095,
+    "minXp": 68190,
+    "maxXp": 69285
+  },
+  {
+    "level": 123,
+    "title": "Iron Vanguard III",
+    "tier": "Iron Vanguard",
+    "tierIndex": 13,
+    "xpRequired": 1105,
+    "minXp": 69285,
+    "maxXp": 70390
+  },
+  {
+    "level": 124,
+    "title": "Iron Vanguard IV",
+    "tier": "Iron Vanguard",
+    "tierIndex": 13,
+    "xpRequired": 1115,
+    "minXp": 70390,
+    "maxXp": 71505
+  },
+  {
+    "level": 125,
+    "title": "Iron Vanguard V",
+    "tier": "Iron Vanguard",
+    "tierIndex": 13,
+    "xpRequired": 1120,
+    "minXp": 71505,
+    "maxXp": 72625
+  },
+  {
+    "level": 126,
+    "title": "Iron Vanguard VI",
+    "tier": "Iron Vanguard",
+    "tierIndex": 13,
+    "xpRequired": 1130,
+    "minXp": 72625,
+    "maxXp": 73755
+  },
+  {
+    "level": 127,
+    "title": "Iron Vanguard VII",
+    "tier": "Iron Vanguard",
+    "tierIndex": 13,
+    "xpRequired": 1140,
+    "minXp": 73755,
+    "maxXp": 74895
+  },
+  {
+    "level": 128,
+    "title": "Iron Vanguard VIII",
+    "tier": "Iron Vanguard",
+    "tierIndex": 13,
+    "xpRequired": 1150,
+    "minXp": 74895,
+    "maxXp": 76045
+  },
+  {
+    "level": 129,
+    "title": "Iron Vanguard IX",
+    "tier": "Iron Vanguard",
+    "tierIndex": 13,
+    "xpRequired": 1155,
+    "minXp": 76045,
+    "maxXp": 77200
+  },
+  {
+    "level": 130,
+    "title": "Iron Vanguard X",
+    "tier": "Iron Vanguard",
+    "tierIndex": 13,
+    "xpRequired": 1165,
+    "minXp": 77200,
+    "maxXp": 78365
+  },
+  {
+    "level": 131,
+    "title": "Iron Knight I",
+    "tier": "Iron Knight",
+    "tierIndex": 14,
+    "xpRequired": 1175,
+    "minXp": 78365,
+    "maxXp": 79540
+  },
+  {
+    "level": 132,
+    "title": "Iron Knight II",
+    "tier": "Iron Knight",
+    "tierIndex": 14,
+    "xpRequired": 1185,
+    "minXp": 79540,
+    "maxXp": 80725
+  },
+  {
+    "level": 133,
+    "title": "Iron Knight III",
+    "tier": "Iron Knight",
+    "tierIndex": 14,
+    "xpRequired": 1195,
+    "minXp": 80725,
+    "maxXp": 81920
+  },
+  {
+    "level": 134,
+    "title": "Iron Knight IV",
+    "tier": "Iron Knight",
+    "tierIndex": 14,
+    "xpRequired": 1200,
+    "minXp": 81920,
+    "maxXp": 83120
+  },
+  {
+    "level": 135,
+    "title": "Iron Knight V",
+    "tier": "Iron Knight",
+    "tierIndex": 14,
+    "xpRequired": 1210,
+    "minXp": 83120,
+    "maxXp": 84330
+  },
+  {
+    "level": 136,
+    "title": "Iron Knight VI",
+    "tier": "Iron Knight",
+    "tierIndex": 14,
+    "xpRequired": 1220,
+    "minXp": 84330,
+    "maxXp": 85550
+  },
+  {
+    "level": 137,
+    "title": "Iron Knight VII",
+    "tier": "Iron Knight",
+    "tierIndex": 14,
+    "xpRequired": 1230,
+    "minXp": 85550,
+    "maxXp": 86780
+  },
+  {
+    "level": 138,
+    "title": "Iron Knight VIII",
+    "tier": "Iron Knight",
+    "tierIndex": 14,
+    "xpRequired": 1235,
+    "minXp": 86780,
+    "maxXp": 88015
+  },
+  {
+    "level": 139,
+    "title": "Iron Knight IX",
+    "tier": "Iron Knight",
+    "tierIndex": 14,
+    "xpRequired": 1245,
+    "minXp": 88015,
+    "maxXp": 89260
+  },
+  {
+    "level": 140,
+    "title": "Iron Knight X",
+    "tier": "Iron Knight",
+    "tierIndex": 14,
+    "xpRequired": 1255,
+    "minXp": 89260,
+    "maxXp": 90515
+  },
+  {
+    "level": 141,
+    "title": "Bronze Striker I",
+    "tier": "Bronze Striker",
+    "tierIndex": 15,
+    "xpRequired": 1265,
+    "minXp": 90515,
+    "maxXp": 91780
+  },
+  {
+    "level": 142,
+    "title": "Bronze Striker II",
+    "tier": "Bronze Striker",
+    "tierIndex": 15,
+    "xpRequired": 1270,
+    "minXp": 91780,
+    "maxXp": 93050
+  },
+  {
+    "level": 143,
+    "title": "Bronze Striker III",
+    "tier": "Bronze Striker",
+    "tierIndex": 15,
+    "xpRequired": 1280,
+    "minXp": 93050,
+    "maxXp": 94330
+  },
+  {
+    "level": 144,
+    "title": "Bronze Striker IV",
+    "tier": "Bronze Striker",
+    "tierIndex": 15,
+    "xpRequired": 1290,
+    "minXp": 94330,
+    "maxXp": 95620
+  },
+  {
+    "level": 145,
+    "title": "Bronze Striker V",
+    "tier": "Bronze Striker",
+    "tierIndex": 15,
+    "xpRequired": 1300,
+    "minXp": 95620,
+    "maxXp": 96920
+  },
+  {
+    "level": 146,
+    "title": "Bronze Striker VI",
+    "tier": "Bronze Striker",
+    "tierIndex": 15,
+    "xpRequired": 1310,
+    "minXp": 96920,
+    "maxXp": 98230
+  },
+  {
+    "level": 147,
+    "title": "Bronze Striker VII",
+    "tier": "Bronze Striker",
+    "tierIndex": 15,
+    "xpRequired": 1315,
+    "minXp": 98230,
+    "maxXp": 99545
+  },
+  {
+    "level": 148,
+    "title": "Bronze Striker VIII",
+    "tier": "Bronze Striker",
+    "tierIndex": 15,
+    "xpRequired": 1325,
+    "minXp": 99545,
+    "maxXp": 100870
+  },
+  {
+    "level": 149,
+    "title": "Bronze Striker IX",
+    "tier": "Bronze Striker",
+    "tierIndex": 15,
+    "xpRequired": 1335,
+    "minXp": 100870,
+    "maxXp": 102205
+  },
+  {
+    "level": 150,
+    "title": "Bronze Striker X",
+    "tier": "Bronze Striker",
+    "tierIndex": 15,
+    "xpRequired": 1345,
+    "minXp": 102205,
+    "maxXp": 103550
+  },
+  {
+    "level": 151,
+    "title": "Bronze Warrior I",
+    "tier": "Bronze Warrior",
+    "tierIndex": 16,
+    "xpRequired": 1350,
+    "minXp": 103550,
+    "maxXp": 104900
+  },
+  {
+    "level": 152,
+    "title": "Bronze Warrior II",
+    "tier": "Bronze Warrior",
+    "tierIndex": 16,
+    "xpRequired": 1360,
+    "minXp": 104900,
+    "maxXp": 106260
+  },
+  {
+    "level": 153,
+    "title": "Bronze Warrior III",
+    "tier": "Bronze Warrior",
+    "tierIndex": 16,
+    "xpRequired": 1370,
+    "minXp": 106260,
+    "maxXp": 107630
+  },
+  {
+    "level": 154,
+    "title": "Bronze Warrior IV",
+    "tier": "Bronze Warrior",
+    "tierIndex": 16,
+    "xpRequired": 1380,
+    "minXp": 107630,
+    "maxXp": 109010
+  },
+  {
+    "level": 155,
+    "title": "Bronze Warrior V",
+    "tier": "Bronze Warrior",
+    "tierIndex": 16,
+    "xpRequired": 1390,
+    "minXp": 109010,
+    "maxXp": 110400
+  },
+  {
+    "level": 156,
+    "title": "Bronze Warrior VI",
+    "tier": "Bronze Warrior",
+    "tierIndex": 16,
+    "xpRequired": 1395,
+    "minXp": 110400,
+    "maxXp": 111795
+  },
+  {
+    "level": 157,
+    "title": "Bronze Warrior VII",
+    "tier": "Bronze Warrior",
+    "tierIndex": 16,
+    "xpRequired": 1405,
+    "minXp": 111795,
+    "maxXp": 113200
+  },
+  {
+    "level": 158,
+    "title": "Bronze Warrior VIII",
+    "tier": "Bronze Warrior",
+    "tierIndex": 16,
+    "xpRequired": 1415,
+    "minXp": 113200,
+    "maxXp": 114615
+  },
+  {
+    "level": 159,
+    "title": "Bronze Warrior IX",
+    "tier": "Bronze Warrior",
+    "tierIndex": 16,
+    "xpRequired": 1425,
+    "minXp": 114615,
+    "maxXp": 116040
+  },
+  {
+    "level": 160,
+    "title": "Bronze Warrior X",
+    "tier": "Bronze Warrior",
+    "tierIndex": 16,
+    "xpRequired": 1430,
+    "minXp": 116040,
+    "maxXp": 117470
+  },
+  {
+    "level": 161,
+    "title": "Bronze Knight I",
+    "tier": "Bronze Knight",
+    "tierIndex": 17,
+    "xpRequired": 1440,
+    "minXp": 117470,
+    "maxXp": 118910
+  },
+  {
+    "level": 162,
+    "title": "Bronze Knight II",
+    "tier": "Bronze Knight",
+    "tierIndex": 17,
+    "xpRequired": 1450,
+    "minXp": 118910,
+    "maxXp": 120360
+  },
+  {
+    "level": 163,
+    "title": "Bronze Knight III",
+    "tier": "Bronze Knight",
+    "tierIndex": 17,
+    "xpRequired": 1460,
+    "minXp": 120360,
+    "maxXp": 121820
+  },
+  {
+    "level": 164,
+    "title": "Bronze Knight IV",
+    "tier": "Bronze Knight",
+    "tierIndex": 17,
+    "xpRequired": 1470,
+    "minXp": 121820,
+    "maxXp": 123290
+  },
+  {
+    "level": 165,
+    "title": "Bronze Knight V",
+    "tier": "Bronze Knight",
+    "tierIndex": 17,
+    "xpRequired": 1475,
+    "minXp": 123290,
+    "maxXp": 124765
+  },
+  {
+    "level": 166,
+    "title": "Bronze Knight VI",
+    "tier": "Bronze Knight",
+    "tierIndex": 17,
+    "xpRequired": 1485,
+    "minXp": 124765,
+    "maxXp": 126250
+  },
+  {
+    "level": 167,
+    "title": "Bronze Knight VII",
+    "tier": "Bronze Knight",
+    "tierIndex": 17,
+    "xpRequired": 1495,
+    "minXp": 126250,
+    "maxXp": 127745
+  },
+  {
+    "level": 168,
+    "title": "Bronze Knight VIII",
+    "tier": "Bronze Knight",
+    "tierIndex": 17,
+    "xpRequired": 1505,
+    "minXp": 127745,
+    "maxXp": 129250
+  },
+  {
+    "level": 169,
+    "title": "Bronze Knight IX",
+    "tier": "Bronze Knight",
+    "tierIndex": 17,
+    "xpRequired": 1510,
+    "minXp": 129250,
+    "maxXp": 130760
+  },
+  {
+    "level": 170,
+    "title": "Bronze Knight X",
+    "tier": "Bronze Knight",
+    "tierIndex": 17,
+    "xpRequired": 1520,
+    "minXp": 130760,
+    "maxXp": 132280
+  },
+  {
+    "level": 171,
+    "title": "Bronze Champion I",
+    "tier": "Bronze Champion",
+    "tierIndex": 18,
+    "xpRequired": 1530,
+    "minXp": 132280,
+    "maxXp": 133810
+  },
+  {
+    "level": 172,
+    "title": "Bronze Champion II",
+    "tier": "Bronze Champion",
+    "tierIndex": 18,
+    "xpRequired": 1540,
+    "minXp": 133810,
+    "maxXp": 135350
+  },
+  {
+    "level": 173,
+    "title": "Bronze Champion III",
+    "tier": "Bronze Champion",
+    "tierIndex": 18,
+    "xpRequired": 1550,
+    "minXp": 135350,
+    "maxXp": 136900
+  },
+  {
+    "level": 174,
+    "title": "Bronze Champion IV",
+    "tier": "Bronze Champion",
+    "tierIndex": 18,
+    "xpRequired": 1555,
+    "minXp": 136900,
+    "maxXp": 138455
+  },
+  {
+    "level": 175,
+    "title": "Bronze Champion V",
+    "tier": "Bronze Champion",
+    "tierIndex": 18,
+    "xpRequired": 1565,
+    "minXp": 138455,
+    "maxXp": 140020
+  },
+  {
+    "level": 176,
+    "title": "Bronze Champion VI",
+    "tier": "Bronze Champion",
+    "tierIndex": 18,
+    "xpRequired": 1575,
+    "minXp": 140020,
+    "maxXp": 141595
+  },
+  {
+    "level": 177,
+    "title": "Bronze Champion VII",
+    "tier": "Bronze Champion",
+    "tierIndex": 18,
+    "xpRequired": 1585,
+    "minXp": 141595,
+    "maxXp": 143180
+  },
+  {
+    "level": 178,
+    "title": "Bronze Champion VIII",
+    "tier": "Bronze Champion",
+    "tierIndex": 18,
+    "xpRequired": 1590,
+    "minXp": 143180,
+    "maxXp": 144770
+  },
+  {
+    "level": 179,
+    "title": "Bronze Champion IX",
+    "tier": "Bronze Champion",
+    "tierIndex": 18,
+    "xpRequired": 1600,
+    "minXp": 144770,
+    "maxXp": 146370
+  },
+  {
+    "level": 180,
+    "title": "Bronze Champion X",
+    "tier": "Bronze Champion",
+    "tierIndex": 18,
+    "xpRequired": 1610,
+    "minXp": 146370,
+    "maxXp": 147980
+  },
+  {
+    "level": 181,
+    "title": "Silver Scout I",
+    "tier": "Silver Scout",
+    "tierIndex": 19,
+    "xpRequired": 1620,
+    "minXp": 147980,
+    "maxXp": 149600
+  },
+  {
+    "level": 182,
+    "title": "Silver Scout II",
+    "tier": "Silver Scout",
+    "tierIndex": 19,
+    "xpRequired": 1630,
+    "minXp": 149600,
+    "maxXp": 151230
+  },
+  {
+    "level": 183,
+    "title": "Silver Scout III",
+    "tier": "Silver Scout",
+    "tierIndex": 19,
+    "xpRequired": 1635,
+    "minXp": 151230,
+    "maxXp": 152865
+  },
+  {
+    "level": 184,
+    "title": "Silver Scout IV",
+    "tier": "Silver Scout",
+    "tierIndex": 19,
+    "xpRequired": 1645,
+    "minXp": 152865,
+    "maxXp": 154510
+  },
+  {
+    "level": 185,
+    "title": "Silver Scout V",
+    "tier": "Silver Scout",
+    "tierIndex": 19,
+    "xpRequired": 1655,
+    "minXp": 154510,
+    "maxXp": 156165
+  },
+  {
+    "level": 186,
+    "title": "Silver Scout VI",
+    "tier": "Silver Scout",
+    "tierIndex": 19,
+    "xpRequired": 1665,
+    "minXp": 156165,
+    "maxXp": 157830
+  },
+  {
+    "level": 187,
+    "title": "Silver Scout VII",
+    "tier": "Silver Scout",
+    "tierIndex": 19,
+    "xpRequired": 1675,
+    "minXp": 157830,
+    "maxXp": 159505
+  },
+  {
+    "level": 188,
+    "title": "Silver Scout VIII",
+    "tier": "Silver Scout",
+    "tierIndex": 19,
+    "xpRequired": 1680,
+    "minXp": 159505,
+    "maxXp": 161185
+  },
+  {
+    "level": 189,
+    "title": "Silver Scout IX",
+    "tier": "Silver Scout",
+    "tierIndex": 19,
+    "xpRequired": 1690,
+    "minXp": 161185,
+    "maxXp": 162875
+  },
+  {
+    "level": 190,
+    "title": "Silver Scout X",
+    "tier": "Silver Scout",
+    "tierIndex": 19,
+    "xpRequired": 1700,
+    "minXp": 162875,
+    "maxXp": 164575
+  },
+  {
+    "level": 191,
+    "title": "Silver Guard I",
+    "tier": "Silver Guard",
+    "tierIndex": 20,
+    "xpRequired": 1710,
+    "minXp": 164575,
+    "maxXp": 166285
+  },
+  {
+    "level": 192,
+    "title": "Silver Guard II",
+    "tier": "Silver Guard",
+    "tierIndex": 20,
+    "xpRequired": 1715,
+    "minXp": 166285,
+    "maxXp": 168000
+  },
+  {
+    "level": 193,
+    "title": "Silver Guard III",
+    "tier": "Silver Guard",
+    "tierIndex": 20,
+    "xpRequired": 1725,
+    "minXp": 168000,
+    "maxXp": 169725
+  },
+  {
+    "level": 194,
+    "title": "Silver Guard IV",
+    "tier": "Silver Guard",
+    "tierIndex": 20,
+    "xpRequired": 1735,
+    "minXp": 169725,
+    "maxXp": 171460
+  },
+  {
+    "level": 195,
+    "title": "Silver Guard V",
+    "tier": "Silver Guard",
+    "tierIndex": 20,
+    "xpRequired": 1745,
+    "minXp": 171460,
+    "maxXp": 173205
+  },
+  {
+    "level": 196,
+    "title": "Silver Guard VI",
+    "tier": "Silver Guard",
+    "tierIndex": 20,
+    "xpRequired": 1755,
+    "minXp": 173205,
+    "maxXp": 174960
+  },
+  {
+    "level": 197,
+    "title": "Silver Guard VII",
+    "tier": "Silver Guard",
+    "tierIndex": 20,
+    "xpRequired": 1760,
+    "minXp": 174960,
+    "maxXp": 176720
+  },
+  {
+    "level": 198,
+    "title": "Silver Guard VIII",
+    "tier": "Silver Guard",
+    "tierIndex": 20,
+    "xpRequired": 1770,
+    "minXp": 176720,
+    "maxXp": 178490
+  },
+  {
+    "level": 199,
+    "title": "Silver Guard IX",
+    "tier": "Silver Guard",
+    "tierIndex": 20,
+    "xpRequired": 1780,
+    "minXp": 178490,
+    "maxXp": 180270
+  },
+  {
+    "level": 200,
+    "title": "Silver Guard X",
+    "tier": "Silver Guard",
+    "tierIndex": 20,
+    "xpRequired": 1790,
+    "minXp": 180270,
+    "maxXp": 182060
+  },
+  {
+    "level": 201,
+    "title": "Silver Knight I",
+    "tier": "Silver Knight",
+    "tierIndex": 21,
+    "xpRequired": 1800,
+    "minXp": 182060,
+    "maxXp": 183860
+  },
+  {
+    "level": 202,
+    "title": "Silver Knight II",
+    "tier": "Silver Knight",
+    "tierIndex": 21,
+    "xpRequired": 1805,
+    "minXp": 183860,
+    "maxXp": 185665
+  },
+  {
+    "level": 203,
+    "title": "Silver Knight III",
+    "tier": "Silver Knight",
+    "tierIndex": 21,
+    "xpRequired": 1815,
+    "minXp": 185665,
+    "maxXp": 187480
+  },
+  {
+    "level": 204,
+    "title": "Silver Knight IV",
+    "tier": "Silver Knight",
+    "tierIndex": 21,
+    "xpRequired": 1825,
+    "minXp": 187480,
+    "maxXp": 189305
+  },
+  {
+    "level": 205,
+    "title": "Silver Knight V",
+    "tier": "Silver Knight",
+    "tierIndex": 21,
+    "xpRequired": 1835,
+    "minXp": 189305,
+    "maxXp": 191140
+  },
+  {
+    "level": 206,
+    "title": "Silver Knight VI",
+    "tier": "Silver Knight",
+    "tierIndex": 21,
+    "xpRequired": 1845,
+    "minXp": 191140,
+    "maxXp": 192985
+  },
+  {
+    "level": 207,
+    "title": "Silver Knight VII",
+    "tier": "Silver Knight",
+    "tierIndex": 21,
+    "xpRequired": 1850,
+    "minXp": 192985,
+    "maxXp": 194835
+  },
+  {
+    "level": 208,
+    "title": "Silver Knight VIII",
+    "tier": "Silver Knight",
+    "tierIndex": 21,
+    "xpRequired": 1860,
+    "minXp": 194835,
+    "maxXp": 196695
+  },
+  {
+    "level": 209,
+    "title": "Silver Knight IX",
+    "tier": "Silver Knight",
+    "tierIndex": 21,
+    "xpRequired": 1870,
+    "minXp": 196695,
+    "maxXp": 198565
+  },
+  {
+    "level": 210,
+    "title": "Silver Knight X",
+    "tier": "Silver Knight",
+    "tierIndex": 21,
+    "xpRequired": 1880,
+    "minXp": 198565,
+    "maxXp": 200445
+  },
+  {
+    "level": 211,
+    "title": "Silver Champion I",
+    "tier": "Silver Champion",
+    "tierIndex": 22,
+    "xpRequired": 1890,
+    "minXp": 200445,
+    "maxXp": 202335
+  },
+  {
+    "level": 212,
+    "title": "Silver Champion II",
+    "tier": "Silver Champion",
+    "tierIndex": 22,
+    "xpRequired": 1895,
+    "minXp": 202335,
+    "maxXp": 204230
+  },
+  {
+    "level": 213,
+    "title": "Silver Champion III",
+    "tier": "Silver Champion",
+    "tierIndex": 22,
+    "xpRequired": 1905,
+    "minXp": 204230,
+    "maxXp": 206135
+  },
+  {
+    "level": 214,
+    "title": "Silver Champion IV",
+    "tier": "Silver Champion",
+    "tierIndex": 22,
+    "xpRequired": 1915,
+    "minXp": 206135,
+    "maxXp": 208050
+  },
+  {
+    "level": 215,
+    "title": "Silver Champion V",
+    "tier": "Silver Champion",
+    "tierIndex": 22,
+    "xpRequired": 1925,
+    "minXp": 208050,
+    "maxXp": 209975
+  },
+  {
+    "level": 216,
+    "title": "Silver Champion VI",
+    "tier": "Silver Champion",
+    "tierIndex": 22,
+    "xpRequired": 1935,
+    "minXp": 209975,
+    "maxXp": 211910
+  },
+  {
+    "level": 217,
+    "title": "Silver Champion VII",
+    "tier": "Silver Champion",
+    "tierIndex": 22,
+    "xpRequired": 1940,
+    "minXp": 211910,
+    "maxXp": 213850
+  },
+  {
+    "level": 218,
+    "title": "Silver Champion VIII",
+    "tier": "Silver Champion",
+    "tierIndex": 22,
+    "xpRequired": 1950,
+    "minXp": 213850,
+    "maxXp": 215800
+  },
+  {
+    "level": 219,
+    "title": "Silver Champion IX",
+    "tier": "Silver Champion",
+    "tierIndex": 22,
+    "xpRequired": 1960,
+    "minXp": 215800,
+    "maxXp": 217760
+  },
+  {
+    "level": 220,
+    "title": "Silver Champion X",
+    "tier": "Silver Champion",
+    "tierIndex": 22,
+    "xpRequired": 1970,
+    "minXp": 217760,
+    "maxXp": 219730
+  },
+  {
+    "level": 221,
+    "title": "Gold Striker I",
+    "tier": "Gold Striker",
+    "tierIndex": 23,
+    "xpRequired": 1975,
+    "minXp": 219730,
+    "maxXp": 221705
+  },
+  {
+    "level": 222,
+    "title": "Gold Striker II",
+    "tier": "Gold Striker",
+    "tierIndex": 23,
+    "xpRequired": 1985,
+    "minXp": 221705,
+    "maxXp": 223690
+  },
+  {
+    "level": 223,
+    "title": "Gold Striker III",
+    "tier": "Gold Striker",
+    "tierIndex": 23,
+    "xpRequired": 1995,
+    "minXp": 223690,
+    "maxXp": 225685
+  },
+  {
+    "level": 224,
+    "title": "Gold Striker IV",
+    "tier": "Gold Striker",
+    "tierIndex": 23,
+    "xpRequired": 2005,
+    "minXp": 225685,
+    "maxXp": 227690
+  },
+  {
+    "level": 225,
+    "title": "Gold Striker V",
+    "tier": "Gold Striker",
+    "tierIndex": 23,
+    "xpRequired": 2015,
+    "minXp": 227690,
+    "maxXp": 229705
+  },
+  {
+    "level": 226,
+    "title": "Gold Striker VI",
+    "tier": "Gold Striker",
+    "tierIndex": 23,
+    "xpRequired": 2020,
+    "minXp": 229705,
+    "maxXp": 231725
+  },
+  {
+    "level": 227,
+    "title": "Gold Striker VII",
+    "tier": "Gold Striker",
+    "tierIndex": 23,
+    "xpRequired": 2030,
+    "minXp": 231725,
+    "maxXp": 233755
+  },
+  {
+    "level": 228,
+    "title": "Gold Striker VIII",
+    "tier": "Gold Striker",
+    "tierIndex": 23,
+    "xpRequired": 2040,
+    "minXp": 233755,
+    "maxXp": 235795
+  },
+  {
+    "level": 229,
+    "title": "Gold Striker IX",
+    "tier": "Gold Striker",
+    "tierIndex": 23,
+    "xpRequired": 2050,
+    "minXp": 235795,
+    "maxXp": 237845
+  },
+  {
+    "level": 230,
+    "title": "Gold Striker X",
+    "tier": "Gold Striker",
+    "tierIndex": 23,
+    "xpRequired": 2060,
+    "minXp": 237845,
+    "maxXp": 239905
+  },
+  {
+    "level": 231,
+    "title": "Gold Warrior I",
+    "tier": "Gold Warrior",
+    "tierIndex": 24,
+    "xpRequired": 2065,
+    "minXp": 239905,
+    "maxXp": 241970
+  },
+  {
+    "level": 232,
+    "title": "Gold Warrior II",
+    "tier": "Gold Warrior",
+    "tierIndex": 24,
+    "xpRequired": 2075,
+    "minXp": 241970,
+    "maxXp": 244045
+  },
+  {
+    "level": 233,
+    "title": "Gold Warrior III",
+    "tier": "Gold Warrior",
+    "tierIndex": 24,
+    "xpRequired": 2085,
+    "minXp": 244045,
+    "maxXp": 246130
+  },
+  {
+    "level": 234,
+    "title": "Gold Warrior IV",
+    "tier": "Gold Warrior",
+    "tierIndex": 24,
+    "xpRequired": 2095,
+    "minXp": 246130,
+    "maxXp": 248225
+  },
+  {
+    "level": 235,
+    "title": "Gold Warrior V",
+    "tier": "Gold Warrior",
+    "tierIndex": 24,
+    "xpRequired": 2105,
+    "minXp": 248225,
+    "maxXp": 250330
+  },
+  {
+    "level": 236,
+    "title": "Gold Warrior VI",
+    "tier": "Gold Warrior",
+    "tierIndex": 24,
+    "xpRequired": 2110,
+    "minXp": 250330,
+    "maxXp": 252440
+  },
+  {
+    "level": 237,
+    "title": "Gold Warrior VII",
+    "tier": "Gold Warrior",
+    "tierIndex": 24,
+    "xpRequired": 2120,
+    "minXp": 252440,
+    "maxXp": 254560
+  },
+  {
+    "level": 238,
+    "title": "Gold Warrior VIII",
+    "tier": "Gold Warrior",
+    "tierIndex": 24,
+    "xpRequired": 2130,
+    "minXp": 254560,
+    "maxXp": 256690
+  },
+  {
+    "level": 239,
+    "title": "Gold Warrior IX",
+    "tier": "Gold Warrior",
+    "tierIndex": 24,
+    "xpRequired": 2140,
+    "minXp": 256690,
+    "maxXp": 258830
+  },
+  {
+    "level": 240,
+    "title": "Gold Warrior X",
+    "tier": "Gold Warrior",
+    "tierIndex": 24,
+    "xpRequired": 2150,
+    "minXp": 258830,
+    "maxXp": 260980
+  },
+  {
+    "level": 241,
+    "title": "Gold Knight I",
+    "tier": "Gold Knight",
+    "tierIndex": 25,
+    "xpRequired": 2155,
+    "minXp": 260980,
+    "maxXp": 263135
+  },
+  {
+    "level": 242,
+    "title": "Gold Knight II",
+    "tier": "Gold Knight",
+    "tierIndex": 25,
+    "xpRequired": 2165,
+    "minXp": 263135,
+    "maxXp": 265300
+  },
+  {
+    "level": 243,
+    "title": "Gold Knight III",
+    "tier": "Gold Knight",
+    "tierIndex": 25,
+    "xpRequired": 2175,
+    "minXp": 265300,
+    "maxXp": 267475
+  },
+  {
+    "level": 244,
+    "title": "Gold Knight IV",
+    "tier": "Gold Knight",
+    "tierIndex": 25,
+    "xpRequired": 2185,
+    "minXp": 267475,
+    "maxXp": 269660
+  },
+  {
+    "level": 245,
+    "title": "Gold Knight V",
+    "tier": "Gold Knight",
+    "tierIndex": 25,
+    "xpRequired": 2195,
+    "minXp": 269660,
+    "maxXp": 271855
+  },
+  {
+    "level": 246,
+    "title": "Gold Knight VI",
+    "tier": "Gold Knight",
+    "tierIndex": 25,
+    "xpRequired": 2200,
+    "minXp": 271855,
+    "maxXp": 274055
+  },
+  {
+    "level": 247,
+    "title": "Gold Knight VII",
+    "tier": "Gold Knight",
+    "tierIndex": 25,
+    "xpRequired": 2210,
+    "minXp": 274055,
+    "maxXp": 276265
+  },
+  {
+    "level": 248,
+    "title": "Gold Knight VIII",
+    "tier": "Gold Knight",
+    "tierIndex": 25,
+    "xpRequired": 2220,
+    "minXp": 276265,
+    "maxXp": 278485
+  },
+  {
+    "level": 249,
+    "title": "Gold Knight IX",
+    "tier": "Gold Knight",
+    "tierIndex": 25,
+    "xpRequired": 2230,
+    "minXp": 278485,
+    "maxXp": 280715
+  },
+  {
+    "level": 250,
+    "title": "Gold Knight X",
+    "tier": "Gold Knight",
+    "tierIndex": 25,
+    "xpRequired": 2240,
+    "minXp": 280715,
+    "maxXp": 282955
+  },
+  {
+    "level": 251,
+    "title": "Gold Paladin I",
+    "tier": "Gold Paladin",
+    "tierIndex": 26,
+    "xpRequired": 2250,
+    "minXp": 282955,
+    "maxXp": 285205
+  },
+  {
+    "level": 252,
+    "title": "Gold Paladin II",
+    "tier": "Gold Paladin",
+    "tierIndex": 26,
+    "xpRequired": 2255,
+    "minXp": 285205,
+    "maxXp": 287460
+  },
+  {
+    "level": 253,
+    "title": "Gold Paladin III",
+    "tier": "Gold Paladin",
+    "tierIndex": 26,
+    "xpRequired": 2265,
+    "minXp": 287460,
+    "maxXp": 289725
+  },
+  {
+    "level": 254,
+    "title": "Gold Paladin IV",
+    "tier": "Gold Paladin",
+    "tierIndex": 26,
+    "xpRequired": 2275,
+    "minXp": 289725,
+    "maxXp": 292000
+  },
+  {
+    "level": 255,
+    "title": "Gold Paladin V",
+    "tier": "Gold Paladin",
+    "tierIndex": 26,
+    "xpRequired": 2285,
+    "minXp": 292000,
+    "maxXp": 294285
+  },
+  {
+    "level": 256,
+    "title": "Gold Paladin VI",
+    "tier": "Gold Paladin",
+    "tierIndex": 26,
+    "xpRequired": 2295,
+    "minXp": 294285,
+    "maxXp": 296580
+  },
+  {
+    "level": 257,
+    "title": "Gold Paladin VII",
+    "tier": "Gold Paladin",
+    "tierIndex": 26,
+    "xpRequired": 2300,
+    "minXp": 296580,
+    "maxXp": 298880
+  },
+  {
+    "level": 258,
+    "title": "Gold Paladin VIII",
+    "tier": "Gold Paladin",
+    "tierIndex": 26,
+    "xpRequired": 2310,
+    "minXp": 298880,
+    "maxXp": 301190
+  },
+  {
+    "level": 259,
+    "title": "Gold Paladin IX",
+    "tier": "Gold Paladin",
+    "tierIndex": 26,
+    "xpRequired": 2320,
+    "minXp": 301190,
+    "maxXp": 303510
+  },
+  {
+    "level": 260,
+    "title": "Gold Paladin X",
+    "tier": "Gold Paladin",
+    "tierIndex": 26,
+    "xpRequired": 2330,
+    "minXp": 303510,
+    "maxXp": 305840
+  },
+  {
+    "level": 261,
+    "title": "Gold Champion I",
+    "tier": "Gold Champion",
+    "tierIndex": 27,
+    "xpRequired": 2340,
+    "minXp": 305840,
+    "maxXp": 308180
+  },
+  {
+    "level": 262,
+    "title": "Gold Champion II",
+    "tier": "Gold Champion",
+    "tierIndex": 27,
+    "xpRequired": 2345,
+    "minXp": 308180,
+    "maxXp": 310525
+  },
+  {
+    "level": 263,
+    "title": "Gold Champion III",
+    "tier": "Gold Champion",
+    "tierIndex": 27,
+    "xpRequired": 2355,
+    "minXp": 310525,
+    "maxXp": 312880
+  },
+  {
+    "level": 264,
+    "title": "Gold Champion IV",
+    "tier": "Gold Champion",
+    "tierIndex": 27,
+    "xpRequired": 2365,
+    "minXp": 312880,
+    "maxXp": 315245
+  },
+  {
+    "level": 265,
+    "title": "Gold Champion V",
+    "tier": "Gold Champion",
+    "tierIndex": 27,
+    "xpRequired": 2375,
+    "minXp": 315245,
+    "maxXp": 317620
+  },
+  {
+    "level": 266,
+    "title": "Gold Champion VI",
+    "tier": "Gold Champion",
+    "tierIndex": 27,
+    "xpRequired": 2385,
+    "minXp": 317620,
+    "maxXp": 320005
+  },
+  {
+    "level": 267,
+    "title": "Gold Champion VII",
+    "tier": "Gold Champion",
+    "tierIndex": 27,
+    "xpRequired": 2390,
+    "minXp": 320005,
+    "maxXp": 322395
+  },
+  {
+    "level": 268,
+    "title": "Gold Champion VIII",
+    "tier": "Gold Champion",
+    "tierIndex": 27,
+    "xpRequired": 2400,
+    "minXp": 322395,
+    "maxXp": 324795
+  },
+  {
+    "level": 269,
+    "title": "Gold Champion IX",
+    "tier": "Gold Champion",
+    "tierIndex": 27,
+    "xpRequired": 2410,
+    "minXp": 324795,
+    "maxXp": 327205
+  },
+  {
+    "level": 270,
+    "title": "Gold Champion X",
+    "tier": "Gold Champion",
+    "tierIndex": 27,
+    "xpRequired": 2420,
+    "minXp": 327205,
+    "maxXp": 329625
+  },
+  {
+    "level": 271,
+    "title": "Platinum Scout I",
+    "tier": "Platinum Scout",
+    "tierIndex": 28,
+    "xpRequired": 2430,
+    "minXp": 329625,
+    "maxXp": 332055
+  },
+  {
+    "level": 272,
+    "title": "Platinum Scout II",
+    "tier": "Platinum Scout",
+    "tierIndex": 28,
+    "xpRequired": 2435,
+    "minXp": 332055,
+    "maxXp": 334490
+  },
+  {
+    "level": 273,
+    "title": "Platinum Scout III",
+    "tier": "Platinum Scout",
+    "tierIndex": 28,
+    "xpRequired": 2445,
+    "minXp": 334490,
+    "maxXp": 336935
+  },
+  {
+    "level": 274,
+    "title": "Platinum Scout IV",
+    "tier": "Platinum Scout",
+    "tierIndex": 28,
+    "xpRequired": 2455,
+    "minXp": 336935,
+    "maxXp": 339390
+  },
+  {
+    "level": 275,
+    "title": "Platinum Scout V",
+    "tier": "Platinum Scout",
+    "tierIndex": 28,
+    "xpRequired": 2465,
+    "minXp": 339390,
+    "maxXp": 341855
+  },
+  {
+    "level": 276,
+    "title": "Platinum Scout VI",
+    "tier": "Platinum Scout",
+    "tierIndex": 28,
+    "xpRequired": 2475,
+    "minXp": 341855,
+    "maxXp": 344330
+  },
+  {
+    "level": 277,
+    "title": "Platinum Scout VII",
+    "tier": "Platinum Scout",
+    "tierIndex": 28,
+    "xpRequired": 2485,
+    "minXp": 344330,
+    "maxXp": 346815
+  },
+  {
+    "level": 278,
+    "title": "Platinum Scout VIII",
+    "tier": "Platinum Scout",
+    "tierIndex": 28,
+    "xpRequired": 2490,
+    "minXp": 346815,
+    "maxXp": 349305
+  },
+  {
+    "level": 279,
+    "title": "Platinum Scout IX",
+    "tier": "Platinum Scout",
+    "tierIndex": 28,
+    "xpRequired": 2500,
+    "minXp": 349305,
+    "maxXp": 351805
+  },
+  {
+    "level": 280,
+    "title": "Platinum Scout X",
+    "tier": "Platinum Scout",
+    "tierIndex": 28,
+    "xpRequired": 2510,
+    "minXp": 351805,
+    "maxXp": 354315
+  },
+  {
+    "level": 281,
+    "title": "Platinum Knight I",
+    "tier": "Platinum Knight",
+    "tierIndex": 29,
+    "xpRequired": 2520,
+    "minXp": 354315,
+    "maxXp": 356835
+  },
+  {
+    "level": 282,
+    "title": "Platinum Knight II",
+    "tier": "Platinum Knight",
+    "tierIndex": 29,
+    "xpRequired": 2530,
+    "minXp": 356835,
+    "maxXp": 359365
+  },
+  {
+    "level": 283,
+    "title": "Platinum Knight III",
+    "tier": "Platinum Knight",
+    "tierIndex": 29,
+    "xpRequired": 2535,
+    "minXp": 359365,
+    "maxXp": 361900
+  },
+  {
+    "level": 284,
+    "title": "Platinum Knight IV",
+    "tier": "Platinum Knight",
+    "tierIndex": 29,
+    "xpRequired": 2545,
+    "minXp": 361900,
+    "maxXp": 364445
+  },
+  {
+    "level": 285,
+    "title": "Platinum Knight V",
+    "tier": "Platinum Knight",
+    "tierIndex": 29,
+    "xpRequired": 2555,
+    "minXp": 364445,
+    "maxXp": 367000
+  },
+  {
+    "level": 286,
+    "title": "Platinum Knight VI",
+    "tier": "Platinum Knight",
+    "tierIndex": 29,
+    "xpRequired": 2565,
+    "minXp": 367000,
+    "maxXp": 369565
+  },
+  {
+    "level": 287,
+    "title": "Platinum Knight VII",
+    "tier": "Platinum Knight",
+    "tierIndex": 29,
+    "xpRequired": 2575,
+    "minXp": 369565,
+    "maxXp": 372140
+  },
+  {
+    "level": 288,
+    "title": "Platinum Knight VIII",
+    "tier": "Platinum Knight",
+    "tierIndex": 29,
+    "xpRequired": 2580,
+    "minXp": 372140,
+    "maxXp": 374720
+  },
+  {
+    "level": 289,
+    "title": "Platinum Knight IX",
+    "tier": "Platinum Knight",
+    "tierIndex": 29,
+    "xpRequired": 2590,
+    "minXp": 374720,
+    "maxXp": 377310
+  },
+  {
+    "level": 290,
+    "title": "Platinum Knight X",
+    "tier": "Platinum Knight",
+    "tierIndex": 29,
+    "xpRequired": 2600,
+    "minXp": 377310,
+    "maxXp": 379910
+  },
+  {
+    "level": 291,
+    "title": "Platinum Paladin I",
+    "tier": "Platinum Paladin",
+    "tierIndex": 30,
+    "xpRequired": 2610,
+    "minXp": 379910,
+    "maxXp": 382520
+  },
+  {
+    "level": 292,
+    "title": "Platinum Paladin II",
+    "tier": "Platinum Paladin",
+    "tierIndex": 30,
+    "xpRequired": 2620,
+    "minXp": 382520,
+    "maxXp": 385140
+  },
+  {
+    "level": 293,
+    "title": "Platinum Paladin III",
+    "tier": "Platinum Paladin",
+    "tierIndex": 30,
+    "xpRequired": 2630,
+    "minXp": 385140,
+    "maxXp": 387770
+  },
+  {
+    "level": 294,
+    "title": "Platinum Paladin IV",
+    "tier": "Platinum Paladin",
+    "tierIndex": 30,
+    "xpRequired": 2635,
+    "minXp": 387770,
+    "maxXp": 390405
+  },
+  {
+    "level": 295,
+    "title": "Platinum Paladin V",
+    "tier": "Platinum Paladin",
+    "tierIndex": 30,
+    "xpRequired": 2645,
+    "minXp": 390405,
+    "maxXp": 393050
+  },
+  {
+    "level": 296,
+    "title": "Platinum Paladin VI",
+    "tier": "Platinum Paladin",
+    "tierIndex": 30,
+    "xpRequired": 2655,
+    "minXp": 393050,
+    "maxXp": 395705
+  },
+  {
+    "level": 297,
+    "title": "Platinum Paladin VII",
+    "tier": "Platinum Paladin",
+    "tierIndex": 30,
+    "xpRequired": 2665,
+    "minXp": 395705,
+    "maxXp": 398370
+  },
+  {
+    "level": 298,
+    "title": "Platinum Paladin VIII",
+    "tier": "Platinum Paladin",
+    "tierIndex": 30,
+    "xpRequired": 2675,
+    "minXp": 398370,
+    "maxXp": 401045
+  },
+  {
+    "level": 299,
+    "title": "Platinum Paladin IX",
+    "tier": "Platinum Paladin",
+    "tierIndex": 30,
+    "xpRequired": 2680,
+    "minXp": 401045,
+    "maxXp": 403725
+  },
+  {
+    "level": 300,
+    "title": "Platinum Paladin X",
+    "tier": "Platinum Paladin",
+    "tierIndex": 30,
+    "xpRequired": 2690,
+    "minXp": 403725,
+    "maxXp": 406415
+  },
+  {
+    "level": 301,
+    "title": "Platinum Champion I",
+    "tier": "Platinum Champion",
+    "tierIndex": 31,
+    "xpRequired": 2700,
+    "minXp": 406415,
+    "maxXp": 409115
+  },
+  {
+    "level": 302,
+    "title": "Platinum Champion II",
+    "tier": "Platinum Champion",
+    "tierIndex": 31,
+    "xpRequired": 2710,
+    "minXp": 409115,
+    "maxXp": 411825
+  },
+  {
+    "level": 303,
+    "title": "Platinum Champion III",
+    "tier": "Platinum Champion",
+    "tierIndex": 31,
+    "xpRequired": 2720,
+    "minXp": 411825,
+    "maxXp": 414545
+  },
+  {
+    "level": 304,
+    "title": "Platinum Champion IV",
+    "tier": "Platinum Champion",
+    "tierIndex": 31,
+    "xpRequired": 2725,
+    "minXp": 414545,
+    "maxXp": 417270
+  },
+  {
+    "level": 305,
+    "title": "Platinum Champion V",
+    "tier": "Platinum Champion",
+    "tierIndex": 31,
+    "xpRequired": 2735,
+    "minXp": 417270,
+    "maxXp": 420005
+  },
+  {
+    "level": 306,
+    "title": "Platinum Champion VI",
+    "tier": "Platinum Champion",
+    "tierIndex": 31,
+    "xpRequired": 2745,
+    "minXp": 420005,
+    "maxXp": 422750
+  },
+  {
+    "level": 307,
+    "title": "Platinum Champion VII",
+    "tier": "Platinum Champion",
+    "tierIndex": 31,
+    "xpRequired": 2755,
+    "minXp": 422750,
+    "maxXp": 425505
+  },
+  {
+    "level": 308,
+    "title": "Platinum Champion VIII",
+    "tier": "Platinum Champion",
+    "tierIndex": 31,
+    "xpRequired": 2765,
+    "minXp": 425505,
+    "maxXp": 428270
+  },
+  {
+    "level": 309,
+    "title": "Platinum Champion IX",
+    "tier": "Platinum Champion",
+    "tierIndex": 31,
+    "xpRequired": 2775,
+    "minXp": 428270,
+    "maxXp": 431045
+  },
+  {
+    "level": 310,
+    "title": "Platinum Champion X",
+    "tier": "Platinum Champion",
+    "tierIndex": 31,
+    "xpRequired": 2780,
+    "minXp": 431045,
+    "maxXp": 433825
+  },
+  {
+    "level": 311,
+    "title": "Diamond Striker I",
+    "tier": "Diamond Striker",
+    "tierIndex": 32,
+    "xpRequired": 2790,
+    "minXp": 433825,
+    "maxXp": 436615
+  },
+  {
+    "level": 312,
+    "title": "Diamond Striker II",
+    "tier": "Diamond Striker",
+    "tierIndex": 32,
+    "xpRequired": 2800,
+    "minXp": 436615,
+    "maxXp": 439415
+  },
+  {
+    "level": 313,
+    "title": "Diamond Striker III",
+    "tier": "Diamond Striker",
+    "tierIndex": 32,
+    "xpRequired": 2810,
+    "minXp": 439415,
+    "maxXp": 442225
+  },
+  {
+    "level": 314,
+    "title": "Diamond Striker IV",
+    "tier": "Diamond Striker",
+    "tierIndex": 32,
+    "xpRequired": 2820,
+    "minXp": 442225,
+    "maxXp": 445045
+  },
+  {
+    "level": 315,
+    "title": "Diamond Striker V",
+    "tier": "Diamond Striker",
+    "tierIndex": 32,
+    "xpRequired": 2825,
+    "minXp": 445045,
+    "maxXp": 447870
+  },
+  {
+    "level": 316,
+    "title": "Diamond Striker VI",
+    "tier": "Diamond Striker",
+    "tierIndex": 32,
+    "xpRequired": 2835,
+    "minXp": 447870,
+    "maxXp": 450705
+  },
+  {
+    "level": 317,
+    "title": "Diamond Striker VII",
+    "tier": "Diamond Striker",
+    "tierIndex": 32,
+    "xpRequired": 2845,
+    "minXp": 450705,
+    "maxXp": 453550
+  },
+  {
+    "level": 318,
+    "title": "Diamond Striker VIII",
+    "tier": "Diamond Striker",
+    "tierIndex": 32,
+    "xpRequired": 2855,
+    "minXp": 453550,
+    "maxXp": 456405
+  },
+  {
+    "level": 319,
+    "title": "Diamond Striker IX",
+    "tier": "Diamond Striker",
+    "tierIndex": 32,
+    "xpRequired": 2865,
+    "minXp": 456405,
+    "maxXp": 459270
+  },
+  {
+    "level": 320,
+    "title": "Diamond Striker X",
+    "tier": "Diamond Striker",
+    "tierIndex": 32,
+    "xpRequired": 2875,
+    "minXp": 459270,
+    "maxXp": 462145
+  },
+  {
+    "level": 321,
+    "title": "Diamond Guard I",
+    "tier": "Diamond Guard",
+    "tierIndex": 33,
+    "xpRequired": 2880,
+    "minXp": 462145,
+    "maxXp": 465025
+  },
+  {
+    "level": 322,
+    "title": "Diamond Guard II",
+    "tier": "Diamond Guard",
+    "tierIndex": 33,
+    "xpRequired": 2890,
+    "minXp": 465025,
+    "maxXp": 467915
+  },
+  {
+    "level": 323,
+    "title": "Diamond Guard III",
+    "tier": "Diamond Guard",
+    "tierIndex": 33,
+    "xpRequired": 2900,
+    "minXp": 467915,
+    "maxXp": 470815
+  },
+  {
+    "level": 324,
+    "title": "Diamond Guard IV",
+    "tier": "Diamond Guard",
+    "tierIndex": 33,
+    "xpRequired": 2910,
+    "minXp": 470815,
+    "maxXp": 473725
+  },
+  {
+    "level": 325,
+    "title": "Diamond Guard V",
+    "tier": "Diamond Guard",
+    "tierIndex": 33,
+    "xpRequired": 2920,
+    "minXp": 473725,
+    "maxXp": 476645
+  },
+  {
+    "level": 326,
+    "title": "Diamond Guard VI",
+    "tier": "Diamond Guard",
+    "tierIndex": 33,
+    "xpRequired": 2930,
+    "minXp": 476645,
+    "maxXp": 479575
+  },
+  {
+    "level": 327,
+    "title": "Diamond Guard VII",
+    "tier": "Diamond Guard",
+    "tierIndex": 33,
+    "xpRequired": 2935,
+    "minXp": 479575,
+    "maxXp": 482510
+  },
+  {
+    "level": 328,
+    "title": "Diamond Guard VIII",
+    "tier": "Diamond Guard",
+    "tierIndex": 33,
+    "xpRequired": 2945,
+    "minXp": 482510,
+    "maxXp": 485455
+  },
+  {
+    "level": 329,
+    "title": "Diamond Guard IX",
+    "tier": "Diamond Guard",
+    "tierIndex": 33,
+    "xpRequired": 2955,
+    "minXp": 485455,
+    "maxXp": 488410
+  },
+  {
+    "level": 330,
+    "title": "Diamond Guard X",
+    "tier": "Diamond Guard",
+    "tierIndex": 33,
+    "xpRequired": 2965,
+    "minXp": 488410,
+    "maxXp": 491375
+  },
+  {
+    "level": 331,
+    "title": "Diamond Knight I",
+    "tier": "Diamond Knight",
+    "tierIndex": 34,
+    "xpRequired": 2975,
+    "minXp": 491375,
+    "maxXp": 494350
+  },
+  {
+    "level": 332,
+    "title": "Diamond Knight II",
+    "tier": "Diamond Knight",
+    "tierIndex": 34,
+    "xpRequired": 2980,
+    "minXp": 494350,
+    "maxXp": 497330
+  },
+  {
+    "level": 333,
+    "title": "Diamond Knight III",
+    "tier": "Diamond Knight",
+    "tierIndex": 34,
+    "xpRequired": 2990,
+    "minXp": 497330,
+    "maxXp": 500320
+  },
+  {
+    "level": 334,
+    "title": "Diamond Knight IV",
+    "tier": "Diamond Knight",
+    "tierIndex": 34,
+    "xpRequired": 3000,
+    "minXp": 500320,
+    "maxXp": 503320
+  },
+  {
+    "level": 335,
+    "title": "Diamond Knight V",
+    "tier": "Diamond Knight",
+    "tierIndex": 34,
+    "xpRequired": 3010,
+    "minXp": 503320,
+    "maxXp": 506330
+  },
+  {
+    "level": 336,
+    "title": "Diamond Knight VI",
+    "tier": "Diamond Knight",
+    "tierIndex": 34,
+    "xpRequired": 3020,
+    "minXp": 506330,
+    "maxXp": 509350
+  },
+  {
+    "level": 337,
+    "title": "Diamond Knight VII",
+    "tier": "Diamond Knight",
+    "tierIndex": 34,
+    "xpRequired": 3030,
+    "minXp": 509350,
+    "maxXp": 512380
+  },
+  {
+    "level": 338,
+    "title": "Diamond Knight VIII",
+    "tier": "Diamond Knight",
+    "tierIndex": 34,
+    "xpRequired": 3035,
+    "minXp": 512380,
+    "maxXp": 515415
+  },
+  {
+    "level": 339,
+    "title": "Diamond Knight IX",
+    "tier": "Diamond Knight",
+    "tierIndex": 34,
+    "xpRequired": 3045,
+    "minXp": 515415,
+    "maxXp": 518460
+  },
+  {
+    "level": 340,
+    "title": "Diamond Knight X",
+    "tier": "Diamond Knight",
+    "tierIndex": 34,
+    "xpRequired": 3055,
+    "minXp": 518460,
+    "maxXp": 521515
+  },
+  {
+    "level": 341,
+    "title": "Diamond Vanguard I",
+    "tier": "Diamond Vanguard",
+    "tierIndex": 35,
+    "xpRequired": 3065,
+    "minXp": 521515,
+    "maxXp": 524580
+  },
+  {
+    "level": 342,
+    "title": "Diamond Vanguard II",
+    "tier": "Diamond Vanguard",
+    "tierIndex": 35,
+    "xpRequired": 3075,
+    "minXp": 524580,
+    "maxXp": 527655
+  },
+  {
+    "level": 343,
+    "title": "Diamond Vanguard III",
+    "tier": "Diamond Vanguard",
+    "tierIndex": 35,
+    "xpRequired": 3080,
+    "minXp": 527655,
+    "maxXp": 530735
+  },
+  {
+    "level": 344,
+    "title": "Diamond Vanguard IV",
+    "tier": "Diamond Vanguard",
+    "tierIndex": 35,
+    "xpRequired": 3090,
+    "minXp": 530735,
+    "maxXp": 533825
+  },
+  {
+    "level": 345,
+    "title": "Diamond Vanguard V",
+    "tier": "Diamond Vanguard",
+    "tierIndex": 35,
+    "xpRequired": 3100,
+    "minXp": 533825,
+    "maxXp": 536925
+  },
+  {
+    "level": 346,
+    "title": "Diamond Vanguard VI",
+    "tier": "Diamond Vanguard",
+    "tierIndex": 35,
+    "xpRequired": 3110,
+    "minXp": 536925,
+    "maxXp": 540035
+  },
+  {
+    "level": 347,
+    "title": "Diamond Vanguard VII",
+    "tier": "Diamond Vanguard",
+    "tierIndex": 35,
+    "xpRequired": 3120,
+    "minXp": 540035,
+    "maxXp": 543155
+  },
+  {
+    "level": 348,
+    "title": "Diamond Vanguard VIII",
+    "tier": "Diamond Vanguard",
+    "tierIndex": 35,
+    "xpRequired": 3130,
+    "minXp": 543155,
+    "maxXp": 546285
+  },
+  {
+    "level": 349,
+    "title": "Diamond Vanguard IX",
+    "tier": "Diamond Vanguard",
+    "tierIndex": 35,
+    "xpRequired": 3135,
+    "minXp": 546285,
+    "maxXp": 549420
+  },
+  {
+    "level": 350,
+    "title": "Diamond Vanguard X",
+    "tier": "Diamond Vanguard",
+    "tierIndex": 35,
+    "xpRequired": 3145,
+    "minXp": 549420,
+    "maxXp": 552565
+  },
+  {
+    "level": 351,
+    "title": "Diamond Champion I",
+    "tier": "Diamond Champion",
+    "tierIndex": 36,
+    "xpRequired": 3155,
+    "minXp": 552565,
+    "maxXp": 555720
+  },
+  {
+    "level": 352,
+    "title": "Diamond Champion II",
+    "tier": "Diamond Champion",
+    "tierIndex": 36,
+    "xpRequired": 3165,
+    "minXp": 555720,
+    "maxXp": 558885
+  },
+  {
+    "level": 353,
+    "title": "Diamond Champion III",
+    "tier": "Diamond Champion",
+    "tierIndex": 36,
+    "xpRequired": 3175,
+    "minXp": 558885,
+    "maxXp": 562060
+  },
+  {
+    "level": 354,
+    "title": "Diamond Champion IV",
+    "tier": "Diamond Champion",
+    "tierIndex": 36,
+    "xpRequired": 3185,
+    "minXp": 562060,
+    "maxXp": 565245
+  },
+  {
+    "level": 355,
+    "title": "Diamond Champion V",
+    "tier": "Diamond Champion",
+    "tierIndex": 36,
+    "xpRequired": 3190,
+    "minXp": 565245,
+    "maxXp": 568435
+  },
+  {
+    "level": 356,
+    "title": "Diamond Champion VI",
+    "tier": "Diamond Champion",
+    "tierIndex": 36,
+    "xpRequired": 3200,
+    "minXp": 568435,
+    "maxXp": 571635
+  },
+  {
+    "level": 357,
+    "title": "Diamond Champion VII",
+    "tier": "Diamond Champion",
+    "tierIndex": 36,
+    "xpRequired": 3210,
+    "minXp": 571635,
+    "maxXp": 574845
+  },
+  {
+    "level": 358,
+    "title": "Diamond Champion VIII",
+    "tier": "Diamond Champion",
+    "tierIndex": 36,
+    "xpRequired": 3220,
+    "minXp": 574845,
+    "maxXp": 578065
+  },
+  {
+    "level": 359,
+    "title": "Diamond Champion IX",
+    "tier": "Diamond Champion",
+    "tierIndex": 36,
+    "xpRequired": 3230,
+    "minXp": 578065,
+    "maxXp": 581295
+  },
+  {
+    "level": 360,
+    "title": "Diamond Champion X",
+    "tier": "Diamond Champion",
+    "tierIndex": 36,
+    "xpRequired": 3240,
+    "minXp": 581295,
+    "maxXp": 584535
+  },
+  {
+    "level": 361,
+    "title": "Emerald Ranger I",
+    "tier": "Emerald Ranger",
+    "tierIndex": 37,
+    "xpRequired": 3245,
+    "minXp": 584535,
+    "maxXp": 587780
+  },
+  {
+    "level": 362,
+    "title": "Emerald Ranger II",
+    "tier": "Emerald Ranger",
+    "tierIndex": 37,
+    "xpRequired": 3255,
+    "minXp": 587780,
+    "maxXp": 591035
+  },
+  {
+    "level": 363,
+    "title": "Emerald Ranger III",
+    "tier": "Emerald Ranger",
+    "tierIndex": 37,
+    "xpRequired": 3265,
+    "minXp": 591035,
+    "maxXp": 594300
+  },
+  {
+    "level": 364,
+    "title": "Emerald Ranger IV",
+    "tier": "Emerald Ranger",
+    "tierIndex": 37,
+    "xpRequired": 3275,
+    "minXp": 594300,
+    "maxXp": 597575
+  },
+  {
+    "level": 365,
+    "title": "Emerald Ranger V",
+    "tier": "Emerald Ranger",
+    "tierIndex": 37,
+    "xpRequired": 3285,
+    "minXp": 597575,
+    "maxXp": 600860
+  },
+  {
+    "level": 366,
+    "title": "Emerald Ranger VI",
+    "tier": "Emerald Ranger",
+    "tierIndex": 37,
+    "xpRequired": 3295,
+    "minXp": 600860,
+    "maxXp": 604155
+  },
+  {
+    "level": 367,
+    "title": "Emerald Ranger VII",
+    "tier": "Emerald Ranger",
+    "tierIndex": 37,
+    "xpRequired": 3300,
+    "minXp": 604155,
+    "maxXp": 607455
+  },
+  {
+    "level": 368,
+    "title": "Emerald Ranger VIII",
+    "tier": "Emerald Ranger",
+    "tierIndex": 37,
+    "xpRequired": 3310,
+    "minXp": 607455,
+    "maxXp": 610765
+  },
+  {
+    "level": 369,
+    "title": "Emerald Ranger IX",
+    "tier": "Emerald Ranger",
+    "tierIndex": 37,
+    "xpRequired": 3320,
+    "minXp": 610765,
+    "maxXp": 614085
+  },
+  {
+    "level": 370,
+    "title": "Emerald Ranger X",
+    "tier": "Emerald Ranger",
+    "tierIndex": 37,
+    "xpRequired": 3330,
+    "minXp": 614085,
+    "maxXp": 617415
+  },
+  {
+    "level": 371,
+    "title": "Emerald Warrior I",
+    "tier": "Emerald Warrior",
+    "tierIndex": 38,
+    "xpRequired": 3340,
+    "minXp": 617415,
+    "maxXp": 620755
+  },
+  {
+    "level": 372,
+    "title": "Emerald Warrior II",
+    "tier": "Emerald Warrior",
+    "tierIndex": 38,
+    "xpRequired": 3345,
+    "minXp": 620755,
+    "maxXp": 624100
+  },
+  {
+    "level": 373,
+    "title": "Emerald Warrior III",
+    "tier": "Emerald Warrior",
+    "tierIndex": 38,
+    "xpRequired": 3355,
+    "minXp": 624100,
+    "maxXp": 627455
+  },
+  {
+    "level": 374,
+    "title": "Emerald Warrior IV",
+    "tier": "Emerald Warrior",
+    "tierIndex": 38,
+    "xpRequired": 3365,
+    "minXp": 627455,
+    "maxXp": 630820
+  },
+  {
+    "level": 375,
+    "title": "Emerald Warrior V",
+    "tier": "Emerald Warrior",
+    "tierIndex": 38,
+    "xpRequired": 3375,
+    "minXp": 630820,
+    "maxXp": 634195
+  },
+  {
+    "level": 376,
+    "title": "Emerald Warrior VI",
+    "tier": "Emerald Warrior",
+    "tierIndex": 38,
+    "xpRequired": 3385,
+    "minXp": 634195,
+    "maxXp": 637580
+  },
+  {
+    "level": 377,
+    "title": "Emerald Warrior VII",
+    "tier": "Emerald Warrior",
+    "tierIndex": 38,
+    "xpRequired": 3395,
+    "minXp": 637580,
+    "maxXp": 640975
+  },
+  {
+    "level": 378,
+    "title": "Emerald Warrior VIII",
+    "tier": "Emerald Warrior",
+    "tierIndex": 38,
+    "xpRequired": 3400,
+    "minXp": 640975,
+    "maxXp": 644375
+  },
+  {
+    "level": 379,
+    "title": "Emerald Warrior IX",
+    "tier": "Emerald Warrior",
+    "tierIndex": 38,
+    "xpRequired": 3410,
+    "minXp": 644375,
+    "maxXp": 647785
+  },
+  {
+    "level": 380,
+    "title": "Emerald Warrior X",
+    "tier": "Emerald Warrior",
+    "tierIndex": 38,
+    "xpRequired": 3420,
+    "minXp": 647785,
+    "maxXp": 651205
+  },
+  {
+    "level": 381,
+    "title": "Emerald Knight I",
+    "tier": "Emerald Knight",
+    "tierIndex": 39,
+    "xpRequired": 3430,
+    "minXp": 651205,
+    "maxXp": 654635
+  },
+  {
+    "level": 382,
+    "title": "Emerald Knight II",
+    "tier": "Emerald Knight",
+    "tierIndex": 39,
+    "xpRequired": 3440,
+    "minXp": 654635,
+    "maxXp": 658075
+  },
+  {
+    "level": 383,
+    "title": "Emerald Knight III",
+    "tier": "Emerald Knight",
+    "tierIndex": 39,
+    "xpRequired": 3450,
+    "minXp": 658075,
+    "maxXp": 661525
+  },
+  {
+    "level": 384,
+    "title": "Emerald Knight IV",
+    "tier": "Emerald Knight",
+    "tierIndex": 39,
+    "xpRequired": 3455,
+    "minXp": 661525,
+    "maxXp": 664980
+  },
+  {
+    "level": 385,
+    "title": "Emerald Knight V",
+    "tier": "Emerald Knight",
+    "tierIndex": 39,
+    "xpRequired": 3465,
+    "minXp": 664980,
+    "maxXp": 668445
+  },
+  {
+    "level": 386,
+    "title": "Emerald Knight VI",
+    "tier": "Emerald Knight",
+    "tierIndex": 39,
+    "xpRequired": 3475,
+    "minXp": 668445,
+    "maxXp": 671920
+  },
+  {
+    "level": 387,
+    "title": "Emerald Knight VII",
+    "tier": "Emerald Knight",
+    "tierIndex": 39,
+    "xpRequired": 3485,
+    "minXp": 671920,
+    "maxXp": 675405
+  },
+  {
+    "level": 388,
+    "title": "Emerald Knight VIII",
+    "tier": "Emerald Knight",
+    "tierIndex": 39,
+    "xpRequired": 3495,
+    "minXp": 675405,
+    "maxXp": 678900
+  },
+  {
+    "level": 389,
+    "title": "Emerald Knight IX",
+    "tier": "Emerald Knight",
+    "tierIndex": 39,
+    "xpRequired": 3505,
+    "minXp": 678900,
+    "maxXp": 682405
+  },
+  {
+    "level": 390,
+    "title": "Emerald Knight X",
+    "tier": "Emerald Knight",
+    "tierIndex": 39,
+    "xpRequired": 3510,
+    "minXp": 682405,
+    "maxXp": 685915
+  },
+  {
+    "level": 391,
+    "title": "Emerald Champion I",
+    "tier": "Emerald Champion",
+    "tierIndex": 40,
+    "xpRequired": 3520,
+    "minXp": 685915,
+    "maxXp": 689435
+  },
+  {
+    "level": 392,
+    "title": "Emerald Champion II",
+    "tier": "Emerald Champion",
+    "tierIndex": 40,
+    "xpRequired": 3530,
+    "minXp": 689435,
+    "maxXp": 692965
+  },
+  {
+    "level": 393,
+    "title": "Emerald Champion III",
+    "tier": "Emerald Champion",
+    "tierIndex": 40,
+    "xpRequired": 3540,
+    "minXp": 692965,
+    "maxXp": 696505
+  },
+  {
+    "level": 394,
+    "title": "Emerald Champion IV",
+    "tier": "Emerald Champion",
+    "tierIndex": 40,
+    "xpRequired": 3550,
+    "minXp": 696505,
+    "maxXp": 700055
+  },
+  {
+    "level": 395,
+    "title": "Emerald Champion V",
+    "tier": "Emerald Champion",
+    "tierIndex": 40,
+    "xpRequired": 3560,
+    "minXp": 700055,
+    "maxXp": 703615
+  },
+  {
+    "level": 396,
+    "title": "Emerald Champion VI",
+    "tier": "Emerald Champion",
+    "tierIndex": 40,
+    "xpRequired": 3565,
+    "minXp": 703615,
+    "maxXp": 707180
+  },
+  {
+    "level": 397,
+    "title": "Emerald Champion VII",
+    "tier": "Emerald Champion",
+    "tierIndex": 40,
+    "xpRequired": 3575,
+    "minXp": 707180,
+    "maxXp": 710755
+  },
+  {
+    "level": 398,
+    "title": "Emerald Champion VIII",
+    "tier": "Emerald Champion",
+    "tierIndex": 40,
+    "xpRequired": 3585,
+    "minXp": 710755,
+    "maxXp": 714340
+  },
+  {
+    "level": 399,
+    "title": "Emerald Champion IX",
+    "tier": "Emerald Champion",
+    "tierIndex": 40,
+    "xpRequired": 3595,
+    "minXp": 714340,
+    "maxXp": 717935
+  },
+  {
+    "level": 400,
+    "title": "Emerald Champion X",
+    "tier": "Emerald Champion",
+    "tierIndex": 40,
+    "xpRequired": 3605,
+    "minXp": 717935,
+    "maxXp": 721540
+  },
+  {
+    "level": 401,
+    "title": "Ruby Berserker I",
+    "tier": "Ruby Berserker",
+    "tierIndex": 41,
+    "xpRequired": 3615,
+    "minXp": 721540,
+    "maxXp": 725155
+  },
+  {
+    "level": 402,
+    "title": "Ruby Berserker II",
+    "tier": "Ruby Berserker",
+    "tierIndex": 41,
+    "xpRequired": 3620,
+    "minXp": 725155,
+    "maxXp": 728775
+  },
+  {
+    "level": 403,
+    "title": "Ruby Berserker III",
+    "tier": "Ruby Berserker",
+    "tierIndex": 41,
+    "xpRequired": 3630,
+    "minXp": 728775,
+    "maxXp": 732405
+  },
+  {
+    "level": 404,
+    "title": "Ruby Berserker IV",
+    "tier": "Ruby Berserker",
+    "tierIndex": 41,
+    "xpRequired": 3640,
+    "minXp": 732405,
+    "maxXp": 736045
+  },
+  {
+    "level": 405,
+    "title": "Ruby Berserker V",
+    "tier": "Ruby Berserker",
+    "tierIndex": 41,
+    "xpRequired": 3650,
+    "minXp": 736045,
+    "maxXp": 739695
+  },
+  {
+    "level": 406,
+    "title": "Ruby Berserker VI",
+    "tier": "Ruby Berserker",
+    "tierIndex": 41,
+    "xpRequired": 3660,
+    "minXp": 739695,
+    "maxXp": 743355
+  },
+  {
+    "level": 407,
+    "title": "Ruby Berserker VII",
+    "tier": "Ruby Berserker",
+    "tierIndex": 41,
+    "xpRequired": 3670,
+    "minXp": 743355,
+    "maxXp": 747025
+  },
+  {
+    "level": 408,
+    "title": "Ruby Berserker VIII",
+    "tier": "Ruby Berserker",
+    "tierIndex": 41,
+    "xpRequired": 3675,
+    "minXp": 747025,
+    "maxXp": 750700
+  },
+  {
+    "level": 409,
+    "title": "Ruby Berserker IX",
+    "tier": "Ruby Berserker",
+    "tierIndex": 41,
+    "xpRequired": 3685,
+    "minXp": 750700,
+    "maxXp": 754385
+  },
+  {
+    "level": 410,
+    "title": "Ruby Berserker X",
+    "tier": "Ruby Berserker",
+    "tierIndex": 41,
+    "xpRequired": 3695,
+    "minXp": 754385,
+    "maxXp": 758080
+  },
+  {
+    "level": 411,
+    "title": "Ruby Slayer I",
+    "tier": "Ruby Slayer",
+    "tierIndex": 42,
+    "xpRequired": 3705,
+    "minXp": 758080,
+    "maxXp": 761785
+  },
+  {
+    "level": 412,
+    "title": "Ruby Slayer II",
+    "tier": "Ruby Slayer",
+    "tierIndex": 42,
+    "xpRequired": 3715,
+    "minXp": 761785,
+    "maxXp": 765500
+  },
+  {
+    "level": 413,
+    "title": "Ruby Slayer III",
+    "tier": "Ruby Slayer",
+    "tierIndex": 42,
+    "xpRequired": 3725,
+    "minXp": 765500,
+    "maxXp": 769225
+  },
+  {
+    "level": 414,
+    "title": "Ruby Slayer IV",
+    "tier": "Ruby Slayer",
+    "tierIndex": 42,
+    "xpRequired": 3735,
+    "minXp": 769225,
+    "maxXp": 772960
+  },
+  {
+    "level": 415,
+    "title": "Ruby Slayer V",
+    "tier": "Ruby Slayer",
+    "tierIndex": 42,
+    "xpRequired": 3740,
+    "minXp": 772960,
+    "maxXp": 776700
+  },
+  {
+    "level": 416,
+    "title": "Ruby Slayer VI",
+    "tier": "Ruby Slayer",
+    "tierIndex": 42,
+    "xpRequired": 3750,
+    "minXp": 776700,
+    "maxXp": 780450
+  },
+  {
+    "level": 417,
+    "title": "Ruby Slayer VII",
+    "tier": "Ruby Slayer",
+    "tierIndex": 42,
+    "xpRequired": 3760,
+    "minXp": 780450,
+    "maxXp": 784210
+  },
+  {
+    "level": 418,
+    "title": "Ruby Slayer VIII",
+    "tier": "Ruby Slayer",
+    "tierIndex": 42,
+    "xpRequired": 3770,
+    "minXp": 784210,
+    "maxXp": 787980
+  },
+  {
+    "level": 419,
+    "title": "Ruby Slayer IX",
+    "tier": "Ruby Slayer",
+    "tierIndex": 42,
+    "xpRequired": 3780,
+    "minXp": 787980,
+    "maxXp": 791760
+  },
+  {
+    "level": 420,
+    "title": "Ruby Slayer X",
+    "tier": "Ruby Slayer",
+    "tierIndex": 42,
+    "xpRequired": 3790,
+    "minXp": 791760,
+    "maxXp": 795550
+  },
+  {
+    "level": 421,
+    "title": "Ruby Knight I",
+    "tier": "Ruby Knight",
+    "tierIndex": 43,
+    "xpRequired": 3795,
+    "minXp": 795550,
+    "maxXp": 799345
+  },
+  {
+    "level": 422,
+    "title": "Ruby Knight II",
+    "tier": "Ruby Knight",
+    "tierIndex": 43,
+    "xpRequired": 3805,
+    "minXp": 799345,
+    "maxXp": 803150
+  },
+  {
+    "level": 423,
+    "title": "Ruby Knight III",
+    "tier": "Ruby Knight",
+    "tierIndex": 43,
+    "xpRequired": 3815,
+    "minXp": 803150,
+    "maxXp": 806965
+  },
+  {
+    "level": 424,
+    "title": "Ruby Knight IV",
+    "tier": "Ruby Knight",
+    "tierIndex": 43,
+    "xpRequired": 3825,
+    "minXp": 806965,
+    "maxXp": 810790
+  },
+  {
+    "level": 425,
+    "title": "Ruby Knight V",
+    "tier": "Ruby Knight",
+    "tierIndex": 43,
+    "xpRequired": 3835,
+    "minXp": 810790,
+    "maxXp": 814625
+  },
+  {
+    "level": 426,
+    "title": "Ruby Knight VI",
+    "tier": "Ruby Knight",
+    "tierIndex": 43,
+    "xpRequired": 3845,
+    "minXp": 814625,
+    "maxXp": 818470
+  },
+  {
+    "level": 427,
+    "title": "Ruby Knight VII",
+    "tier": "Ruby Knight",
+    "tierIndex": 43,
+    "xpRequired": 3850,
+    "minXp": 818470,
+    "maxXp": 822320
+  },
+  {
+    "level": 428,
+    "title": "Ruby Knight VIII",
+    "tier": "Ruby Knight",
+    "tierIndex": 43,
+    "xpRequired": 3860,
+    "minXp": 822320,
+    "maxXp": 826180
+  },
+  {
+    "level": 429,
+    "title": "Ruby Knight IX",
+    "tier": "Ruby Knight",
+    "tierIndex": 43,
+    "xpRequired": 3870,
+    "minXp": 826180,
+    "maxXp": 830050
+  },
+  {
+    "level": 430,
+    "title": "Ruby Knight X",
+    "tier": "Ruby Knight",
+    "tierIndex": 43,
+    "xpRequired": 3880,
+    "minXp": 830050,
+    "maxXp": 833930
+  },
+  {
+    "level": 431,
+    "title": "Ruby Champion I",
+    "tier": "Ruby Champion",
+    "tierIndex": 44,
+    "xpRequired": 3890,
+    "minXp": 833930,
+    "maxXp": 837820
+  },
+  {
+    "level": 432,
+    "title": "Ruby Champion II",
+    "tier": "Ruby Champion",
+    "tierIndex": 44,
+    "xpRequired": 3900,
+    "minXp": 837820,
+    "maxXp": 841720
+  },
+  {
+    "level": 433,
+    "title": "Ruby Champion III",
+    "tier": "Ruby Champion",
+    "tierIndex": 44,
+    "xpRequired": 3905,
+    "minXp": 841720,
+    "maxXp": 845625
+  },
+  {
+    "level": 434,
+    "title": "Ruby Champion IV",
+    "tier": "Ruby Champion",
+    "tierIndex": 44,
+    "xpRequired": 3915,
+    "minXp": 845625,
+    "maxXp": 849540
+  },
+  {
+    "level": 435,
+    "title": "Ruby Champion V",
+    "tier": "Ruby Champion",
+    "tierIndex": 44,
+    "xpRequired": 3925,
+    "minXp": 849540,
+    "maxXp": 853465
+  },
+  {
+    "level": 436,
+    "title": "Ruby Champion VI",
+    "tier": "Ruby Champion",
+    "tierIndex": 44,
+    "xpRequired": 3935,
+    "minXp": 853465,
+    "maxXp": 857400
+  },
+  {
+    "level": 437,
+    "title": "Ruby Champion VII",
+    "tier": "Ruby Champion",
+    "tierIndex": 44,
+    "xpRequired": 3945,
+    "minXp": 857400,
+    "maxXp": 861345
+  },
+  {
+    "level": 438,
+    "title": "Ruby Champion VIII",
+    "tier": "Ruby Champion",
+    "tierIndex": 44,
+    "xpRequired": 3955,
+    "minXp": 861345,
+    "maxXp": 865300
+  },
+  {
+    "level": 439,
+    "title": "Ruby Champion IX",
+    "tier": "Ruby Champion",
+    "tierIndex": 44,
+    "xpRequired": 3965,
+    "minXp": 865300,
+    "maxXp": 869265
+  },
+  {
+    "level": 440,
+    "title": "Ruby Champion X",
+    "tier": "Ruby Champion",
+    "tierIndex": 44,
+    "xpRequired": 3970,
+    "minXp": 869265,
+    "maxXp": 873235
+  },
+  {
+    "level": 441,
+    "title": "Sapphire Scout I",
+    "tier": "Sapphire Scout",
+    "tierIndex": 45,
+    "xpRequired": 3980,
+    "minXp": 873235,
+    "maxXp": 877215
+  },
+  {
+    "level": 442,
+    "title": "Sapphire Scout II",
+    "tier": "Sapphire Scout",
+    "tierIndex": 45,
+    "xpRequired": 3990,
+    "minXp": 877215,
+    "maxXp": 881205
+  },
+  {
+    "level": 443,
+    "title": "Sapphire Scout III",
+    "tier": "Sapphire Scout",
+    "tierIndex": 45,
+    "xpRequired": 4000,
+    "minXp": 881205,
+    "maxXp": 885205
+  },
+  {
+    "level": 444,
+    "title": "Sapphire Scout IV",
+    "tier": "Sapphire Scout",
+    "tierIndex": 45,
+    "xpRequired": 4010,
+    "minXp": 885205,
+    "maxXp": 889215
+  },
+  {
+    "level": 445,
+    "title": "Sapphire Scout V",
+    "tier": "Sapphire Scout",
+    "tierIndex": 45,
+    "xpRequired": 4020,
+    "minXp": 889215,
+    "maxXp": 893235
+  },
+  {
+    "level": 446,
+    "title": "Sapphire Scout VI",
+    "tier": "Sapphire Scout",
+    "tierIndex": 45,
+    "xpRequired": 4025,
+    "minXp": 893235,
+    "maxXp": 897260
+  },
+  {
+    "level": 447,
+    "title": "Sapphire Scout VII",
+    "tier": "Sapphire Scout",
+    "tierIndex": 45,
+    "xpRequired": 4035,
+    "minXp": 897260,
+    "maxXp": 901295
+  },
+  {
+    "level": 448,
+    "title": "Sapphire Scout VIII",
+    "tier": "Sapphire Scout",
+    "tierIndex": 45,
+    "xpRequired": 4045,
+    "minXp": 901295,
+    "maxXp": 905340
+  },
+  {
+    "level": 449,
+    "title": "Sapphire Scout IX",
+    "tier": "Sapphire Scout",
+    "tierIndex": 45,
+    "xpRequired": 4055,
+    "minXp": 905340,
+    "maxXp": 909395
+  },
+  {
+    "level": 450,
+    "title": "Sapphire Scout X",
+    "tier": "Sapphire Scout",
+    "tierIndex": 45,
+    "xpRequired": 4065,
+    "minXp": 909395,
+    "maxXp": 913460
+  },
+  {
+    "level": 451,
+    "title": "Sapphire Guardian I",
+    "tier": "Sapphire Guardian",
+    "tierIndex": 46,
+    "xpRequired": 4075,
+    "minXp": 913460,
+    "maxXp": 917535
+  },
+  {
+    "level": 452,
+    "title": "Sapphire Guardian II",
+    "tier": "Sapphire Guardian",
+    "tierIndex": 46,
+    "xpRequired": 4080,
+    "minXp": 917535,
+    "maxXp": 921615
+  },
+  {
+    "level": 453,
+    "title": "Sapphire Guardian III",
+    "tier": "Sapphire Guardian",
+    "tierIndex": 46,
+    "xpRequired": 4090,
+    "minXp": 921615,
+    "maxXp": 925705
+  },
+  {
+    "level": 454,
+    "title": "Sapphire Guardian IV",
+    "tier": "Sapphire Guardian",
+    "tierIndex": 46,
+    "xpRequired": 4100,
+    "minXp": 925705,
+    "maxXp": 929805
+  },
+  {
+    "level": 455,
+    "title": "Sapphire Guardian V",
+    "tier": "Sapphire Guardian",
+    "tierIndex": 46,
+    "xpRequired": 4110,
+    "minXp": 929805,
+    "maxXp": 933915
+  },
+  {
+    "level": 456,
+    "title": "Sapphire Guardian VI",
+    "tier": "Sapphire Guardian",
+    "tierIndex": 46,
+    "xpRequired": 4120,
+    "minXp": 933915,
+    "maxXp": 938035
+  },
+  {
+    "level": 457,
+    "title": "Sapphire Guardian VII",
+    "tier": "Sapphire Guardian",
+    "tierIndex": 46,
+    "xpRequired": 4130,
+    "minXp": 938035,
+    "maxXp": 942165
+  },
+  {
+    "level": 458,
+    "title": "Sapphire Guardian VIII",
+    "tier": "Sapphire Guardian",
+    "tierIndex": 46,
+    "xpRequired": 4140,
+    "minXp": 942165,
+    "maxXp": 946305
+  },
+  {
+    "level": 459,
+    "title": "Sapphire Guardian IX",
+    "tier": "Sapphire Guardian",
+    "tierIndex": 46,
+    "xpRequired": 4145,
+    "minXp": 946305,
+    "maxXp": 950450
+  },
+  {
+    "level": 460,
+    "title": "Sapphire Guardian X",
+    "tier": "Sapphire Guardian",
+    "tierIndex": 46,
+    "xpRequired": 4155,
+    "minXp": 950450,
+    "maxXp": 954605
+  },
+  {
+    "level": 461,
+    "title": "Sapphire Knight I",
+    "tier": "Sapphire Knight",
+    "tierIndex": 47,
+    "xpRequired": 4165,
+    "minXp": 954605,
+    "maxXp": 958770
+  },
+  {
+    "level": 462,
+    "title": "Sapphire Knight II",
+    "tier": "Sapphire Knight",
+    "tierIndex": 47,
+    "xpRequired": 4175,
+    "minXp": 958770,
+    "maxXp": 962945
+  },
+  {
+    "level": 463,
+    "title": "Sapphire Knight III",
+    "tier": "Sapphire Knight",
+    "tierIndex": 47,
+    "xpRequired": 4185,
+    "minXp": 962945,
+    "maxXp": 967130
+  },
+  {
+    "level": 464,
+    "title": "Sapphire Knight IV",
+    "tier": "Sapphire Knight",
+    "tierIndex": 47,
+    "xpRequired": 4195,
+    "minXp": 967130,
+    "maxXp": 971325
+  },
+  {
+    "level": 465,
+    "title": "Sapphire Knight V",
+    "tier": "Sapphire Knight",
+    "tierIndex": 47,
+    "xpRequired": 4200,
+    "minXp": 971325,
+    "maxXp": 975525
+  },
+  {
+    "level": 466,
+    "title": "Sapphire Knight VI",
+    "tier": "Sapphire Knight",
+    "tierIndex": 47,
+    "xpRequired": 4210,
+    "minXp": 975525,
+    "maxXp": 979735
+  },
+  {
+    "level": 467,
+    "title": "Sapphire Knight VII",
+    "tier": "Sapphire Knight",
+    "tierIndex": 47,
+    "xpRequired": 4220,
+    "minXp": 979735,
+    "maxXp": 983955
+  },
+  {
+    "level": 468,
+    "title": "Sapphire Knight VIII",
+    "tier": "Sapphire Knight",
+    "tierIndex": 47,
+    "xpRequired": 4230,
+    "minXp": 983955,
+    "maxXp": 988185
+  },
+  {
+    "level": 469,
+    "title": "Sapphire Knight IX",
+    "tier": "Sapphire Knight",
+    "tierIndex": 47,
+    "xpRequired": 4240,
+    "minXp": 988185,
+    "maxXp": 992425
+  },
+  {
+    "level": 470,
+    "title": "Sapphire Knight X",
+    "tier": "Sapphire Knight",
+    "tierIndex": 47,
+    "xpRequired": 4250,
+    "minXp": 992425,
+    "maxXp": 996675
+  },
+  {
+    "level": 471,
+    "title": "Sapphire Champion I",
+    "tier": "Sapphire Champion",
+    "tierIndex": 48,
+    "xpRequired": 4260,
+    "minXp": 996675,
+    "maxXp": 1000935
+  },
+  {
+    "level": 472,
+    "title": "Sapphire Champion II",
+    "tier": "Sapphire Champion",
+    "tierIndex": 48,
+    "xpRequired": 4265,
+    "minXp": 1000935,
+    "maxXp": 1005200
+  },
+  {
+    "level": 473,
+    "title": "Sapphire Champion III",
+    "tier": "Sapphire Champion",
+    "tierIndex": 48,
+    "xpRequired": 4275,
+    "minXp": 1005200,
+    "maxXp": 1009475
+  },
+  {
+    "level": 474,
+    "title": "Sapphire Champion IV",
+    "tier": "Sapphire Champion",
+    "tierIndex": 48,
+    "xpRequired": 4285,
+    "minXp": 1009475,
+    "maxXp": 1013760
+  },
+  {
+    "level": 475,
+    "title": "Sapphire Champion V",
+    "tier": "Sapphire Champion",
+    "tierIndex": 48,
+    "xpRequired": 4295,
+    "minXp": 1013760,
+    "maxXp": 1018055
+  },
+  {
+    "level": 476,
+    "title": "Sapphire Champion VI",
+    "tier": "Sapphire Champion",
+    "tierIndex": 48,
+    "xpRequired": 4305,
+    "minXp": 1018055,
+    "maxXp": 1022360
+  },
+  {
+    "level": 477,
+    "title": "Sapphire Champion VII",
+    "tier": "Sapphire Champion",
+    "tierIndex": 48,
+    "xpRequired": 4315,
+    "minXp": 1022360,
+    "maxXp": 1026675
+  },
+  {
+    "level": 478,
+    "title": "Sapphire Champion VIII",
+    "tier": "Sapphire Champion",
+    "tierIndex": 48,
+    "xpRequired": 4320,
+    "minXp": 1026675,
+    "maxXp": 1030995
+  },
+  {
+    "level": 479,
+    "title": "Sapphire Champion IX",
+    "tier": "Sapphire Champion",
+    "tierIndex": 48,
+    "xpRequired": 4330,
+    "minXp": 1030995,
+    "maxXp": 1035325
+  },
+  {
+    "level": 480,
+    "title": "Sapphire Champion X",
+    "tier": "Sapphire Champion",
+    "tierIndex": 48,
+    "xpRequired": 4340,
+    "minXp": 1035325,
+    "maxXp": 1039665
+  },
+  {
+    "level": 481,
+    "title": "Obsidian Striker I",
+    "tier": "Obsidian Striker",
+    "tierIndex": 49,
+    "xpRequired": 4350,
+    "minXp": 1039665,
+    "maxXp": 1044015
+  },
+  {
+    "level": 482,
+    "title": "Obsidian Striker II",
+    "tier": "Obsidian Striker",
+    "tierIndex": 49,
+    "xpRequired": 4360,
+    "minXp": 1044015,
+    "maxXp": 1048375
+  },
+  {
+    "level": 483,
+    "title": "Obsidian Striker III",
+    "tier": "Obsidian Striker",
+    "tierIndex": 49,
+    "xpRequired": 4370,
+    "minXp": 1048375,
+    "maxXp": 1052745
+  },
+  {
+    "level": 484,
+    "title": "Obsidian Striker IV",
+    "tier": "Obsidian Striker",
+    "tierIndex": 49,
+    "xpRequired": 4380,
+    "minXp": 1052745,
+    "maxXp": 1057125
+  },
+  {
+    "level": 485,
+    "title": "Obsidian Striker V",
+    "tier": "Obsidian Striker",
+    "tierIndex": 49,
+    "xpRequired": 4385,
+    "minXp": 1057125,
+    "maxXp": 1061510
+  },
+  {
+    "level": 486,
+    "title": "Obsidian Striker VI",
+    "tier": "Obsidian Striker",
+    "tierIndex": 49,
+    "xpRequired": 4395,
+    "minXp": 1061510,
+    "maxXp": 1065905
+  },
+  {
+    "level": 487,
+    "title": "Obsidian Striker VII",
+    "tier": "Obsidian Striker",
+    "tierIndex": 49,
+    "xpRequired": 4405,
+    "minXp": 1065905,
+    "maxXp": 1070310
+  },
+  {
+    "level": 488,
+    "title": "Obsidian Striker VIII",
+    "tier": "Obsidian Striker",
+    "tierIndex": 49,
+    "xpRequired": 4415,
+    "minXp": 1070310,
+    "maxXp": 1074725
+  },
+  {
+    "level": 489,
+    "title": "Obsidian Striker IX",
+    "tier": "Obsidian Striker",
+    "tierIndex": 49,
+    "xpRequired": 4425,
+    "minXp": 1074725,
+    "maxXp": 1079150
+  },
+  {
+    "level": 490,
+    "title": "Obsidian Striker X",
+    "tier": "Obsidian Striker",
+    "tierIndex": 49,
+    "xpRequired": 4435,
+    "minXp": 1079150,
+    "maxXp": 1083585
+  },
+  {
+    "level": 491,
+    "title": "Obsidian Knight I",
+    "tier": "Obsidian Knight",
+    "tierIndex": 50,
+    "xpRequired": 4445,
+    "minXp": 1083585,
+    "maxXp": 1088030
+  },
+  {
+    "level": 492,
+    "title": "Obsidian Knight II",
+    "tier": "Obsidian Knight",
+    "tierIndex": 50,
+    "xpRequired": 4450,
+    "minXp": 1088030,
+    "maxXp": 1092480
+  },
+  {
+    "level": 493,
+    "title": "Obsidian Knight III",
+    "tier": "Obsidian Knight",
+    "tierIndex": 50,
+    "xpRequired": 4460,
+    "minXp": 1092480,
+    "maxXp": 1096940
+  },
+  {
+    "level": 494,
+    "title": "Obsidian Knight IV",
+    "tier": "Obsidian Knight",
+    "tierIndex": 50,
+    "xpRequired": 4470,
+    "minXp": 1096940,
+    "maxXp": 1101410
+  },
+  {
+    "level": 495,
+    "title": "Obsidian Knight V",
+    "tier": "Obsidian Knight",
+    "tierIndex": 50,
+    "xpRequired": 4480,
+    "minXp": 1101410,
+    "maxXp": 1105890
+  },
+  {
+    "level": 496,
+    "title": "Obsidian Knight VI",
+    "tier": "Obsidian Knight",
+    "tierIndex": 50,
+    "xpRequired": 4490,
+    "minXp": 1105890,
+    "maxXp": 1110380
+  },
+  {
+    "level": 497,
+    "title": "Obsidian Knight VII",
+    "tier": "Obsidian Knight",
+    "tierIndex": 50,
+    "xpRequired": 4500,
+    "minXp": 1110380,
+    "maxXp": 1114880
+  },
+  {
+    "level": 498,
+    "title": "Obsidian Knight VIII",
+    "tier": "Obsidian Knight",
+    "tierIndex": 50,
+    "xpRequired": 4505,
+    "minXp": 1114880,
+    "maxXp": 1119385
+  },
+  {
+    "level": 499,
+    "title": "Obsidian Knight IX",
+    "tier": "Obsidian Knight",
+    "tierIndex": 50,
+    "xpRequired": 4515,
+    "minXp": 1119385,
+    "maxXp": 1123900
+  },
+  {
+    "level": 500,
+    "title": "Obsidian Knight X",
+    "tier": "Obsidian Knight",
+    "tierIndex": 50,
+    "xpRequired": 4525,
+    "minXp": 1123900,
+    "maxXp": 1128425
+  },
+  {
+    "level": 501,
+    "title": "Obsidian Vanguard I",
+    "tier": "Obsidian Vanguard",
+    "tierIndex": 51,
+    "xpRequired": 4535,
+    "minXp": 1128425,
+    "maxXp": 1132960
+  },
+  {
+    "level": 502,
+    "title": "Obsidian Vanguard II",
+    "tier": "Obsidian Vanguard",
+    "tierIndex": 51,
+    "xpRequired": 4545,
+    "minXp": 1132960,
+    "maxXp": 1137505
+  },
+  {
+    "level": 503,
+    "title": "Obsidian Vanguard III",
+    "tier": "Obsidian Vanguard",
+    "tierIndex": 51,
+    "xpRequired": 4555,
+    "minXp": 1137505,
+    "maxXp": 1142060
+  },
+  {
+    "level": 504,
+    "title": "Obsidian Vanguard IV",
+    "tier": "Obsidian Vanguard",
+    "tierIndex": 51,
+    "xpRequired": 4565,
+    "minXp": 1142060,
+    "maxXp": 1146625
+  },
+  {
+    "level": 505,
+    "title": "Obsidian Vanguard V",
+    "tier": "Obsidian Vanguard",
+    "tierIndex": 51,
+    "xpRequired": 4570,
+    "minXp": 1146625,
+    "maxXp": 1151195
+  },
+  {
+    "level": 506,
+    "title": "Obsidian Vanguard VI",
+    "tier": "Obsidian Vanguard",
+    "tierIndex": 51,
+    "xpRequired": 4580,
+    "minXp": 1151195,
+    "maxXp": 1155775
+  },
+  {
+    "level": 507,
+    "title": "Obsidian Vanguard VII",
+    "tier": "Obsidian Vanguard",
+    "tierIndex": 51,
+    "xpRequired": 4590,
+    "minXp": 1155775,
+    "maxXp": 1160365
+  },
+  {
+    "level": 508,
+    "title": "Obsidian Vanguard VIII",
+    "tier": "Obsidian Vanguard",
+    "tierIndex": 51,
+    "xpRequired": 4600,
+    "minXp": 1160365,
+    "maxXp": 1164965
+  },
+  {
+    "level": 509,
+    "title": "Obsidian Vanguard IX",
+    "tier": "Obsidian Vanguard",
+    "tierIndex": 51,
+    "xpRequired": 4610,
+    "minXp": 1164965,
+    "maxXp": 1169575
+  },
+  {
+    "level": 510,
+    "title": "Obsidian Vanguard X",
+    "tier": "Obsidian Vanguard",
+    "tierIndex": 51,
+    "xpRequired": 4620,
+    "minXp": 1169575,
+    "maxXp": 1174195
+  },
+  {
+    "level": 511,
+    "title": "Obsidian Champion I",
+    "tier": "Obsidian Champion",
+    "tierIndex": 52,
+    "xpRequired": 4630,
+    "minXp": 1174195,
+    "maxXp": 1178825
+  },
+  {
+    "level": 512,
+    "title": "Obsidian Champion II",
+    "tier": "Obsidian Champion",
+    "tierIndex": 52,
+    "xpRequired": 4635,
+    "minXp": 1178825,
+    "maxXp": 1183460
+  },
+  {
+    "level": 513,
+    "title": "Obsidian Champion III",
+    "tier": "Obsidian Champion",
+    "tierIndex": 52,
+    "xpRequired": 4645,
+    "minXp": 1183460,
+    "maxXp": 1188105
+  },
+  {
+    "level": 514,
+    "title": "Obsidian Champion IV",
+    "tier": "Obsidian Champion",
+    "tierIndex": 52,
+    "xpRequired": 4655,
+    "minXp": 1188105,
+    "maxXp": 1192760
+  },
+  {
+    "level": 515,
+    "title": "Obsidian Champion V",
+    "tier": "Obsidian Champion",
+    "tierIndex": 52,
+    "xpRequired": 4665,
+    "minXp": 1192760,
+    "maxXp": 1197425
+  },
+  {
+    "level": 516,
+    "title": "Obsidian Champion VI",
+    "tier": "Obsidian Champion",
+    "tierIndex": 52,
+    "xpRequired": 4675,
+    "minXp": 1197425,
+    "maxXp": 1202100
+  },
+  {
+    "level": 517,
+    "title": "Obsidian Champion VII",
+    "tier": "Obsidian Champion",
+    "tierIndex": 52,
+    "xpRequired": 4685,
+    "minXp": 1202100,
+    "maxXp": 1206785
+  },
+  {
+    "level": 518,
+    "title": "Obsidian Champion VIII",
+    "tier": "Obsidian Champion",
+    "tierIndex": 52,
+    "xpRequired": 4695,
+    "minXp": 1206785,
+    "maxXp": 1211480
+  },
+  {
+    "level": 519,
+    "title": "Obsidian Champion IX",
+    "tier": "Obsidian Champion",
+    "tierIndex": 52,
+    "xpRequired": 4700,
+    "minXp": 1211480,
+    "maxXp": 1216180
+  },
+  {
+    "level": 520,
+    "title": "Obsidian Champion X",
+    "tier": "Obsidian Champion",
+    "tierIndex": 52,
+    "xpRequired": 4710,
+    "minXp": 1216180,
+    "maxXp": 1220890
+  },
+  {
+    "level": 521,
+    "title": "Shadow Scout I",
+    "tier": "Shadow Scout",
+    "tierIndex": 53,
+    "xpRequired": 4720,
+    "minXp": 1220890,
+    "maxXp": 1225610
+  },
+  {
+    "level": 522,
+    "title": "Shadow Scout II",
+    "tier": "Shadow Scout",
+    "tierIndex": 53,
+    "xpRequired": 4730,
+    "minXp": 1225610,
+    "maxXp": 1230340
+  },
+  {
+    "level": 523,
+    "title": "Shadow Scout III",
+    "tier": "Shadow Scout",
+    "tierIndex": 53,
+    "xpRequired": 4740,
+    "minXp": 1230340,
+    "maxXp": 1235080
+  },
+  {
+    "level": 524,
+    "title": "Shadow Scout IV",
+    "tier": "Shadow Scout",
+    "tierIndex": 53,
+    "xpRequired": 4750,
+    "minXp": 1235080,
+    "maxXp": 1239830
+  },
+  {
+    "level": 525,
+    "title": "Shadow Scout V",
+    "tier": "Shadow Scout",
+    "tierIndex": 53,
+    "xpRequired": 4760,
+    "minXp": 1239830,
+    "maxXp": 1244590
+  },
+  {
+    "level": 526,
+    "title": "Shadow Scout VI",
+    "tier": "Shadow Scout",
+    "tierIndex": 53,
+    "xpRequired": 4765,
+    "minXp": 1244590,
+    "maxXp": 1249355
+  },
+  {
+    "level": 527,
+    "title": "Shadow Scout VII",
+    "tier": "Shadow Scout",
+    "tierIndex": 53,
+    "xpRequired": 4775,
+    "minXp": 1249355,
+    "maxXp": 1254130
+  },
+  {
+    "level": 528,
+    "title": "Shadow Scout VIII",
+    "tier": "Shadow Scout",
+    "tierIndex": 53,
+    "xpRequired": 4785,
+    "minXp": 1254130,
+    "maxXp": 1258915
+  },
+  {
+    "level": 529,
+    "title": "Shadow Scout IX",
+    "tier": "Shadow Scout",
+    "tierIndex": 53,
+    "xpRequired": 4795,
+    "minXp": 1258915,
+    "maxXp": 1263710
+  },
+  {
+    "level": 530,
+    "title": "Shadow Scout X",
+    "tier": "Shadow Scout",
+    "tierIndex": 53,
+    "xpRequired": 4805,
+    "minXp": 1263710,
+    "maxXp": 1268515
+  },
+  {
+    "level": 531,
+    "title": "Shadow Blade I",
+    "tier": "Shadow Blade",
+    "tierIndex": 54,
+    "xpRequired": 4815,
+    "minXp": 1268515,
+    "maxXp": 1273330
+  },
+  {
+    "level": 532,
+    "title": "Shadow Blade II",
+    "tier": "Shadow Blade",
+    "tierIndex": 54,
+    "xpRequired": 4825,
+    "minXp": 1273330,
+    "maxXp": 1278155
+  },
+  {
+    "level": 533,
+    "title": "Shadow Blade III",
+    "tier": "Shadow Blade",
+    "tierIndex": 54,
+    "xpRequired": 4830,
+    "minXp": 1278155,
+    "maxXp": 1282985
+  },
+  {
+    "level": 534,
+    "title": "Shadow Blade IV",
+    "tier": "Shadow Blade",
+    "tierIndex": 54,
+    "xpRequired": 4840,
+    "minXp": 1282985,
+    "maxXp": 1287825
+  },
+  {
+    "level": 535,
+    "title": "Shadow Blade V",
+    "tier": "Shadow Blade",
+    "tierIndex": 54,
+    "xpRequired": 4850,
+    "minXp": 1287825,
+    "maxXp": 1292675
+  },
+  {
+    "level": 536,
+    "title": "Shadow Blade VI",
+    "tier": "Shadow Blade",
+    "tierIndex": 54,
+    "xpRequired": 4860,
+    "minXp": 1292675,
+    "maxXp": 1297535
+  },
+  {
+    "level": 537,
+    "title": "Shadow Blade VII",
+    "tier": "Shadow Blade",
+    "tierIndex": 54,
+    "xpRequired": 4870,
+    "minXp": 1297535,
+    "maxXp": 1302405
+  },
+  {
+    "level": 538,
+    "title": "Shadow Blade VIII",
+    "tier": "Shadow Blade",
+    "tierIndex": 54,
+    "xpRequired": 4880,
+    "minXp": 1302405,
+    "maxXp": 1307285
+  },
+  {
+    "level": 539,
+    "title": "Shadow Blade IX",
+    "tier": "Shadow Blade",
+    "tierIndex": 54,
+    "xpRequired": 4890,
+    "minXp": 1307285,
+    "maxXp": 1312175
+  },
+  {
+    "level": 540,
+    "title": "Shadow Blade X",
+    "tier": "Shadow Blade",
+    "tierIndex": 54,
+    "xpRequired": 4895,
+    "minXp": 1312175,
+    "maxXp": 1317070
+  },
+  {
+    "level": 541,
+    "title": "Shadow Knight I",
+    "tier": "Shadow Knight",
+    "tierIndex": 55,
+    "xpRequired": 4905,
+    "minXp": 1317070,
+    "maxXp": 1321975
+  },
+  {
+    "level": 542,
+    "title": "Shadow Knight II",
+    "tier": "Shadow Knight",
+    "tierIndex": 55,
+    "xpRequired": 4915,
+    "minXp": 1321975,
+    "maxXp": 1326890
+  },
+  {
+    "level": 543,
+    "title": "Shadow Knight III",
+    "tier": "Shadow Knight",
+    "tierIndex": 55,
+    "xpRequired": 4925,
+    "minXp": 1326890,
+    "maxXp": 1331815
+  },
+  {
+    "level": 544,
+    "title": "Shadow Knight IV",
+    "tier": "Shadow Knight",
+    "tierIndex": 55,
+    "xpRequired": 4935,
+    "minXp": 1331815,
+    "maxXp": 1336750
+  },
+  {
+    "level": 545,
+    "title": "Shadow Knight V",
+    "tier": "Shadow Knight",
+    "tierIndex": 55,
+    "xpRequired": 4945,
+    "minXp": 1336750,
+    "maxXp": 1341695
+  },
+  {
+    "level": 546,
+    "title": "Shadow Knight VI",
+    "tier": "Shadow Knight",
+    "tierIndex": 55,
+    "xpRequired": 4955,
+    "minXp": 1341695,
+    "maxXp": 1346650
+  },
+  {
+    "level": 547,
+    "title": "Shadow Knight VII",
+    "tier": "Shadow Knight",
+    "tierIndex": 55,
+    "xpRequired": 4960,
+    "minXp": 1346650,
+    "maxXp": 1351610
+  },
+  {
+    "level": 548,
+    "title": "Shadow Knight VIII",
+    "tier": "Shadow Knight",
+    "tierIndex": 55,
+    "xpRequired": 4970,
+    "minXp": 1351610,
+    "maxXp": 1356580
+  },
+  {
+    "level": 549,
+    "title": "Shadow Knight IX",
+    "tier": "Shadow Knight",
+    "tierIndex": 55,
+    "xpRequired": 4980,
+    "minXp": 1356580,
+    "maxXp": 1361560
+  },
+  {
+    "level": 550,
+    "title": "Shadow Knight X",
+    "tier": "Shadow Knight",
+    "tierIndex": 55,
+    "xpRequired": 4990,
+    "minXp": 1361560,
+    "maxXp": 1366550
+  },
+  {
+    "level": 551,
+    "title": "Shadow Master I",
+    "tier": "Shadow Master",
+    "tierIndex": 56,
+    "xpRequired": 5000,
+    "minXp": 1366550,
+    "maxXp": 1371550
+  },
+  {
+    "level": 552,
+    "title": "Shadow Master II",
+    "tier": "Shadow Master",
+    "tierIndex": 56,
+    "xpRequired": 5010,
+    "minXp": 1371550,
+    "maxXp": 1376560
+  },
+  {
+    "level": 553,
+    "title": "Shadow Master III",
+    "tier": "Shadow Master",
+    "tierIndex": 56,
+    "xpRequired": 5020,
+    "minXp": 1376560,
+    "maxXp": 1381580
+  },
+  {
+    "level": 554,
+    "title": "Shadow Master IV",
+    "tier": "Shadow Master",
+    "tierIndex": 56,
+    "xpRequired": 5025,
+    "minXp": 1381580,
+    "maxXp": 1386605
+  },
+  {
+    "level": 555,
+    "title": "Shadow Master V",
+    "tier": "Shadow Master",
+    "tierIndex": 56,
+    "xpRequired": 5035,
+    "minXp": 1386605,
+    "maxXp": 1391640
+  },
+  {
+    "level": 556,
+    "title": "Shadow Master VI",
+    "tier": "Shadow Master",
+    "tierIndex": 56,
+    "xpRequired": 5045,
+    "minXp": 1391640,
+    "maxXp": 1396685
+  },
+  {
+    "level": 557,
+    "title": "Shadow Master VII",
+    "tier": "Shadow Master",
+    "tierIndex": 56,
+    "xpRequired": 5055,
+    "minXp": 1396685,
+    "maxXp": 1401740
+  },
+  {
+    "level": 558,
+    "title": "Shadow Master VIII",
+    "tier": "Shadow Master",
+    "tierIndex": 56,
+    "xpRequired": 5065,
+    "minXp": 1401740,
+    "maxXp": 1406805
+  },
+  {
+    "level": 559,
+    "title": "Shadow Master IX",
+    "tier": "Shadow Master",
+    "tierIndex": 56,
+    "xpRequired": 5075,
+    "minXp": 1406805,
+    "maxXp": 1411880
+  },
+  {
+    "level": 560,
+    "title": "Shadow Master X",
+    "tier": "Shadow Master",
+    "tierIndex": 56,
+    "xpRequired": 5085,
+    "minXp": 1411880,
+    "maxXp": 1416965
+  },
+  {
+    "level": 561,
+    "title": "Ranger Elite I",
+    "tier": "Ranger Elite",
+    "tierIndex": 57,
+    "xpRequired": 5090,
+    "minXp": 1416965,
+    "maxXp": 1422055
+  },
+  {
+    "level": 562,
+    "title": "Ranger Elite II",
+    "tier": "Ranger Elite",
+    "tierIndex": 57,
+    "xpRequired": 5100,
+    "minXp": 1422055,
+    "maxXp": 1427155
+  },
+  {
+    "level": 563,
+    "title": "Ranger Elite III",
+    "tier": "Ranger Elite",
+    "tierIndex": 57,
+    "xpRequired": 5110,
+    "minXp": 1427155,
+    "maxXp": 1432265
+  },
+  {
+    "level": 564,
+    "title": "Ranger Elite IV",
+    "tier": "Ranger Elite",
+    "tierIndex": 57,
+    "xpRequired": 5120,
+    "minXp": 1432265,
+    "maxXp": 1437385
+  },
+  {
+    "level": 565,
+    "title": "Ranger Elite V",
+    "tier": "Ranger Elite",
+    "tierIndex": 57,
+    "xpRequired": 5130,
+    "minXp": 1437385,
+    "maxXp": 1442515
+  },
+  {
+    "level": 566,
+    "title": "Ranger Elite VI",
+    "tier": "Ranger Elite",
+    "tierIndex": 57,
+    "xpRequired": 5140,
+    "minXp": 1442515,
+    "maxXp": 1447655
+  },
+  {
+    "level": 567,
+    "title": "Ranger Elite VII",
+    "tier": "Ranger Elite",
+    "tierIndex": 57,
+    "xpRequired": 5150,
+    "minXp": 1447655,
+    "maxXp": 1452805
+  },
+  {
+    "level": 568,
+    "title": "Ranger Elite VIII",
+    "tier": "Ranger Elite",
+    "tierIndex": 57,
+    "xpRequired": 5155,
+    "minXp": 1452805,
+    "maxXp": 1457960
+  },
+  {
+    "level": 569,
+    "title": "Ranger Elite IX",
+    "tier": "Ranger Elite",
+    "tierIndex": 57,
+    "xpRequired": 5165,
+    "minXp": 1457960,
+    "maxXp": 1463125
+  },
+  {
+    "level": 570,
+    "title": "Ranger Elite X",
+    "tier": "Ranger Elite",
+    "tierIndex": 57,
+    "xpRequired": 5175,
+    "minXp": 1463125,
+    "maxXp": 1468300
+  },
+  {
+    "level": 571,
+    "title": "Hunter Master I",
+    "tier": "Hunter Master",
+    "tierIndex": 58,
+    "xpRequired": 5185,
+    "minXp": 1468300,
+    "maxXp": 1473485
+  },
+  {
+    "level": 572,
+    "title": "Hunter Master II",
+    "tier": "Hunter Master",
+    "tierIndex": 58,
+    "xpRequired": 5195,
+    "minXp": 1473485,
+    "maxXp": 1478680
+  },
+  {
+    "level": 573,
+    "title": "Hunter Master III",
+    "tier": "Hunter Master",
+    "tierIndex": 58,
+    "xpRequired": 5205,
+    "minXp": 1478680,
+    "maxXp": 1483885
+  },
+  {
+    "level": 574,
+    "title": "Hunter Master IV",
+    "tier": "Hunter Master",
+    "tierIndex": 58,
+    "xpRequired": 5215,
+    "minXp": 1483885,
+    "maxXp": 1489100
+  },
+  {
+    "level": 575,
+    "title": "Hunter Master V",
+    "tier": "Hunter Master",
+    "tierIndex": 58,
+    "xpRequired": 5220,
+    "minXp": 1489100,
+    "maxXp": 1494320
+  },
+  {
+    "level": 576,
+    "title": "Hunter Master VI",
+    "tier": "Hunter Master",
+    "tierIndex": 58,
+    "xpRequired": 5230,
+    "minXp": 1494320,
+    "maxXp": 1499550
+  },
+  {
+    "level": 577,
+    "title": "Hunter Master VII",
+    "tier": "Hunter Master",
+    "tierIndex": 58,
+    "xpRequired": 5240,
+    "minXp": 1499550,
+    "maxXp": 1504790
+  },
+  {
+    "level": 578,
+    "title": "Hunter Master VIII",
+    "tier": "Hunter Master",
+    "tierIndex": 58,
+    "xpRequired": 5250,
+    "minXp": 1504790,
+    "maxXp": 1510040
+  },
+  {
+    "level": 579,
+    "title": "Hunter Master IX",
+    "tier": "Hunter Master",
+    "tierIndex": 58,
+    "xpRequired": 5260,
+    "minXp": 1510040,
+    "maxXp": 1515300
+  },
+  {
+    "level": 580,
+    "title": "Hunter Master X",
+    "tier": "Hunter Master",
+    "tierIndex": 58,
+    "xpRequired": 5270,
+    "minXp": 1515300,
+    "maxXp": 1520570
+  },
+  {
+    "level": 581,
+    "title": "Assassin Elite I",
+    "tier": "Assassin Elite",
+    "tierIndex": 59,
+    "xpRequired": 5280,
+    "minXp": 1520570,
+    "maxXp": 1525850
+  },
+  {
+    "level": 582,
+    "title": "Assassin Elite II",
+    "tier": "Assassin Elite",
+    "tierIndex": 59,
+    "xpRequired": 5290,
+    "minXp": 1525850,
+    "maxXp": 1531140
+  },
+  {
+    "level": 583,
+    "title": "Assassin Elite III",
+    "tier": "Assassin Elite",
+    "tierIndex": 59,
+    "xpRequired": 5295,
+    "minXp": 1531140,
+    "maxXp": 1536435
+  },
+  {
+    "level": 584,
+    "title": "Assassin Elite IV",
+    "tier": "Assassin Elite",
+    "tierIndex": 59,
+    "xpRequired": 5305,
+    "minXp": 1536435,
+    "maxXp": 1541740
+  },
+  {
+    "level": 585,
+    "title": "Assassin Elite V",
+    "tier": "Assassin Elite",
+    "tierIndex": 59,
+    "xpRequired": 5315,
+    "minXp": 1541740,
+    "maxXp": 1547055
+  },
+  {
+    "level": 586,
+    "title": "Assassin Elite VI",
+    "tier": "Assassin Elite",
+    "tierIndex": 59,
+    "xpRequired": 5325,
+    "minXp": 1547055,
+    "maxXp": 1552380
+  },
+  {
+    "level": 587,
+    "title": "Assassin Elite VII",
+    "tier": "Assassin Elite",
+    "tierIndex": 59,
+    "xpRequired": 5335,
+    "minXp": 1552380,
+    "maxXp": 1557715
+  },
+  {
+    "level": 588,
+    "title": "Assassin Elite VIII",
+    "tier": "Assassin Elite",
+    "tierIndex": 59,
+    "xpRequired": 5345,
+    "minXp": 1557715,
+    "maxXp": 1563060
+  },
+  {
+    "level": 589,
+    "title": "Assassin Elite IX",
+    "tier": "Assassin Elite",
+    "tierIndex": 59,
+    "xpRequired": 5355,
+    "minXp": 1563060,
+    "maxXp": 1568415
+  },
+  {
+    "level": 590,
+    "title": "Assassin Elite X",
+    "tier": "Assassin Elite",
+    "tierIndex": 59,
+    "xpRequired": 5360,
+    "minXp": 1568415,
+    "maxXp": 1573775
+  },
+  {
+    "level": 591,
+    "title": "Duelist Champion I",
+    "tier": "Duelist Champion",
+    "tierIndex": 60,
+    "xpRequired": 5370,
+    "minXp": 1573775,
+    "maxXp": 1579145
+  },
+  {
+    "level": 592,
+    "title": "Duelist Champion II",
+    "tier": "Duelist Champion",
+    "tierIndex": 60,
+    "xpRequired": 5380,
+    "minXp": 1579145,
+    "maxXp": 1584525
+  },
+  {
+    "level": 593,
+    "title": "Duelist Champion III",
+    "tier": "Duelist Champion",
+    "tierIndex": 60,
+    "xpRequired": 5390,
+    "minXp": 1584525,
+    "maxXp": 1589915
+  },
+  {
+    "level": 594,
+    "title": "Duelist Champion IV",
+    "tier": "Duelist Champion",
+    "tierIndex": 60,
+    "xpRequired": 5400,
+    "minXp": 1589915,
+    "maxXp": 1595315
+  },
+  {
+    "level": 595,
+    "title": "Duelist Champion V",
+    "tier": "Duelist Champion",
+    "tierIndex": 60,
+    "xpRequired": 5410,
+    "minXp": 1595315,
+    "maxXp": 1600725
+  },
+  {
+    "level": 596,
+    "title": "Duelist Champion VI",
+    "tier": "Duelist Champion",
+    "tierIndex": 60,
+    "xpRequired": 5420,
+    "minXp": 1600725,
+    "maxXp": 1606145
+  },
+  {
+    "level": 597,
+    "title": "Duelist Champion VII",
+    "tier": "Duelist Champion",
+    "tierIndex": 60,
+    "xpRequired": 5425,
+    "minXp": 1606145,
+    "maxXp": 1611570
+  },
+  {
+    "level": 598,
+    "title": "Duelist Champion VIII",
+    "tier": "Duelist Champion",
+    "tierIndex": 60,
+    "xpRequired": 5435,
+    "minXp": 1611570,
+    "maxXp": 1617005
+  },
+  {
+    "level": 599,
+    "title": "Duelist Champion IX",
+    "tier": "Duelist Champion",
+    "tierIndex": 60,
+    "xpRequired": 5445,
+    "minXp": 1617005,
+    "maxXp": 1622450
+  },
+  {
+    "level": 600,
+    "title": "Duelist Champion X",
+    "tier": "Duelist Champion",
+    "tierIndex": 60,
+    "xpRequired": 5455,
+    "minXp": 1622450,
+    "maxXp": 1627905
+  },
+  {
+    "level": 601,
+    "title": "Gladiator Warlord I",
+    "tier": "Gladiator Warlord",
+    "tierIndex": 61,
+    "xpRequired": 5465,
+    "minXp": 1627905,
+    "maxXp": 1633370
+  },
+  {
+    "level": 602,
+    "title": "Gladiator Warlord II",
+    "tier": "Gladiator Warlord",
+    "tierIndex": 61,
+    "xpRequired": 5475,
+    "minXp": 1633370,
+    "maxXp": 1638845
+  },
+  {
+    "level": 603,
+    "title": "Gladiator Warlord III",
+    "tier": "Gladiator Warlord",
+    "tierIndex": 61,
+    "xpRequired": 5485,
+    "minXp": 1638845,
+    "maxXp": 1644330
+  },
+  {
+    "level": 604,
+    "title": "Gladiator Warlord IV",
+    "tier": "Gladiator Warlord",
+    "tierIndex": 61,
+    "xpRequired": 5495,
+    "minXp": 1644330,
+    "maxXp": 1649825
+  },
+  {
+    "level": 605,
+    "title": "Gladiator Warlord V",
+    "tier": "Gladiator Warlord",
+    "tierIndex": 61,
+    "xpRequired": 5500,
+    "minXp": 1649825,
+    "maxXp": 1655325
+  },
+  {
+    "level": 606,
+    "title": "Gladiator Warlord VI",
+    "tier": "Gladiator Warlord",
+    "tierIndex": 61,
+    "xpRequired": 5510,
+    "minXp": 1655325,
+    "maxXp": 1660835
+  },
+  {
+    "level": 607,
+    "title": "Gladiator Warlord VII",
+    "tier": "Gladiator Warlord",
+    "tierIndex": 61,
+    "xpRequired": 5520,
+    "minXp": 1660835,
+    "maxXp": 1666355
+  },
+  {
+    "level": 608,
+    "title": "Gladiator Warlord VIII",
+    "tier": "Gladiator Warlord",
+    "tierIndex": 61,
+    "xpRequired": 5530,
+    "minXp": 1666355,
+    "maxXp": 1671885
+  },
+  {
+    "level": 609,
+    "title": "Gladiator Warlord IX",
+    "tier": "Gladiator Warlord",
+    "tierIndex": 61,
+    "xpRequired": 5540,
+    "minXp": 1671885,
+    "maxXp": 1677425
+  },
+  {
+    "level": 610,
+    "title": "Gladiator Warlord X",
+    "tier": "Gladiator Warlord",
+    "tierIndex": 61,
+    "xpRequired": 5550,
+    "minXp": 1677425,
+    "maxXp": 1682975
+  },
+  {
+    "level": 611,
+    "title": "Berserker Champion I",
+    "tier": "Berserker Champion",
+    "tierIndex": 62,
+    "xpRequired": 5560,
+    "minXp": 1682975,
+    "maxXp": 1688535
+  },
+  {
+    "level": 612,
+    "title": "Berserker Champion II",
+    "tier": "Berserker Champion",
+    "tierIndex": 62,
+    "xpRequired": 5565,
+    "minXp": 1688535,
+    "maxXp": 1694100
+  },
+  {
+    "level": 613,
+    "title": "Berserker Champion III",
+    "tier": "Berserker Champion",
+    "tierIndex": 62,
+    "xpRequired": 5575,
+    "minXp": 1694100,
+    "maxXp": 1699675
+  },
+  {
+    "level": 614,
+    "title": "Berserker Champion IV",
+    "tier": "Berserker Champion",
+    "tierIndex": 62,
+    "xpRequired": 5585,
+    "minXp": 1699675,
+    "maxXp": 1705260
+  },
+  {
+    "level": 615,
+    "title": "Berserker Champion V",
+    "tier": "Berserker Champion",
+    "tierIndex": 62,
+    "xpRequired": 5595,
+    "minXp": 1705260,
+    "maxXp": 1710855
+  },
+  {
+    "level": 616,
+    "title": "Berserker Champion VI",
+    "tier": "Berserker Champion",
+    "tierIndex": 62,
+    "xpRequired": 5605,
+    "minXp": 1710855,
+    "maxXp": 1716460
+  },
+  {
+    "level": 617,
+    "title": "Berserker Champion VII",
+    "tier": "Berserker Champion",
+    "tierIndex": 62,
+    "xpRequired": 5615,
+    "minXp": 1716460,
+    "maxXp": 1722075
+  },
+  {
+    "level": 618,
+    "title": "Berserker Champion VIII",
+    "tier": "Berserker Champion",
+    "tierIndex": 62,
+    "xpRequired": 5625,
+    "minXp": 1722075,
+    "maxXp": 1727700
+  },
+  {
+    "level": 619,
+    "title": "Berserker Champion IX",
+    "tier": "Berserker Champion",
+    "tierIndex": 62,
+    "xpRequired": 5635,
+    "minXp": 1727700,
+    "maxXp": 1733335
+  },
+  {
+    "level": 620,
+    "title": "Berserker Champion X",
+    "tier": "Berserker Champion",
+    "tierIndex": 62,
+    "xpRequired": 5640,
+    "minXp": 1733335,
+    "maxXp": 1738975
+  },
+  {
+    "level": 621,
+    "title": "Paladin Commander I",
+    "tier": "Paladin Commander",
+    "tierIndex": 63,
+    "xpRequired": 5650,
+    "minXp": 1738975,
+    "maxXp": 1744625
+  },
+  {
+    "level": 622,
+    "title": "Paladin Commander II",
+    "tier": "Paladin Commander",
+    "tierIndex": 63,
+    "xpRequired": 5660,
+    "minXp": 1744625,
+    "maxXp": 1750285
+  },
+  {
+    "level": 623,
+    "title": "Paladin Commander III",
+    "tier": "Paladin Commander",
+    "tierIndex": 63,
+    "xpRequired": 5670,
+    "minXp": 1750285,
+    "maxXp": 1755955
+  },
+  {
+    "level": 624,
+    "title": "Paladin Commander IV",
+    "tier": "Paladin Commander",
+    "tierIndex": 63,
+    "xpRequired": 5680,
+    "minXp": 1755955,
+    "maxXp": 1761635
+  },
+  {
+    "level": 625,
+    "title": "Paladin Commander V",
+    "tier": "Paladin Commander",
+    "tierIndex": 63,
+    "xpRequired": 5690,
+    "minXp": 1761635,
+    "maxXp": 1767325
+  },
+  {
+    "level": 626,
+    "title": "Paladin Commander VI",
+    "tier": "Paladin Commander",
+    "tierIndex": 63,
+    "xpRequired": 5700,
+    "minXp": 1767325,
+    "maxXp": 1773025
+  },
+  {
+    "level": 627,
+    "title": "Paladin Commander VII",
+    "tier": "Paladin Commander",
+    "tierIndex": 63,
+    "xpRequired": 5705,
+    "minXp": 1773025,
+    "maxXp": 1778730
+  },
+  {
+    "level": 628,
+    "title": "Paladin Commander VIII",
+    "tier": "Paladin Commander",
+    "tierIndex": 63,
+    "xpRequired": 5715,
+    "minXp": 1778730,
+    "maxXp": 1784445
+  },
+  {
+    "level": 629,
+    "title": "Paladin Commander IX",
+    "tier": "Paladin Commander",
+    "tierIndex": 63,
+    "xpRequired": 5725,
+    "minXp": 1784445,
+    "maxXp": 1790170
+  },
+  {
+    "level": 630,
+    "title": "Paladin Commander X",
+    "tier": "Paladin Commander",
+    "tierIndex": 63,
+    "xpRequired": 5735,
+    "minXp": 1790170,
+    "maxXp": 1795905
+  },
+  {
+    "level": 631,
+    "title": "Templar Knight I",
+    "tier": "Templar Knight",
+    "tierIndex": 64,
+    "xpRequired": 5745,
+    "minXp": 1795905,
+    "maxXp": 1801650
+  },
+  {
+    "level": 632,
+    "title": "Templar Knight II",
+    "tier": "Templar Knight",
+    "tierIndex": 64,
+    "xpRequired": 5755,
+    "minXp": 1801650,
+    "maxXp": 1807405
+  },
+  {
+    "level": 633,
+    "title": "Templar Knight III",
+    "tier": "Templar Knight",
+    "tierIndex": 64,
+    "xpRequired": 5765,
+    "minXp": 1807405,
+    "maxXp": 1813170
+  },
+  {
+    "level": 634,
+    "title": "Templar Knight IV",
+    "tier": "Templar Knight",
+    "tierIndex": 64,
+    "xpRequired": 5775,
+    "minXp": 1813170,
+    "maxXp": 1818945
+  },
+  {
+    "level": 635,
+    "title": "Templar Knight V",
+    "tier": "Templar Knight",
+    "tierIndex": 64,
+    "xpRequired": 5780,
+    "minXp": 1818945,
+    "maxXp": 1824725
+  },
+  {
+    "level": 636,
+    "title": "Templar Knight VI",
+    "tier": "Templar Knight",
+    "tierIndex": 64,
+    "xpRequired": 5790,
+    "minXp": 1824725,
+    "maxXp": 1830515
+  },
+  {
+    "level": 637,
+    "title": "Templar Knight VII",
+    "tier": "Templar Knight",
+    "tierIndex": 64,
+    "xpRequired": 5800,
+    "minXp": 1830515,
+    "maxXp": 1836315
+  },
+  {
+    "level": 638,
+    "title": "Templar Knight VIII",
+    "tier": "Templar Knight",
+    "tierIndex": 64,
+    "xpRequired": 5810,
+    "minXp": 1836315,
+    "maxXp": 1842125
+  },
+  {
+    "level": 639,
+    "title": "Templar Knight IX",
+    "tier": "Templar Knight",
+    "tierIndex": 64,
+    "xpRequired": 5820,
+    "minXp": 1842125,
+    "maxXp": 1847945
+  },
+  {
+    "level": 640,
+    "title": "Templar Knight X",
+    "tier": "Templar Knight",
+    "tierIndex": 64,
+    "xpRequired": 5830,
+    "minXp": 1847945,
+    "maxXp": 1853775
+  },
+  {
+    "level": 641,
+    "title": "Crusader Champion I",
+    "tier": "Crusader Champion",
+    "tierIndex": 65,
+    "xpRequired": 5840,
+    "minXp": 1853775,
+    "maxXp": 1859615
+  },
+  {
+    "level": 642,
+    "title": "Crusader Champion II",
+    "tier": "Crusader Champion",
+    "tierIndex": 65,
+    "xpRequired": 5850,
+    "minXp": 1859615,
+    "maxXp": 1865465
+  },
+  {
+    "level": 643,
+    "title": "Crusader Champion III",
+    "tier": "Crusader Champion",
+    "tierIndex": 65,
+    "xpRequired": 5855,
+    "minXp": 1865465,
+    "maxXp": 1871320
+  },
+  {
+    "level": 644,
+    "title": "Crusader Champion IV",
+    "tier": "Crusader Champion",
+    "tierIndex": 65,
+    "xpRequired": 5865,
+    "minXp": 1871320,
+    "maxXp": 1877185
+  },
+  {
+    "level": 645,
+    "title": "Crusader Champion V",
+    "tier": "Crusader Champion",
+    "tierIndex": 65,
+    "xpRequired": 5875,
+    "minXp": 1877185,
+    "maxXp": 1883060
+  },
+  {
+    "level": 646,
+    "title": "Crusader Champion VI",
+    "tier": "Crusader Champion",
+    "tierIndex": 65,
+    "xpRequired": 5885,
+    "minXp": 1883060,
+    "maxXp": 1888945
+  },
+  {
+    "level": 647,
+    "title": "Crusader Champion VII",
+    "tier": "Crusader Champion",
+    "tierIndex": 65,
+    "xpRequired": 5895,
+    "minXp": 1888945,
+    "maxXp": 1894840
+  },
+  {
+    "level": 648,
+    "title": "Crusader Champion VIII",
+    "tier": "Crusader Champion",
+    "tierIndex": 65,
+    "xpRequired": 5905,
+    "minXp": 1894840,
+    "maxXp": 1900745
+  },
+  {
+    "level": 649,
+    "title": "Crusader Champion IX",
+    "tier": "Crusader Champion",
+    "tierIndex": 65,
+    "xpRequired": 5915,
+    "minXp": 1900745,
+    "maxXp": 1906660
+  },
+  {
+    "level": 650,
+    "title": "Crusader Champion X",
+    "tier": "Crusader Champion",
+    "tierIndex": 65,
+    "xpRequired": 5925,
+    "minXp": 1906660,
+    "maxXp": 1912585
+  },
+  {
+    "level": 651,
+    "title": "Battlemage I",
+    "tier": "Battlemage",
+    "tierIndex": 66,
+    "xpRequired": 5930,
+    "minXp": 1912585,
+    "maxXp": 1918515
+  },
+  {
+    "level": 652,
+    "title": "Battlemage II",
+    "tier": "Battlemage",
+    "tierIndex": 66,
+    "xpRequired": 5940,
+    "minXp": 1918515,
+    "maxXp": 1924455
+  },
+  {
+    "level": 653,
+    "title": "Battlemage III",
+    "tier": "Battlemage",
+    "tierIndex": 66,
+    "xpRequired": 5950,
+    "minXp": 1924455,
+    "maxXp": 1930405
+  },
+  {
+    "level": 654,
+    "title": "Battlemage IV",
+    "tier": "Battlemage",
+    "tierIndex": 66,
+    "xpRequired": 5960,
+    "minXp": 1930405,
+    "maxXp": 1936365
+  },
+  {
+    "level": 655,
+    "title": "Battlemage V",
+    "tier": "Battlemage",
+    "tierIndex": 66,
+    "xpRequired": 5970,
+    "minXp": 1936365,
+    "maxXp": 1942335
+  },
+  {
+    "level": 656,
+    "title": "Battlemage VI",
+    "tier": "Battlemage",
+    "tierIndex": 66,
+    "xpRequired": 5980,
+    "minXp": 1942335,
+    "maxXp": 1948315
+  },
+  {
+    "level": 657,
+    "title": "Battlemage VII",
+    "tier": "Battlemage",
+    "tierIndex": 66,
+    "xpRequired": 5990,
+    "minXp": 1948315,
+    "maxXp": 1954305
+  },
+  {
+    "level": 658,
+    "title": "Battlemage VIII",
+    "tier": "Battlemage",
+    "tierIndex": 66,
+    "xpRequired": 5995,
+    "minXp": 1954305,
+    "maxXp": 1960300
+  },
+  {
+    "level": 659,
+    "title": "Battlemage IX",
+    "tier": "Battlemage",
+    "tierIndex": 66,
+    "xpRequired": 6005,
+    "minXp": 1960300,
+    "maxXp": 1966305
+  },
+  {
+    "level": 660,
+    "title": "Battlemage X",
+    "tier": "Battlemage",
+    "tierIndex": 66,
+    "xpRequired": 6015,
+    "minXp": 1966305,
+    "maxXp": 1972320
+  },
+  {
+    "level": 661,
+    "title": "Spellblade Master I",
+    "tier": "Spellblade Master",
+    "tierIndex": 67,
+    "xpRequired": 6025,
+    "minXp": 1972320,
+    "maxXp": 1978345
+  },
+  {
+    "level": 662,
+    "title": "Spellblade Master II",
+    "tier": "Spellblade Master",
+    "tierIndex": 67,
+    "xpRequired": 6035,
+    "minXp": 1978345,
+    "maxXp": 1984380
+  },
+  {
+    "level": 663,
+    "title": "Spellblade Master III",
+    "tier": "Spellblade Master",
+    "tierIndex": 67,
+    "xpRequired": 6045,
+    "minXp": 1984380,
+    "maxXp": 1990425
+  },
+  {
+    "level": 664,
+    "title": "Spellblade Master IV",
+    "tier": "Spellblade Master",
+    "tierIndex": 67,
+    "xpRequired": 6055,
+    "minXp": 1990425,
+    "maxXp": 1996480
+  },
+  {
+    "level": 665,
+    "title": "Spellblade Master V",
+    "tier": "Spellblade Master",
+    "tierIndex": 67,
+    "xpRequired": 6065,
+    "minXp": 1996480,
+    "maxXp": 2002545
+  },
+  {
+    "level": 666,
+    "title": "Spellblade Master VI",
+    "tier": "Spellblade Master",
+    "tierIndex": 67,
+    "xpRequired": 6070,
+    "minXp": 2002545,
+    "maxXp": 2008615
+  },
+  {
+    "level": 667,
+    "title": "Spellblade Master VII",
+    "tier": "Spellblade Master",
+    "tierIndex": 67,
+    "xpRequired": 6080,
+    "minXp": 2008615,
+    "maxXp": 2014695
+  },
+  {
+    "level": 668,
+    "title": "Spellblade Master VIII",
+    "tier": "Spellblade Master",
+    "tierIndex": 67,
+    "xpRequired": 6090,
+    "minXp": 2014695,
+    "maxXp": 2020785
+  },
+  {
+    "level": 669,
+    "title": "Spellblade Master IX",
+    "tier": "Spellblade Master",
+    "tierIndex": 67,
+    "xpRequired": 6100,
+    "minXp": 2020785,
+    "maxXp": 2026885
+  },
+  {
+    "level": 670,
+    "title": "Spellblade Master X",
+    "tier": "Spellblade Master",
+    "tierIndex": 67,
+    "xpRequired": 6110,
+    "minXp": 2026885,
+    "maxXp": 2032995
+  },
+  {
+    "level": 671,
+    "title": "Stormcaller I",
+    "tier": "Stormcaller",
+    "tierIndex": 68,
+    "xpRequired": 6120,
+    "minXp": 2032995,
+    "maxXp": 2039115
+  },
+  {
+    "level": 672,
+    "title": "Stormcaller II",
+    "tier": "Stormcaller",
+    "tierIndex": 68,
+    "xpRequired": 6130,
+    "minXp": 2039115,
+    "maxXp": 2045245
+  },
+  {
+    "level": 673,
+    "title": "Stormcaller III",
+    "tier": "Stormcaller",
+    "tierIndex": 68,
+    "xpRequired": 6140,
+    "minXp": 2045245,
+    "maxXp": 2051385
+  },
+  {
+    "level": 674,
+    "title": "Stormcaller IV",
+    "tier": "Stormcaller",
+    "tierIndex": 68,
+    "xpRequired": 6145,
+    "minXp": 2051385,
+    "maxXp": 2057530
+  },
+  {
+    "level": 675,
+    "title": "Stormcaller V",
+    "tier": "Stormcaller",
+    "tierIndex": 68,
+    "xpRequired": 6155,
+    "minXp": 2057530,
+    "maxXp": 2063685
+  },
+  {
+    "level": 676,
+    "title": "Stormcaller VI",
+    "tier": "Stormcaller",
+    "tierIndex": 68,
+    "xpRequired": 6165,
+    "minXp": 2063685,
+    "maxXp": 2069850
+  },
+  {
+    "level": 677,
+    "title": "Stormcaller VII",
+    "tier": "Stormcaller",
+    "tierIndex": 68,
+    "xpRequired": 6175,
+    "minXp": 2069850,
+    "maxXp": 2076025
+  },
+  {
+    "level": 678,
+    "title": "Stormcaller VIII",
+    "tier": "Stormcaller",
+    "tierIndex": 68,
+    "xpRequired": 6185,
+    "minXp": 2076025,
+    "maxXp": 2082210
+  },
+  {
+    "level": 679,
+    "title": "Stormcaller IX",
+    "tier": "Stormcaller",
+    "tierIndex": 68,
+    "xpRequired": 6195,
+    "minXp": 2082210,
+    "maxXp": 2088405
+  },
+  {
+    "level": 680,
+    "title": "Stormcaller X",
+    "tier": "Stormcaller",
+    "tierIndex": 68,
+    "xpRequired": 6205,
+    "minXp": 2088405,
+    "maxXp": 2094610
+  },
+  {
+    "level": 681,
+    "title": "Frost Knight I",
+    "tier": "Frost Knight",
+    "tierIndex": 69,
+    "xpRequired": 6215,
+    "minXp": 2094610,
+    "maxXp": 2100825
+  },
+  {
+    "level": 682,
+    "title": "Frost Knight II",
+    "tier": "Frost Knight",
+    "tierIndex": 69,
+    "xpRequired": 6220,
+    "minXp": 2100825,
+    "maxXp": 2107045
+  },
+  {
+    "level": 683,
+    "title": "Frost Knight III",
+    "tier": "Frost Knight",
+    "tierIndex": 69,
+    "xpRequired": 6230,
+    "minXp": 2107045,
+    "maxXp": 2113275
+  },
+  {
+    "level": 684,
+    "title": "Frost Knight IV",
+    "tier": "Frost Knight",
+    "tierIndex": 69,
+    "xpRequired": 6240,
+    "minXp": 2113275,
+    "maxXp": 2119515
+  },
+  {
+    "level": 685,
+    "title": "Frost Knight V",
+    "tier": "Frost Knight",
+    "tierIndex": 69,
+    "xpRequired": 6250,
+    "minXp": 2119515,
+    "maxXp": 2125765
+  },
+  {
+    "level": 686,
+    "title": "Frost Knight VI",
+    "tier": "Frost Knight",
+    "tierIndex": 69,
+    "xpRequired": 6260,
+    "minXp": 2125765,
+    "maxXp": 2132025
+  },
+  {
+    "level": 687,
+    "title": "Frost Knight VII",
+    "tier": "Frost Knight",
+    "tierIndex": 69,
+    "xpRequired": 6270,
+    "minXp": 2132025,
+    "maxXp": 2138295
+  },
+  {
+    "level": 688,
+    "title": "Frost Knight VIII",
+    "tier": "Frost Knight",
+    "tierIndex": 69,
+    "xpRequired": 6280,
+    "minXp": 2138295,
+    "maxXp": 2144575
+  },
+  {
+    "level": 689,
+    "title": "Frost Knight IX",
+    "tier": "Frost Knight",
+    "tierIndex": 69,
+    "xpRequired": 6290,
+    "minXp": 2144575,
+    "maxXp": 2150865
+  },
+  {
+    "level": 690,
+    "title": "Frost Knight X",
+    "tier": "Frost Knight",
+    "tierIndex": 69,
+    "xpRequired": 6300,
+    "minXp": 2150865,
+    "maxXp": 2157165
+  },
+  {
+    "level": 691,
+    "title": "Flame Knight I",
+    "tier": "Flame Knight",
+    "tierIndex": 70,
+    "xpRequired": 6305,
+    "minXp": 2157165,
+    "maxXp": 2163470
+  },
+  {
+    "level": 692,
+    "title": "Flame Knight II",
+    "tier": "Flame Knight",
+    "tierIndex": 70,
+    "xpRequired": 6315,
+    "minXp": 2163470,
+    "maxXp": 2169785
+  },
+  {
+    "level": 693,
+    "title": "Flame Knight III",
+    "tier": "Flame Knight",
+    "tierIndex": 70,
+    "xpRequired": 6325,
+    "minXp": 2169785,
+    "maxXp": 2176110
+  },
+  {
+    "level": 694,
+    "title": "Flame Knight IV",
+    "tier": "Flame Knight",
+    "tierIndex": 70,
+    "xpRequired": 6335,
+    "minXp": 2176110,
+    "maxXp": 2182445
+  },
+  {
+    "level": 695,
+    "title": "Flame Knight V",
+    "tier": "Flame Knight",
+    "tierIndex": 70,
+    "xpRequired": 6345,
+    "minXp": 2182445,
+    "maxXp": 2188790
+  },
+  {
+    "level": 696,
+    "title": "Flame Knight VI",
+    "tier": "Flame Knight",
+    "tierIndex": 70,
+    "xpRequired": 6355,
+    "minXp": 2188790,
+    "maxXp": 2195145
+  },
+  {
+    "level": 697,
+    "title": "Flame Knight VII",
+    "tier": "Flame Knight",
+    "tierIndex": 70,
+    "xpRequired": 6365,
+    "minXp": 2195145,
+    "maxXp": 2201510
+  },
+  {
+    "level": 698,
+    "title": "Flame Knight VIII",
+    "tier": "Flame Knight",
+    "tierIndex": 70,
+    "xpRequired": 6375,
+    "minXp": 2201510,
+    "maxXp": 2207885
+  },
+  {
+    "level": 699,
+    "title": "Flame Knight IX",
+    "tier": "Flame Knight",
+    "tierIndex": 70,
+    "xpRequired": 6380,
+    "minXp": 2207885,
+    "maxXp": 2214265
+  },
+  {
+    "level": 700,
+    "title": "Flame Knight X",
+    "tier": "Flame Knight",
+    "tierIndex": 70,
+    "xpRequired": 6390,
+    "minXp": 2214265,
+    "maxXp": 2220655
+  },
+  {
+    "level": 701,
+    "title": "Thunder Vanguard I",
+    "tier": "Thunder Vanguard",
+    "tierIndex": 71,
+    "xpRequired": 6400,
+    "minXp": 2220655,
+    "maxXp": 2227055
+  },
+  {
+    "level": 702,
+    "title": "Thunder Vanguard II",
+    "tier": "Thunder Vanguard",
+    "tierIndex": 71,
+    "xpRequired": 6410,
+    "minXp": 2227055,
+    "maxXp": 2233465
+  },
+  {
+    "level": 703,
+    "title": "Thunder Vanguard III",
+    "tier": "Thunder Vanguard",
+    "tierIndex": 71,
+    "xpRequired": 6420,
+    "minXp": 2233465,
+    "maxXp": 2239885
+  },
+  {
+    "level": 704,
+    "title": "Thunder Vanguard IV",
+    "tier": "Thunder Vanguard",
+    "tierIndex": 71,
+    "xpRequired": 6430,
+    "minXp": 2239885,
+    "maxXp": 2246315
+  },
+  {
+    "level": 705,
+    "title": "Thunder Vanguard V",
+    "tier": "Thunder Vanguard",
+    "tierIndex": 71,
+    "xpRequired": 6440,
+    "minXp": 2246315,
+    "maxXp": 2252755
+  },
+  {
+    "level": 706,
+    "title": "Thunder Vanguard VI",
+    "tier": "Thunder Vanguard",
+    "tierIndex": 71,
+    "xpRequired": 6450,
+    "minXp": 2252755,
+    "maxXp": 2259205
+  },
+  {
+    "level": 707,
+    "title": "Thunder Vanguard VII",
+    "tier": "Thunder Vanguard",
+    "tierIndex": 71,
+    "xpRequired": 6455,
+    "minXp": 2259205,
+    "maxXp": 2265660
+  },
+  {
+    "level": 708,
+    "title": "Thunder Vanguard VIII",
+    "tier": "Thunder Vanguard",
+    "tierIndex": 71,
+    "xpRequired": 6465,
+    "minXp": 2265660,
+    "maxXp": 2272125
+  },
+  {
+    "level": 709,
+    "title": "Thunder Vanguard IX",
+    "tier": "Thunder Vanguard",
+    "tierIndex": 71,
+    "xpRequired": 6475,
+    "minXp": 2272125,
+    "maxXp": 2278600
+  },
+  {
+    "level": 710,
+    "title": "Thunder Vanguard X",
+    "tier": "Thunder Vanguard",
+    "tierIndex": 71,
+    "xpRequired": 6485,
+    "minXp": 2278600,
+    "maxXp": 2285085
+  },
+  {
+    "level": 711,
+    "title": "Void Walker I",
+    "tier": "Void Walker",
+    "tierIndex": 72,
+    "xpRequired": 6495,
+    "minXp": 2285085,
+    "maxXp": 2291580
+  },
+  {
+    "level": 712,
+    "title": "Void Walker II",
+    "tier": "Void Walker",
+    "tierIndex": 72,
+    "xpRequired": 6505,
+    "minXp": 2291580,
+    "maxXp": 2298085
+  },
+  {
+    "level": 713,
+    "title": "Void Walker III",
+    "tier": "Void Walker",
+    "tierIndex": 72,
+    "xpRequired": 6515,
+    "minXp": 2298085,
+    "maxXp": 2304600
+  },
+  {
+    "level": 714,
+    "title": "Void Walker IV",
+    "tier": "Void Walker",
+    "tierIndex": 72,
+    "xpRequired": 6525,
+    "minXp": 2304600,
+    "maxXp": 2311125
+  },
+  {
+    "level": 715,
+    "title": "Void Walker V",
+    "tier": "Void Walker",
+    "tierIndex": 72,
+    "xpRequired": 6530,
+    "minXp": 2311125,
+    "maxXp": 2317655
+  },
+  {
+    "level": 716,
+    "title": "Void Walker VI",
+    "tier": "Void Walker",
+    "tierIndex": 72,
+    "xpRequired": 6540,
+    "minXp": 2317655,
+    "maxXp": 2324195
+  },
+  {
+    "level": 717,
+    "title": "Void Walker VII",
+    "tier": "Void Walker",
+    "tierIndex": 72,
+    "xpRequired": 6550,
+    "minXp": 2324195,
+    "maxXp": 2330745
+  },
+  {
+    "level": 718,
+    "title": "Void Walker VIII",
+    "tier": "Void Walker",
+    "tierIndex": 72,
+    "xpRequired": 6560,
+    "minXp": 2330745,
+    "maxXp": 2337305
+  },
+  {
+    "level": 719,
+    "title": "Void Walker IX",
+    "tier": "Void Walker",
+    "tierIndex": 72,
+    "xpRequired": 6570,
+    "minXp": 2337305,
+    "maxXp": 2343875
+  },
+  {
+    "level": 720,
+    "title": "Void Walker X",
+    "tier": "Void Walker",
+    "tierIndex": 72,
+    "xpRequired": 6580,
+    "minXp": 2343875,
+    "maxXp": 2350455
+  },
+  {
+    "level": 721,
+    "title": "Void Slayer I",
+    "tier": "Void Slayer",
+    "tierIndex": 73,
+    "xpRequired": 6590,
+    "minXp": 2350455,
+    "maxXp": 2357045
+  },
+  {
+    "level": 722,
+    "title": "Void Slayer II",
+    "tier": "Void Slayer",
+    "tierIndex": 73,
+    "xpRequired": 6600,
+    "minXp": 2357045,
+    "maxXp": 2363645
+  },
+  {
+    "level": 723,
+    "title": "Void Slayer III",
+    "tier": "Void Slayer",
+    "tierIndex": 73,
+    "xpRequired": 6610,
+    "minXp": 2363645,
+    "maxXp": 2370255
+  },
+  {
+    "level": 724,
+    "title": "Void Slayer IV",
+    "tier": "Void Slayer",
+    "tierIndex": 73,
+    "xpRequired": 6615,
+    "minXp": 2370255,
+    "maxXp": 2376870
+  },
+  {
+    "level": 725,
+    "title": "Void Slayer V",
+    "tier": "Void Slayer",
+    "tierIndex": 73,
+    "xpRequired": 6625,
+    "minXp": 2376870,
+    "maxXp": 2383495
+  },
+  {
+    "level": 726,
+    "title": "Void Slayer VI",
+    "tier": "Void Slayer",
+    "tierIndex": 73,
+    "xpRequired": 6635,
+    "minXp": 2383495,
+    "maxXp": 2390130
+  },
+  {
+    "level": 727,
+    "title": "Void Slayer VII",
+    "tier": "Void Slayer",
+    "tierIndex": 73,
+    "xpRequired": 6645,
+    "minXp": 2390130,
+    "maxXp": 2396775
+  },
+  {
+    "level": 728,
+    "title": "Void Slayer VIII",
+    "tier": "Void Slayer",
+    "tierIndex": 73,
+    "xpRequired": 6655,
+    "minXp": 2396775,
+    "maxXp": 2403430
+  },
+  {
+    "level": 729,
+    "title": "Void Slayer IX",
+    "tier": "Void Slayer",
+    "tierIndex": 73,
+    "xpRequired": 6665,
+    "minXp": 2403430,
+    "maxXp": 2410095
+  },
+  {
+    "level": 730,
+    "title": "Void Slayer X",
+    "tier": "Void Slayer",
+    "tierIndex": 73,
+    "xpRequired": 6675,
+    "minXp": 2410095,
+    "maxXp": 2416770
+  },
+  {
+    "level": 731,
+    "title": "Dragon Knight I",
+    "tier": "Dragon Knight",
+    "tierIndex": 74,
+    "xpRequired": 6685,
+    "minXp": 2416770,
+    "maxXp": 2423455
+  },
+  {
+    "level": 732,
+    "title": "Dragon Knight II",
+    "tier": "Dragon Knight",
+    "tierIndex": 74,
+    "xpRequired": 6690,
+    "minXp": 2423455,
+    "maxXp": 2430145
+  },
+  {
+    "level": 733,
+    "title": "Dragon Knight III",
+    "tier": "Dragon Knight",
+    "tierIndex": 74,
+    "xpRequired": 6700,
+    "minXp": 2430145,
+    "maxXp": 2436845
+  },
+  {
+    "level": 734,
+    "title": "Dragon Knight IV",
+    "tier": "Dragon Knight",
+    "tierIndex": 74,
+    "xpRequired": 6710,
+    "minXp": 2436845,
+    "maxXp": 2443555
+  },
+  {
+    "level": 735,
+    "title": "Dragon Knight V",
+    "tier": "Dragon Knight",
+    "tierIndex": 74,
+    "xpRequired": 6720,
+    "minXp": 2443555,
+    "maxXp": 2450275
+  },
+  {
+    "level": 736,
+    "title": "Dragon Knight VI",
+    "tier": "Dragon Knight",
+    "tierIndex": 74,
+    "xpRequired": 6730,
+    "minXp": 2450275,
+    "maxXp": 2457005
+  },
+  {
+    "level": 737,
+    "title": "Dragon Knight VII",
+    "tier": "Dragon Knight",
+    "tierIndex": 74,
+    "xpRequired": 6740,
+    "minXp": 2457005,
+    "maxXp": 2463745
+  },
+  {
+    "level": 738,
+    "title": "Dragon Knight VIII",
+    "tier": "Dragon Knight",
+    "tierIndex": 74,
+    "xpRequired": 6750,
+    "minXp": 2463745,
+    "maxXp": 2470495
+  },
+  {
+    "level": 739,
+    "title": "Dragon Knight IX",
+    "tier": "Dragon Knight",
+    "tierIndex": 74,
+    "xpRequired": 6760,
+    "minXp": 2470495,
+    "maxXp": 2477255
+  },
+  {
+    "level": 740,
+    "title": "Dragon Knight X",
+    "tier": "Dragon Knight",
+    "tierIndex": 74,
+    "xpRequired": 6770,
+    "minXp": 2477255,
+    "maxXp": 2484025
+  },
+  {
+    "level": 741,
+    "title": "Dragon Slayer I",
+    "tier": "Dragon Slayer",
+    "tierIndex": 75,
+    "xpRequired": 6775,
+    "minXp": 2484025,
+    "maxXp": 2490800
+  },
+  {
+    "level": 742,
+    "title": "Dragon Slayer II",
+    "tier": "Dragon Slayer",
+    "tierIndex": 75,
+    "xpRequired": 6785,
+    "minXp": 2490800,
+    "maxXp": 2497585
+  },
+  {
+    "level": 743,
+    "title": "Dragon Slayer III",
+    "tier": "Dragon Slayer",
+    "tierIndex": 75,
+    "xpRequired": 6795,
+    "minXp": 2497585,
+    "maxXp": 2504380
+  },
+  {
+    "level": 744,
+    "title": "Dragon Slayer IV",
+    "tier": "Dragon Slayer",
+    "tierIndex": 75,
+    "xpRequired": 6805,
+    "minXp": 2504380,
+    "maxXp": 2511185
+  },
+  {
+    "level": 745,
+    "title": "Dragon Slayer V",
+    "tier": "Dragon Slayer",
+    "tierIndex": 75,
+    "xpRequired": 6815,
+    "minXp": 2511185,
+    "maxXp": 2518000
+  },
+  {
+    "level": 746,
+    "title": "Dragon Slayer VI",
+    "tier": "Dragon Slayer",
+    "tierIndex": 75,
+    "xpRequired": 6825,
+    "minXp": 2518000,
+    "maxXp": 2524825
+  },
+  {
+    "level": 747,
+    "title": "Dragon Slayer VII",
+    "tier": "Dragon Slayer",
+    "tierIndex": 75,
+    "xpRequired": 6835,
+    "minXp": 2524825,
+    "maxXp": 2531660
+  },
+  {
+    "level": 748,
+    "title": "Dragon Slayer VIII",
+    "tier": "Dragon Slayer",
+    "tierIndex": 75,
+    "xpRequired": 6845,
+    "minXp": 2531660,
+    "maxXp": 2538505
+  },
+  {
+    "level": 749,
+    "title": "Dragon Slayer IX",
+    "tier": "Dragon Slayer",
+    "tierIndex": 75,
+    "xpRequired": 6850,
+    "minXp": 2538505,
+    "maxXp": 2545355
+  },
+  {
+    "level": 750,
+    "title": "Dragon Slayer X",
+    "tier": "Dragon Slayer",
+    "tierIndex": 75,
+    "xpRequired": 6860,
+    "minXp": 2545355,
+    "maxXp": 2552215
+  },
+  {
+    "level": 751,
+    "title": "Titan Slayer I",
+    "tier": "Titan Slayer",
+    "tierIndex": 76,
+    "xpRequired": 6870,
+    "minXp": 2552215,
+    "maxXp": 2559085
+  },
+  {
+    "level": 752,
+    "title": "Titan Slayer II",
+    "tier": "Titan Slayer",
+    "tierIndex": 76,
+    "xpRequired": 6880,
+    "minXp": 2559085,
+    "maxXp": 2565965
+  },
+  {
+    "level": 753,
+    "title": "Titan Slayer III",
+    "tier": "Titan Slayer",
+    "tierIndex": 76,
+    "xpRequired": 6890,
+    "minXp": 2565965,
+    "maxXp": 2572855
+  },
+  {
+    "level": 754,
+    "title": "Titan Slayer IV",
+    "tier": "Titan Slayer",
+    "tierIndex": 76,
+    "xpRequired": 6900,
+    "minXp": 2572855,
+    "maxXp": 2579755
+  },
+  {
+    "level": 755,
+    "title": "Titan Slayer V",
+    "tier": "Titan Slayer",
+    "tierIndex": 76,
+    "xpRequired": 6910,
+    "minXp": 2579755,
+    "maxXp": 2586665
+  },
+  {
+    "level": 756,
+    "title": "Titan Slayer VI",
+    "tier": "Titan Slayer",
+    "tierIndex": 76,
+    "xpRequired": 6920,
+    "minXp": 2586665,
+    "maxXp": 2593585
+  },
+  {
+    "level": 757,
+    "title": "Titan Slayer VII",
+    "tier": "Titan Slayer",
+    "tierIndex": 76,
+    "xpRequired": 6930,
+    "minXp": 2593585,
+    "maxXp": 2600515
+  },
+  {
+    "level": 758,
+    "title": "Titan Slayer VIII",
+    "tier": "Titan Slayer",
+    "tierIndex": 76,
+    "xpRequired": 6935,
+    "minXp": 2600515,
+    "maxXp": 2607450
+  },
+  {
+    "level": 759,
+    "title": "Titan Slayer IX",
+    "tier": "Titan Slayer",
+    "tierIndex": 76,
+    "xpRequired": 6945,
+    "minXp": 2607450,
+    "maxXp": 2614395
+  },
+  {
+    "level": 760,
+    "title": "Titan Slayer X",
+    "tier": "Titan Slayer",
+    "tierIndex": 76,
+    "xpRequired": 6955,
+    "minXp": 2614395,
+    "maxXp": 2621350
+  },
+  {
+    "level": 761,
+    "title": "Colossus Guard I",
+    "tier": "Colossus Guard",
+    "tierIndex": 77,
+    "xpRequired": 6965,
+    "minXp": 2621350,
+    "maxXp": 2628315
+  },
+  {
+    "level": 762,
+    "title": "Colossus Guard II",
+    "tier": "Colossus Guard",
+    "tierIndex": 77,
+    "xpRequired": 6975,
+    "minXp": 2628315,
+    "maxXp": 2635290
+  },
+  {
+    "level": 763,
+    "title": "Colossus Guard III",
+    "tier": "Colossus Guard",
+    "tierIndex": 77,
+    "xpRequired": 6985,
+    "minXp": 2635290,
+    "maxXp": 2642275
+  },
+  {
+    "level": 764,
+    "title": "Colossus Guard IV",
+    "tier": "Colossus Guard",
+    "tierIndex": 77,
+    "xpRequired": 6995,
+    "minXp": 2642275,
+    "maxXp": 2649270
+  },
+  {
+    "level": 765,
+    "title": "Colossus Guard V",
+    "tier": "Colossus Guard",
+    "tierIndex": 77,
+    "xpRequired": 7005,
+    "minXp": 2649270,
+    "maxXp": 2656275
+  },
+  {
+    "level": 766,
+    "title": "Colossus Guard VI",
+    "tier": "Colossus Guard",
+    "tierIndex": 77,
+    "xpRequired": 7015,
+    "minXp": 2656275,
+    "maxXp": 2663290
+  },
+  {
+    "level": 767,
+    "title": "Colossus Guard VII",
+    "tier": "Colossus Guard",
+    "tierIndex": 77,
+    "xpRequired": 7020,
+    "minXp": 2663290,
+    "maxXp": 2670310
+  },
+  {
+    "level": 768,
+    "title": "Colossus Guard VIII",
+    "tier": "Colossus Guard",
+    "tierIndex": 77,
+    "xpRequired": 7030,
+    "minXp": 2670310,
+    "maxXp": 2677340
+  },
+  {
+    "level": 769,
+    "title": "Colossus Guard IX",
+    "tier": "Colossus Guard",
+    "tierIndex": 77,
+    "xpRequired": 7040,
+    "minXp": 2677340,
+    "maxXp": 2684380
+  },
+  {
+    "level": 770,
+    "title": "Colossus Guard X",
+    "tier": "Colossus Guard",
+    "tierIndex": 77,
+    "xpRequired": 7050,
+    "minXp": 2684380,
+    "maxXp": 2691430
+  },
+  {
+    "level": 771,
+    "title": "Juggernaut I",
+    "tier": "Juggernaut",
+    "tierIndex": 78,
+    "xpRequired": 7060,
+    "minXp": 2691430,
+    "maxXp": 2698490
+  },
+  {
+    "level": 772,
+    "title": "Juggernaut II",
+    "tier": "Juggernaut",
+    "tierIndex": 78,
+    "xpRequired": 7070,
+    "minXp": 2698490,
+    "maxXp": 2705560
+  },
+  {
+    "level": 773,
+    "title": "Juggernaut III",
+    "tier": "Juggernaut",
+    "tierIndex": 78,
+    "xpRequired": 7080,
+    "minXp": 2705560,
+    "maxXp": 2712640
+  },
+  {
+    "level": 774,
+    "title": "Juggernaut IV",
+    "tier": "Juggernaut",
+    "tierIndex": 78,
+    "xpRequired": 7090,
+    "minXp": 2712640,
+    "maxXp": 2719730
+  },
+  {
+    "level": 775,
+    "title": "Juggernaut V",
+    "tier": "Juggernaut",
+    "tierIndex": 78,
+    "xpRequired": 7095,
+    "minXp": 2719730,
+    "maxXp": 2726825
+  },
+  {
+    "level": 776,
+    "title": "Juggernaut VI",
+    "tier": "Juggernaut",
+    "tierIndex": 78,
+    "xpRequired": 7105,
+    "minXp": 2726825,
+    "maxXp": 2733930
+  },
+  {
+    "level": 777,
+    "title": "Juggernaut VII",
+    "tier": "Juggernaut",
+    "tierIndex": 78,
+    "xpRequired": 7115,
+    "minXp": 2733930,
+    "maxXp": 2741045
+  },
+  {
+    "level": 778,
+    "title": "Juggernaut VIII",
+    "tier": "Juggernaut",
+    "tierIndex": 78,
+    "xpRequired": 7125,
+    "minXp": 2741045,
+    "maxXp": 2748170
+  },
+  {
+    "level": 779,
+    "title": "Juggernaut IX",
+    "tier": "Juggernaut",
+    "tierIndex": 78,
+    "xpRequired": 7135,
+    "minXp": 2748170,
+    "maxXp": 2755305
+  },
+  {
+    "level": 780,
+    "title": "Juggernaut X",
+    "tier": "Juggernaut",
+    "tierIndex": 78,
+    "xpRequired": 7145,
+    "minXp": 2755305,
+    "maxXp": 2762450
+  },
+  {
+    "level": 781,
+    "title": "Warlord I",
+    "tier": "Warlord",
+    "tierIndex": 79,
+    "xpRequired": 7155,
+    "minXp": 2762450,
+    "maxXp": 2769605
+  },
+  {
+    "level": 782,
+    "title": "Warlord II",
+    "tier": "Warlord",
+    "tierIndex": 79,
+    "xpRequired": 7165,
+    "minXp": 2769605,
+    "maxXp": 2776770
+  },
+  {
+    "level": 783,
+    "title": "Warlord III",
+    "tier": "Warlord",
+    "tierIndex": 79,
+    "xpRequired": 7175,
+    "minXp": 2776770,
+    "maxXp": 2783945
+  },
+  {
+    "level": 784,
+    "title": "Warlord IV",
+    "tier": "Warlord",
+    "tierIndex": 79,
+    "xpRequired": 7180,
+    "minXp": 2783945,
+    "maxXp": 2791125
+  },
+  {
+    "level": 785,
+    "title": "Warlord V",
+    "tier": "Warlord",
+    "tierIndex": 79,
+    "xpRequired": 7190,
+    "minXp": 2791125,
+    "maxXp": 2798315
+  },
+  {
+    "level": 786,
+    "title": "Warlord VI",
+    "tier": "Warlord",
+    "tierIndex": 79,
+    "xpRequired": 7200,
+    "minXp": 2798315,
+    "maxXp": 2805515
+  },
+  {
+    "level": 787,
+    "title": "Warlord VII",
+    "tier": "Warlord",
+    "tierIndex": 79,
+    "xpRequired": 7210,
+    "minXp": 2805515,
+    "maxXp": 2812725
+  },
+  {
+    "level": 788,
+    "title": "Warlord VIII",
+    "tier": "Warlord",
+    "tierIndex": 79,
+    "xpRequired": 7220,
+    "minXp": 2812725,
+    "maxXp": 2819945
+  },
+  {
+    "level": 789,
+    "title": "Warlord IX",
+    "tier": "Warlord",
+    "tierIndex": 79,
+    "xpRequired": 7230,
+    "minXp": 2819945,
+    "maxXp": 2827175
+  },
+  {
+    "level": 790,
+    "title": "Warlord X",
+    "tier": "Warlord",
+    "tierIndex": 79,
+    "xpRequired": 7240,
+    "minXp": 2827175,
+    "maxXp": 2834415
+  },
+  {
+    "level": 791,
+    "title": "High Commander I",
+    "tier": "High Commander",
+    "tierIndex": 80,
+    "xpRequired": 7250,
+    "minXp": 2834415,
+    "maxXp": 2841665
+  },
+  {
+    "level": 792,
+    "title": "High Commander II",
+    "tier": "High Commander",
+    "tierIndex": 80,
+    "xpRequired": 7260,
+    "minXp": 2841665,
+    "maxXp": 2848925
+  },
+  {
+    "level": 793,
+    "title": "High Commander III",
+    "tier": "High Commander",
+    "tierIndex": 80,
+    "xpRequired": 7265,
+    "minXp": 2848925,
+    "maxXp": 2856190
+  },
+  {
+    "level": 794,
+    "title": "High Commander IV",
+    "tier": "High Commander",
+    "tierIndex": 80,
+    "xpRequired": 7275,
+    "minXp": 2856190,
+    "maxXp": 2863465
+  },
+  {
+    "level": 795,
+    "title": "High Commander V",
+    "tier": "High Commander",
+    "tierIndex": 80,
+    "xpRequired": 7285,
+    "minXp": 2863465,
+    "maxXp": 2870750
+  },
+  {
+    "level": 796,
+    "title": "High Commander VI",
+    "tier": "High Commander",
+    "tierIndex": 80,
+    "xpRequired": 7295,
+    "minXp": 2870750,
+    "maxXp": 2878045
+  },
+  {
+    "level": 797,
+    "title": "High Commander VII",
+    "tier": "High Commander",
+    "tierIndex": 80,
+    "xpRequired": 7305,
+    "minXp": 2878045,
+    "maxXp": 2885350
+  },
+  {
+    "level": 798,
+    "title": "High Commander VIII",
+    "tier": "High Commander",
+    "tierIndex": 80,
+    "xpRequired": 7315,
+    "minXp": 2885350,
+    "maxXp": 2892665
+  },
+  {
+    "level": 799,
+    "title": "High Commander IX",
+    "tier": "High Commander",
+    "tierIndex": 80,
+    "xpRequired": 7325,
+    "minXp": 2892665,
+    "maxXp": 2899990
+  },
+  {
+    "level": 800,
+    "title": "High Commander X",
+    "tier": "High Commander",
+    "tierIndex": 80,
+    "xpRequired": 7335,
+    "minXp": 2899990,
+    "maxXp": 2907325
+  },
+  {
+    "level": 801,
+    "title": "Grand Marshal I",
+    "tier": "Grand Marshal",
+    "tierIndex": 81,
+    "xpRequired": 7345,
+    "minXp": 2907325,
+    "maxXp": 2914670
+  },
+  {
+    "level": 802,
+    "title": "Grand Marshal II",
+    "tier": "Grand Marshal",
+    "tierIndex": 81,
+    "xpRequired": 7350,
+    "minXp": 2914670,
+    "maxXp": 2922020
+  },
+  {
+    "level": 803,
+    "title": "Grand Marshal III",
+    "tier": "Grand Marshal",
+    "tierIndex": 81,
+    "xpRequired": 7360,
+    "minXp": 2922020,
+    "maxXp": 2929380
+  },
+  {
+    "level": 804,
+    "title": "Grand Marshal IV",
+    "tier": "Grand Marshal",
+    "tierIndex": 81,
+    "xpRequired": 7370,
+    "minXp": 2929380,
+    "maxXp": 2936750
+  },
+  {
+    "level": 805,
+    "title": "Grand Marshal V",
+    "tier": "Grand Marshal",
+    "tierIndex": 81,
+    "xpRequired": 7380,
+    "minXp": 2936750,
+    "maxXp": 2944130
+  },
+  {
+    "level": 806,
+    "title": "Grand Marshal VI",
+    "tier": "Grand Marshal",
+    "tierIndex": 81,
+    "xpRequired": 7390,
+    "minXp": 2944130,
+    "maxXp": 2951520
+  },
+  {
+    "level": 807,
+    "title": "Grand Marshal VII",
+    "tier": "Grand Marshal",
+    "tierIndex": 81,
+    "xpRequired": 7400,
+    "minXp": 2951520,
+    "maxXp": 2958920
+  },
+  {
+    "level": 808,
+    "title": "Grand Marshal VIII",
+    "tier": "Grand Marshal",
+    "tierIndex": 81,
+    "xpRequired": 7410,
+    "minXp": 2958920,
+    "maxXp": 2966330
+  },
+  {
+    "level": 809,
+    "title": "Grand Marshal IX",
+    "tier": "Grand Marshal",
+    "tierIndex": 81,
+    "xpRequired": 7420,
+    "minXp": 2966330,
+    "maxXp": 2973750
+  },
+  {
+    "level": 810,
+    "title": "Grand Marshal X",
+    "tier": "Grand Marshal",
+    "tierIndex": 81,
+    "xpRequired": 7430,
+    "minXp": 2973750,
+    "maxXp": 2981180
+  },
+  {
+    "level": 811,
+    "title": "Vanguard Sovereign I",
+    "tier": "Vanguard Sovereign",
+    "tierIndex": 82,
+    "xpRequired": 7435,
+    "minXp": 2981180,
+    "maxXp": 2988615
+  },
+  {
+    "level": 812,
+    "title": "Vanguard Sovereign II",
+    "tier": "Vanguard Sovereign",
+    "tierIndex": 82,
+    "xpRequired": 7445,
+    "minXp": 2988615,
+    "maxXp": 2996060
+  },
+  {
+    "level": 813,
+    "title": "Vanguard Sovereign III",
+    "tier": "Vanguard Sovereign",
+    "tierIndex": 82,
+    "xpRequired": 7455,
+    "minXp": 2996060,
+    "maxXp": 3003515
+  },
+  {
+    "level": 814,
+    "title": "Vanguard Sovereign IV",
+    "tier": "Vanguard Sovereign",
+    "tierIndex": 82,
+    "xpRequired": 7465,
+    "minXp": 3003515,
+    "maxXp": 3010980
+  },
+  {
+    "level": 815,
+    "title": "Vanguard Sovereign V",
+    "tier": "Vanguard Sovereign",
+    "tierIndex": 82,
+    "xpRequired": 7475,
+    "minXp": 3010980,
+    "maxXp": 3018455
+  },
+  {
+    "level": 816,
+    "title": "Vanguard Sovereign VI",
+    "tier": "Vanguard Sovereign",
+    "tierIndex": 82,
+    "xpRequired": 7485,
+    "minXp": 3018455,
+    "maxXp": 3025940
+  },
+  {
+    "level": 817,
+    "title": "Vanguard Sovereign VII",
+    "tier": "Vanguard Sovereign",
+    "tierIndex": 82,
+    "xpRequired": 7495,
+    "minXp": 3025940,
+    "maxXp": 3033435
+  },
+  {
+    "level": 818,
+    "title": "Vanguard Sovereign VIII",
+    "tier": "Vanguard Sovereign",
+    "tierIndex": 82,
+    "xpRequired": 7505,
+    "minXp": 3033435,
+    "maxXp": 3040940
+  },
+  {
+    "level": 819,
+    "title": "Vanguard Sovereign IX",
+    "tier": "Vanguard Sovereign",
+    "tierIndex": 82,
+    "xpRequired": 7515,
+    "minXp": 3040940,
+    "maxXp": 3048455
+  },
+  {
+    "level": 820,
+    "title": "Vanguard Sovereign X",
+    "tier": "Vanguard Sovereign",
+    "tierIndex": 82,
+    "xpRequired": 7525,
+    "minXp": 3048455,
+    "maxXp": 3055980
+  },
+  {
+    "level": 821,
+    "title": "Hero I",
+    "tier": "Hero",
+    "tierIndex": 83,
+    "xpRequired": 7530,
+    "minXp": 3055980,
+    "maxXp": 3063510
+  },
+  {
+    "level": 822,
+    "title": "Hero II",
+    "tier": "Hero",
+    "tierIndex": 83,
+    "xpRequired": 7540,
+    "minXp": 3063510,
+    "maxXp": 3071050
+  },
+  {
+    "level": 823,
+    "title": "Hero III",
+    "tier": "Hero",
+    "tierIndex": 83,
+    "xpRequired": 7550,
+    "minXp": 3071050,
+    "maxXp": 3078600
+  },
+  {
+    "level": 824,
+    "title": "Hero IV",
+    "tier": "Hero",
+    "tierIndex": 83,
+    "xpRequired": 7560,
+    "minXp": 3078600,
+    "maxXp": 3086160
+  },
+  {
+    "level": 825,
+    "title": "Hero V",
+    "tier": "Hero",
+    "tierIndex": 83,
+    "xpRequired": 7570,
+    "minXp": 3086160,
+    "maxXp": 3093730
+  },
+  {
+    "level": 826,
+    "title": "Hero VI",
+    "tier": "Hero",
+    "tierIndex": 83,
+    "xpRequired": 7580,
+    "minXp": 3093730,
+    "maxXp": 3101310
+  },
+  {
+    "level": 827,
+    "title": "Hero VII",
+    "tier": "Hero",
+    "tierIndex": 83,
+    "xpRequired": 7590,
+    "minXp": 3101310,
+    "maxXp": 3108900
+  },
+  {
+    "level": 828,
+    "title": "Hero VIII",
+    "tier": "Hero",
+    "tierIndex": 83,
+    "xpRequired": 7600,
+    "minXp": 3108900,
+    "maxXp": 3116500
+  },
+  {
+    "level": 829,
+    "title": "Hero IX",
+    "tier": "Hero",
+    "tierIndex": 83,
+    "xpRequired": 7610,
+    "minXp": 3116500,
+    "maxXp": 3124110
+  },
+  {
+    "level": 830,
+    "title": "Hero X",
+    "tier": "Hero",
+    "tierIndex": 83,
+    "xpRequired": 7615,
+    "minXp": 3124110,
+    "maxXp": 3131725
+  },
+  {
+    "level": 831,
+    "title": "Veteran Hero I",
+    "tier": "Veteran Hero",
+    "tierIndex": 84,
+    "xpRequired": 7625,
+    "minXp": 3131725,
+    "maxXp": 3139350
+  },
+  {
+    "level": 832,
+    "title": "Veteran Hero II",
+    "tier": "Veteran Hero",
+    "tierIndex": 84,
+    "xpRequired": 7635,
+    "minXp": 3139350,
+    "maxXp": 3146985
+  },
+  {
+    "level": 833,
+    "title": "Veteran Hero III",
+    "tier": "Veteran Hero",
+    "tierIndex": 84,
+    "xpRequired": 7645,
+    "minXp": 3146985,
+    "maxXp": 3154630
+  },
+  {
+    "level": 834,
+    "title": "Veteran Hero IV",
+    "tier": "Veteran Hero",
+    "tierIndex": 84,
+    "xpRequired": 7655,
+    "minXp": 3154630,
+    "maxXp": 3162285
+  },
+  {
+    "level": 835,
+    "title": "Veteran Hero V",
+    "tier": "Veteran Hero",
+    "tierIndex": 84,
+    "xpRequired": 7665,
+    "minXp": 3162285,
+    "maxXp": 3169950
+  },
+  {
+    "level": 836,
+    "title": "Veteran Hero VI",
+    "tier": "Veteran Hero",
+    "tierIndex": 84,
+    "xpRequired": 7675,
+    "minXp": 3169950,
+    "maxXp": 3177625
+  },
+  {
+    "level": 837,
+    "title": "Veteran Hero VII",
+    "tier": "Veteran Hero",
+    "tierIndex": 84,
+    "xpRequired": 7685,
+    "minXp": 3177625,
+    "maxXp": 3185310
+  },
+  {
+    "level": 838,
+    "title": "Veteran Hero VIII",
+    "tier": "Veteran Hero",
+    "tierIndex": 84,
+    "xpRequired": 7695,
+    "minXp": 3185310,
+    "maxXp": 3193005
+  },
+  {
+    "level": 839,
+    "title": "Veteran Hero IX",
+    "tier": "Veteran Hero",
+    "tierIndex": 84,
+    "xpRequired": 7700,
+    "minXp": 3193005,
+    "maxXp": 3200705
+  },
+  {
+    "level": 840,
+    "title": "Veteran Hero X",
+    "tier": "Veteran Hero",
+    "tierIndex": 84,
+    "xpRequired": 7710,
+    "minXp": 3200705,
+    "maxXp": 3208415
+  },
+  {
+    "level": 841,
+    "title": "Apex Champion I",
+    "tier": "Apex Champion",
+    "tierIndex": 85,
+    "xpRequired": 7720,
+    "minXp": 3208415,
+    "maxXp": 3216135
+  },
+  {
+    "level": 842,
+    "title": "Apex Champion II",
+    "tier": "Apex Champion",
+    "tierIndex": 85,
+    "xpRequired": 7730,
+    "minXp": 3216135,
+    "maxXp": 3223865
+  },
+  {
+    "level": 843,
+    "title": "Apex Champion III",
+    "tier": "Apex Champion",
+    "tierIndex": 85,
+    "xpRequired": 7740,
+    "minXp": 3223865,
+    "maxXp": 3231605
+  },
+  {
+    "level": 844,
+    "title": "Apex Champion IV",
+    "tier": "Apex Champion",
+    "tierIndex": 85,
+    "xpRequired": 7750,
+    "minXp": 3231605,
+    "maxXp": 3239355
+  },
+  {
+    "level": 845,
+    "title": "Apex Champion V",
+    "tier": "Apex Champion",
+    "tierIndex": 85,
+    "xpRequired": 7760,
+    "minXp": 3239355,
+    "maxXp": 3247115
+  },
+  {
+    "level": 846,
+    "title": "Apex Champion VI",
+    "tier": "Apex Champion",
+    "tierIndex": 85,
+    "xpRequired": 7770,
+    "minXp": 3247115,
+    "maxXp": 3254885
+  },
+  {
+    "level": 847,
+    "title": "Apex Champion VII",
+    "tier": "Apex Champion",
+    "tierIndex": 85,
+    "xpRequired": 7780,
+    "minXp": 3254885,
+    "maxXp": 3262665
+  },
+  {
+    "level": 848,
+    "title": "Apex Champion VIII",
+    "tier": "Apex Champion",
+    "tierIndex": 85,
+    "xpRequired": 7790,
+    "minXp": 3262665,
+    "maxXp": 3270455
+  },
+  {
+    "level": 849,
+    "title": "Apex Champion IX",
+    "tier": "Apex Champion",
+    "tierIndex": 85,
+    "xpRequired": 7795,
+    "minXp": 3270455,
+    "maxXp": 3278250
+  },
+  {
+    "level": 850,
+    "title": "Apex Champion X",
+    "tier": "Apex Champion",
+    "tierIndex": 85,
+    "xpRequired": 7805,
+    "minXp": 3278250,
+    "maxXp": 3286055
+  },
+  {
+    "level": 851,
+    "title": "Grandmaster I",
+    "tier": "Grandmaster",
+    "tierIndex": 86,
+    "xpRequired": 7815,
+    "minXp": 3286055,
+    "maxXp": 3293870
+  },
+  {
+    "level": 852,
+    "title": "Grandmaster II",
+    "tier": "Grandmaster",
+    "tierIndex": 86,
+    "xpRequired": 7825,
+    "minXp": 3293870,
+    "maxXp": 3301695
+  },
+  {
+    "level": 853,
+    "title": "Grandmaster III",
+    "tier": "Grandmaster",
+    "tierIndex": 86,
+    "xpRequired": 7835,
+    "minXp": 3301695,
+    "maxXp": 3309530
+  },
+  {
+    "level": 854,
+    "title": "Grandmaster IV",
+    "tier": "Grandmaster",
+    "tierIndex": 86,
+    "xpRequired": 7845,
+    "minXp": 3309530,
+    "maxXp": 3317375
+  },
+  {
+    "level": 855,
+    "title": "Grandmaster V",
+    "tier": "Grandmaster",
+    "tierIndex": 86,
+    "xpRequired": 7855,
+    "minXp": 3317375,
+    "maxXp": 3325230
+  },
+  {
+    "level": 856,
+    "title": "Grandmaster VI",
+    "tier": "Grandmaster",
+    "tierIndex": 86,
+    "xpRequired": 7865,
+    "minXp": 3325230,
+    "maxXp": 3333095
+  },
+  {
+    "level": 857,
+    "title": "Grandmaster VII",
+    "tier": "Grandmaster",
+    "tierIndex": 86,
+    "xpRequired": 7875,
+    "minXp": 3333095,
+    "maxXp": 3340970
+  },
+  {
+    "level": 858,
+    "title": "Grandmaster VIII",
+    "tier": "Grandmaster",
+    "tierIndex": 86,
+    "xpRequired": 7880,
+    "minXp": 3340970,
+    "maxXp": 3348850
+  },
+  {
+    "level": 859,
+    "title": "Grandmaster IX",
+    "tier": "Grandmaster",
+    "tierIndex": 86,
+    "xpRequired": 7890,
+    "minXp": 3348850,
+    "maxXp": 3356740
+  },
+  {
+    "level": 860,
+    "title": "Grandmaster X",
+    "tier": "Grandmaster",
+    "tierIndex": 86,
+    "xpRequired": 7900,
+    "minXp": 3356740,
+    "maxXp": 3364640
+  },
+  {
+    "level": 861,
+    "title": "High Grandmaster I",
+    "tier": "High Grandmaster",
+    "tierIndex": 87,
+    "xpRequired": 7910,
+    "minXp": 3364640,
+    "maxXp": 3372550
+  },
+  {
+    "level": 862,
+    "title": "High Grandmaster II",
+    "tier": "High Grandmaster",
+    "tierIndex": 87,
+    "xpRequired": 7920,
+    "minXp": 3372550,
+    "maxXp": 3380470
+  },
+  {
+    "level": 863,
+    "title": "High Grandmaster III",
+    "tier": "High Grandmaster",
+    "tierIndex": 87,
+    "xpRequired": 7930,
+    "minXp": 3380470,
+    "maxXp": 3388400
+  },
+  {
+    "level": 864,
+    "title": "High Grandmaster IV",
+    "tier": "High Grandmaster",
+    "tierIndex": 87,
+    "xpRequired": 7940,
+    "minXp": 3388400,
+    "maxXp": 3396340
+  },
+  {
+    "level": 865,
+    "title": "High Grandmaster V",
+    "tier": "High Grandmaster",
+    "tierIndex": 87,
+    "xpRequired": 7950,
+    "minXp": 3396340,
+    "maxXp": 3404290
+  },
+  {
+    "level": 866,
+    "title": "High Grandmaster VI",
+    "tier": "High Grandmaster",
+    "tierIndex": 87,
+    "xpRequired": 7960,
+    "minXp": 3404290,
+    "maxXp": 3412250
+  },
+  {
+    "level": 867,
+    "title": "High Grandmaster VII",
+    "tier": "High Grandmaster",
+    "tierIndex": 87,
+    "xpRequired": 7970,
+    "minXp": 3412250,
+    "maxXp": 3420220
+  },
+  {
+    "level": 868,
+    "title": "High Grandmaster VIII",
+    "tier": "High Grandmaster",
+    "tierIndex": 87,
+    "xpRequired": 7975,
+    "minXp": 3420220,
+    "maxXp": 3428195
+  },
+  {
+    "level": 869,
+    "title": "High Grandmaster IX",
+    "tier": "High Grandmaster",
+    "tierIndex": 87,
+    "xpRequired": 7985,
+    "minXp": 3428195,
+    "maxXp": 3436180
+  },
+  {
+    "level": 870,
+    "title": "High Grandmaster X",
+    "tier": "High Grandmaster",
+    "tierIndex": 87,
+    "xpRequired": 7995,
+    "minXp": 3436180,
+    "maxXp": 3444175
+  },
+  {
+    "level": 871,
+    "title": "Mythic Knight I",
+    "tier": "Mythic Knight",
+    "tierIndex": 88,
+    "xpRequired": 8005,
+    "minXp": 3444175,
+    "maxXp": 3452180
+  },
+  {
+    "level": 872,
+    "title": "Mythic Knight II",
+    "tier": "Mythic Knight",
+    "tierIndex": 88,
+    "xpRequired": 8015,
+    "minXp": 3452180,
+    "maxXp": 3460195
+  },
+  {
+    "level": 873,
+    "title": "Mythic Knight III",
+    "tier": "Mythic Knight",
+    "tierIndex": 88,
+    "xpRequired": 8025,
+    "minXp": 3460195,
+    "maxXp": 3468220
+  },
+  {
+    "level": 874,
+    "title": "Mythic Knight IV",
+    "tier": "Mythic Knight",
+    "tierIndex": 88,
+    "xpRequired": 8035,
+    "minXp": 3468220,
+    "maxXp": 3476255
+  },
+  {
+    "level": 875,
+    "title": "Mythic Knight V",
+    "tier": "Mythic Knight",
+    "tierIndex": 88,
+    "xpRequired": 8045,
+    "minXp": 3476255,
+    "maxXp": 3484300
+  },
+  {
+    "level": 876,
+    "title": "Mythic Knight VI",
+    "tier": "Mythic Knight",
+    "tierIndex": 88,
+    "xpRequired": 8055,
+    "minXp": 3484300,
+    "maxXp": 3492355
+  },
+  {
+    "level": 877,
+    "title": "Mythic Knight VII",
+    "tier": "Mythic Knight",
+    "tierIndex": 88,
+    "xpRequired": 8065,
+    "minXp": 3492355,
+    "maxXp": 3500420
+  },
+  {
+    "level": 878,
+    "title": "Mythic Knight VIII",
+    "tier": "Mythic Knight",
+    "tierIndex": 88,
+    "xpRequired": 8070,
+    "minXp": 3500420,
+    "maxXp": 3508490
+  },
+  {
+    "level": 879,
+    "title": "Mythic Knight IX",
+    "tier": "Mythic Knight",
+    "tierIndex": 88,
+    "xpRequired": 8080,
+    "minXp": 3508490,
+    "maxXp": 3516570
+  },
+  {
+    "level": 880,
+    "title": "Mythic Knight X",
+    "tier": "Mythic Knight",
+    "tierIndex": 88,
+    "xpRequired": 8090,
+    "minXp": 3516570,
+    "maxXp": 3524660
+  },
+  {
+    "level": 881,
+    "title": "Mythic Champion I",
+    "tier": "Mythic Champion",
+    "tierIndex": 89,
+    "xpRequired": 8100,
+    "minXp": 3524660,
+    "maxXp": 3532760
+  },
+  {
+    "level": 882,
+    "title": "Mythic Champion II",
+    "tier": "Mythic Champion",
+    "tierIndex": 89,
+    "xpRequired": 8110,
+    "minXp": 3532760,
+    "maxXp": 3540870
+  },
+  {
+    "level": 883,
+    "title": "Mythic Champion III",
+    "tier": "Mythic Champion",
+    "tierIndex": 89,
+    "xpRequired": 8120,
+    "minXp": 3540870,
+    "maxXp": 3548990
+  },
+  {
+    "level": 884,
+    "title": "Mythic Champion IV",
+    "tier": "Mythic Champion",
+    "tierIndex": 89,
+    "xpRequired": 8130,
+    "minXp": 3548990,
+    "maxXp": 3557120
+  },
+  {
+    "level": 885,
+    "title": "Mythic Champion V",
+    "tier": "Mythic Champion",
+    "tierIndex": 89,
+    "xpRequired": 8140,
+    "minXp": 3557120,
+    "maxXp": 3565260
+  },
+  {
+    "level": 886,
+    "title": "Mythic Champion VI",
+    "tier": "Mythic Champion",
+    "tierIndex": 89,
+    "xpRequired": 8150,
+    "minXp": 3565260,
+    "maxXp": 3573410
+  },
+  {
+    "level": 887,
+    "title": "Mythic Champion VII",
+    "tier": "Mythic Champion",
+    "tierIndex": 89,
+    "xpRequired": 8160,
+    "minXp": 3573410,
+    "maxXp": 3581570
+  },
+  {
+    "level": 888,
+    "title": "Mythic Champion VIII",
+    "tier": "Mythic Champion",
+    "tierIndex": 89,
+    "xpRequired": 8165,
+    "minXp": 3581570,
+    "maxXp": 3589735
+  },
+  {
+    "level": 889,
+    "title": "Mythic Champion IX",
+    "tier": "Mythic Champion",
+    "tierIndex": 89,
+    "xpRequired": 8175,
+    "minXp": 3589735,
+    "maxXp": 3597910
+  },
+  {
+    "level": 890,
+    "title": "Mythic Champion X",
+    "tier": "Mythic Champion",
+    "tierIndex": 89,
+    "xpRequired": 8185,
+    "minXp": 3597910,
+    "maxXp": 3606095
+  },
+  {
+    "level": 891,
+    "title": "Mythic Warlord I",
+    "tier": "Mythic Warlord",
+    "tierIndex": 90,
+    "xpRequired": 8195,
+    "minXp": 3606095,
+    "maxXp": 3614290
+  },
+  {
+    "level": 892,
+    "title": "Mythic Warlord II",
+    "tier": "Mythic Warlord",
+    "tierIndex": 90,
+    "xpRequired": 8205,
+    "minXp": 3614290,
+    "maxXp": 3622495
+  },
+  {
+    "level": 893,
+    "title": "Mythic Warlord III",
+    "tier": "Mythic Warlord",
+    "tierIndex": 90,
+    "xpRequired": 8215,
+    "minXp": 3622495,
+    "maxXp": 3630710
+  },
+  {
+    "level": 894,
+    "title": "Mythic Warlord IV",
+    "tier": "Mythic Warlord",
+    "tierIndex": 90,
+    "xpRequired": 8225,
+    "minXp": 3630710,
+    "maxXp": 3638935
+  },
+  {
+    "level": 895,
+    "title": "Mythic Warlord V",
+    "tier": "Mythic Warlord",
+    "tierIndex": 90,
+    "xpRequired": 8235,
+    "minXp": 3638935,
+    "maxXp": 3647170
+  },
+  {
+    "level": 896,
+    "title": "Mythic Warlord VI",
+    "tier": "Mythic Warlord",
+    "tierIndex": 90,
+    "xpRequired": 8245,
+    "minXp": 3647170,
+    "maxXp": 3655415
+  },
+  {
+    "level": 897,
+    "title": "Mythic Warlord VII",
+    "tier": "Mythic Warlord",
+    "tierIndex": 90,
+    "xpRequired": 8250,
+    "minXp": 3655415,
+    "maxXp": 3663665
+  },
+  {
+    "level": 898,
+    "title": "Mythic Warlord VIII",
+    "tier": "Mythic Warlord",
+    "tierIndex": 90,
+    "xpRequired": 8260,
+    "minXp": 3663665,
+    "maxXp": 3671925
+  },
+  {
+    "level": 899,
+    "title": "Mythic Warlord IX",
+    "tier": "Mythic Warlord",
+    "tierIndex": 90,
+    "xpRequired": 8270,
+    "minXp": 3671925,
+    "maxXp": 3680195
+  },
+  {
+    "level": 900,
+    "title": "Mythic Warlord X",
+    "tier": "Mythic Warlord",
+    "tierIndex": 90,
+    "xpRequired": 8280,
+    "minXp": 3680195,
+    "maxXp": 3688475
+  },
+  {
+    "level": 901,
+    "title": "Legend I",
+    "tier": "Legend",
+    "tierIndex": 91,
+    "xpRequired": 8290,
+    "minXp": 3688475,
+    "maxXp": 3696765
+  },
+  {
+    "level": 902,
+    "title": "Legend II",
+    "tier": "Legend",
+    "tierIndex": 91,
+    "xpRequired": 8300,
+    "minXp": 3696765,
+    "maxXp": 3705065
+  },
+  {
+    "level": 903,
+    "title": "Legend III",
+    "tier": "Legend",
+    "tierIndex": 91,
+    "xpRequired": 8310,
+    "minXp": 3705065,
+    "maxXp": 3713375
+  },
+  {
+    "level": 904,
+    "title": "Legend IV",
+    "tier": "Legend",
+    "tierIndex": 91,
+    "xpRequired": 8320,
+    "minXp": 3713375,
+    "maxXp": 3721695
+  },
+  {
+    "level": 905,
+    "title": "Legend V",
+    "tier": "Legend",
+    "tierIndex": 91,
+    "xpRequired": 8330,
+    "minXp": 3721695,
+    "maxXp": 3730025
+  },
+  {
+    "level": 906,
+    "title": "Legend VI",
+    "tier": "Legend",
+    "tierIndex": 91,
+    "xpRequired": 8340,
+    "minXp": 3730025,
+    "maxXp": 3738365
+  },
+  {
+    "level": 907,
+    "title": "Legend VII",
+    "tier": "Legend",
+    "tierIndex": 91,
+    "xpRequired": 8345,
+    "minXp": 3738365,
+    "maxXp": 3746710
+  },
+  {
+    "level": 908,
+    "title": "Legend VIII",
+    "tier": "Legend",
+    "tierIndex": 91,
+    "xpRequired": 8355,
+    "minXp": 3746710,
+    "maxXp": 3755065
+  },
+  {
+    "level": 909,
+    "title": "Legend IX",
+    "tier": "Legend",
+    "tierIndex": 91,
+    "xpRequired": 8365,
+    "minXp": 3755065,
+    "maxXp": 3763430
+  },
+  {
+    "level": 910,
+    "title": "Legend X",
+    "tier": "Legend",
+    "tierIndex": 91,
+    "xpRequired": 8375,
+    "minXp": 3763430,
+    "maxXp": 3771805
+  },
+  {
+    "level": 911,
+    "title": "Apex Legend I",
+    "tier": "Apex Legend",
+    "tierIndex": 92,
+    "xpRequired": 8385,
+    "minXp": 3771805,
+    "maxXp": 3780190
+  },
+  {
+    "level": 912,
+    "title": "Apex Legend II",
+    "tier": "Apex Legend",
+    "tierIndex": 92,
+    "xpRequired": 8395,
+    "minXp": 3780190,
+    "maxXp": 3788585
+  },
+  {
+    "level": 913,
+    "title": "Apex Legend III",
+    "tier": "Apex Legend",
+    "tierIndex": 92,
+    "xpRequired": 8405,
+    "minXp": 3788585,
+    "maxXp": 3796990
+  },
+  {
+    "level": 914,
+    "title": "Apex Legend IV",
+    "tier": "Apex Legend",
+    "tierIndex": 92,
+    "xpRequired": 8415,
+    "minXp": 3796990,
+    "maxXp": 3805405
+  },
+  {
+    "level": 915,
+    "title": "Apex Legend V",
+    "tier": "Apex Legend",
+    "tierIndex": 92,
+    "xpRequired": 8425,
+    "minXp": 3805405,
+    "maxXp": 3813830
+  },
+  {
+    "level": 916,
+    "title": "Apex Legend VI",
+    "tier": "Apex Legend",
+    "tierIndex": 92,
+    "xpRequired": 8435,
+    "minXp": 3813830,
+    "maxXp": 3822265
+  },
+  {
+    "level": 917,
+    "title": "Apex Legend VII",
+    "tier": "Apex Legend",
+    "tierIndex": 92,
+    "xpRequired": 8445,
+    "minXp": 3822265,
+    "maxXp": 3830710
+  },
+  {
+    "level": 918,
+    "title": "Apex Legend VIII",
+    "tier": "Apex Legend",
+    "tierIndex": 92,
+    "xpRequired": 8450,
+    "minXp": 3830710,
+    "maxXp": 3839160
+  },
+  {
+    "level": 919,
+    "title": "Apex Legend IX",
+    "tier": "Apex Legend",
+    "tierIndex": 92,
+    "xpRequired": 8460,
+    "minXp": 3839160,
+    "maxXp": 3847620
+  },
+  {
+    "level": 920,
+    "title": "Apex Legend X",
+    "tier": "Apex Legend",
+    "tierIndex": 92,
+    "xpRequired": 8470,
+    "minXp": 3847620,
+    "maxXp": 3856090
+  },
+  {
+    "level": 921,
+    "title": "Demigod I",
+    "tier": "Demigod",
+    "tierIndex": 93,
+    "xpRequired": 8480,
+    "minXp": 3856090,
+    "maxXp": 3864570
+  },
+  {
+    "level": 922,
+    "title": "Demigod II",
+    "tier": "Demigod",
+    "tierIndex": 93,
+    "xpRequired": 8490,
+    "minXp": 3864570,
+    "maxXp": 3873060
+  },
+  {
+    "level": 923,
+    "title": "Demigod III",
+    "tier": "Demigod",
+    "tierIndex": 93,
+    "xpRequired": 8500,
+    "minXp": 3873060,
+    "maxXp": 3881560
+  },
+  {
+    "level": 924,
+    "title": "Demigod IV",
+    "tier": "Demigod",
+    "tierIndex": 93,
+    "xpRequired": 8510,
+    "minXp": 3881560,
+    "maxXp": 3890070
+  },
+  {
+    "level": 925,
+    "title": "Demigod V",
+    "tier": "Demigod",
+    "tierIndex": 93,
+    "xpRequired": 8520,
+    "minXp": 3890070,
+    "maxXp": 3898590
+  },
+  {
+    "level": 926,
+    "title": "Demigod VI",
+    "tier": "Demigod",
+    "tierIndex": 93,
+    "xpRequired": 8530,
+    "minXp": 3898590,
+    "maxXp": 3907120
+  },
+  {
+    "level": 927,
+    "title": "Demigod VII",
+    "tier": "Demigod",
+    "tierIndex": 93,
+    "xpRequired": 8540,
+    "minXp": 3907120,
+    "maxXp": 3915660
+  },
+  {
+    "level": 928,
+    "title": "Demigod VIII",
+    "tier": "Demigod",
+    "tierIndex": 93,
+    "xpRequired": 8545,
+    "minXp": 3915660,
+    "maxXp": 3924205
+  },
+  {
+    "level": 929,
+    "title": "Demigod IX",
+    "tier": "Demigod",
+    "tierIndex": 93,
+    "xpRequired": 8555,
+    "minXp": 3924205,
+    "maxXp": 3932760
+  },
+  {
+    "level": 930,
+    "title": "Demigod X",
+    "tier": "Demigod",
+    "tierIndex": 93,
+    "xpRequired": 8565,
+    "minXp": 3932760,
+    "maxXp": 3941325
+  },
+  {
+    "level": 931,
+    "title": "Immortal I",
+    "tier": "Immortal",
+    "tierIndex": 94,
+    "xpRequired": 8575,
+    "minXp": 3941325,
+    "maxXp": 3949900
+  },
+  {
+    "level": 932,
+    "title": "Immortal II",
+    "tier": "Immortal",
+    "tierIndex": 94,
+    "xpRequired": 8585,
+    "minXp": 3949900,
+    "maxXp": 3958485
+  },
+  {
+    "level": 933,
+    "title": "Immortal III",
+    "tier": "Immortal",
+    "tierIndex": 94,
+    "xpRequired": 8595,
+    "minXp": 3958485,
+    "maxXp": 3967080
+  },
+  {
+    "level": 934,
+    "title": "Immortal IV",
+    "tier": "Immortal",
+    "tierIndex": 94,
+    "xpRequired": 8605,
+    "minXp": 3967080,
+    "maxXp": 3975685
+  },
+  {
+    "level": 935,
+    "title": "Immortal V",
+    "tier": "Immortal",
+    "tierIndex": 94,
+    "xpRequired": 8615,
+    "minXp": 3975685,
+    "maxXp": 3984300
+  },
+  {
+    "level": 936,
+    "title": "Immortal VI",
+    "tier": "Immortal",
+    "tierIndex": 94,
+    "xpRequired": 8625,
+    "minXp": 3984300,
+    "maxXp": 3992925
+  },
+  {
+    "level": 937,
+    "title": "Immortal VII",
+    "tier": "Immortal",
+    "tierIndex": 94,
+    "xpRequired": 8635,
+    "minXp": 3992925,
+    "maxXp": 4001560
+  },
+  {
+    "level": 938,
+    "title": "Immortal VIII",
+    "tier": "Immortal",
+    "tierIndex": 94,
+    "xpRequired": 8640,
+    "minXp": 4001560,
+    "maxXp": 4010200
+  },
+  {
+    "level": 939,
+    "title": "Immortal IX",
+    "tier": "Immortal",
+    "tierIndex": 94,
+    "xpRequired": 8650,
+    "minXp": 4010200,
+    "maxXp": 4018850
+  },
+  {
+    "level": 940,
+    "title": "Immortal X",
+    "tier": "Immortal",
+    "tierIndex": 94,
+    "xpRequired": 8660,
+    "minXp": 4018850,
+    "maxXp": 4027510
+  },
+  {
+    "level": 941,
+    "title": "Celestial Knight I",
+    "tier": "Celestial Knight",
+    "tierIndex": 95,
+    "xpRequired": 8670,
+    "minXp": 4027510,
+    "maxXp": 4036180
+  },
+  {
+    "level": 942,
+    "title": "Celestial Knight II",
+    "tier": "Celestial Knight",
+    "tierIndex": 95,
+    "xpRequired": 8680,
+    "minXp": 4036180,
+    "maxXp": 4044860
+  },
+  {
+    "level": 943,
+    "title": "Celestial Knight III",
+    "tier": "Celestial Knight",
+    "tierIndex": 95,
+    "xpRequired": 8690,
+    "minXp": 4044860,
+    "maxXp": 4053550
+  },
+  {
+    "level": 944,
+    "title": "Celestial Knight IV",
+    "tier": "Celestial Knight",
+    "tierIndex": 95,
+    "xpRequired": 8700,
+    "minXp": 4053550,
+    "maxXp": 4062250
+  },
+  {
+    "level": 945,
+    "title": "Celestial Knight V",
+    "tier": "Celestial Knight",
+    "tierIndex": 95,
+    "xpRequired": 8710,
+    "minXp": 4062250,
+    "maxXp": 4070960
+  },
+  {
+    "level": 946,
+    "title": "Celestial Knight VI",
+    "tier": "Celestial Knight",
+    "tierIndex": 95,
+    "xpRequired": 8720,
+    "minXp": 4070960,
+    "maxXp": 4079680
+  },
+  {
+    "level": 947,
+    "title": "Celestial Knight VII",
+    "tier": "Celestial Knight",
+    "tierIndex": 95,
+    "xpRequired": 8730,
+    "minXp": 4079680,
+    "maxXp": 4088410
+  },
+  {
+    "level": 948,
+    "title": "Celestial Knight VIII",
+    "tier": "Celestial Knight",
+    "tierIndex": 95,
+    "xpRequired": 8740,
+    "minXp": 4088410,
+    "maxXp": 4097150
+  },
+  {
+    "level": 949,
+    "title": "Celestial Knight IX",
+    "tier": "Celestial Knight",
+    "tierIndex": 95,
+    "xpRequired": 8745,
+    "minXp": 4097150,
+    "maxXp": 4105895
+  },
+  {
+    "level": 950,
+    "title": "Celestial Knight X",
+    "tier": "Celestial Knight",
+    "tierIndex": 95,
+    "xpRequired": 8755,
+    "minXp": 4105895,
+    "maxXp": 4114650
+  },
+  {
+    "level": 951,
+    "title": "Ascendant I",
+    "tier": "Ascendant",
+    "tierIndex": 96,
+    "xpRequired": 8765,
+    "minXp": 4114650,
+    "maxXp": 4123415
+  },
+  {
+    "level": 952,
+    "title": "Ascendant II",
+    "tier": "Ascendant",
+    "tierIndex": 96,
+    "xpRequired": 8775,
+    "minXp": 4123415,
+    "maxXp": 4132190
+  },
+  {
+    "level": 953,
+    "title": "Ascendant III",
+    "tier": "Ascendant",
+    "tierIndex": 96,
+    "xpRequired": 8785,
+    "minXp": 4132190,
+    "maxXp": 4140975
+  },
+  {
+    "level": 954,
+    "title": "Ascendant IV",
+    "tier": "Ascendant",
+    "tierIndex": 96,
+    "xpRequired": 8795,
+    "minXp": 4140975,
+    "maxXp": 4149770
+  },
+  {
+    "level": 955,
+    "title": "Ascendant V",
+    "tier": "Ascendant",
+    "tierIndex": 96,
+    "xpRequired": 8805,
+    "minXp": 4149770,
+    "maxXp": 4158575
+  },
+  {
+    "level": 956,
+    "title": "Ascendant VI",
+    "tier": "Ascendant",
+    "tierIndex": 96,
+    "xpRequired": 8815,
+    "minXp": 4158575,
+    "maxXp": 4167390
+  },
+  {
+    "level": 957,
+    "title": "Ascendant VII",
+    "tier": "Ascendant",
+    "tierIndex": 96,
+    "xpRequired": 8825,
+    "minXp": 4167390,
+    "maxXp": 4176215
+  },
+  {
+    "level": 958,
+    "title": "Ascendant VIII",
+    "tier": "Ascendant",
+    "tierIndex": 96,
+    "xpRequired": 8835,
+    "minXp": 4176215,
+    "maxXp": 4185050
+  },
+  {
+    "level": 959,
+    "title": "Ascendant IX",
+    "tier": "Ascendant",
+    "tierIndex": 96,
+    "xpRequired": 8840,
+    "minXp": 4185050,
+    "maxXp": 4193890
+  },
+  {
+    "level": 960,
+    "title": "Ascendant X",
+    "tier": "Ascendant",
+    "tierIndex": 96,
+    "xpRequired": 8850,
+    "minXp": 4193890,
+    "maxXp": 4202740
+  },
+  {
+    "level": 961,
+    "title": "Transcendent I",
+    "tier": "Transcendent",
+    "tierIndex": 97,
+    "xpRequired": 8860,
+    "minXp": 4202740,
+    "maxXp": 4211600
+  },
+  {
+    "level": 962,
+    "title": "Transcendent II",
+    "tier": "Transcendent",
+    "tierIndex": 97,
+    "xpRequired": 8870,
+    "minXp": 4211600,
+    "maxXp": 4220470
+  },
+  {
+    "level": 963,
+    "title": "Transcendent III",
+    "tier": "Transcendent",
+    "tierIndex": 97,
+    "xpRequired": 8880,
+    "minXp": 4220470,
+    "maxXp": 4229350
+  },
+  {
+    "level": 964,
+    "title": "Transcendent IV",
+    "tier": "Transcendent",
+    "tierIndex": 97,
+    "xpRequired": 8890,
+    "minXp": 4229350,
+    "maxXp": 4238240
+  },
+  {
+    "level": 965,
+    "title": "Transcendent V",
+    "tier": "Transcendent",
+    "tierIndex": 97,
+    "xpRequired": 8900,
+    "minXp": 4238240,
+    "maxXp": 4247140
+  },
+  {
+    "level": 966,
+    "title": "Transcendent VI",
+    "tier": "Transcendent",
+    "tierIndex": 97,
+    "xpRequired": 8910,
+    "minXp": 4247140,
+    "maxXp": 4256050
+  },
+  {
+    "level": 967,
+    "title": "Transcendent VII",
+    "tier": "Transcendent",
+    "tierIndex": 97,
+    "xpRequired": 8920,
+    "minXp": 4256050,
+    "maxXp": 4264970
+  },
+  {
+    "level": 968,
+    "title": "Transcendent VIII",
+    "tier": "Transcendent",
+    "tierIndex": 97,
+    "xpRequired": 8930,
+    "minXp": 4264970,
+    "maxXp": 4273900
+  },
+  {
+    "level": 969,
+    "title": "Transcendent IX",
+    "tier": "Transcendent",
+    "tierIndex": 97,
+    "xpRequired": 8940,
+    "minXp": 4273900,
+    "maxXp": 4282840
+  },
+  {
+    "level": 970,
+    "title": "Transcendent X",
+    "tier": "Transcendent",
+    "tierIndex": 97,
+    "xpRequired": 8945,
+    "minXp": 4282840,
+    "maxXp": 4291785
+  },
+  {
+    "level": 971,
+    "title": "Archon I",
+    "tier": "Archon",
+    "tierIndex": 98,
+    "xpRequired": 8955,
+    "minXp": 4291785,
+    "maxXp": 4300740
+  },
+  {
+    "level": 972,
+    "title": "Archon II",
+    "tier": "Archon",
+    "tierIndex": 98,
+    "xpRequired": 8965,
+    "minXp": 4300740,
+    "maxXp": 4309705
+  },
+  {
+    "level": 973,
+    "title": "Archon III",
+    "tier": "Archon",
+    "tierIndex": 98,
+    "xpRequired": 8975,
+    "minXp": 4309705,
+    "maxXp": 4318680
+  },
+  {
+    "level": 974,
+    "title": "Archon IV",
+    "tier": "Archon",
+    "tierIndex": 98,
+    "xpRequired": 8985,
+    "minXp": 4318680,
+    "maxXp": 4327665
+  },
+  {
+    "level": 975,
+    "title": "Archon V",
+    "tier": "Archon",
+    "tierIndex": 98,
+    "xpRequired": 8995,
+    "minXp": 4327665,
+    "maxXp": 4336660
+  },
+  {
+    "level": 976,
+    "title": "Archon VI",
+    "tier": "Archon",
+    "tierIndex": 98,
+    "xpRequired": 9005,
+    "minXp": 4336660,
+    "maxXp": 4345665
+  },
+  {
+    "level": 977,
+    "title": "Archon VII",
+    "tier": "Archon",
+    "tierIndex": 98,
+    "xpRequired": 9015,
+    "minXp": 4345665,
+    "maxXp": 4354680
+  },
+  {
+    "level": 978,
+    "title": "Archon VIII",
+    "tier": "Archon",
+    "tierIndex": 98,
+    "xpRequired": 9025,
+    "minXp": 4354680,
+    "maxXp": 4363705
+  },
+  {
+    "level": 979,
+    "title": "Archon IX",
+    "tier": "Archon",
+    "tierIndex": 98,
+    "xpRequired": 9035,
+    "minXp": 4363705,
+    "maxXp": 4372740
+  },
+  {
+    "level": 980,
+    "title": "Archon X",
+    "tier": "Archon",
+    "tierIndex": 98,
+    "xpRequired": 9045,
+    "minXp": 4372740,
+    "maxXp": 4381785
+  },
+  {
+    "level": 981,
+    "title": "Sovereign I",
+    "tier": "Sovereign",
+    "tierIndex": 99,
+    "xpRequired": 9050,
+    "minXp": 4381785,
+    "maxXp": 4390835
+  },
+  {
+    "level": 982,
+    "title": "Sovereign II",
+    "tier": "Sovereign",
+    "tierIndex": 99,
+    "xpRequired": 9060,
+    "minXp": 4390835,
+    "maxXp": 4399895
+  },
+  {
+    "level": 983,
+    "title": "Sovereign III",
+    "tier": "Sovereign",
+    "tierIndex": 99,
+    "xpRequired": 9070,
+    "minXp": 4399895,
+    "maxXp": 4408965
+  },
+  {
+    "level": 984,
+    "title": "Sovereign IV",
+    "tier": "Sovereign",
+    "tierIndex": 99,
+    "xpRequired": 9080,
+    "minXp": 4408965,
+    "maxXp": 4418045
+  },
+  {
+    "level": 985,
+    "title": "Sovereign V",
+    "tier": "Sovereign",
+    "tierIndex": 99,
+    "xpRequired": 9090,
+    "minXp": 4418045,
+    "maxXp": 4427135
+  },
+  {
+    "level": 986,
+    "title": "Sovereign VI",
+    "tier": "Sovereign",
+    "tierIndex": 99,
+    "xpRequired": 9100,
+    "minXp": 4427135,
+    "maxXp": 4436235
+  },
+  {
+    "level": 987,
+    "title": "Sovereign VII",
+    "tier": "Sovereign",
+    "tierIndex": 99,
+    "xpRequired": 9110,
+    "minXp": 4436235,
+    "maxXp": 4445345
+  },
+  {
+    "level": 988,
+    "title": "Sovereign VIII",
+    "tier": "Sovereign",
+    "tierIndex": 99,
+    "xpRequired": 9120,
+    "minXp": 4445345,
+    "maxXp": 4454465
+  },
+  {
+    "level": 989,
+    "title": "Sovereign IX",
+    "tier": "Sovereign",
+    "tierIndex": 99,
+    "xpRequired": 9130,
+    "minXp": 4454465,
+    "maxXp": 4463595
+  },
+  {
+    "level": 990,
+    "title": "Sovereign X",
+    "tier": "Sovereign",
+    "tierIndex": 99,
+    "xpRequired": 9140,
+    "minXp": 4463595,
+    "maxXp": 4472735
+  },
+  {
+    "level": 991,
+    "title": "The Absolute I",
+    "tier": "The Absolute",
+    "tierIndex": 100,
+    "xpRequired": 9150,
+    "minXp": 4472735,
+    "maxXp": 4481885
+  },
+  {
+    "level": 992,
+    "title": "The Absolute II",
+    "tier": "The Absolute",
+    "tierIndex": 100,
+    "xpRequired": 9155,
+    "minXp": 4481885,
+    "maxXp": 4491040
+  },
+  {
+    "level": 993,
+    "title": "The Absolute III",
+    "tier": "The Absolute",
+    "tierIndex": 100,
+    "xpRequired": 9165,
+    "minXp": 4491040,
+    "maxXp": 4500205
+  },
+  {
+    "level": 994,
+    "title": "The Absolute IV",
+    "tier": "The Absolute",
+    "tierIndex": 100,
+    "xpRequired": 9175,
+    "minXp": 4500205,
+    "maxXp": 4509380
+  },
+  {
+    "level": 995,
+    "title": "The Absolute V",
+    "tier": "The Absolute",
+    "tierIndex": 100,
+    "xpRequired": 9185,
+    "minXp": 4509380,
+    "maxXp": 4518565
+  },
+  {
+    "level": 996,
+    "title": "The Absolute VI",
+    "tier": "The Absolute",
+    "tierIndex": 100,
+    "xpRequired": 9195,
+    "minXp": 4518565,
+    "maxXp": 4527760
+  },
+  {
+    "level": 997,
+    "title": "The Absolute VII",
+    "tier": "The Absolute",
+    "tierIndex": 100,
+    "xpRequired": 9205,
+    "minXp": 4527760,
+    "maxXp": 4536965
+  },
+  {
+    "level": 998,
+    "title": "The Absolute VIII",
+    "tier": "The Absolute",
+    "tierIndex": 100,
+    "xpRequired": 9215,
+    "minXp": 4536965,
+    "maxXp": 4546180
+  },
+  {
+    "level": 999,
+    "title": "The Absolute IX",
+    "tier": "The Absolute",
+    "tierIndex": 100,
+    "xpRequired": 9225,
+    "minXp": 4546180,
+    "maxXp": 4555405
+  },
+  {
+    "level": 1000,
+    "title": "The Absolute X",
+    "tier": "The Absolute",
+    "tierIndex": 100,
+    "xpRequired": 9235,
+    "minXp": 4555405,
+    "maxXp": 4564640
   }
 ]

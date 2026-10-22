@@ -2780,143 +2780,54 @@
   }
 
   // =========================================================================
-  // RPG PROGRESSION SYSTEM (100 LEVELS & TIERS)
+  // RPG PROGRESSION SYSTEM (1,000 LEVELS & 100 TIERS)
   // =========================================================================
-  const RPG_LEVEL_TITLES = [
-    // Tier 1: The Initiate (1-10)
-    ['Novice Seeker', 'The Initiate'],
-    ['Curious Scribe', 'The Initiate'],
-    ['Mindful Page', 'The Initiate'],
-    ['Quiet Observer', 'The Initiate'],
-    ['Dedicated Apprentice', 'The Initiate'],
-    ['Steady Cogitator', 'The Initiate'],
-    ['Focus Neophyte', 'The Initiate'],
-    ['Habit Builder', 'The Initiate'],
-    ['Diligent Scholar', 'The Initiate'],
-    ['Disciplined Mind', 'The Initiate'],
-
-    // Tier 2: The Practitioner (11-20)
-    ['Deep Diver', 'The Practitioner'],
-    ['Concept Weaver', 'The Practitioner'],
-    ['Logic Smith', 'The Practitioner'],
-    ['Insight Seeker', 'The Practitioner'],
-    ['Focus Alchemist', 'The Practitioner'],
-    ['Knowledge Artisan', 'The Practitioner'],
-    ['Syntax Walker', 'The Practitioner'],
-    ['Theory Crafter', 'The Practitioner'],
-    ['Rhythm Finder', 'The Practitioner'],
-    ['Flow State Adept', 'The Practitioner'],
-
-    // Tier 3: The Scholar (21-30)
-    ['Intellect Forger', 'The Scholar'],
-    ['Thesis Crafter', 'The Scholar'],
-    ['Pattern Analyst', 'The Scholar'],
-    ['Memory Architect', 'The Scholar'],
-    ['Relentless Scribe', 'The Scholar'],
-    ['Archive Explorer', 'The Scholar'],
-    ['Methodical Thinker', 'The Scholar'],
-    ['Abstract Weaver', 'The Scholar'],
-    ['Keystone Scholar', 'The Scholar'],
-    ['Master of Fundamentals', 'The Scholar'],
-
-    // Tier 4: The Sage (31-40)
-    ['Synapse Sculptor', 'The Sage'],
-    ['Deep Work Strategist', 'The Sage'],
-    ['Erudite Inquirer', 'The Sage'],
-    ['Clarity Harbinger', 'The Sage'],
-    ['Principle Master', 'The Sage'],
-    ['Cognitive Architect', 'The Sage'],
-    ['Knowledge Sentinel', 'The Sage'],
-    ['Rigor Specialist', 'The Sage'],
-    ['Wisdom Seeker', 'The Sage'],
-    ['High Scholar', 'The Sage'],
-
-    // Tier 5: The Philosopher (41-50)
-    ['Iron Will', 'The Philosopher'],
-    ['Silent Polymath', 'The Philosopher'],
-    ['Insight Catalyst', 'The Philosopher'],
-    ['Epiphany Engineer', 'The Philosopher'],
-    ['Archive Guardian', 'The Philosopher'],
-    ['Focus Vanguard', 'The Philosopher'],
-    ['Thought Synthesizer', 'The Philosopher'],
-    ['Tenacious Sage', 'The Philosopher'],
-    ['Horizon Gazer', 'The Philosopher'],
-    ['Grand Philosopher', 'The Philosopher'],
-
-    // Tier 6: The Virtuoso (51-60)
-    ['Flow Sovereign', 'The Virtuoso'],
-    ['Mind Over Distraction', 'The Virtuoso'],
-    ['Zenith Apprentice', 'The Virtuoso'],
-    ['Nexus Thinker', 'The Virtuoso'],
-    ['Neural Virtuoso', 'The Virtuoso'],
-    ['Precision Craftsman', 'The Virtuoso'],
-    ['Quantum Logician', 'The Virtuoso'],
-    ['Unbroken Will', 'The Virtuoso'],
-    ['Arcane Polymath', 'The Virtuoso'],
-    ['Focus Grandmaster', 'The Virtuoso'],
-
-    // Tier 7: The Luminary (61-70)
-    ['Astral Chronicler', 'The Luminary'],
-    ['Wisdom Luminary', 'The Luminary'],
-    ['Clarity Paragon', 'The Luminary'],
-    ['Hyperfocus Titan', 'The Luminary'],
-    ['Concept Sovereign', 'The Luminary'],
-    ['Thought Harmonizer', 'The Luminary'],
-    ['Epoch Observer', 'The Luminary'],
-    ['Truth Illuminator', 'The Luminary'],
-    ['Pinnacle Scholar', 'The Luminary'],
-    ['Ascendant Luminary', 'The Luminary'],
-
-    // Tier 8: The Archmage (71-80)
-    ['Ethereal Savant', 'The Archmage'],
-    ['Dimensional Scholar', 'The Archmage'],
-    ['Mind of Stillness', 'The Archmage'],
-    ['Synthesis Paragon', 'The Archmage'],
-    ['Focus Archmage', 'The Archmage'],
-    ['Master of Insight', 'The Archmage'],
-    ['Continuum Seeker', 'The Archmage'],
-    ['Infinite Discipline', 'The Archmage'],
-    ['The Silent Beacon', 'The Archmage'],
-    ['Sovereign Polymath', 'The Archmage'],
-
-    // Tier 9: The Eternal (81-90)
-    ['Timeless Intellect', 'The Eternal'],
-    ['Primordial Sage', 'The Eternal'],
-    ['Nexus of Knowledge', 'The Eternal'],
-    ['Infinity Adept', 'The Eternal'],
-    ['Unwavering Pillar', 'The Eternal'],
-    ['Celestial Scribe', 'The Eternal'],
-    ['Cosmic Polymath', 'The Eternal'],
-    ['Continuum Weaver', 'The Eternal'],
-    ['Eternal Thinker', 'The Eternal'],
-    ['Master of the Arc', 'The Eternal'],
-
-    // Tier 10: The Mythic (91-100)
-    ['Epoch Sovereign', 'The Mythic'],
-    ['Transcendent Mind', 'The Mythic'],
-    ['Boundless Intellect', 'The Mythic'],
-    ['Sovereign of Will', 'The Mythic'],
-    ['Omniscient Sentinel', 'The Mythic'],
-    ['Nexus of Truth', 'The Mythic'],
-    ['Master of Eternity', 'The Mythic'],
-    ['Zen Transcendent', 'The Mythic'],
-    ['The Absolute Mind', 'The Mythic'],
-    ['Grand Chronomancer', 'The Mythic']
+  const RPG_TIERS = [
+    'Novice', 'Trainee', 'Apprentice', 'Initiate', 'Recruit',
+    'Scout', 'Pathfinder', 'Adventurer', 'Explorer', 'Pioneer',
+    'Iron Initiate', 'Iron Guard', 'Iron Vanguard', 'Iron Knight',
+    'Bronze Striker', 'Bronze Warrior', 'Bronze Knight', 'Bronze Champion',
+    'Silver Scout', 'Silver Guard', 'Silver Knight', 'Silver Champion',
+    'Gold Striker', 'Gold Warrior', 'Gold Knight', 'Gold Paladin', 'Gold Champion',
+    'Platinum Scout', 'Platinum Knight', 'Platinum Paladin', 'Platinum Champion',
+    'Diamond Striker', 'Diamond Guard', 'Diamond Knight', 'Diamond Vanguard', 'Diamond Champion',
+    'Emerald Ranger', 'Emerald Warrior', 'Emerald Knight', 'Emerald Champion',
+    'Ruby Berserker', 'Ruby Slayer', 'Ruby Knight', 'Ruby Champion',
+    'Sapphire Scout', 'Sapphire Guardian', 'Sapphire Knight', 'Sapphire Champion',
+    'Obsidian Striker', 'Obsidian Knight', 'Obsidian Vanguard', 'Obsidian Champion',
+    'Shadow Scout', 'Shadow Blade', 'Shadow Knight', 'Shadow Master',
+    'Ranger Elite', 'Hunter Master', 'Assassin Elite', 'Duelist Champion',
+    'Gladiator Warlord', 'Berserker Champion', 'Paladin Commander', 'Templar Knight',
+    'Crusader Champion', 'Battlemage', 'Spellblade Master', 'Stormcaller',
+    'Frost Knight', 'Flame Knight', 'Thunder Vanguard', 'Void Walker',
+    'Void Slayer', 'Dragon Knight', 'Dragon Slayer', 'Titan Slayer',
+    'Colossus Guard', 'Juggernaut', 'Warlord', 'High Commander',
+    'Grand Marshal', 'Vanguard Sovereign', 'Hero', 'Veteran Hero',
+    'Apex Champion', 'Grandmaster', 'High Grandmaster', 'Mythic Knight',
+    'Mythic Champion', 'Mythic Warlord', 'Legend', 'Apex Legend',
+    'Demigod', 'Immortal', 'Celestial Knight', 'Ascendant',
+    'Transcendent', 'Archon', 'Sovereign', 'The Absolute'
   ];
+
+  const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 
   const RPG_LEVELS = (() => {
     const list = [];
     let cum = 0;
-    for (let i = 0; i < RPG_LEVEL_TITLES.length; i++) {
-      const lvl = i + 1;
-      const xpReq = lvl === 1 ? 25 : Math.max(25, Math.round((20 + Math.floor(7.5 * Math.pow(lvl, 1.38))) / 5) * 5);
+    for (let lvl = 1; lvl <= 1000; lvl++) {
+      const tierIdx = Math.floor((lvl - 1) / 10);
+      const tier = RPG_TIERS[tierIdx] || 'The Absolute';
+      const sub = ROMAN_NUMERALS[(lvl - 1) % 10];
+      const title = `${tier} ${sub}`;
+      const xpReq = Math.max(50, Math.round((50 + 8 * (lvl - 1) + 0.15 * Math.pow(lvl, 1.3)) / 5) * 5);
       const minXp = cum;
       const maxXp = cum + xpReq;
       cum = maxXp;
       list.push({
         level: lvl,
-        title: RPG_LEVEL_TITLES[i][0],
-        tier: RPG_LEVEL_TITLES[i][1],
+        title: title,
+        tier: tier,
+        tierIndex: tierIdx + 1,
         xpRequired: xpReq,
         minXp: minXp,
         maxXp: maxXp
@@ -2929,7 +2840,7 @@
     const xp = Math.max(0, Math.floor(totalXp || 0));
     for (let i = 0; i < RPG_LEVELS.length; i++) {
       const l = RPG_LEVELS[i];
-      if (xp < l.maxXp || l.level === 100) {
+      if (xp < l.maxXp || l.level === 1000) {
         const currentLevelXp = Math.max(0, xp - l.minXp);
         const xpRequired = l.xpRequired;
         const progressPercent = Math.min(100, Math.max(0, (currentLevelXp / xpRequired) * 100));
@@ -2937,11 +2848,12 @@
           level: l.level,
           title: l.title,
           tier: l.tier,
+          tierIndex: l.tierIndex,
           currentLevelXp: currentLevelXp,
           xpRequired: xpRequired,
           progressPercent: progressPercent,
           totalXp: xp,
-          isMax: l.level === 100 && xp >= l.maxXp
+          isMax: l.level === 1000 && xp >= l.maxXp
         };
       }
     }
@@ -2950,6 +2862,7 @@
       level: maxL.level,
       title: maxL.title,
       tier: maxL.tier,
+      tierIndex: maxL.tierIndex,
       currentLevelXp: maxL.xpRequired,
       xpRequired: maxL.xpRequired,
       progressPercent: 100,
@@ -3286,23 +3199,26 @@
     });
 
     let cum = 0;
+    let nextLvlIdx = 0;
     for (const s of sessions) {
       cum += Number(s.xp || s.durationMinutes || 0);
-      for (const l of RPG_LEVELS) {
-        if (cum >= l.maxXp && !dates[l.level]) {
+      while (nextLvlIdx < RPG_LEVELS.length && cum >= RPG_LEVELS[nextLvlIdx].maxXp) {
+        const l = RPG_LEVELS[nextLvlIdx];
+        if (!dates[l.level]) {
           dates[l.level] = {
             date: s.date,
             timestamp: s.timestamp,
             formatted: s.date ? formatDayDateHeader(s.date) : 'Cleared'
           };
         }
+        nextLvlIdx++;
       }
     }
 
-    // Fallback for any cleared level where sessions were truncated
     const currentLvl = getLevelInfo(state.xp).level;
-    for (const l of RPG_LEVELS) {
-      if (l.level < currentLvl && !dates[l.level]) {
+    for (let i = 0; i < currentLvl - 1; i++) {
+      const l = RPG_LEVELS[i];
+      if (!dates[l.level]) {
         dates[l.level] = {
           formatted: 'Milestone Cleared'
         };
@@ -3314,6 +3230,7 @@
   function openLevelsDialog() {
     const dialog = document.getElementById('levels-dialog');
     if (!dialog) return;
+    showAllLevelsView = false;
     renderLevelsDialogDOM();
     if (typeof dialog.showModal === 'function' && !dialog.open) {
       dialog.showModal();
@@ -3331,29 +3248,27 @@
     const dialog = document.getElementById('levels-dialog');
     if (!dialog) return;
 
+    const shell = document.getElementById('levels-dialog-shell');
+    if (shell) {
+      shell.classList.toggle('is-catalog-mode', showAllLevelsView);
+    }
+
     const lvlInfo = getLevelInfo(state.xp);
     const clearDates = calculateLevelClearDates();
 
-    // Title & Badge
+    // 1. My Journey View Header & Metric cards
     const titleEl = document.getElementById('levels-dialog-title');
     const badgeEl = document.getElementById('levels-dialog-badge');
     const toggleBtnText = document.getElementById('toggle-levels-text');
-    const toggleBtn = document.getElementById('btn-toggle-all-levels');
 
     if (titleEl) {
       titleEl.textContent = `Level ${lvlInfo.level} — ${lvlInfo.title}`;
     }
     if (badgeEl) {
-      badgeEl.textContent = `${lvlInfo.tier}`;
+      badgeEl.textContent = `Tier ${lvlInfo.tierIndex}: ${lvlInfo.tier}`;
     }
     if (toggleBtnText) {
-      toggleBtnText.textContent = showAllLevelsView ? 'My Journey' : 'All Levels';
-    }
-    if (toggleBtn) {
-      toggleBtn.classList.toggle('is-active-view', showAllLevelsView);
-      toggleBtn.title = showAllLevelsView
-        ? 'Switch back to your cleared levels and current progress'
-        : 'View the complete catalog of all 100 RPG Levels and XP requirements';
+      toggleBtnText.textContent = 'All Levels';
     }
 
     // 3 Metric Cards
@@ -3391,7 +3306,7 @@
       totalXpEl.textContent = `${Number(state.xp || 0).toLocaleString()} XP`;
     }
 
-    // Heading & Count
+    // 2. Feed List and Heading
     const headingEl = document.getElementById('levels-feed-heading');
     const countEl = document.getElementById('levels-feed-count');
     const feedList = document.getElementById('levels-feed-list');
@@ -3399,11 +3314,11 @@
 
     let itemsToRender = [];
     if (showAllLevelsView) {
-      if (headingEl) headingEl.textContent = 'All 100 Mastery Levels';
-      if (countEl) countEl.textContent = '100 Levels • 10 Tiers';
+      if (headingEl) headingEl.textContent = 'Tier 1: Novice';
+      if (countEl) countEl.textContent = '1,000 Levels • 100 Tiers';
       itemsToRender = RPG_LEVELS;
     } else {
-      if (headingEl) headingEl.textContent = 'Cleared Milestones & Rank';
+      if (headingEl) headingEl.textContent = `Tier ${lvlInfo.tierIndex}: ${lvlInfo.tier}`;
       const clearedCount = Math.max(0, lvlInfo.level - 1);
       if (countEl) countEl.textContent = `${clearedCount} Cleared • Lv. ${lvlInfo.level}`;
       const maxPreview = Math.min(RPG_LEVELS.length, lvlInfo.level + 2);
@@ -3412,14 +3327,34 @@
 
     feedList.innerHTML = '';
     const frag = document.createDocumentFragment();
+    let lastTierIndex = -1;
 
     itemsToRender.forEach((l) => {
-      const isCleared = l.level < lvlInfo.level || (l.level === 100 && lvlInfo.isMax);
+      // Sticky Tier Section Header
+      if (l.tierIndex !== lastTierIndex) {
+        lastTierIndex = l.tierIndex;
+        const tierStartLvl = (l.tierIndex - 1) * 10 + 1;
+        const tierEndLvl = l.tierIndex * 10;
+        const tierHdr = document.createElement('div');
+        tierHdr.className = 'level-tier-sticky-header';
+        tierHdr.setAttribute('data-tier-name', l.tier);
+        tierHdr.setAttribute('data-tier-idx', l.tierIndex);
+        tierHdr.innerHTML = `
+          <div class="level-tier-sticky-left">
+            <span class="level-tier-badge">Tier ${l.tierIndex}</span>
+            <span class="level-tier-name">${escapeHtml(l.tier)}</span>
+          </div>
+          <span class="level-tier-range">Lv. ${tierStartLvl} – ${tierEndLvl}</span>
+        `;
+        frag.appendChild(tierHdr);
+      }
+
+      const isCleared = l.level < lvlInfo.level || (l.level === 1000 && lvlInfo.isMax);
       const isCurrent = l.level === lvlInfo.level && !lvlInfo.isMax;
       const isLocked = l.level > lvlInfo.level;
 
       const card = document.createElement('div');
-      card.className = `level-card ${isCurrent ? 'is-current' : ''} ${isLocked ? 'is-locked' : ''}`;
+      card.className = `level-card ${isCurrent ? 'is-current' : ''} ${isLocked ? 'is-locked' : ''} ${showAllLevelsView && isCurrent ? 'is-user-current' : ''}`;
       if (isCurrent) {
         card.setAttribute('data-current-level', 'true');
       }
@@ -3427,19 +3362,30 @@
       let subtitle = '';
       let badgeHtml = '';
 
-      if (isCleared) {
-        const clearRecord = clearDates[l.level];
-        const dateStr = clearRecord?.formatted || (clearRecord?.date ? formatDayDateHeader(clearRecord.date) : 'Cleared Milestone');
-        subtitle = `Cleared on ${dateStr} • ${formatCompactNumber(l.xpRequired)} XP`;
-        badgeHtml = `<span class="level-badge-status level-badge-cleared">Cleared ✓</span>`;
-      } else if (isCurrent) {
-        const remaining = Math.max(0, l.xpRequired - lvlInfo.currentLevelXp);
-        subtitle = `Current Level • ${formatCompactNumber(lvlInfo.currentLevelXp)} / ${formatCompactNumber(l.xpRequired)} XP (${remaining} XP to next)`;
-        badgeHtml = `<span class="level-badge-status level-badge-current">${lvlInfo.progressPercent.toFixed(0)}%</span>`;
+      if (showAllLevelsView) {
+        // Pure catalog view - only show the level info, not user data
+        subtitle = `Requires +${formatCompactNumber(l.xpRequired)} XP • Total: ${formatCompactNumber(l.maxXp)} XP`;
+        if (isCurrent) {
+          badgeHtml = `<span class="level-badge-status level-badge-current">Your Rank</span>`;
+        } else {
+          badgeHtml = `<span class="level-badge-status level-badge-catalog">${formatCompactNumber(l.xpRequired)} XP</span>`;
+        }
       } else {
-        const diff = Math.max(0, l.minXp - state.xp);
-        subtitle = `Unlocks at ${formatCompactNumber(l.minXp)} XP total (${formatCompactNumber(diff)} XP needed)`;
-        badgeHtml = `<span class="level-badge-status level-badge-locked">${formatCompactNumber(l.xpRequired)} XP</span>`;
+        // My Journey view - show user progress and clear history
+        if (isCleared) {
+          const clearRecord = clearDates[l.level];
+          const dateStr = clearRecord?.formatted || (clearRecord?.date ? formatDayDateHeader(clearRecord.date) : 'Cleared Milestone');
+          subtitle = `Cleared on ${dateStr} • ${formatCompactNumber(l.xpRequired)} XP`;
+          badgeHtml = `<span class="level-badge-status level-badge-cleared">Cleared ✓</span>`;
+        } else if (isCurrent) {
+          const remaining = Math.max(0, l.xpRequired - lvlInfo.currentLevelXp);
+          subtitle = `Current Level • ${formatCompactNumber(lvlInfo.currentLevelXp)} / ${formatCompactNumber(l.xpRequired)} XP (${remaining} XP to next)`;
+          badgeHtml = `<span class="level-badge-status level-badge-current">${lvlInfo.progressPercent.toFixed(0)}%</span>`;
+        } else {
+          const diff = Math.max(0, l.minXp - state.xp);
+          subtitle = `Unlocks at ${formatCompactNumber(l.minXp)} XP total (${formatCompactNumber(diff)} XP needed)`;
+          badgeHtml = `<span class="level-badge-status level-badge-locked">${formatCompactNumber(l.xpRequired)} XP</span>`;
+        }
       }
 
       card.innerHTML = `
@@ -3455,7 +3401,6 @@
             <div class="level-title-row">
               <span class="level-item-lvl">Lv. ${l.level}</span>
               <span class="level-item-name">${escapeHtml(l.title)}</span>
-              <span class="level-item-tier">${escapeHtml(l.tier)}</span>
             </div>
             <span class="level-item-subtitle">${subtitle}</span>
           </div>
@@ -3469,6 +3414,24 @@
     });
 
     feedList.appendChild(frag);
+
+    // Dynamic sticky tier update on scroll
+    feedList.onscroll = () => {
+      const headers = feedList.querySelectorAll('.level-tier-sticky-header');
+      let activeTierName = null;
+      let activeTierIdx = null;
+      const listTop = feedList.getBoundingClientRect().top;
+      headers.forEach(h => {
+        const rect = h.getBoundingClientRect();
+        if (rect.top <= listTop + 40) {
+          activeTierName = h.getAttribute('data-tier-name');
+          activeTierIdx = h.getAttribute('data-tier-idx');
+        }
+      });
+      if (activeTierName && headingEl) {
+        headingEl.textContent = `Tier ${activeTierIdx}: ${activeTierName}`;
+      }
+    };
 
     if (showAllLevelsView) {
       setTimeout(() => {
@@ -3888,17 +3851,32 @@
       });
     }
 
-    // RPG Levels Dialog: Close button
+    // RPG Levels Dialog: Close button (Journey Header)
     const btnCloseLevels = document.getElementById('btn-close-levels-dialog');
     if (btnCloseLevels) {
       btnCloseLevels.addEventListener('click', closeLevelsDialog);
     }
 
-    // RPG Levels Dialog: Toggle between My Journey and All Levels catalog
+    // RPG Levels Dialog: Close button (Catalog Header)
+    const btnCloseCatalog = document.getElementById('btn-close-levels-catalog');
+    if (btnCloseCatalog) {
+      btnCloseCatalog.addEventListener('click', closeLevelsDialog);
+    }
+
+    // RPG Levels Dialog: Switch to All Levels catalog view
     const btnToggleAllLevels = document.getElementById('btn-toggle-all-levels');
     if (btnToggleAllLevels) {
       btnToggleAllLevels.addEventListener('click', () => {
-        showAllLevelsView = !showAllLevelsView;
+        showAllLevelsView = true;
+        renderLevelsDialogDOM();
+      });
+    }
+
+    // RPG Levels Dialog: Back to My Journey view
+    const btnBackToJourney = document.getElementById('btn-back-to-journey');
+    if (btnBackToJourney) {
+      btnBackToJourney.addEventListener('click', () => {
+        showAllLevelsView = false;
         renderLevelsDialogDOM();
       });
     }

@@ -1,136 +1,1306 @@
 ================================================================================
-  STUDYARC RPG PROGRESSION — 100 TIERS & LEVELS OF MASTERY
+  STUDYARC RPG PROGRESSION — 100 TIERS & 1,000 LEVELS OF MASTERY
 ================================================================================
 
-LVL   | TITLE                      | TIER               | XP NEEDED  | XP RANGE (TOTAL)
+LVL    | TITLE                      | TIER                   | XP NEEDED  | XP RANGE (TOTAL)
 --------------------------------------------------------------------------------
 
->>> TIER: THE INITIATE <<<
+>>> TIER 1: NOVICE <<<
 --------------------------------------------------
-1     | Novice Seeker              | The Initiate       | 25         | 0 -> 25 XP
-2     | Curious Scribe             | The Initiate       | 40         | 25 -> 65 XP
-3     | Mindful Page               | The Initiate       | 55         | 65 -> 120 XP
-4     | Quiet Observer             | The Initiate       | 70         | 120 -> 190 XP
-5     | Dedicated Apprentice       | The Initiate       | 90         | 190 -> 280 XP
-6     | Steady Cogitator           | The Initiate       | 110        | 280 -> 390 XP
-7     | Focus Neophyte             | The Initiate       | 130        | 390 -> 520 XP
-8     | Habit Builder              | The Initiate       | 150        | 520 -> 670 XP
-9     | Diligent Scholar           | The Initiate       | 175        | 670 -> 845 XP
-10    | Disciplined Mind           | The Initiate       | 200        | 845 -> 1,045 XP
+1      | Novice I                   | Novice                 | 50         | 0 -> 50 XP
+2      | Novice II                  | Novice                 | 60         | 50 -> 110 XP
+3      | Novice III                 | Novice                 | 65         | 110 -> 175 XP
+4      | Novice IV                  | Novice                 | 75         | 175 -> 250 XP
+5      | Novice V                   | Novice                 | 85         | 250 -> 335 XP
+6      | Novice VI                  | Novice                 | 90         | 335 -> 425 XP
+7      | Novice VII                 | Novice                 | 100        | 425 -> 525 XP
+8      | Novice VIII                | Novice                 | 110        | 525 -> 635 XP
+9      | Novice IX                  | Novice                 | 115        | 635 -> 750 XP
+10     | Novice X                   | Novice                 | 125        | 750 -> 875 XP
 
->>> TIER: THE PRACTITIONER <<<
+>>> TIER 2: TRAINEE <<<
 --------------------------------------------------
-11    | Deep Diver                 | The Practitioner   | 225        | 1,045 -> 1,270 XP
-12    | Concept Weaver             | The Practitioner   | 250        | 1,270 -> 1,520 XP
-13    | Logic Smith                | The Practitioner   | 280        | 1,520 -> 1,800 XP
-14    | Insight Seeker             | The Practitioner   | 305        | 1,800 -> 2,105 XP
-15    | Focus Alchemist            | The Practitioner   | 335        | 2,105 -> 2,440 XP
-16    | Knowledge Artisan          | The Practitioner   | 365        | 2,440 -> 2,805 XP
-17    | Syntax Walker              | The Practitioner   | 395        | 2,805 -> 3,200 XP
-18    | Theory Crafter             | The Practitioner   | 425        | 3,200 -> 3,625 XP
-19    | Rhythm Finder              | The Practitioner   | 455        | 3,625 -> 4,080 XP
-20    | Flow State Adept           | The Practitioner   | 490        | 4,080 -> 4,570 XP
+11     | Trainee I                  | Trainee                | 135        | 875 -> 1,010 XP
+12     | Trainee II                 | Trainee                | 140        | 1,010 -> 1,150 XP
+13     | Trainee III                | Trainee                | 150        | 1,150 -> 1,300 XP
+14     | Trainee IV                 | Trainee                | 160        | 1,300 -> 1,460 XP
+15     | Trainee V                  | Trainee                | 165        | 1,460 -> 1,625 XP
+16     | Trainee VI                 | Trainee                | 175        | 1,625 -> 1,800 XP
+17     | Trainee VII                | Trainee                | 185        | 1,800 -> 1,985 XP
+18     | Trainee VIII               | Trainee                | 190        | 1,985 -> 2,175 XP
+19     | Trainee IX                 | Trainee                | 200        | 2,175 -> 2,375 XP
+20     | Trainee X                  | Trainee                | 210        | 2,375 -> 2,585 XP
 
->>> TIER: THE SCHOLAR <<<
+>>> TIER 3: APPRENTICE <<<
 --------------------------------------------------
-21    | Intellect Forger           | The Scholar        | 520        | 4,570 -> 5,090 XP
-22    | Thesis Crafter             | The Scholar        | 555        | 5,090 -> 5,645 XP
-23    | Pattern Analyst            | The Scholar        | 585        | 5,645 -> 6,230 XP
-24    | Memory Architect           | The Scholar        | 620        | 6,230 -> 6,850 XP
-25    | Relentless Scribe          | The Scholar        | 655        | 6,850 -> 7,505 XP
-26    | Archive Explorer           | The Scholar        | 690        | 7,505 -> 8,195 XP
-27    | Methodical Thinker         | The Scholar        | 730        | 8,195 -> 8,925 XP
-28    | Abstract Weaver            | The Scholar        | 765        | 8,925 -> 9,690 XP
-29    | Keystone Scholar           | The Scholar        | 800        | 9,690 -> 10,490 XP
-30    | Master of Fundamentals     | The Scholar        | 840        | 10,490 -> 11,330 XP
+21     | Apprentice I               | Apprentice             | 220        | 2,585 -> 2,805 XP
+22     | Apprentice II              | Apprentice             | 225        | 2,805 -> 3,030 XP
+23     | Apprentice III             | Apprentice             | 235        | 3,030 -> 3,265 XP
+24     | Apprentice IV              | Apprentice             | 245        | 3,265 -> 3,510 XP
+25     | Apprentice V               | Apprentice             | 250        | 3,510 -> 3,760 XP
+26     | Apprentice VI              | Apprentice             | 260        | 3,760 -> 4,020 XP
+27     | Apprentice VII             | Apprentice             | 270        | 4,020 -> 4,290 XP
+28     | Apprentice VIII            | Apprentice             | 275        | 4,290 -> 4,565 XP
+29     | Apprentice IX              | Apprentice             | 285        | 4,565 -> 4,850 XP
+30     | Apprentice X               | Apprentice             | 295        | 4,850 -> 5,145 XP
 
->>> TIER: THE SAGE <<<
+>>> TIER 4: INITIATE <<<
 --------------------------------------------------
-31    | Synapse Sculptor           | The Sage           | 875        | 11,330 -> 12,205 XP
-32    | Deep Work Strategist       | The Sage           | 915        | 12,205 -> 13,120 XP
-33    | Erudite Inquirer           | The Sage           | 955        | 13,120 -> 14,075 XP
-34    | Clarity Harbinger          | The Sage           | 995        | 14,075 -> 15,070 XP
-35    | Principle Master           | The Sage           | 1035       | 15,070 -> 16,105 XP
-36    | Cognitive Architect        | The Sage           | 1075       | 16,105 -> 17,180 XP
-37    | Knowledge Sentinel         | The Sage           | 1115       | 17,180 -> 18,295 XP
-38    | Rigor Specialist           | The Sage           | 1155       | 18,295 -> 19,450 XP
-39    | Wisdom Seeker              | The Sage           | 1195       | 19,450 -> 20,645 XP
-40    | High Scholar               | The Sage           | 1240       | 20,645 -> 21,885 XP
+31     | Initiate I                 | Initiate               | 305        | 5,145 -> 5,450 XP
+32     | Initiate II                | Initiate               | 310        | 5,450 -> 5,760 XP
+33     | Initiate III               | Initiate               | 320        | 5,760 -> 6,080 XP
+34     | Initiate IV                | Initiate               | 330        | 6,080 -> 6,410 XP
+35     | Initiate V                 | Initiate               | 335        | 6,410 -> 6,745 XP
+36     | Initiate VI                | Initiate               | 345        | 6,745 -> 7,090 XP
+37     | Initiate VII               | Initiate               | 355        | 7,090 -> 7,445 XP
+38     | Initiate VIII              | Initiate               | 365        | 7,445 -> 7,810 XP
+39     | Initiate IX                | Initiate               | 370        | 7,810 -> 8,180 XP
+40     | Initiate X                 | Initiate               | 380        | 8,180 -> 8,560 XP
 
->>> TIER: THE PHILOSOPHER <<<
+>>> TIER 5: RECRUIT <<<
 --------------------------------------------------
-41    | Iron Will                  | The Philosopher    | 1280       | 21,885 -> 23,165 XP
-42    | Silent Polymath            | The Philosopher    | 1325       | 23,165 -> 24,490 XP
-43    | Insight Catalyst           | The Philosopher    | 1365       | 24,490 -> 25,855 XP
-44    | Epiphany Engineer          | The Philosopher    | 1410       | 25,855 -> 27,265 XP
-45    | Archive Guardian           | The Philosopher    | 1455       | 27,265 -> 28,720 XP
-46    | Focus Vanguard             | The Philosopher    | 1495       | 28,720 -> 30,215 XP
-47    | Thought Synthesizer        | The Philosopher    | 1540       | 30,215 -> 31,755 XP
-48    | Tenacious Sage             | The Philosopher    | 1585       | 31,755 -> 33,340 XP
-49    | Horizon Gazer              | The Philosopher    | 1630       | 33,340 -> 34,970 XP
-50    | Grand Philosopher          | The Philosopher    | 1680       | 34,970 -> 36,650 XP
+41     | Recruit I                  | Recruit                | 390        | 8,560 -> 8,950 XP
+42     | Recruit II                 | Recruit                | 395        | 8,950 -> 9,345 XP
+43     | Recruit III                | Recruit                | 405        | 9,345 -> 9,750 XP
+44     | Recruit IV                 | Recruit                | 415        | 9,750 -> 10,165 XP
+45     | Recruit V                  | Recruit                | 425        | 10,165 -> 10,590 XP
+46     | Recruit VI                 | Recruit                | 430        | 10,590 -> 11,020 XP
+47     | Recruit VII                | Recruit                | 440        | 11,020 -> 11,460 XP
+48     | Recruit VIII               | Recruit                | 450        | 11,460 -> 11,910 XP
+49     | Recruit IX                 | Recruit                | 460        | 11,910 -> 12,370 XP
+50     | Recruit X                  | Recruit                | 465        | 12,370 -> 12,835 XP
 
->>> TIER: THE VIRTUOSO <<<
+>>> TIER 6: SCOUT <<<
 --------------------------------------------------
-51    | Flow Sovereign             | The Virtuoso       | 1725       | 36,650 -> 38,375 XP
-52    | Mind Over Distraction      | The Virtuoso       | 1770       | 38,375 -> 40,145 XP
-53    | Zenith Apprentice          | The Virtuoso       | 1815       | 40,145 -> 41,960 XP
-54    | Nexus Thinker              | The Virtuoso       | 1865       | 41,960 -> 43,825 XP
-55    | Neural Virtuoso            | The Virtuoso       | 1910       | 43,825 -> 45,735 XP
-56    | Precision Craftsman        | The Virtuoso       | 1960       | 45,735 -> 47,695 XP
-57    | Quantum Logician           | The Virtuoso       | 2005       | 47,695 -> 49,700 XP
-58    | Unbroken Will              | The Virtuoso       | 2055       | 49,700 -> 51,755 XP
-59    | Arcane Polymath            | The Virtuoso       | 2105       | 51,755 -> 53,860 XP
-60    | Focus Grandmaster          | The Virtuoso       | 2150       | 53,860 -> 56,010 XP
+51     | Scout I                    | Scout                  | 475        | 12,835 -> 13,310 XP
+52     | Scout II                   | Scout                  | 485        | 13,310 -> 13,795 XP
+53     | Scout III                  | Scout                  | 490        | 13,795 -> 14,285 XP
+54     | Scout IV                   | Scout                  | 500        | 14,285 -> 14,785 XP
+55     | Scout V                    | Scout                  | 510        | 14,785 -> 15,295 XP
+56     | Scout VI                   | Scout                  | 520        | 15,295 -> 15,815 XP
+57     | Scout VII                  | Scout                  | 525        | 15,815 -> 16,340 XP
+58     | Scout VIII                 | Scout                  | 535        | 16,340 -> 16,875 XP
+59     | Scout IX                   | Scout                  | 545        | 16,875 -> 17,420 XP
+60     | Scout X                    | Scout                  | 555        | 17,420 -> 17,975 XP
 
->>> TIER: THE LUMINARY <<<
+>>> TIER 7: PATHFINDER <<<
 --------------------------------------------------
-61    | Astral Chronicler          | The Luminary       | 2200       | 56,010 -> 58,210 XP
-62    | Wisdom Luminary            | The Luminary       | 2250       | 58,210 -> 60,460 XP
-63    | Clarity Paragon            | The Luminary       | 2300       | 60,460 -> 62,760 XP
-64    | Hyperfocus Titan           | The Luminary       | 2350       | 62,760 -> 65,110 XP
-65    | Concept Sovereign          | The Luminary       | 2400       | 65,110 -> 67,510 XP
-66    | Thought Harmonizer         | The Luminary       | 2450       | 67,510 -> 69,960 XP
-67    | Epoch Observer             | The Luminary       | 2505       | 69,960 -> 72,465 XP
-68    | Truth Illuminator          | The Luminary       | 2555       | 72,465 -> 75,020 XP
-69    | Pinnacle Scholar           | The Luminary       | 2605       | 75,020 -> 77,625 XP
-70    | Ascendant Luminary         | The Luminary       | 2660       | 77,625 -> 80,285 XP
+61     | Pathfinder I               | Pathfinder             | 560        | 17,975 -> 18,535 XP
+62     | Pathfinder II              | Pathfinder             | 570        | 18,535 -> 19,105 XP
+63     | Pathfinder III             | Pathfinder             | 580        | 19,105 -> 19,685 XP
+64     | Pathfinder IV              | Pathfinder             | 585        | 19,685 -> 20,270 XP
+65     | Pathfinder V               | Pathfinder             | 595        | 20,270 -> 20,865 XP
+66     | Pathfinder VI              | Pathfinder             | 605        | 20,865 -> 21,470 XP
+67     | Pathfinder VII             | Pathfinder             | 615        | 21,470 -> 22,085 XP
+68     | Pathfinder VIII            | Pathfinder             | 620        | 22,085 -> 22,705 XP
+69     | Pathfinder IX              | Pathfinder             | 630        | 22,705 -> 23,335 XP
+70     | Pathfinder X               | Pathfinder             | 640        | 23,335 -> 23,975 XP
 
->>> TIER: THE ARCHMAGE <<<
+>>> TIER 8: ADVENTURER <<<
 --------------------------------------------------
-71    | Ethereal Savant            | The Archmage       | 2710       | 80,285 -> 82,995 XP
-72    | Dimensional Scholar        | The Archmage       | 2760       | 82,995 -> 85,755 XP
-73    | Mind of Stillness          | The Archmage       | 2815       | 85,755 -> 88,570 XP
-74    | Synthesis Paragon          | The Archmage       | 2870       | 88,570 -> 91,440 XP
-75    | Focus Archmage             | The Archmage       | 2920       | 91,440 -> 94,360 XP
-76    | Master of Insight          | The Archmage       | 2975       | 94,360 -> 97,335 XP
-77    | Continuum Seeker           | The Archmage       | 3030       | 97,335 -> 100,365 XP
-78    | Infinite Discipline        | The Archmage       | 3085       | 100,365 -> 103,450 XP
-79    | The Silent Beacon          | The Archmage       | 3135       | 103,450 -> 106,585 XP
-80    | Sovereign Polymath         | The Archmage       | 3190       | 106,585 -> 109,775 XP
+71     | Adventurer I               | Adventurer             | 650        | 23,975 -> 24,625 XP
+72     | Adventurer II              | Adventurer             | 655        | 24,625 -> 25,280 XP
+73     | Adventurer III             | Adventurer             | 665        | 25,280 -> 25,945 XP
+74     | Adventurer IV              | Adventurer             | 675        | 25,945 -> 26,620 XP
+75     | Adventurer V               | Adventurer             | 685        | 26,620 -> 27,305 XP
+76     | Adventurer VI              | Adventurer             | 690        | 27,305 -> 27,995 XP
+77     | Adventurer VII             | Adventurer             | 700        | 27,995 -> 28,695 XP
+78     | Adventurer VIII            | Adventurer             | 710        | 28,695 -> 29,405 XP
+79     | Adventurer IX              | Adventurer             | 720        | 29,405 -> 30,125 XP
+80     | Adventurer X               | Adventurer             | 725        | 30,125 -> 30,850 XP
 
->>> TIER: THE ETERNAL <<<
+>>> TIER 9: EXPLORER <<<
 --------------------------------------------------
-81    | Timeless Intellect         | The Eternal        | 3245       | 109,775 -> 113,020 XP
-82    | Primordial Sage            | The Eternal        | 3300       | 113,020 -> 116,320 XP
-83    | Nexus of Knowledge         | The Eternal        | 3355       | 116,320 -> 119,675 XP
-84    | Infinity Adept             | The Eternal        | 3410       | 119,675 -> 123,085 XP
-85    | Unwavering Pillar          | The Eternal        | 3470       | 123,085 -> 126,555 XP
-86    | Celestial Scribe           | The Eternal        | 3525       | 126,555 -> 130,080 XP
-87    | Cosmic Polymath            | The Eternal        | 3580       | 130,080 -> 133,660 XP
-88    | Continuum Weaver           | The Eternal        | 3635       | 133,660 -> 137,295 XP
-89    | Eternal Thinker            | The Eternal        | 3695       | 137,295 -> 140,990 XP
-90    | Master of the Arc          | The Eternal        | 3750       | 140,990 -> 144,740 XP
+81     | Explorer I                 | Explorer               | 735        | 30,850 -> 31,585 XP
+82     | Explorer II                | Explorer               | 745        | 31,585 -> 32,330 XP
+83     | Explorer III               | Explorer               | 755        | 32,330 -> 33,085 XP
+84     | Explorer IV                | Explorer               | 760        | 33,085 -> 33,845 XP
+85     | Explorer V                 | Explorer               | 770        | 33,845 -> 34,615 XP
+86     | Explorer VI                | Explorer               | 780        | 34,615 -> 35,395 XP
+87     | Explorer VII               | Explorer               | 790        | 35,395 -> 36,185 XP
+88     | Explorer VIII              | Explorer               | 795        | 36,185 -> 36,980 XP
+89     | Explorer IX                | Explorer               | 805        | 36,980 -> 37,785 XP
+90     | Explorer X                 | Explorer               | 815        | 37,785 -> 38,600 XP
 
->>> TIER: THE MYTHIC <<<
+>>> TIER 10: PIONEER <<<
 --------------------------------------------------
-91    | Epoch Sovereign            | The Mythic         | 3810       | 144,740 -> 148,550 XP
-92    | Transcendent Mind          | The Mythic         | 3865       | 148,550 -> 152,415 XP
-93    | Boundless Intellect        | The Mythic         | 3925       | 152,415 -> 156,340 XP
-94    | Sovereign of Will          | The Mythic         | 3980       | 156,340 -> 160,320 XP
-95    | Omniscient Sentinel        | The Mythic         | 4040       | 160,320 -> 164,360 XP
-96    | Nexus of Truth             | The Mythic         | 4100       | 164,360 -> 168,460 XP
-97    | Master of Eternity         | The Mythic         | 4160       | 168,460 -> 172,620 XP
-98    | Zen Transcendent           | The Mythic         | 4215       | 172,620 -> 176,835 XP
-99    | The Absolute Mind          | The Mythic         | 4275       | 176,835 -> 181,110 XP
-100   | Grand Chronomancer         | The Mythic         | 4335       | 181,110 -> 185,445 XP
+91     | Pioneer I                  | Pioneer                | 825        | 38,600 -> 39,425 XP
+92     | Pioneer II                 | Pioneer                | 830        | 39,425 -> 40,255 XP
+93     | Pioneer III                | Pioneer                | 840        | 40,255 -> 41,095 XP
+94     | Pioneer IV                 | Pioneer                | 850        | 41,095 -> 41,945 XP
+95     | Pioneer V                  | Pioneer                | 860        | 41,945 -> 42,805 XP
+96     | Pioneer VI                 | Pioneer                | 865        | 42,805 -> 43,670 XP
+97     | Pioneer VII                | Pioneer                | 875        | 43,670 -> 44,545 XP
+98     | Pioneer VIII               | Pioneer                | 885        | 44,545 -> 45,430 XP
+99     | Pioneer IX                 | Pioneer                | 895        | 45,430 -> 46,325 XP
+100    | Pioneer X                  | Pioneer                | 900        | 46,325 -> 47,225 XP
+
+>>> TIER 11: IRON INITIATE <<<
+--------------------------------------------------
+101    | Iron Initiate I            | Iron Initiate          | 910        | 47,225 -> 48,135 XP
+102    | Iron Initiate II           | Iron Initiate          | 920        | 48,135 -> 49,055 XP
+103    | Iron Initiate III          | Iron Initiate          | 930        | 49,055 -> 49,985 XP
+104    | Iron Initiate IV           | Iron Initiate          | 935        | 49,985 -> 50,920 XP
+105    | Iron Initiate V            | Iron Initiate          | 945        | 50,920 -> 51,865 XP
+106    | Iron Initiate VI           | Iron Initiate          | 955        | 51,865 -> 52,820 XP
+107    | Iron Initiate VII          | Iron Initiate          | 965        | 52,820 -> 53,785 XP
+108    | Iron Initiate VIII         | Iron Initiate          | 970        | 53,785 -> 54,755 XP
+109    | Iron Initiate IX           | Iron Initiate          | 980        | 54,755 -> 55,735 XP
+110    | Iron Initiate X            | Iron Initiate          | 990        | 55,735 -> 56,725 XP
+
+>>> TIER 12: IRON GUARD <<<
+--------------------------------------------------
+111    | Iron Guard I               | Iron Guard             | 1000       | 56,725 -> 57,725 XP
+112    | Iron Guard II              | Iron Guard             | 1005       | 57,725 -> 58,730 XP
+113    | Iron Guard III             | Iron Guard             | 1015       | 58,730 -> 59,745 XP
+114    | Iron Guard IV              | Iron Guard             | 1025       | 59,745 -> 60,770 XP
+115    | Iron Guard V               | Iron Guard             | 1035       | 60,770 -> 61,805 XP
+116    | Iron Guard VI              | Iron Guard             | 1040       | 61,805 -> 62,845 XP
+117    | Iron Guard VII             | Iron Guard             | 1050       | 62,845 -> 63,895 XP
+118    | Iron Guard VIII            | Iron Guard             | 1060       | 63,895 -> 64,955 XP
+119    | Iron Guard IX              | Iron Guard             | 1070       | 64,955 -> 66,025 XP
+120    | Iron Guard X               | Iron Guard             | 1080       | 66,025 -> 67,105 XP
+
+>>> TIER 13: IRON VANGUARD <<<
+--------------------------------------------------
+121    | Iron Vanguard I            | Iron Vanguard          | 1085       | 67,105 -> 68,190 XP
+122    | Iron Vanguard II           | Iron Vanguard          | 1095       | 68,190 -> 69,285 XP
+123    | Iron Vanguard III          | Iron Vanguard          | 1105       | 69,285 -> 70,390 XP
+124    | Iron Vanguard IV           | Iron Vanguard          | 1115       | 70,390 -> 71,505 XP
+125    | Iron Vanguard V            | Iron Vanguard          | 1120       | 71,505 -> 72,625 XP
+126    | Iron Vanguard VI           | Iron Vanguard          | 1130       | 72,625 -> 73,755 XP
+127    | Iron Vanguard VII          | Iron Vanguard          | 1140       | 73,755 -> 74,895 XP
+128    | Iron Vanguard VIII         | Iron Vanguard          | 1150       | 74,895 -> 76,045 XP
+129    | Iron Vanguard IX           | Iron Vanguard          | 1155       | 76,045 -> 77,200 XP
+130    | Iron Vanguard X            | Iron Vanguard          | 1165       | 77,200 -> 78,365 XP
+
+>>> TIER 14: IRON KNIGHT <<<
+--------------------------------------------------
+131    | Iron Knight I              | Iron Knight            | 1175       | 78,365 -> 79,540 XP
+132    | Iron Knight II             | Iron Knight            | 1185       | 79,540 -> 80,725 XP
+133    | Iron Knight III            | Iron Knight            | 1195       | 80,725 -> 81,920 XP
+134    | Iron Knight IV             | Iron Knight            | 1200       | 81,920 -> 83,120 XP
+135    | Iron Knight V              | Iron Knight            | 1210       | 83,120 -> 84,330 XP
+136    | Iron Knight VI             | Iron Knight            | 1220       | 84,330 -> 85,550 XP
+137    | Iron Knight VII            | Iron Knight            | 1230       | 85,550 -> 86,780 XP
+138    | Iron Knight VIII           | Iron Knight            | 1235       | 86,780 -> 88,015 XP
+139    | Iron Knight IX             | Iron Knight            | 1245       | 88,015 -> 89,260 XP
+140    | Iron Knight X              | Iron Knight            | 1255       | 89,260 -> 90,515 XP
+
+>>> TIER 15: BRONZE STRIKER <<<
+--------------------------------------------------
+141    | Bronze Striker I           | Bronze Striker         | 1265       | 90,515 -> 91,780 XP
+142    | Bronze Striker II          | Bronze Striker         | 1270       | 91,780 -> 93,050 XP
+143    | Bronze Striker III         | Bronze Striker         | 1280       | 93,050 -> 94,330 XP
+144    | Bronze Striker IV          | Bronze Striker         | 1290       | 94,330 -> 95,620 XP
+145    | Bronze Striker V           | Bronze Striker         | 1300       | 95,620 -> 96,920 XP
+146    | Bronze Striker VI          | Bronze Striker         | 1310       | 96,920 -> 98,230 XP
+147    | Bronze Striker VII         | Bronze Striker         | 1315       | 98,230 -> 99,545 XP
+148    | Bronze Striker VIII        | Bronze Striker         | 1325       | 99,545 -> 100,870 XP
+149    | Bronze Striker IX          | Bronze Striker         | 1335       | 100,870 -> 102,205 XP
+150    | Bronze Striker X           | Bronze Striker         | 1345       | 102,205 -> 103,550 XP
+
+>>> TIER 16: BRONZE WARRIOR <<<
+--------------------------------------------------
+151    | Bronze Warrior I           | Bronze Warrior         | 1350       | 103,550 -> 104,900 XP
+152    | Bronze Warrior II          | Bronze Warrior         | 1360       | 104,900 -> 106,260 XP
+153    | Bronze Warrior III         | Bronze Warrior         | 1370       | 106,260 -> 107,630 XP
+154    | Bronze Warrior IV          | Bronze Warrior         | 1380       | 107,630 -> 109,010 XP
+155    | Bronze Warrior V           | Bronze Warrior         | 1390       | 109,010 -> 110,400 XP
+156    | Bronze Warrior VI          | Bronze Warrior         | 1395       | 110,400 -> 111,795 XP
+157    | Bronze Warrior VII         | Bronze Warrior         | 1405       | 111,795 -> 113,200 XP
+158    | Bronze Warrior VIII        | Bronze Warrior         | 1415       | 113,200 -> 114,615 XP
+159    | Bronze Warrior IX          | Bronze Warrior         | 1425       | 114,615 -> 116,040 XP
+160    | Bronze Warrior X           | Bronze Warrior         | 1430       | 116,040 -> 117,470 XP
+
+>>> TIER 17: BRONZE KNIGHT <<<
+--------------------------------------------------
+161    | Bronze Knight I            | Bronze Knight          | 1440       | 117,470 -> 118,910 XP
+162    | Bronze Knight II           | Bronze Knight          | 1450       | 118,910 -> 120,360 XP
+163    | Bronze Knight III          | Bronze Knight          | 1460       | 120,360 -> 121,820 XP
+164    | Bronze Knight IV           | Bronze Knight          | 1470       | 121,820 -> 123,290 XP
+165    | Bronze Knight V            | Bronze Knight          | 1475       | 123,290 -> 124,765 XP
+166    | Bronze Knight VI           | Bronze Knight          | 1485       | 124,765 -> 126,250 XP
+167    | Bronze Knight VII          | Bronze Knight          | 1495       | 126,250 -> 127,745 XP
+168    | Bronze Knight VIII         | Bronze Knight          | 1505       | 127,745 -> 129,250 XP
+169    | Bronze Knight IX           | Bronze Knight          | 1510       | 129,250 -> 130,760 XP
+170    | Bronze Knight X            | Bronze Knight          | 1520       | 130,760 -> 132,280 XP
+
+>>> TIER 18: BRONZE CHAMPION <<<
+--------------------------------------------------
+171    | Bronze Champion I          | Bronze Champion        | 1530       | 132,280 -> 133,810 XP
+172    | Bronze Champion II         | Bronze Champion        | 1540       | 133,810 -> 135,350 XP
+173    | Bronze Champion III        | Bronze Champion        | 1550       | 135,350 -> 136,900 XP
+174    | Bronze Champion IV         | Bronze Champion        | 1555       | 136,900 -> 138,455 XP
+175    | Bronze Champion V          | Bronze Champion        | 1565       | 138,455 -> 140,020 XP
+176    | Bronze Champion VI         | Bronze Champion        | 1575       | 140,020 -> 141,595 XP
+177    | Bronze Champion VII        | Bronze Champion        | 1585       | 141,595 -> 143,180 XP
+178    | Bronze Champion VIII       | Bronze Champion        | 1590       | 143,180 -> 144,770 XP
+179    | Bronze Champion IX         | Bronze Champion        | 1600       | 144,770 -> 146,370 XP
+180    | Bronze Champion X          | Bronze Champion        | 1610       | 146,370 -> 147,980 XP
+
+>>> TIER 19: SILVER SCOUT <<<
+--------------------------------------------------
+181    | Silver Scout I             | Silver Scout           | 1620       | 147,980 -> 149,600 XP
+182    | Silver Scout II            | Silver Scout           | 1630       | 149,600 -> 151,230 XP
+183    | Silver Scout III           | Silver Scout           | 1635       | 151,230 -> 152,865 XP
+184    | Silver Scout IV            | Silver Scout           | 1645       | 152,865 -> 154,510 XP
+185    | Silver Scout V             | Silver Scout           | 1655       | 154,510 -> 156,165 XP
+186    | Silver Scout VI            | Silver Scout           | 1665       | 156,165 -> 157,830 XP
+187    | Silver Scout VII           | Silver Scout           | 1675       | 157,830 -> 159,505 XP
+188    | Silver Scout VIII          | Silver Scout           | 1680       | 159,505 -> 161,185 XP
+189    | Silver Scout IX            | Silver Scout           | 1690       | 161,185 -> 162,875 XP
+190    | Silver Scout X             | Silver Scout           | 1700       | 162,875 -> 164,575 XP
+
+>>> TIER 20: SILVER GUARD <<<
+--------------------------------------------------
+191    | Silver Guard I             | Silver Guard           | 1710       | 164,575 -> 166,285 XP
+192    | Silver Guard II            | Silver Guard           | 1715       | 166,285 -> 168,000 XP
+193    | Silver Guard III           | Silver Guard           | 1725       | 168,000 -> 169,725 XP
+194    | Silver Guard IV            | Silver Guard           | 1735       | 169,725 -> 171,460 XP
+195    | Silver Guard V             | Silver Guard           | 1745       | 171,460 -> 173,205 XP
+196    | Silver Guard VI            | Silver Guard           | 1755       | 173,205 -> 174,960 XP
+197    | Silver Guard VII           | Silver Guard           | 1760       | 174,960 -> 176,720 XP
+198    | Silver Guard VIII          | Silver Guard           | 1770       | 176,720 -> 178,490 XP
+199    | Silver Guard IX            | Silver Guard           | 1780       | 178,490 -> 180,270 XP
+200    | Silver Guard X             | Silver Guard           | 1790       | 180,270 -> 182,060 XP
+
+>>> TIER 21: SILVER KNIGHT <<<
+--------------------------------------------------
+201    | Silver Knight I            | Silver Knight          | 1800       | 182,060 -> 183,860 XP
+202    | Silver Knight II           | Silver Knight          | 1805       | 183,860 -> 185,665 XP
+203    | Silver Knight III          | Silver Knight          | 1815       | 185,665 -> 187,480 XP
+204    | Silver Knight IV           | Silver Knight          | 1825       | 187,480 -> 189,305 XP
+205    | Silver Knight V            | Silver Knight          | 1835       | 189,305 -> 191,140 XP
+206    | Silver Knight VI           | Silver Knight          | 1845       | 191,140 -> 192,985 XP
+207    | Silver Knight VII          | Silver Knight          | 1850       | 192,985 -> 194,835 XP
+208    | Silver Knight VIII         | Silver Knight          | 1860       | 194,835 -> 196,695 XP
+209    | Silver Knight IX           | Silver Knight          | 1870       | 196,695 -> 198,565 XP
+210    | Silver Knight X            | Silver Knight          | 1880       | 198,565 -> 200,445 XP
+
+>>> TIER 22: SILVER CHAMPION <<<
+--------------------------------------------------
+211    | Silver Champion I          | Silver Champion        | 1890       | 200,445 -> 202,335 XP
+212    | Silver Champion II         | Silver Champion        | 1895       | 202,335 -> 204,230 XP
+213    | Silver Champion III        | Silver Champion        | 1905       | 204,230 -> 206,135 XP
+214    | Silver Champion IV         | Silver Champion        | 1915       | 206,135 -> 208,050 XP
+215    | Silver Champion V          | Silver Champion        | 1925       | 208,050 -> 209,975 XP
+216    | Silver Champion VI         | Silver Champion        | 1935       | 209,975 -> 211,910 XP
+217    | Silver Champion VII        | Silver Champion        | 1940       | 211,910 -> 213,850 XP
+218    | Silver Champion VIII       | Silver Champion        | 1950       | 213,850 -> 215,800 XP
+219    | Silver Champion IX         | Silver Champion        | 1960       | 215,800 -> 217,760 XP
+220    | Silver Champion X          | Silver Champion        | 1970       | 217,760 -> 219,730 XP
+
+>>> TIER 23: GOLD STRIKER <<<
+--------------------------------------------------
+221    | Gold Striker I             | Gold Striker           | 1975       | 219,730 -> 221,705 XP
+222    | Gold Striker II            | Gold Striker           | 1985       | 221,705 -> 223,690 XP
+223    | Gold Striker III           | Gold Striker           | 1995       | 223,690 -> 225,685 XP
+224    | Gold Striker IV            | Gold Striker           | 2005       | 225,685 -> 227,690 XP
+225    | Gold Striker V             | Gold Striker           | 2015       | 227,690 -> 229,705 XP
+226    | Gold Striker VI            | Gold Striker           | 2020       | 229,705 -> 231,725 XP
+227    | Gold Striker VII           | Gold Striker           | 2030       | 231,725 -> 233,755 XP
+228    | Gold Striker VIII          | Gold Striker           | 2040       | 233,755 -> 235,795 XP
+229    | Gold Striker IX            | Gold Striker           | 2050       | 235,795 -> 237,845 XP
+230    | Gold Striker X             | Gold Striker           | 2060       | 237,845 -> 239,905 XP
+
+>>> TIER 24: GOLD WARRIOR <<<
+--------------------------------------------------
+231    | Gold Warrior I             | Gold Warrior           | 2065       | 239,905 -> 241,970 XP
+232    | Gold Warrior II            | Gold Warrior           | 2075       | 241,970 -> 244,045 XP
+233    | Gold Warrior III           | Gold Warrior           | 2085       | 244,045 -> 246,130 XP
+234    | Gold Warrior IV            | Gold Warrior           | 2095       | 246,130 -> 248,225 XP
+235    | Gold Warrior V             | Gold Warrior           | 2105       | 248,225 -> 250,330 XP
+236    | Gold Warrior VI            | Gold Warrior           | 2110       | 250,330 -> 252,440 XP
+237    | Gold Warrior VII           | Gold Warrior           | 2120       | 252,440 -> 254,560 XP
+238    | Gold Warrior VIII          | Gold Warrior           | 2130       | 254,560 -> 256,690 XP
+239    | Gold Warrior IX            | Gold Warrior           | 2140       | 256,690 -> 258,830 XP
+240    | Gold Warrior X             | Gold Warrior           | 2150       | 258,830 -> 260,980 XP
+
+>>> TIER 25: GOLD KNIGHT <<<
+--------------------------------------------------
+241    | Gold Knight I              | Gold Knight            | 2155       | 260,980 -> 263,135 XP
+242    | Gold Knight II             | Gold Knight            | 2165       | 263,135 -> 265,300 XP
+243    | Gold Knight III            | Gold Knight            | 2175       | 265,300 -> 267,475 XP
+244    | Gold Knight IV             | Gold Knight            | 2185       | 267,475 -> 269,660 XP
+245    | Gold Knight V              | Gold Knight            | 2195       | 269,660 -> 271,855 XP
+246    | Gold Knight VI             | Gold Knight            | 2200       | 271,855 -> 274,055 XP
+247    | Gold Knight VII            | Gold Knight            | 2210       | 274,055 -> 276,265 XP
+248    | Gold Knight VIII           | Gold Knight            | 2220       | 276,265 -> 278,485 XP
+249    | Gold Knight IX             | Gold Knight            | 2230       | 278,485 -> 280,715 XP
+250    | Gold Knight X              | Gold Knight            | 2240       | 280,715 -> 282,955 XP
+
+>>> TIER 26: GOLD PALADIN <<<
+--------------------------------------------------
+251    | Gold Paladin I             | Gold Paladin           | 2250       | 282,955 -> 285,205 XP
+252    | Gold Paladin II            | Gold Paladin           | 2255       | 285,205 -> 287,460 XP
+253    | Gold Paladin III           | Gold Paladin           | 2265       | 287,460 -> 289,725 XP
+254    | Gold Paladin IV            | Gold Paladin           | 2275       | 289,725 -> 292,000 XP
+255    | Gold Paladin V             | Gold Paladin           | 2285       | 292,000 -> 294,285 XP
+256    | Gold Paladin VI            | Gold Paladin           | 2295       | 294,285 -> 296,580 XP
+257    | Gold Paladin VII           | Gold Paladin           | 2300       | 296,580 -> 298,880 XP
+258    | Gold Paladin VIII          | Gold Paladin           | 2310       | 298,880 -> 301,190 XP
+259    | Gold Paladin IX            | Gold Paladin           | 2320       | 301,190 -> 303,510 XP
+260    | Gold Paladin X             | Gold Paladin           | 2330       | 303,510 -> 305,840 XP
+
+>>> TIER 27: GOLD CHAMPION <<<
+--------------------------------------------------
+261    | Gold Champion I            | Gold Champion          | 2340       | 305,840 -> 308,180 XP
+262    | Gold Champion II           | Gold Champion          | 2345       | 308,180 -> 310,525 XP
+263    | Gold Champion III          | Gold Champion          | 2355       | 310,525 -> 312,880 XP
+264    | Gold Champion IV           | Gold Champion          | 2365       | 312,880 -> 315,245 XP
+265    | Gold Champion V            | Gold Champion          | 2375       | 315,245 -> 317,620 XP
+266    | Gold Champion VI           | Gold Champion          | 2385       | 317,620 -> 320,005 XP
+267    | Gold Champion VII          | Gold Champion          | 2390       | 320,005 -> 322,395 XP
+268    | Gold Champion VIII         | Gold Champion          | 2400       | 322,395 -> 324,795 XP
+269    | Gold Champion IX           | Gold Champion          | 2410       | 324,795 -> 327,205 XP
+270    | Gold Champion X            | Gold Champion          | 2420       | 327,205 -> 329,625 XP
+
+>>> TIER 28: PLATINUM SCOUT <<<
+--------------------------------------------------
+271    | Platinum Scout I           | Platinum Scout         | 2430       | 329,625 -> 332,055 XP
+272    | Platinum Scout II          | Platinum Scout         | 2435       | 332,055 -> 334,490 XP
+273    | Platinum Scout III         | Platinum Scout         | 2445       | 334,490 -> 336,935 XP
+274    | Platinum Scout IV          | Platinum Scout         | 2455       | 336,935 -> 339,390 XP
+275    | Platinum Scout V           | Platinum Scout         | 2465       | 339,390 -> 341,855 XP
+276    | Platinum Scout VI          | Platinum Scout         | 2475       | 341,855 -> 344,330 XP
+277    | Platinum Scout VII         | Platinum Scout         | 2485       | 344,330 -> 346,815 XP
+278    | Platinum Scout VIII        | Platinum Scout         | 2490       | 346,815 -> 349,305 XP
+279    | Platinum Scout IX          | Platinum Scout         | 2500       | 349,305 -> 351,805 XP
+280    | Platinum Scout X           | Platinum Scout         | 2510       | 351,805 -> 354,315 XP
+
+>>> TIER 29: PLATINUM KNIGHT <<<
+--------------------------------------------------
+281    | Platinum Knight I          | Platinum Knight        | 2520       | 354,315 -> 356,835 XP
+282    | Platinum Knight II         | Platinum Knight        | 2530       | 356,835 -> 359,365 XP
+283    | Platinum Knight III        | Platinum Knight        | 2535       | 359,365 -> 361,900 XP
+284    | Platinum Knight IV         | Platinum Knight        | 2545       | 361,900 -> 364,445 XP
+285    | Platinum Knight V          | Platinum Knight        | 2555       | 364,445 -> 367,000 XP
+286    | Platinum Knight VI         | Platinum Knight        | 2565       | 367,000 -> 369,565 XP
+287    | Platinum Knight VII        | Platinum Knight        | 2575       | 369,565 -> 372,140 XP
+288    | Platinum Knight VIII       | Platinum Knight        | 2580       | 372,140 -> 374,720 XP
+289    | Platinum Knight IX         | Platinum Knight        | 2590       | 374,720 -> 377,310 XP
+290    | Platinum Knight X          | Platinum Knight        | 2600       | 377,310 -> 379,910 XP
+
+>>> TIER 30: PLATINUM PALADIN <<<
+--------------------------------------------------
+291    | Platinum Paladin I         | Platinum Paladin       | 2610       | 379,910 -> 382,520 XP
+292    | Platinum Paladin II        | Platinum Paladin       | 2620       | 382,520 -> 385,140 XP
+293    | Platinum Paladin III       | Platinum Paladin       | 2630       | 385,140 -> 387,770 XP
+294    | Platinum Paladin IV        | Platinum Paladin       | 2635       | 387,770 -> 390,405 XP
+295    | Platinum Paladin V         | Platinum Paladin       | 2645       | 390,405 -> 393,050 XP
+296    | Platinum Paladin VI        | Platinum Paladin       | 2655       | 393,050 -> 395,705 XP
+297    | Platinum Paladin VII       | Platinum Paladin       | 2665       | 395,705 -> 398,370 XP
+298    | Platinum Paladin VIII      | Platinum Paladin       | 2675       | 398,370 -> 401,045 XP
+299    | Platinum Paladin IX        | Platinum Paladin       | 2680       | 401,045 -> 403,725 XP
+300    | Platinum Paladin X         | Platinum Paladin       | 2690       | 403,725 -> 406,415 XP
+
+>>> TIER 31: PLATINUM CHAMPION <<<
+--------------------------------------------------
+301    | Platinum Champion I        | Platinum Champion      | 2700       | 406,415 -> 409,115 XP
+302    | Platinum Champion II       | Platinum Champion      | 2710       | 409,115 -> 411,825 XP
+303    | Platinum Champion III      | Platinum Champion      | 2720       | 411,825 -> 414,545 XP
+304    | Platinum Champion IV       | Platinum Champion      | 2725       | 414,545 -> 417,270 XP
+305    | Platinum Champion V        | Platinum Champion      | 2735       | 417,270 -> 420,005 XP
+306    | Platinum Champion VI       | Platinum Champion      | 2745       | 420,005 -> 422,750 XP
+307    | Platinum Champion VII      | Platinum Champion      | 2755       | 422,750 -> 425,505 XP
+308    | Platinum Champion VIII     | Platinum Champion      | 2765       | 425,505 -> 428,270 XP
+309    | Platinum Champion IX       | Platinum Champion      | 2775       | 428,270 -> 431,045 XP
+310    | Platinum Champion X        | Platinum Champion      | 2780       | 431,045 -> 433,825 XP
+
+>>> TIER 32: DIAMOND STRIKER <<<
+--------------------------------------------------
+311    | Diamond Striker I          | Diamond Striker        | 2790       | 433,825 -> 436,615 XP
+312    | Diamond Striker II         | Diamond Striker        | 2800       | 436,615 -> 439,415 XP
+313    | Diamond Striker III        | Diamond Striker        | 2810       | 439,415 -> 442,225 XP
+314    | Diamond Striker IV         | Diamond Striker        | 2820       | 442,225 -> 445,045 XP
+315    | Diamond Striker V          | Diamond Striker        | 2825       | 445,045 -> 447,870 XP
+316    | Diamond Striker VI         | Diamond Striker        | 2835       | 447,870 -> 450,705 XP
+317    | Diamond Striker VII        | Diamond Striker        | 2845       | 450,705 -> 453,550 XP
+318    | Diamond Striker VIII       | Diamond Striker        | 2855       | 453,550 -> 456,405 XP
+319    | Diamond Striker IX         | Diamond Striker        | 2865       | 456,405 -> 459,270 XP
+320    | Diamond Striker X          | Diamond Striker        | 2875       | 459,270 -> 462,145 XP
+
+>>> TIER 33: DIAMOND GUARD <<<
+--------------------------------------------------
+321    | Diamond Guard I            | Diamond Guard          | 2880       | 462,145 -> 465,025 XP
+322    | Diamond Guard II           | Diamond Guard          | 2890       | 465,025 -> 467,915 XP
+323    | Diamond Guard III          | Diamond Guard          | 2900       | 467,915 -> 470,815 XP
+324    | Diamond Guard IV           | Diamond Guard          | 2910       | 470,815 -> 473,725 XP
+325    | Diamond Guard V            | Diamond Guard          | 2920       | 473,725 -> 476,645 XP
+326    | Diamond Guard VI           | Diamond Guard          | 2930       | 476,645 -> 479,575 XP
+327    | Diamond Guard VII          | Diamond Guard          | 2935       | 479,575 -> 482,510 XP
+328    | Diamond Guard VIII         | Diamond Guard          | 2945       | 482,510 -> 485,455 XP
+329    | Diamond Guard IX           | Diamond Guard          | 2955       | 485,455 -> 488,410 XP
+330    | Diamond Guard X            | Diamond Guard          | 2965       | 488,410 -> 491,375 XP
+
+>>> TIER 34: DIAMOND KNIGHT <<<
+--------------------------------------------------
+331    | Diamond Knight I           | Diamond Knight         | 2975       | 491,375 -> 494,350 XP
+332    | Diamond Knight II          | Diamond Knight         | 2980       | 494,350 -> 497,330 XP
+333    | Diamond Knight III         | Diamond Knight         | 2990       | 497,330 -> 500,320 XP
+334    | Diamond Knight IV          | Diamond Knight         | 3000       | 500,320 -> 503,320 XP
+335    | Diamond Knight V           | Diamond Knight         | 3010       | 503,320 -> 506,330 XP
+336    | Diamond Knight VI          | Diamond Knight         | 3020       | 506,330 -> 509,350 XP
+337    | Diamond Knight VII         | Diamond Knight         | 3030       | 509,350 -> 512,380 XP
+338    | Diamond Knight VIII        | Diamond Knight         | 3035       | 512,380 -> 515,415 XP
+339    | Diamond Knight IX          | Diamond Knight         | 3045       | 515,415 -> 518,460 XP
+340    | Diamond Knight X           | Diamond Knight         | 3055       | 518,460 -> 521,515 XP
+
+>>> TIER 35: DIAMOND VANGUARD <<<
+--------------------------------------------------
+341    | Diamond Vanguard I         | Diamond Vanguard       | 3065       | 521,515 -> 524,580 XP
+342    | Diamond Vanguard II        | Diamond Vanguard       | 3075       | 524,580 -> 527,655 XP
+343    | Diamond Vanguard III       | Diamond Vanguard       | 3080       | 527,655 -> 530,735 XP
+344    | Diamond Vanguard IV        | Diamond Vanguard       | 3090       | 530,735 -> 533,825 XP
+345    | Diamond Vanguard V         | Diamond Vanguard       | 3100       | 533,825 -> 536,925 XP
+346    | Diamond Vanguard VI        | Diamond Vanguard       | 3110       | 536,925 -> 540,035 XP
+347    | Diamond Vanguard VII       | Diamond Vanguard       | 3120       | 540,035 -> 543,155 XP
+348    | Diamond Vanguard VIII      | Diamond Vanguard       | 3130       | 543,155 -> 546,285 XP
+349    | Diamond Vanguard IX        | Diamond Vanguard       | 3135       | 546,285 -> 549,420 XP
+350    | Diamond Vanguard X         | Diamond Vanguard       | 3145       | 549,420 -> 552,565 XP
+
+>>> TIER 36: DIAMOND CHAMPION <<<
+--------------------------------------------------
+351    | Diamond Champion I         | Diamond Champion       | 3155       | 552,565 -> 555,720 XP
+352    | Diamond Champion II        | Diamond Champion       | 3165       | 555,720 -> 558,885 XP
+353    | Diamond Champion III       | Diamond Champion       | 3175       | 558,885 -> 562,060 XP
+354    | Diamond Champion IV        | Diamond Champion       | 3185       | 562,060 -> 565,245 XP
+355    | Diamond Champion V         | Diamond Champion       | 3190       | 565,245 -> 568,435 XP
+356    | Diamond Champion VI        | Diamond Champion       | 3200       | 568,435 -> 571,635 XP
+357    | Diamond Champion VII       | Diamond Champion       | 3210       | 571,635 -> 574,845 XP
+358    | Diamond Champion VIII      | Diamond Champion       | 3220       | 574,845 -> 578,065 XP
+359    | Diamond Champion IX        | Diamond Champion       | 3230       | 578,065 -> 581,295 XP
+360    | Diamond Champion X         | Diamond Champion       | 3240       | 581,295 -> 584,535 XP
+
+>>> TIER 37: EMERALD RANGER <<<
+--------------------------------------------------
+361    | Emerald Ranger I           | Emerald Ranger         | 3245       | 584,535 -> 587,780 XP
+362    | Emerald Ranger II          | Emerald Ranger         | 3255       | 587,780 -> 591,035 XP
+363    | Emerald Ranger III         | Emerald Ranger         | 3265       | 591,035 -> 594,300 XP
+364    | Emerald Ranger IV          | Emerald Ranger         | 3275       | 594,300 -> 597,575 XP
+365    | Emerald Ranger V           | Emerald Ranger         | 3285       | 597,575 -> 600,860 XP
+366    | Emerald Ranger VI          | Emerald Ranger         | 3295       | 600,860 -> 604,155 XP
+367    | Emerald Ranger VII         | Emerald Ranger         | 3300       | 604,155 -> 607,455 XP
+368    | Emerald Ranger VIII        | Emerald Ranger         | 3310       | 607,455 -> 610,765 XP
+369    | Emerald Ranger IX          | Emerald Ranger         | 3320       | 610,765 -> 614,085 XP
+370    | Emerald Ranger X           | Emerald Ranger         | 3330       | 614,085 -> 617,415 XP
+
+>>> TIER 38: EMERALD WARRIOR <<<
+--------------------------------------------------
+371    | Emerald Warrior I          | Emerald Warrior        | 3340       | 617,415 -> 620,755 XP
+372    | Emerald Warrior II         | Emerald Warrior        | 3345       | 620,755 -> 624,100 XP
+373    | Emerald Warrior III        | Emerald Warrior        | 3355       | 624,100 -> 627,455 XP
+374    | Emerald Warrior IV         | Emerald Warrior        | 3365       | 627,455 -> 630,820 XP
+375    | Emerald Warrior V          | Emerald Warrior        | 3375       | 630,820 -> 634,195 XP
+376    | Emerald Warrior VI         | Emerald Warrior        | 3385       | 634,195 -> 637,580 XP
+377    | Emerald Warrior VII        | Emerald Warrior        | 3395       | 637,580 -> 640,975 XP
+378    | Emerald Warrior VIII       | Emerald Warrior        | 3400       | 640,975 -> 644,375 XP
+379    | Emerald Warrior IX         | Emerald Warrior        | 3410       | 644,375 -> 647,785 XP
+380    | Emerald Warrior X          | Emerald Warrior        | 3420       | 647,785 -> 651,205 XP
+
+>>> TIER 39: EMERALD KNIGHT <<<
+--------------------------------------------------
+381    | Emerald Knight I           | Emerald Knight         | 3430       | 651,205 -> 654,635 XP
+382    | Emerald Knight II          | Emerald Knight         | 3440       | 654,635 -> 658,075 XP
+383    | Emerald Knight III         | Emerald Knight         | 3450       | 658,075 -> 661,525 XP
+384    | Emerald Knight IV          | Emerald Knight         | 3455       | 661,525 -> 664,980 XP
+385    | Emerald Knight V           | Emerald Knight         | 3465       | 664,980 -> 668,445 XP
+386    | Emerald Knight VI          | Emerald Knight         | 3475       | 668,445 -> 671,920 XP
+387    | Emerald Knight VII         | Emerald Knight         | 3485       | 671,920 -> 675,405 XP
+388    | Emerald Knight VIII        | Emerald Knight         | 3495       | 675,405 -> 678,900 XP
+389    | Emerald Knight IX          | Emerald Knight         | 3505       | 678,900 -> 682,405 XP
+390    | Emerald Knight X           | Emerald Knight         | 3510       | 682,405 -> 685,915 XP
+
+>>> TIER 40: EMERALD CHAMPION <<<
+--------------------------------------------------
+391    | Emerald Champion I         | Emerald Champion       | 3520       | 685,915 -> 689,435 XP
+392    | Emerald Champion II        | Emerald Champion       | 3530       | 689,435 -> 692,965 XP
+393    | Emerald Champion III       | Emerald Champion       | 3540       | 692,965 -> 696,505 XP
+394    | Emerald Champion IV        | Emerald Champion       | 3550       | 696,505 -> 700,055 XP
+395    | Emerald Champion V         | Emerald Champion       | 3560       | 700,055 -> 703,615 XP
+396    | Emerald Champion VI        | Emerald Champion       | 3565       | 703,615 -> 707,180 XP
+397    | Emerald Champion VII       | Emerald Champion       | 3575       | 707,180 -> 710,755 XP
+398    | Emerald Champion VIII      | Emerald Champion       | 3585       | 710,755 -> 714,340 XP
+399    | Emerald Champion IX        | Emerald Champion       | 3595       | 714,340 -> 717,935 XP
+400    | Emerald Champion X         | Emerald Champion       | 3605       | 717,935 -> 721,540 XP
+
+>>> TIER 41: RUBY BERSERKER <<<
+--------------------------------------------------
+401    | Ruby Berserker I           | Ruby Berserker         | 3615       | 721,540 -> 725,155 XP
+402    | Ruby Berserker II          | Ruby Berserker         | 3620       | 725,155 -> 728,775 XP
+403    | Ruby Berserker III         | Ruby Berserker         | 3630       | 728,775 -> 732,405 XP
+404    | Ruby Berserker IV          | Ruby Berserker         | 3640       | 732,405 -> 736,045 XP
+405    | Ruby Berserker V           | Ruby Berserker         | 3650       | 736,045 -> 739,695 XP
+406    | Ruby Berserker VI          | Ruby Berserker         | 3660       | 739,695 -> 743,355 XP
+407    | Ruby Berserker VII         | Ruby Berserker         | 3670       | 743,355 -> 747,025 XP
+408    | Ruby Berserker VIII        | Ruby Berserker         | 3675       | 747,025 -> 750,700 XP
+409    | Ruby Berserker IX          | Ruby Berserker         | 3685       | 750,700 -> 754,385 XP
+410    | Ruby Berserker X           | Ruby Berserker         | 3695       | 754,385 -> 758,080 XP
+
+>>> TIER 42: RUBY SLAYER <<<
+--------------------------------------------------
+411    | Ruby Slayer I              | Ruby Slayer            | 3705       | 758,080 -> 761,785 XP
+412    | Ruby Slayer II             | Ruby Slayer            | 3715       | 761,785 -> 765,500 XP
+413    | Ruby Slayer III            | Ruby Slayer            | 3725       | 765,500 -> 769,225 XP
+414    | Ruby Slayer IV             | Ruby Slayer            | 3735       | 769,225 -> 772,960 XP
+415    | Ruby Slayer V              | Ruby Slayer            | 3740       | 772,960 -> 776,700 XP
+416    | Ruby Slayer VI             | Ruby Slayer            | 3750       | 776,700 -> 780,450 XP
+417    | Ruby Slayer VII            | Ruby Slayer            | 3760       | 780,450 -> 784,210 XP
+418    | Ruby Slayer VIII           | Ruby Slayer            | 3770       | 784,210 -> 787,980 XP
+419    | Ruby Slayer IX             | Ruby Slayer            | 3780       | 787,980 -> 791,760 XP
+420    | Ruby Slayer X              | Ruby Slayer            | 3790       | 791,760 -> 795,550 XP
+
+>>> TIER 43: RUBY KNIGHT <<<
+--------------------------------------------------
+421    | Ruby Knight I              | Ruby Knight            | 3795       | 795,550 -> 799,345 XP
+422    | Ruby Knight II             | Ruby Knight            | 3805       | 799,345 -> 803,150 XP
+423    | Ruby Knight III            | Ruby Knight            | 3815       | 803,150 -> 806,965 XP
+424    | Ruby Knight IV             | Ruby Knight            | 3825       | 806,965 -> 810,790 XP
+425    | Ruby Knight V              | Ruby Knight            | 3835       | 810,790 -> 814,625 XP
+426    | Ruby Knight VI             | Ruby Knight            | 3845       | 814,625 -> 818,470 XP
+427    | Ruby Knight VII            | Ruby Knight            | 3850       | 818,470 -> 822,320 XP
+428    | Ruby Knight VIII           | Ruby Knight            | 3860       | 822,320 -> 826,180 XP
+429    | Ruby Knight IX             | Ruby Knight            | 3870       | 826,180 -> 830,050 XP
+430    | Ruby Knight X              | Ruby Knight            | 3880       | 830,050 -> 833,930 XP
+
+>>> TIER 44: RUBY CHAMPION <<<
+--------------------------------------------------
+431    | Ruby Champion I            | Ruby Champion          | 3890       | 833,930 -> 837,820 XP
+432    | Ruby Champion II           | Ruby Champion          | 3900       | 837,820 -> 841,720 XP
+433    | Ruby Champion III          | Ruby Champion          | 3905       | 841,720 -> 845,625 XP
+434    | Ruby Champion IV           | Ruby Champion          | 3915       | 845,625 -> 849,540 XP
+435    | Ruby Champion V            | Ruby Champion          | 3925       | 849,540 -> 853,465 XP
+436    | Ruby Champion VI           | Ruby Champion          | 3935       | 853,465 -> 857,400 XP
+437    | Ruby Champion VII          | Ruby Champion          | 3945       | 857,400 -> 861,345 XP
+438    | Ruby Champion VIII         | Ruby Champion          | 3955       | 861,345 -> 865,300 XP
+439    | Ruby Champion IX           | Ruby Champion          | 3965       | 865,300 -> 869,265 XP
+440    | Ruby Champion X            | Ruby Champion          | 3970       | 869,265 -> 873,235 XP
+
+>>> TIER 45: SAPPHIRE SCOUT <<<
+--------------------------------------------------
+441    | Sapphire Scout I           | Sapphire Scout         | 3980       | 873,235 -> 877,215 XP
+442    | Sapphire Scout II          | Sapphire Scout         | 3990       | 877,215 -> 881,205 XP
+443    | Sapphire Scout III         | Sapphire Scout         | 4000       | 881,205 -> 885,205 XP
+444    | Sapphire Scout IV          | Sapphire Scout         | 4010       | 885,205 -> 889,215 XP
+445    | Sapphire Scout V           | Sapphire Scout         | 4020       | 889,215 -> 893,235 XP
+446    | Sapphire Scout VI          | Sapphire Scout         | 4025       | 893,235 -> 897,260 XP
+447    | Sapphire Scout VII         | Sapphire Scout         | 4035       | 897,260 -> 901,295 XP
+448    | Sapphire Scout VIII        | Sapphire Scout         | 4045       | 901,295 -> 905,340 XP
+449    | Sapphire Scout IX          | Sapphire Scout         | 4055       | 905,340 -> 909,395 XP
+450    | Sapphire Scout X           | Sapphire Scout         | 4065       | 909,395 -> 913,460 XP
+
+>>> TIER 46: SAPPHIRE GUARDIAN <<<
+--------------------------------------------------
+451    | Sapphire Guardian I        | Sapphire Guardian      | 4075       | 913,460 -> 917,535 XP
+452    | Sapphire Guardian II       | Sapphire Guardian      | 4080       | 917,535 -> 921,615 XP
+453    | Sapphire Guardian III      | Sapphire Guardian      | 4090       | 921,615 -> 925,705 XP
+454    | Sapphire Guardian IV       | Sapphire Guardian      | 4100       | 925,705 -> 929,805 XP
+455    | Sapphire Guardian V        | Sapphire Guardian      | 4110       | 929,805 -> 933,915 XP
+456    | Sapphire Guardian VI       | Sapphire Guardian      | 4120       | 933,915 -> 938,035 XP
+457    | Sapphire Guardian VII      | Sapphire Guardian      | 4130       | 938,035 -> 942,165 XP
+458    | Sapphire Guardian VIII     | Sapphire Guardian      | 4140       | 942,165 -> 946,305 XP
+459    | Sapphire Guardian IX       | Sapphire Guardian      | 4145       | 946,305 -> 950,450 XP
+460    | Sapphire Guardian X        | Sapphire Guardian      | 4155       | 950,450 -> 954,605 XP
+
+>>> TIER 47: SAPPHIRE KNIGHT <<<
+--------------------------------------------------
+461    | Sapphire Knight I          | Sapphire Knight        | 4165       | 954,605 -> 958,770 XP
+462    | Sapphire Knight II         | Sapphire Knight        | 4175       | 958,770 -> 962,945 XP
+463    | Sapphire Knight III        | Sapphire Knight        | 4185       | 962,945 -> 967,130 XP
+464    | Sapphire Knight IV         | Sapphire Knight        | 4195       | 967,130 -> 971,325 XP
+465    | Sapphire Knight V          | Sapphire Knight        | 4200       | 971,325 -> 975,525 XP
+466    | Sapphire Knight VI         | Sapphire Knight        | 4210       | 975,525 -> 979,735 XP
+467    | Sapphire Knight VII        | Sapphire Knight        | 4220       | 979,735 -> 983,955 XP
+468    | Sapphire Knight VIII       | Sapphire Knight        | 4230       | 983,955 -> 988,185 XP
+469    | Sapphire Knight IX         | Sapphire Knight        | 4240       | 988,185 -> 992,425 XP
+470    | Sapphire Knight X          | Sapphire Knight        | 4250       | 992,425 -> 996,675 XP
+
+>>> TIER 48: SAPPHIRE CHAMPION <<<
+--------------------------------------------------
+471    | Sapphire Champion I        | Sapphire Champion      | 4260       | 996,675 -> 1,000,935 XP
+472    | Sapphire Champion II       | Sapphire Champion      | 4265       | 1,000,935 -> 1,005,200 XP
+473    | Sapphire Champion III      | Sapphire Champion      | 4275       | 1,005,200 -> 1,009,475 XP
+474    | Sapphire Champion IV       | Sapphire Champion      | 4285       | 1,009,475 -> 1,013,760 XP
+475    | Sapphire Champion V        | Sapphire Champion      | 4295       | 1,013,760 -> 1,018,055 XP
+476    | Sapphire Champion VI       | Sapphire Champion      | 4305       | 1,018,055 -> 1,022,360 XP
+477    | Sapphire Champion VII      | Sapphire Champion      | 4315       | 1,022,360 -> 1,026,675 XP
+478    | Sapphire Champion VIII     | Sapphire Champion      | 4320       | 1,026,675 -> 1,030,995 XP
+479    | Sapphire Champion IX       | Sapphire Champion      | 4330       | 1,030,995 -> 1,035,325 XP
+480    | Sapphire Champion X        | Sapphire Champion      | 4340       | 1,035,325 -> 1,039,665 XP
+
+>>> TIER 49: OBSIDIAN STRIKER <<<
+--------------------------------------------------
+481    | Obsidian Striker I         | Obsidian Striker       | 4350       | 1,039,665 -> 1,044,015 XP
+482    | Obsidian Striker II        | Obsidian Striker       | 4360       | 1,044,015 -> 1,048,375 XP
+483    | Obsidian Striker III       | Obsidian Striker       | 4370       | 1,048,375 -> 1,052,745 XP
+484    | Obsidian Striker IV        | Obsidian Striker       | 4380       | 1,052,745 -> 1,057,125 XP
+485    | Obsidian Striker V         | Obsidian Striker       | 4385       | 1,057,125 -> 1,061,510 XP
+486    | Obsidian Striker VI        | Obsidian Striker       | 4395       | 1,061,510 -> 1,065,905 XP
+487    | Obsidian Striker VII       | Obsidian Striker       | 4405       | 1,065,905 -> 1,070,310 XP
+488    | Obsidian Striker VIII      | Obsidian Striker       | 4415       | 1,070,310 -> 1,074,725 XP
+489    | Obsidian Striker IX        | Obsidian Striker       | 4425       | 1,074,725 -> 1,079,150 XP
+490    | Obsidian Striker X         | Obsidian Striker       | 4435       | 1,079,150 -> 1,083,585 XP
+
+>>> TIER 50: OBSIDIAN KNIGHT <<<
+--------------------------------------------------
+491    | Obsidian Knight I          | Obsidian Knight        | 4445       | 1,083,585 -> 1,088,030 XP
+492    | Obsidian Knight II         | Obsidian Knight        | 4450       | 1,088,030 -> 1,092,480 XP
+493    | Obsidian Knight III        | Obsidian Knight        | 4460       | 1,092,480 -> 1,096,940 XP
+494    | Obsidian Knight IV         | Obsidian Knight        | 4470       | 1,096,940 -> 1,101,410 XP
+495    | Obsidian Knight V          | Obsidian Knight        | 4480       | 1,101,410 -> 1,105,890 XP
+496    | Obsidian Knight VI         | Obsidian Knight        | 4490       | 1,105,890 -> 1,110,380 XP
+497    | Obsidian Knight VII        | Obsidian Knight        | 4500       | 1,110,380 -> 1,114,880 XP
+498    | Obsidian Knight VIII       | Obsidian Knight        | 4505       | 1,114,880 -> 1,119,385 XP
+499    | Obsidian Knight IX         | Obsidian Knight        | 4515       | 1,119,385 -> 1,123,900 XP
+500    | Obsidian Knight X          | Obsidian Knight        | 4525       | 1,123,900 -> 1,128,425 XP
+
+>>> TIER 51: OBSIDIAN VANGUARD <<<
+--------------------------------------------------
+501    | Obsidian Vanguard I        | Obsidian Vanguard      | 4535       | 1,128,425 -> 1,132,960 XP
+502    | Obsidian Vanguard II       | Obsidian Vanguard      | 4545       | 1,132,960 -> 1,137,505 XP
+503    | Obsidian Vanguard III      | Obsidian Vanguard      | 4555       | 1,137,505 -> 1,142,060 XP
+504    | Obsidian Vanguard IV       | Obsidian Vanguard      | 4565       | 1,142,060 -> 1,146,625 XP
+505    | Obsidian Vanguard V        | Obsidian Vanguard      | 4570       | 1,146,625 -> 1,151,195 XP
+506    | Obsidian Vanguard VI       | Obsidian Vanguard      | 4580       | 1,151,195 -> 1,155,775 XP
+507    | Obsidian Vanguard VII      | Obsidian Vanguard      | 4590       | 1,155,775 -> 1,160,365 XP
+508    | Obsidian Vanguard VIII     | Obsidian Vanguard      | 4600       | 1,160,365 -> 1,164,965 XP
+509    | Obsidian Vanguard IX       | Obsidian Vanguard      | 4610       | 1,164,965 -> 1,169,575 XP
+510    | Obsidian Vanguard X        | Obsidian Vanguard      | 4620       | 1,169,575 -> 1,174,195 XP
+
+>>> TIER 52: OBSIDIAN CHAMPION <<<
+--------------------------------------------------
+511    | Obsidian Champion I        | Obsidian Champion      | 4630       | 1,174,195 -> 1,178,825 XP
+512    | Obsidian Champion II       | Obsidian Champion      | 4635       | 1,178,825 -> 1,183,460 XP
+513    | Obsidian Champion III      | Obsidian Champion      | 4645       | 1,183,460 -> 1,188,105 XP
+514    | Obsidian Champion IV       | Obsidian Champion      | 4655       | 1,188,105 -> 1,192,760 XP
+515    | Obsidian Champion V        | Obsidian Champion      | 4665       | 1,192,760 -> 1,197,425 XP
+516    | Obsidian Champion VI       | Obsidian Champion      | 4675       | 1,197,425 -> 1,202,100 XP
+517    | Obsidian Champion VII      | Obsidian Champion      | 4685       | 1,202,100 -> 1,206,785 XP
+518    | Obsidian Champion VIII     | Obsidian Champion      | 4695       | 1,206,785 -> 1,211,480 XP
+519    | Obsidian Champion IX       | Obsidian Champion      | 4700       | 1,211,480 -> 1,216,180 XP
+520    | Obsidian Champion X        | Obsidian Champion      | 4710       | 1,216,180 -> 1,220,890 XP
+
+>>> TIER 53: SHADOW SCOUT <<<
+--------------------------------------------------
+521    | Shadow Scout I             | Shadow Scout           | 4720       | 1,220,890 -> 1,225,610 XP
+522    | Shadow Scout II            | Shadow Scout           | 4730       | 1,225,610 -> 1,230,340 XP
+523    | Shadow Scout III           | Shadow Scout           | 4740       | 1,230,340 -> 1,235,080 XP
+524    | Shadow Scout IV            | Shadow Scout           | 4750       | 1,235,080 -> 1,239,830 XP
+525    | Shadow Scout V             | Shadow Scout           | 4760       | 1,239,830 -> 1,244,590 XP
+526    | Shadow Scout VI            | Shadow Scout           | 4765       | 1,244,590 -> 1,249,355 XP
+527    | Shadow Scout VII           | Shadow Scout           | 4775       | 1,249,355 -> 1,254,130 XP
+528    | Shadow Scout VIII          | Shadow Scout           | 4785       | 1,254,130 -> 1,258,915 XP
+529    | Shadow Scout IX            | Shadow Scout           | 4795       | 1,258,915 -> 1,263,710 XP
+530    | Shadow Scout X             | Shadow Scout           | 4805       | 1,263,710 -> 1,268,515 XP
+
+>>> TIER 54: SHADOW BLADE <<<
+--------------------------------------------------
+531    | Shadow Blade I             | Shadow Blade           | 4815       | 1,268,515 -> 1,273,330 XP
+532    | Shadow Blade II            | Shadow Blade           | 4825       | 1,273,330 -> 1,278,155 XP
+533    | Shadow Blade III           | Shadow Blade           | 4830       | 1,278,155 -> 1,282,985 XP
+534    | Shadow Blade IV            | Shadow Blade           | 4840       | 1,282,985 -> 1,287,825 XP
+535    | Shadow Blade V             | Shadow Blade           | 4850       | 1,287,825 -> 1,292,675 XP
+536    | Shadow Blade VI            | Shadow Blade           | 4860       | 1,292,675 -> 1,297,535 XP
+537    | Shadow Blade VII           | Shadow Blade           | 4870       | 1,297,535 -> 1,302,405 XP
+538    | Shadow Blade VIII          | Shadow Blade           | 4880       | 1,302,405 -> 1,307,285 XP
+539    | Shadow Blade IX            | Shadow Blade           | 4890       | 1,307,285 -> 1,312,175 XP
+540    | Shadow Blade X             | Shadow Blade           | 4895       | 1,312,175 -> 1,317,070 XP
+
+>>> TIER 55: SHADOW KNIGHT <<<
+--------------------------------------------------
+541    | Shadow Knight I            | Shadow Knight          | 4905       | 1,317,070 -> 1,321,975 XP
+542    | Shadow Knight II           | Shadow Knight          | 4915       | 1,321,975 -> 1,326,890 XP
+543    | Shadow Knight III          | Shadow Knight          | 4925       | 1,326,890 -> 1,331,815 XP
+544    | Shadow Knight IV           | Shadow Knight          | 4935       | 1,331,815 -> 1,336,750 XP
+545    | Shadow Knight V            | Shadow Knight          | 4945       | 1,336,750 -> 1,341,695 XP
+546    | Shadow Knight VI           | Shadow Knight          | 4955       | 1,341,695 -> 1,346,650 XP
+547    | Shadow Knight VII          | Shadow Knight          | 4960       | 1,346,650 -> 1,351,610 XP
+548    | Shadow Knight VIII         | Shadow Knight          | 4970       | 1,351,610 -> 1,356,580 XP
+549    | Shadow Knight IX           | Shadow Knight          | 4980       | 1,356,580 -> 1,361,560 XP
+550    | Shadow Knight X            | Shadow Knight          | 4990       | 1,361,560 -> 1,366,550 XP
+
+>>> TIER 56: SHADOW MASTER <<<
+--------------------------------------------------
+551    | Shadow Master I            | Shadow Master          | 5000       | 1,366,550 -> 1,371,550 XP
+552    | Shadow Master II           | Shadow Master          | 5010       | 1,371,550 -> 1,376,560 XP
+553    | Shadow Master III          | Shadow Master          | 5020       | 1,376,560 -> 1,381,580 XP
+554    | Shadow Master IV           | Shadow Master          | 5025       | 1,381,580 -> 1,386,605 XP
+555    | Shadow Master V            | Shadow Master          | 5035       | 1,386,605 -> 1,391,640 XP
+556    | Shadow Master VI           | Shadow Master          | 5045       | 1,391,640 -> 1,396,685 XP
+557    | Shadow Master VII          | Shadow Master          | 5055       | 1,396,685 -> 1,401,740 XP
+558    | Shadow Master VIII         | Shadow Master          | 5065       | 1,401,740 -> 1,406,805 XP
+559    | Shadow Master IX           | Shadow Master          | 5075       | 1,406,805 -> 1,411,880 XP
+560    | Shadow Master X            | Shadow Master          | 5085       | 1,411,880 -> 1,416,965 XP
+
+>>> TIER 57: RANGER ELITE <<<
+--------------------------------------------------
+561    | Ranger Elite I             | Ranger Elite           | 5090       | 1,416,965 -> 1,422,055 XP
+562    | Ranger Elite II            | Ranger Elite           | 5100       | 1,422,055 -> 1,427,155 XP
+563    | Ranger Elite III           | Ranger Elite           | 5110       | 1,427,155 -> 1,432,265 XP
+564    | Ranger Elite IV            | Ranger Elite           | 5120       | 1,432,265 -> 1,437,385 XP
+565    | Ranger Elite V             | Ranger Elite           | 5130       | 1,437,385 -> 1,442,515 XP
+566    | Ranger Elite VI            | Ranger Elite           | 5140       | 1,442,515 -> 1,447,655 XP
+567    | Ranger Elite VII           | Ranger Elite           | 5150       | 1,447,655 -> 1,452,805 XP
+568    | Ranger Elite VIII          | Ranger Elite           | 5155       | 1,452,805 -> 1,457,960 XP
+569    | Ranger Elite IX            | Ranger Elite           | 5165       | 1,457,960 -> 1,463,125 XP
+570    | Ranger Elite X             | Ranger Elite           | 5175       | 1,463,125 -> 1,468,300 XP
+
+>>> TIER 58: HUNTER MASTER <<<
+--------------------------------------------------
+571    | Hunter Master I            | Hunter Master          | 5185       | 1,468,300 -> 1,473,485 XP
+572    | Hunter Master II           | Hunter Master          | 5195       | 1,473,485 -> 1,478,680 XP
+573    | Hunter Master III          | Hunter Master          | 5205       | 1,478,680 -> 1,483,885 XP
+574    | Hunter Master IV           | Hunter Master          | 5215       | 1,483,885 -> 1,489,100 XP
+575    | Hunter Master V            | Hunter Master          | 5220       | 1,489,100 -> 1,494,320 XP
+576    | Hunter Master VI           | Hunter Master          | 5230       | 1,494,320 -> 1,499,550 XP
+577    | Hunter Master VII          | Hunter Master          | 5240       | 1,499,550 -> 1,504,790 XP
+578    | Hunter Master VIII         | Hunter Master          | 5250       | 1,504,790 -> 1,510,040 XP
+579    | Hunter Master IX           | Hunter Master          | 5260       | 1,510,040 -> 1,515,300 XP
+580    | Hunter Master X            | Hunter Master          | 5270       | 1,515,300 -> 1,520,570 XP
+
+>>> TIER 59: ASSASSIN ELITE <<<
+--------------------------------------------------
+581    | Assassin Elite I           | Assassin Elite         | 5280       | 1,520,570 -> 1,525,850 XP
+582    | Assassin Elite II          | Assassin Elite         | 5290       | 1,525,850 -> 1,531,140 XP
+583    | Assassin Elite III         | Assassin Elite         | 5295       | 1,531,140 -> 1,536,435 XP
+584    | Assassin Elite IV          | Assassin Elite         | 5305       | 1,536,435 -> 1,541,740 XP
+585    | Assassin Elite V           | Assassin Elite         | 5315       | 1,541,740 -> 1,547,055 XP
+586    | Assassin Elite VI          | Assassin Elite         | 5325       | 1,547,055 -> 1,552,380 XP
+587    | Assassin Elite VII         | Assassin Elite         | 5335       | 1,552,380 -> 1,557,715 XP
+588    | Assassin Elite VIII        | Assassin Elite         | 5345       | 1,557,715 -> 1,563,060 XP
+589    | Assassin Elite IX          | Assassin Elite         | 5355       | 1,563,060 -> 1,568,415 XP
+590    | Assassin Elite X           | Assassin Elite         | 5360       | 1,568,415 -> 1,573,775 XP
+
+>>> TIER 60: DUELIST CHAMPION <<<
+--------------------------------------------------
+591    | Duelist Champion I         | Duelist Champion       | 5370       | 1,573,775 -> 1,579,145 XP
+592    | Duelist Champion II        | Duelist Champion       | 5380       | 1,579,145 -> 1,584,525 XP
+593    | Duelist Champion III       | Duelist Champion       | 5390       | 1,584,525 -> 1,589,915 XP
+594    | Duelist Champion IV        | Duelist Champion       | 5400       | 1,589,915 -> 1,595,315 XP
+595    | Duelist Champion V         | Duelist Champion       | 5410       | 1,595,315 -> 1,600,725 XP
+596    | Duelist Champion VI        | Duelist Champion       | 5420       | 1,600,725 -> 1,606,145 XP
+597    | Duelist Champion VII       | Duelist Champion       | 5425       | 1,606,145 -> 1,611,570 XP
+598    | Duelist Champion VIII      | Duelist Champion       | 5435       | 1,611,570 -> 1,617,005 XP
+599    | Duelist Champion IX        | Duelist Champion       | 5445       | 1,617,005 -> 1,622,450 XP
+600    | Duelist Champion X         | Duelist Champion       | 5455       | 1,622,450 -> 1,627,905 XP
+
+>>> TIER 61: GLADIATOR WARLORD <<<
+--------------------------------------------------
+601    | Gladiator Warlord I        | Gladiator Warlord      | 5465       | 1,627,905 -> 1,633,370 XP
+602    | Gladiator Warlord II       | Gladiator Warlord      | 5475       | 1,633,370 -> 1,638,845 XP
+603    | Gladiator Warlord III      | Gladiator Warlord      | 5485       | 1,638,845 -> 1,644,330 XP
+604    | Gladiator Warlord IV       | Gladiator Warlord      | 5495       | 1,644,330 -> 1,649,825 XP
+605    | Gladiator Warlord V        | Gladiator Warlord      | 5500       | 1,649,825 -> 1,655,325 XP
+606    | Gladiator Warlord VI       | Gladiator Warlord      | 5510       | 1,655,325 -> 1,660,835 XP
+607    | Gladiator Warlord VII      | Gladiator Warlord      | 5520       | 1,660,835 -> 1,666,355 XP
+608    | Gladiator Warlord VIII     | Gladiator Warlord      | 5530       | 1,666,355 -> 1,671,885 XP
+609    | Gladiator Warlord IX       | Gladiator Warlord      | 5540       | 1,671,885 -> 1,677,425 XP
+610    | Gladiator Warlord X        | Gladiator Warlord      | 5550       | 1,677,425 -> 1,682,975 XP
+
+>>> TIER 62: BERSERKER CHAMPION <<<
+--------------------------------------------------
+611    | Berserker Champion I       | Berserker Champion     | 5560       | 1,682,975 -> 1,688,535 XP
+612    | Berserker Champion II      | Berserker Champion     | 5565       | 1,688,535 -> 1,694,100 XP
+613    | Berserker Champion III     | Berserker Champion     | 5575       | 1,694,100 -> 1,699,675 XP
+614    | Berserker Champion IV      | Berserker Champion     | 5585       | 1,699,675 -> 1,705,260 XP
+615    | Berserker Champion V       | Berserker Champion     | 5595       | 1,705,260 -> 1,710,855 XP
+616    | Berserker Champion VI      | Berserker Champion     | 5605       | 1,710,855 -> 1,716,460 XP
+617    | Berserker Champion VII     | Berserker Champion     | 5615       | 1,716,460 -> 1,722,075 XP
+618    | Berserker Champion VIII    | Berserker Champion     | 5625       | 1,722,075 -> 1,727,700 XP
+619    | Berserker Champion IX      | Berserker Champion     | 5635       | 1,727,700 -> 1,733,335 XP
+620    | Berserker Champion X       | Berserker Champion     | 5640       | 1,733,335 -> 1,738,975 XP
+
+>>> TIER 63: PALADIN COMMANDER <<<
+--------------------------------------------------
+621    | Paladin Commander I        | Paladin Commander      | 5650       | 1,738,975 -> 1,744,625 XP
+622    | Paladin Commander II       | Paladin Commander      | 5660       | 1,744,625 -> 1,750,285 XP
+623    | Paladin Commander III      | Paladin Commander      | 5670       | 1,750,285 -> 1,755,955 XP
+624    | Paladin Commander IV       | Paladin Commander      | 5680       | 1,755,955 -> 1,761,635 XP
+625    | Paladin Commander V        | Paladin Commander      | 5690       | 1,761,635 -> 1,767,325 XP
+626    | Paladin Commander VI       | Paladin Commander      | 5700       | 1,767,325 -> 1,773,025 XP
+627    | Paladin Commander VII      | Paladin Commander      | 5705       | 1,773,025 -> 1,778,730 XP
+628    | Paladin Commander VIII     | Paladin Commander      | 5715       | 1,778,730 -> 1,784,445 XP
+629    | Paladin Commander IX       | Paladin Commander      | 5725       | 1,784,445 -> 1,790,170 XP
+630    | Paladin Commander X        | Paladin Commander      | 5735       | 1,790,170 -> 1,795,905 XP
+
+>>> TIER 64: TEMPLAR KNIGHT <<<
+--------------------------------------------------
+631    | Templar Knight I           | Templar Knight         | 5745       | 1,795,905 -> 1,801,650 XP
+632    | Templar Knight II          | Templar Knight         | 5755       | 1,801,650 -> 1,807,405 XP
+633    | Templar Knight III         | Templar Knight         | 5765       | 1,807,405 -> 1,813,170 XP
+634    | Templar Knight IV          | Templar Knight         | 5775       | 1,813,170 -> 1,818,945 XP
+635    | Templar Knight V           | Templar Knight         | 5780       | 1,818,945 -> 1,824,725 XP
+636    | Templar Knight VI          | Templar Knight         | 5790       | 1,824,725 -> 1,830,515 XP
+637    | Templar Knight VII         | Templar Knight         | 5800       | 1,830,515 -> 1,836,315 XP
+638    | Templar Knight VIII        | Templar Knight         | 5810       | 1,836,315 -> 1,842,125 XP
+639    | Templar Knight IX          | Templar Knight         | 5820       | 1,842,125 -> 1,847,945 XP
+640    | Templar Knight X           | Templar Knight         | 5830       | 1,847,945 -> 1,853,775 XP
+
+>>> TIER 65: CRUSADER CHAMPION <<<
+--------------------------------------------------
+641    | Crusader Champion I        | Crusader Champion      | 5840       | 1,853,775 -> 1,859,615 XP
+642    | Crusader Champion II       | Crusader Champion      | 5850       | 1,859,615 -> 1,865,465 XP
+643    | Crusader Champion III      | Crusader Champion      | 5855       | 1,865,465 -> 1,871,320 XP
+644    | Crusader Champion IV       | Crusader Champion      | 5865       | 1,871,320 -> 1,877,185 XP
+645    | Crusader Champion V        | Crusader Champion      | 5875       | 1,877,185 -> 1,883,060 XP
+646    | Crusader Champion VI       | Crusader Champion      | 5885       | 1,883,060 -> 1,888,945 XP
+647    | Crusader Champion VII      | Crusader Champion      | 5895       | 1,888,945 -> 1,894,840 XP
+648    | Crusader Champion VIII     | Crusader Champion      | 5905       | 1,894,840 -> 1,900,745 XP
+649    | Crusader Champion IX       | Crusader Champion      | 5915       | 1,900,745 -> 1,906,660 XP
+650    | Crusader Champion X        | Crusader Champion      | 5925       | 1,906,660 -> 1,912,585 XP
+
+>>> TIER 66: BATTLEMAGE <<<
+--------------------------------------------------
+651    | Battlemage I               | Battlemage             | 5930       | 1,912,585 -> 1,918,515 XP
+652    | Battlemage II              | Battlemage             | 5940       | 1,918,515 -> 1,924,455 XP
+653    | Battlemage III             | Battlemage             | 5950       | 1,924,455 -> 1,930,405 XP
+654    | Battlemage IV              | Battlemage             | 5960       | 1,930,405 -> 1,936,365 XP
+655    | Battlemage V               | Battlemage             | 5970       | 1,936,365 -> 1,942,335 XP
+656    | Battlemage VI              | Battlemage             | 5980       | 1,942,335 -> 1,948,315 XP
+657    | Battlemage VII             | Battlemage             | 5990       | 1,948,315 -> 1,954,305 XP
+658    | Battlemage VIII            | Battlemage             | 5995       | 1,954,305 -> 1,960,300 XP
+659    | Battlemage IX              | Battlemage             | 6005       | 1,960,300 -> 1,966,305 XP
+660    | Battlemage X               | Battlemage             | 6015       | 1,966,305 -> 1,972,320 XP
+
+>>> TIER 67: SPELLBLADE MASTER <<<
+--------------------------------------------------
+661    | Spellblade Master I        | Spellblade Master      | 6025       | 1,972,320 -> 1,978,345 XP
+662    | Spellblade Master II       | Spellblade Master      | 6035       | 1,978,345 -> 1,984,380 XP
+663    | Spellblade Master III      | Spellblade Master      | 6045       | 1,984,380 -> 1,990,425 XP
+664    | Spellblade Master IV       | Spellblade Master      | 6055       | 1,990,425 -> 1,996,480 XP
+665    | Spellblade Master V        | Spellblade Master      | 6065       | 1,996,480 -> 2,002,545 XP
+666    | Spellblade Master VI       | Spellblade Master      | 6070       | 2,002,545 -> 2,008,615 XP
+667    | Spellblade Master VII      | Spellblade Master      | 6080       | 2,008,615 -> 2,014,695 XP
+668    | Spellblade Master VIII     | Spellblade Master      | 6090       | 2,014,695 -> 2,020,785 XP
+669    | Spellblade Master IX       | Spellblade Master      | 6100       | 2,020,785 -> 2,026,885 XP
+670    | Spellblade Master X        | Spellblade Master      | 6110       | 2,026,885 -> 2,032,995 XP
+
+>>> TIER 68: STORMCALLER <<<
+--------------------------------------------------
+671    | Stormcaller I              | Stormcaller            | 6120       | 2,032,995 -> 2,039,115 XP
+672    | Stormcaller II             | Stormcaller            | 6130       | 2,039,115 -> 2,045,245 XP
+673    | Stormcaller III            | Stormcaller            | 6140       | 2,045,245 -> 2,051,385 XP
+674    | Stormcaller IV             | Stormcaller            | 6145       | 2,051,385 -> 2,057,530 XP
+675    | Stormcaller V              | Stormcaller            | 6155       | 2,057,530 -> 2,063,685 XP
+676    | Stormcaller VI             | Stormcaller            | 6165       | 2,063,685 -> 2,069,850 XP
+677    | Stormcaller VII            | Stormcaller            | 6175       | 2,069,850 -> 2,076,025 XP
+678    | Stormcaller VIII           | Stormcaller            | 6185       | 2,076,025 -> 2,082,210 XP
+679    | Stormcaller IX             | Stormcaller            | 6195       | 2,082,210 -> 2,088,405 XP
+680    | Stormcaller X              | Stormcaller            | 6205       | 2,088,405 -> 2,094,610 XP
+
+>>> TIER 69: FROST KNIGHT <<<
+--------------------------------------------------
+681    | Frost Knight I             | Frost Knight           | 6215       | 2,094,610 -> 2,100,825 XP
+682    | Frost Knight II            | Frost Knight           | 6220       | 2,100,825 -> 2,107,045 XP
+683    | Frost Knight III           | Frost Knight           | 6230       | 2,107,045 -> 2,113,275 XP
+684    | Frost Knight IV            | Frost Knight           | 6240       | 2,113,275 -> 2,119,515 XP
+685    | Frost Knight V             | Frost Knight           | 6250       | 2,119,515 -> 2,125,765 XP
+686    | Frost Knight VI            | Frost Knight           | 6260       | 2,125,765 -> 2,132,025 XP
+687    | Frost Knight VII           | Frost Knight           | 6270       | 2,132,025 -> 2,138,295 XP
+688    | Frost Knight VIII          | Frost Knight           | 6280       | 2,138,295 -> 2,144,575 XP
+689    | Frost Knight IX            | Frost Knight           | 6290       | 2,144,575 -> 2,150,865 XP
+690    | Frost Knight X             | Frost Knight           | 6300       | 2,150,865 -> 2,157,165 XP
+
+>>> TIER 70: FLAME KNIGHT <<<
+--------------------------------------------------
+691    | Flame Knight I             | Flame Knight           | 6305       | 2,157,165 -> 2,163,470 XP
+692    | Flame Knight II            | Flame Knight           | 6315       | 2,163,470 -> 2,169,785 XP
+693    | Flame Knight III           | Flame Knight           | 6325       | 2,169,785 -> 2,176,110 XP
+694    | Flame Knight IV            | Flame Knight           | 6335       | 2,176,110 -> 2,182,445 XP
+695    | Flame Knight V             | Flame Knight           | 6345       | 2,182,445 -> 2,188,790 XP
+696    | Flame Knight VI            | Flame Knight           | 6355       | 2,188,790 -> 2,195,145 XP
+697    | Flame Knight VII           | Flame Knight           | 6365       | 2,195,145 -> 2,201,510 XP
+698    | Flame Knight VIII          | Flame Knight           | 6375       | 2,201,510 -> 2,207,885 XP
+699    | Flame Knight IX            | Flame Knight           | 6380       | 2,207,885 -> 2,214,265 XP
+700    | Flame Knight X             | Flame Knight           | 6390       | 2,214,265 -> 2,220,655 XP
+
+>>> TIER 71: THUNDER VANGUARD <<<
+--------------------------------------------------
+701    | Thunder Vanguard I         | Thunder Vanguard       | 6400       | 2,220,655 -> 2,227,055 XP
+702    | Thunder Vanguard II        | Thunder Vanguard       | 6410       | 2,227,055 -> 2,233,465 XP
+703    | Thunder Vanguard III       | Thunder Vanguard       | 6420       | 2,233,465 -> 2,239,885 XP
+704    | Thunder Vanguard IV        | Thunder Vanguard       | 6430       | 2,239,885 -> 2,246,315 XP
+705    | Thunder Vanguard V         | Thunder Vanguard       | 6440       | 2,246,315 -> 2,252,755 XP
+706    | Thunder Vanguard VI        | Thunder Vanguard       | 6450       | 2,252,755 -> 2,259,205 XP
+707    | Thunder Vanguard VII       | Thunder Vanguard       | 6455       | 2,259,205 -> 2,265,660 XP
+708    | Thunder Vanguard VIII      | Thunder Vanguard       | 6465       | 2,265,660 -> 2,272,125 XP
+709    | Thunder Vanguard IX        | Thunder Vanguard       | 6475       | 2,272,125 -> 2,278,600 XP
+710    | Thunder Vanguard X         | Thunder Vanguard       | 6485       | 2,278,600 -> 2,285,085 XP
+
+>>> TIER 72: VOID WALKER <<<
+--------------------------------------------------
+711    | Void Walker I              | Void Walker            | 6495       | 2,285,085 -> 2,291,580 XP
+712    | Void Walker II             | Void Walker            | 6505       | 2,291,580 -> 2,298,085 XP
+713    | Void Walker III            | Void Walker            | 6515       | 2,298,085 -> 2,304,600 XP
+714    | Void Walker IV             | Void Walker            | 6525       | 2,304,600 -> 2,311,125 XP
+715    | Void Walker V              | Void Walker            | 6530       | 2,311,125 -> 2,317,655 XP
+716    | Void Walker VI             | Void Walker            | 6540       | 2,317,655 -> 2,324,195 XP
+717    | Void Walker VII            | Void Walker            | 6550       | 2,324,195 -> 2,330,745 XP
+718    | Void Walker VIII           | Void Walker            | 6560       | 2,330,745 -> 2,337,305 XP
+719    | Void Walker IX             | Void Walker            | 6570       | 2,337,305 -> 2,343,875 XP
+720    | Void Walker X              | Void Walker            | 6580       | 2,343,875 -> 2,350,455 XP
+
+>>> TIER 73: VOID SLAYER <<<
+--------------------------------------------------
+721    | Void Slayer I              | Void Slayer            | 6590       | 2,350,455 -> 2,357,045 XP
+722    | Void Slayer II             | Void Slayer            | 6600       | 2,357,045 -> 2,363,645 XP
+723    | Void Slayer III            | Void Slayer            | 6610       | 2,363,645 -> 2,370,255 XP
+724    | Void Slayer IV             | Void Slayer            | 6615       | 2,370,255 -> 2,376,870 XP
+725    | Void Slayer V              | Void Slayer            | 6625       | 2,376,870 -> 2,383,495 XP
+726    | Void Slayer VI             | Void Slayer            | 6635       | 2,383,495 -> 2,390,130 XP
+727    | Void Slayer VII            | Void Slayer            | 6645       | 2,390,130 -> 2,396,775 XP
+728    | Void Slayer VIII           | Void Slayer            | 6655       | 2,396,775 -> 2,403,430 XP
+729    | Void Slayer IX             | Void Slayer            | 6665       | 2,403,430 -> 2,410,095 XP
+730    | Void Slayer X              | Void Slayer            | 6675       | 2,410,095 -> 2,416,770 XP
+
+>>> TIER 74: DRAGON KNIGHT <<<
+--------------------------------------------------
+731    | Dragon Knight I            | Dragon Knight          | 6685       | 2,416,770 -> 2,423,455 XP
+732    | Dragon Knight II           | Dragon Knight          | 6690       | 2,423,455 -> 2,430,145 XP
+733    | Dragon Knight III          | Dragon Knight          | 6700       | 2,430,145 -> 2,436,845 XP
+734    | Dragon Knight IV           | Dragon Knight          | 6710       | 2,436,845 -> 2,443,555 XP
+735    | Dragon Knight V            | Dragon Knight          | 6720       | 2,443,555 -> 2,450,275 XP
+736    | Dragon Knight VI           | Dragon Knight          | 6730       | 2,450,275 -> 2,457,005 XP
+737    | Dragon Knight VII          | Dragon Knight          | 6740       | 2,457,005 -> 2,463,745 XP
+738    | Dragon Knight VIII         | Dragon Knight          | 6750       | 2,463,745 -> 2,470,495 XP
+739    | Dragon Knight IX           | Dragon Knight          | 6760       | 2,470,495 -> 2,477,255 XP
+740    | Dragon Knight X            | Dragon Knight          | 6770       | 2,477,255 -> 2,484,025 XP
+
+>>> TIER 75: DRAGON SLAYER <<<
+--------------------------------------------------
+741    | Dragon Slayer I            | Dragon Slayer          | 6775       | 2,484,025 -> 2,490,800 XP
+742    | Dragon Slayer II           | Dragon Slayer          | 6785       | 2,490,800 -> 2,497,585 XP
+743    | Dragon Slayer III          | Dragon Slayer          | 6795       | 2,497,585 -> 2,504,380 XP
+744    | Dragon Slayer IV           | Dragon Slayer          | 6805       | 2,504,380 -> 2,511,185 XP
+745    | Dragon Slayer V            | Dragon Slayer          | 6815       | 2,511,185 -> 2,518,000 XP
+746    | Dragon Slayer VI           | Dragon Slayer          | 6825       | 2,518,000 -> 2,524,825 XP
+747    | Dragon Slayer VII          | Dragon Slayer          | 6835       | 2,524,825 -> 2,531,660 XP
+748    | Dragon Slayer VIII         | Dragon Slayer          | 6845       | 2,531,660 -> 2,538,505 XP
+749    | Dragon Slayer IX           | Dragon Slayer          | 6850       | 2,538,505 -> 2,545,355 XP
+750    | Dragon Slayer X            | Dragon Slayer          | 6860       | 2,545,355 -> 2,552,215 XP
+
+>>> TIER 76: TITAN SLAYER <<<
+--------------------------------------------------
+751    | Titan Slayer I             | Titan Slayer           | 6870       | 2,552,215 -> 2,559,085 XP
+752    | Titan Slayer II            | Titan Slayer           | 6880       | 2,559,085 -> 2,565,965 XP
+753    | Titan Slayer III           | Titan Slayer           | 6890       | 2,565,965 -> 2,572,855 XP
+754    | Titan Slayer IV            | Titan Slayer           | 6900       | 2,572,855 -> 2,579,755 XP
+755    | Titan Slayer V             | Titan Slayer           | 6910       | 2,579,755 -> 2,586,665 XP
+756    | Titan Slayer VI            | Titan Slayer           | 6920       | 2,586,665 -> 2,593,585 XP
+757    | Titan Slayer VII           | Titan Slayer           | 6930       | 2,593,585 -> 2,600,515 XP
+758    | Titan Slayer VIII          | Titan Slayer           | 6935       | 2,600,515 -> 2,607,450 XP
+759    | Titan Slayer IX            | Titan Slayer           | 6945       | 2,607,450 -> 2,614,395 XP
+760    | Titan Slayer X             | Titan Slayer           | 6955       | 2,614,395 -> 2,621,350 XP
+
+>>> TIER 77: COLOSSUS GUARD <<<
+--------------------------------------------------
+761    | Colossus Guard I           | Colossus Guard         | 6965       | 2,621,350 -> 2,628,315 XP
+762    | Colossus Guard II          | Colossus Guard         | 6975       | 2,628,315 -> 2,635,290 XP
+763    | Colossus Guard III         | Colossus Guard         | 6985       | 2,635,290 -> 2,642,275 XP
+764    | Colossus Guard IV          | Colossus Guard         | 6995       | 2,642,275 -> 2,649,270 XP
+765    | Colossus Guard V           | Colossus Guard         | 7005       | 2,649,270 -> 2,656,275 XP
+766    | Colossus Guard VI          | Colossus Guard         | 7015       | 2,656,275 -> 2,663,290 XP
+767    | Colossus Guard VII         | Colossus Guard         | 7020       | 2,663,290 -> 2,670,310 XP
+768    | Colossus Guard VIII        | Colossus Guard         | 7030       | 2,670,310 -> 2,677,340 XP
+769    | Colossus Guard IX          | Colossus Guard         | 7040       | 2,677,340 -> 2,684,380 XP
+770    | Colossus Guard X           | Colossus Guard         | 7050       | 2,684,380 -> 2,691,430 XP
+
+>>> TIER 78: JUGGERNAUT <<<
+--------------------------------------------------
+771    | Juggernaut I               | Juggernaut             | 7060       | 2,691,430 -> 2,698,490 XP
+772    | Juggernaut II              | Juggernaut             | 7070       | 2,698,490 -> 2,705,560 XP
+773    | Juggernaut III             | Juggernaut             | 7080       | 2,705,560 -> 2,712,640 XP
+774    | Juggernaut IV              | Juggernaut             | 7090       | 2,712,640 -> 2,719,730 XP
+775    | Juggernaut V               | Juggernaut             | 7095       | 2,719,730 -> 2,726,825 XP
+776    | Juggernaut VI              | Juggernaut             | 7105       | 2,726,825 -> 2,733,930 XP
+777    | Juggernaut VII             | Juggernaut             | 7115       | 2,733,930 -> 2,741,045 XP
+778    | Juggernaut VIII            | Juggernaut             | 7125       | 2,741,045 -> 2,748,170 XP
+779    | Juggernaut IX              | Juggernaut             | 7135       | 2,748,170 -> 2,755,305 XP
+780    | Juggernaut X               | Juggernaut             | 7145       | 2,755,305 -> 2,762,450 XP
+
+>>> TIER 79: WARLORD <<<
+--------------------------------------------------
+781    | Warlord I                  | Warlord                | 7155       | 2,762,450 -> 2,769,605 XP
+782    | Warlord II                 | Warlord                | 7165       | 2,769,605 -> 2,776,770 XP
+783    | Warlord III                | Warlord                | 7175       | 2,776,770 -> 2,783,945 XP
+784    | Warlord IV                 | Warlord                | 7180       | 2,783,945 -> 2,791,125 XP
+785    | Warlord V                  | Warlord                | 7190       | 2,791,125 -> 2,798,315 XP
+786    | Warlord VI                 | Warlord                | 7200       | 2,798,315 -> 2,805,515 XP
+787    | Warlord VII                | Warlord                | 7210       | 2,805,515 -> 2,812,725 XP
+788    | Warlord VIII               | Warlord                | 7220       | 2,812,725 -> 2,819,945 XP
+789    | Warlord IX                 | Warlord                | 7230       | 2,819,945 -> 2,827,175 XP
+790    | Warlord X                  | Warlord                | 7240       | 2,827,175 -> 2,834,415 XP
+
+>>> TIER 80: HIGH COMMANDER <<<
+--------------------------------------------------
+791    | High Commander I           | High Commander         | 7250       | 2,834,415 -> 2,841,665 XP
+792    | High Commander II          | High Commander         | 7260       | 2,841,665 -> 2,848,925 XP
+793    | High Commander III         | High Commander         | 7265       | 2,848,925 -> 2,856,190 XP
+794    | High Commander IV          | High Commander         | 7275       | 2,856,190 -> 2,863,465 XP
+795    | High Commander V           | High Commander         | 7285       | 2,863,465 -> 2,870,750 XP
+796    | High Commander VI          | High Commander         | 7295       | 2,870,750 -> 2,878,045 XP
+797    | High Commander VII         | High Commander         | 7305       | 2,878,045 -> 2,885,350 XP
+798    | High Commander VIII        | High Commander         | 7315       | 2,885,350 -> 2,892,665 XP
+799    | High Commander IX          | High Commander         | 7325       | 2,892,665 -> 2,899,990 XP
+800    | High Commander X           | High Commander         | 7335       | 2,899,990 -> 2,907,325 XP
+
+>>> TIER 81: GRAND MARSHAL <<<
+--------------------------------------------------
+801    | Grand Marshal I            | Grand Marshal          | 7345       | 2,907,325 -> 2,914,670 XP
+802    | Grand Marshal II           | Grand Marshal          | 7350       | 2,914,670 -> 2,922,020 XP
+803    | Grand Marshal III          | Grand Marshal          | 7360       | 2,922,020 -> 2,929,380 XP
+804    | Grand Marshal IV           | Grand Marshal          | 7370       | 2,929,380 -> 2,936,750 XP
+805    | Grand Marshal V            | Grand Marshal          | 7380       | 2,936,750 -> 2,944,130 XP
+806    | Grand Marshal VI           | Grand Marshal          | 7390       | 2,944,130 -> 2,951,520 XP
+807    | Grand Marshal VII          | Grand Marshal          | 7400       | 2,951,520 -> 2,958,920 XP
+808    | Grand Marshal VIII         | Grand Marshal          | 7410       | 2,958,920 -> 2,966,330 XP
+809    | Grand Marshal IX           | Grand Marshal          | 7420       | 2,966,330 -> 2,973,750 XP
+810    | Grand Marshal X            | Grand Marshal          | 7430       | 2,973,750 -> 2,981,180 XP
+
+>>> TIER 82: VANGUARD SOVEREIGN <<<
+--------------------------------------------------
+811    | Vanguard Sovereign I       | Vanguard Sovereign     | 7435       | 2,981,180 -> 2,988,615 XP
+812    | Vanguard Sovereign II      | Vanguard Sovereign     | 7445       | 2,988,615 -> 2,996,060 XP
+813    | Vanguard Sovereign III     | Vanguard Sovereign     | 7455       | 2,996,060 -> 3,003,515 XP
+814    | Vanguard Sovereign IV      | Vanguard Sovereign     | 7465       | 3,003,515 -> 3,010,980 XP
+815    | Vanguard Sovereign V       | Vanguard Sovereign     | 7475       | 3,010,980 -> 3,018,455 XP
+816    | Vanguard Sovereign VI      | Vanguard Sovereign     | 7485       | 3,018,455 -> 3,025,940 XP
+817    | Vanguard Sovereign VII     | Vanguard Sovereign     | 7495       | 3,025,940 -> 3,033,435 XP
+818    | Vanguard Sovereign VIII    | Vanguard Sovereign     | 7505       | 3,033,435 -> 3,040,940 XP
+819    | Vanguard Sovereign IX      | Vanguard Sovereign     | 7515       | 3,040,940 -> 3,048,455 XP
+820    | Vanguard Sovereign X       | Vanguard Sovereign     | 7525       | 3,048,455 -> 3,055,980 XP
+
+>>> TIER 83: HERO <<<
+--------------------------------------------------
+821    | Hero I                     | Hero                   | 7530       | 3,055,980 -> 3,063,510 XP
+822    | Hero II                    | Hero                   | 7540       | 3,063,510 -> 3,071,050 XP
+823    | Hero III                   | Hero                   | 7550       | 3,071,050 -> 3,078,600 XP
+824    | Hero IV                    | Hero                   | 7560       | 3,078,600 -> 3,086,160 XP
+825    | Hero V                     | Hero                   | 7570       | 3,086,160 -> 3,093,730 XP
+826    | Hero VI                    | Hero                   | 7580       | 3,093,730 -> 3,101,310 XP
+827    | Hero VII                   | Hero                   | 7590       | 3,101,310 -> 3,108,900 XP
+828    | Hero VIII                  | Hero                   | 7600       | 3,108,900 -> 3,116,500 XP
+829    | Hero IX                    | Hero                   | 7610       | 3,116,500 -> 3,124,110 XP
+830    | Hero X                     | Hero                   | 7615       | 3,124,110 -> 3,131,725 XP
+
+>>> TIER 84: VETERAN HERO <<<
+--------------------------------------------------
+831    | Veteran Hero I             | Veteran Hero           | 7625       | 3,131,725 -> 3,139,350 XP
+832    | Veteran Hero II            | Veteran Hero           | 7635       | 3,139,350 -> 3,146,985 XP
+833    | Veteran Hero III           | Veteran Hero           | 7645       | 3,146,985 -> 3,154,630 XP
+834    | Veteran Hero IV            | Veteran Hero           | 7655       | 3,154,630 -> 3,162,285 XP
+835    | Veteran Hero V             | Veteran Hero           | 7665       | 3,162,285 -> 3,169,950 XP
+836    | Veteran Hero VI            | Veteran Hero           | 7675       | 3,169,950 -> 3,177,625 XP
+837    | Veteran Hero VII           | Veteran Hero           | 7685       | 3,177,625 -> 3,185,310 XP
+838    | Veteran Hero VIII          | Veteran Hero           | 7695       | 3,185,310 -> 3,193,005 XP
+839    | Veteran Hero IX            | Veteran Hero           | 7700       | 3,193,005 -> 3,200,705 XP
+840    | Veteran Hero X             | Veteran Hero           | 7710       | 3,200,705 -> 3,208,415 XP
+
+>>> TIER 85: APEX CHAMPION <<<
+--------------------------------------------------
+841    | Apex Champion I            | Apex Champion          | 7720       | 3,208,415 -> 3,216,135 XP
+842    | Apex Champion II           | Apex Champion          | 7730       | 3,216,135 -> 3,223,865 XP
+843    | Apex Champion III          | Apex Champion          | 7740       | 3,223,865 -> 3,231,605 XP
+844    | Apex Champion IV           | Apex Champion          | 7750       | 3,231,605 -> 3,239,355 XP
+845    | Apex Champion V            | Apex Champion          | 7760       | 3,239,355 -> 3,247,115 XP
+846    | Apex Champion VI           | Apex Champion          | 7770       | 3,247,115 -> 3,254,885 XP
+847    | Apex Champion VII          | Apex Champion          | 7780       | 3,254,885 -> 3,262,665 XP
+848    | Apex Champion VIII         | Apex Champion          | 7790       | 3,262,665 -> 3,270,455 XP
+849    | Apex Champion IX           | Apex Champion          | 7795       | 3,270,455 -> 3,278,250 XP
+850    | Apex Champion X            | Apex Champion          | 7805       | 3,278,250 -> 3,286,055 XP
+
+>>> TIER 86: GRANDMASTER <<<
+--------------------------------------------------
+851    | Grandmaster I              | Grandmaster            | 7815       | 3,286,055 -> 3,293,870 XP
+852    | Grandmaster II             | Grandmaster            | 7825       | 3,293,870 -> 3,301,695 XP
+853    | Grandmaster III            | Grandmaster            | 7835       | 3,301,695 -> 3,309,530 XP
+854    | Grandmaster IV             | Grandmaster            | 7845       | 3,309,530 -> 3,317,375 XP
+855    | Grandmaster V              | Grandmaster            | 7855       | 3,317,375 -> 3,325,230 XP
+856    | Grandmaster VI             | Grandmaster            | 7865       | 3,325,230 -> 3,333,095 XP
+857    | Grandmaster VII            | Grandmaster            | 7875       | 3,333,095 -> 3,340,970 XP
+858    | Grandmaster VIII           | Grandmaster            | 7880       | 3,340,970 -> 3,348,850 XP
+859    | Grandmaster IX             | Grandmaster            | 7890       | 3,348,850 -> 3,356,740 XP
+860    | Grandmaster X              | Grandmaster            | 7900       | 3,356,740 -> 3,364,640 XP
+
+>>> TIER 87: HIGH GRANDMASTER <<<
+--------------------------------------------------
+861    | High Grandmaster I         | High Grandmaster       | 7910       | 3,364,640 -> 3,372,550 XP
+862    | High Grandmaster II        | High Grandmaster       | 7920       | 3,372,550 -> 3,380,470 XP
+863    | High Grandmaster III       | High Grandmaster       | 7930       | 3,380,470 -> 3,388,400 XP
+864    | High Grandmaster IV        | High Grandmaster       | 7940       | 3,388,400 -> 3,396,340 XP
+865    | High Grandmaster V         | High Grandmaster       | 7950       | 3,396,340 -> 3,404,290 XP
+866    | High Grandmaster VI        | High Grandmaster       | 7960       | 3,404,290 -> 3,412,250 XP
+867    | High Grandmaster VII       | High Grandmaster       | 7970       | 3,412,250 -> 3,420,220 XP
+868    | High Grandmaster VIII      | High Grandmaster       | 7975       | 3,420,220 -> 3,428,195 XP
+869    | High Grandmaster IX        | High Grandmaster       | 7985       | 3,428,195 -> 3,436,180 XP
+870    | High Grandmaster X         | High Grandmaster       | 7995       | 3,436,180 -> 3,444,175 XP
+
+>>> TIER 88: MYTHIC KNIGHT <<<
+--------------------------------------------------
+871    | Mythic Knight I            | Mythic Knight          | 8005       | 3,444,175 -> 3,452,180 XP
+872    | Mythic Knight II           | Mythic Knight          | 8015       | 3,452,180 -> 3,460,195 XP
+873    | Mythic Knight III          | Mythic Knight          | 8025       | 3,460,195 -> 3,468,220 XP
+874    | Mythic Knight IV           | Mythic Knight          | 8035       | 3,468,220 -> 3,476,255 XP
+875    | Mythic Knight V            | Mythic Knight          | 8045       | 3,476,255 -> 3,484,300 XP
+876    | Mythic Knight VI           | Mythic Knight          | 8055       | 3,484,300 -> 3,492,355 XP
+877    | Mythic Knight VII          | Mythic Knight          | 8065       | 3,492,355 -> 3,500,420 XP
+878    | Mythic Knight VIII         | Mythic Knight          | 8070       | 3,500,420 -> 3,508,490 XP
+879    | Mythic Knight IX           | Mythic Knight          | 8080       | 3,508,490 -> 3,516,570 XP
+880    | Mythic Knight X            | Mythic Knight          | 8090       | 3,516,570 -> 3,524,660 XP
+
+>>> TIER 89: MYTHIC CHAMPION <<<
+--------------------------------------------------
+881    | Mythic Champion I          | Mythic Champion        | 8100       | 3,524,660 -> 3,532,760 XP
+882    | Mythic Champion II         | Mythic Champion        | 8110       | 3,532,760 -> 3,540,870 XP
+883    | Mythic Champion III        | Mythic Champion        | 8120       | 3,540,870 -> 3,548,990 XP
+884    | Mythic Champion IV         | Mythic Champion        | 8130       | 3,548,990 -> 3,557,120 XP
+885    | Mythic Champion V          | Mythic Champion        | 8140       | 3,557,120 -> 3,565,260 XP
+886    | Mythic Champion VI         | Mythic Champion        | 8150       | 3,565,260 -> 3,573,410 XP
+887    | Mythic Champion VII        | Mythic Champion        | 8160       | 3,573,410 -> 3,581,570 XP
+888    | Mythic Champion VIII       | Mythic Champion        | 8165       | 3,581,570 -> 3,589,735 XP
+889    | Mythic Champion IX         | Mythic Champion        | 8175       | 3,589,735 -> 3,597,910 XP
+890    | Mythic Champion X          | Mythic Champion        | 8185       | 3,597,910 -> 3,606,095 XP
+
+>>> TIER 90: MYTHIC WARLORD <<<
+--------------------------------------------------
+891    | Mythic Warlord I           | Mythic Warlord         | 8195       | 3,606,095 -> 3,614,290 XP
+892    | Mythic Warlord II          | Mythic Warlord         | 8205       | 3,614,290 -> 3,622,495 XP
+893    | Mythic Warlord III         | Mythic Warlord         | 8215       | 3,622,495 -> 3,630,710 XP
+894    | Mythic Warlord IV          | Mythic Warlord         | 8225       | 3,630,710 -> 3,638,935 XP
+895    | Mythic Warlord V           | Mythic Warlord         | 8235       | 3,638,935 -> 3,647,170 XP
+896    | Mythic Warlord VI          | Mythic Warlord         | 8245       | 3,647,170 -> 3,655,415 XP
+897    | Mythic Warlord VII         | Mythic Warlord         | 8250       | 3,655,415 -> 3,663,665 XP
+898    | Mythic Warlord VIII        | Mythic Warlord         | 8260       | 3,663,665 -> 3,671,925 XP
+899    | Mythic Warlord IX          | Mythic Warlord         | 8270       | 3,671,925 -> 3,680,195 XP
+900    | Mythic Warlord X           | Mythic Warlord         | 8280       | 3,680,195 -> 3,688,475 XP
+
+>>> TIER 91: LEGEND <<<
+--------------------------------------------------
+901    | Legend I                   | Legend                 | 8290       | 3,688,475 -> 3,696,765 XP
+902    | Legend II                  | Legend                 | 8300       | 3,696,765 -> 3,705,065 XP
+903    | Legend III                 | Legend                 | 8310       | 3,705,065 -> 3,713,375 XP
+904    | Legend IV                  | Legend                 | 8320       | 3,713,375 -> 3,721,695 XP
+905    | Legend V                   | Legend                 | 8330       | 3,721,695 -> 3,730,025 XP
+906    | Legend VI                  | Legend                 | 8340       | 3,730,025 -> 3,738,365 XP
+907    | Legend VII                 | Legend                 | 8345       | 3,738,365 -> 3,746,710 XP
+908    | Legend VIII                | Legend                 | 8355       | 3,746,710 -> 3,755,065 XP
+909    | Legend IX                  | Legend                 | 8365       | 3,755,065 -> 3,763,430 XP
+910    | Legend X                   | Legend                 | 8375       | 3,763,430 -> 3,771,805 XP
+
+>>> TIER 92: APEX LEGEND <<<
+--------------------------------------------------
+911    | Apex Legend I              | Apex Legend            | 8385       | 3,771,805 -> 3,780,190 XP
+912    | Apex Legend II             | Apex Legend            | 8395       | 3,780,190 -> 3,788,585 XP
+913    | Apex Legend III            | Apex Legend            | 8405       | 3,788,585 -> 3,796,990 XP
+914    | Apex Legend IV             | Apex Legend            | 8415       | 3,796,990 -> 3,805,405 XP
+915    | Apex Legend V              | Apex Legend            | 8425       | 3,805,405 -> 3,813,830 XP
+916    | Apex Legend VI             | Apex Legend            | 8435       | 3,813,830 -> 3,822,265 XP
+917    | Apex Legend VII            | Apex Legend            | 8445       | 3,822,265 -> 3,830,710 XP
+918    | Apex Legend VIII           | Apex Legend            | 8450       | 3,830,710 -> 3,839,160 XP
+919    | Apex Legend IX             | Apex Legend            | 8460       | 3,839,160 -> 3,847,620 XP
+920    | Apex Legend X              | Apex Legend            | 8470       | 3,847,620 -> 3,856,090 XP
+
+>>> TIER 93: DEMIGOD <<<
+--------------------------------------------------
+921    | Demigod I                  | Demigod                | 8480       | 3,856,090 -> 3,864,570 XP
+922    | Demigod II                 | Demigod                | 8490       | 3,864,570 -> 3,873,060 XP
+923    | Demigod III                | Demigod                | 8500       | 3,873,060 -> 3,881,560 XP
+924    | Demigod IV                 | Demigod                | 8510       | 3,881,560 -> 3,890,070 XP
+925    | Demigod V                  | Demigod                | 8520       | 3,890,070 -> 3,898,590 XP
+926    | Demigod VI                 | Demigod                | 8530       | 3,898,590 -> 3,907,120 XP
+927    | Demigod VII                | Demigod                | 8540       | 3,907,120 -> 3,915,660 XP
+928    | Demigod VIII               | Demigod                | 8545       | 3,915,660 -> 3,924,205 XP
+929    | Demigod IX                 | Demigod                | 8555       | 3,924,205 -> 3,932,760 XP
+930    | Demigod X                  | Demigod                | 8565       | 3,932,760 -> 3,941,325 XP
+
+>>> TIER 94: IMMORTAL <<<
+--------------------------------------------------
+931    | Immortal I                 | Immortal               | 8575       | 3,941,325 -> 3,949,900 XP
+932    | Immortal II                | Immortal               | 8585       | 3,949,900 -> 3,958,485 XP
+933    | Immortal III               | Immortal               | 8595       | 3,958,485 -> 3,967,080 XP
+934    | Immortal IV                | Immortal               | 8605       | 3,967,080 -> 3,975,685 XP
+935    | Immortal V                 | Immortal               | 8615       | 3,975,685 -> 3,984,300 XP
+936    | Immortal VI                | Immortal               | 8625       | 3,984,300 -> 3,992,925 XP
+937    | Immortal VII               | Immortal               | 8635       | 3,992,925 -> 4,001,560 XP
+938    | Immortal VIII              | Immortal               | 8640       | 4,001,560 -> 4,010,200 XP
+939    | Immortal IX                | Immortal               | 8650       | 4,010,200 -> 4,018,850 XP
+940    | Immortal X                 | Immortal               | 8660       | 4,018,850 -> 4,027,510 XP
+
+>>> TIER 95: CELESTIAL KNIGHT <<<
+--------------------------------------------------
+941    | Celestial Knight I         | Celestial Knight       | 8670       | 4,027,510 -> 4,036,180 XP
+942    | Celestial Knight II        | Celestial Knight       | 8680       | 4,036,180 -> 4,044,860 XP
+943    | Celestial Knight III       | Celestial Knight       | 8690       | 4,044,860 -> 4,053,550 XP
+944    | Celestial Knight IV        | Celestial Knight       | 8700       | 4,053,550 -> 4,062,250 XP
+945    | Celestial Knight V         | Celestial Knight       | 8710       | 4,062,250 -> 4,070,960 XP
+946    | Celestial Knight VI        | Celestial Knight       | 8720       | 4,070,960 -> 4,079,680 XP
+947    | Celestial Knight VII       | Celestial Knight       | 8730       | 4,079,680 -> 4,088,410 XP
+948    | Celestial Knight VIII      | Celestial Knight       | 8740       | 4,088,410 -> 4,097,150 XP
+949    | Celestial Knight IX        | Celestial Knight       | 8745       | 4,097,150 -> 4,105,895 XP
+950    | Celestial Knight X         | Celestial Knight       | 8755       | 4,105,895 -> 4,114,650 XP
+
+>>> TIER 96: ASCENDANT <<<
+--------------------------------------------------
+951    | Ascendant I                | Ascendant              | 8765       | 4,114,650 -> 4,123,415 XP
+952    | Ascendant II               | Ascendant              | 8775       | 4,123,415 -> 4,132,190 XP
+953    | Ascendant III              | Ascendant              | 8785       | 4,132,190 -> 4,140,975 XP
+954    | Ascendant IV               | Ascendant              | 8795       | 4,140,975 -> 4,149,770 XP
+955    | Ascendant V                | Ascendant              | 8805       | 4,149,770 -> 4,158,575 XP
+956    | Ascendant VI               | Ascendant              | 8815       | 4,158,575 -> 4,167,390 XP
+957    | Ascendant VII              | Ascendant              | 8825       | 4,167,390 -> 4,176,215 XP
+958    | Ascendant VIII             | Ascendant              | 8835       | 4,176,215 -> 4,185,050 XP
+959    | Ascendant IX               | Ascendant              | 8840       | 4,185,050 -> 4,193,890 XP
+960    | Ascendant X                | Ascendant              | 8850       | 4,193,890 -> 4,202,740 XP
+
+>>> TIER 97: TRANSCENDENT <<<
+--------------------------------------------------
+961    | Transcendent I             | Transcendent           | 8860       | 4,202,740 -> 4,211,600 XP
+962    | Transcendent II            | Transcendent           | 8870       | 4,211,600 -> 4,220,470 XP
+963    | Transcendent III           | Transcendent           | 8880       | 4,220,470 -> 4,229,350 XP
+964    | Transcendent IV            | Transcendent           | 8890       | 4,229,350 -> 4,238,240 XP
+965    | Transcendent V             | Transcendent           | 8900       | 4,238,240 -> 4,247,140 XP
+966    | Transcendent VI            | Transcendent           | 8910       | 4,247,140 -> 4,256,050 XP
+967    | Transcendent VII           | Transcendent           | 8920       | 4,256,050 -> 4,264,970 XP
+968    | Transcendent VIII          | Transcendent           | 8930       | 4,264,970 -> 4,273,900 XP
+969    | Transcendent IX            | Transcendent           | 8940       | 4,273,900 -> 4,282,840 XP
+970    | Transcendent X             | Transcendent           | 8945       | 4,282,840 -> 4,291,785 XP
+
+>>> TIER 98: ARCHON <<<
+--------------------------------------------------
+971    | Archon I                   | Archon                 | 8955       | 4,291,785 -> 4,300,740 XP
+972    | Archon II                  | Archon                 | 8965       | 4,300,740 -> 4,309,705 XP
+973    | Archon III                 | Archon                 | 8975       | 4,309,705 -> 4,318,680 XP
+974    | Archon IV                  | Archon                 | 8985       | 4,318,680 -> 4,327,665 XP
+975    | Archon V                   | Archon                 | 8995       | 4,327,665 -> 4,336,660 XP
+976    | Archon VI                  | Archon                 | 9005       | 4,336,660 -> 4,345,665 XP
+977    | Archon VII                 | Archon                 | 9015       | 4,345,665 -> 4,354,680 XP
+978    | Archon VIII                | Archon                 | 9025       | 4,354,680 -> 4,363,705 XP
+979    | Archon IX                  | Archon                 | 9035       | 4,363,705 -> 4,372,740 XP
+980    | Archon X                   | Archon                 | 9045       | 4,372,740 -> 4,381,785 XP
+
+>>> TIER 99: SOVEREIGN <<<
+--------------------------------------------------
+981    | Sovereign I                | Sovereign              | 9050       | 4,381,785 -> 4,390,835 XP
+982    | Sovereign II               | Sovereign              | 9060       | 4,390,835 -> 4,399,895 XP
+983    | Sovereign III              | Sovereign              | 9070       | 4,399,895 -> 4,408,965 XP
+984    | Sovereign IV               | Sovereign              | 9080       | 4,408,965 -> 4,418,045 XP
+985    | Sovereign V                | Sovereign              | 9090       | 4,418,045 -> 4,427,135 XP
+986    | Sovereign VI               | Sovereign              | 9100       | 4,427,135 -> 4,436,235 XP
+987    | Sovereign VII              | Sovereign              | 9110       | 4,436,235 -> 4,445,345 XP
+988    | Sovereign VIII             | Sovereign              | 9120       | 4,445,345 -> 4,454,465 XP
+989    | Sovereign IX               | Sovereign              | 9130       | 4,454,465 -> 4,463,595 XP
+990    | Sovereign X                | Sovereign              | 9140       | 4,463,595 -> 4,472,735 XP
+
+>>> TIER 100: THE ABSOLUTE <<<
+--------------------------------------------------
+991    | The Absolute I             | The Absolute           | 9150       | 4,472,735 -> 4,481,885 XP
+992    | The Absolute II            | The Absolute           | 9155       | 4,481,885 -> 4,491,040 XP
+993    | The Absolute III           | The Absolute           | 9165       | 4,491,040 -> 4,500,205 XP
+994    | The Absolute IV            | The Absolute           | 9175       | 4,500,205 -> 4,509,380 XP
+995    | The Absolute V             | The Absolute           | 9185       | 4,509,380 -> 4,518,565 XP
+996    | The Absolute VI            | The Absolute           | 9195       | 4,518,565 -> 4,527,760 XP
+997    | The Absolute VII           | The Absolute           | 9205       | 4,527,760 -> 4,536,965 XP
+998    | The Absolute VIII          | The Absolute           | 9215       | 4,536,965 -> 4,546,180 XP
+999    | The Absolute IX            | The Absolute           | 9225       | 4,546,180 -> 4,555,405 XP
+1000   | The Absolute X             | The Absolute           | 9235       | 4,555,405 -> 4,564,640 XP

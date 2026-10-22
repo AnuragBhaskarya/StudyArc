@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=7.5">
+  <link rel="stylesheet" href="styles.css?v=7.6">
   <script>
     (function () {
       try {
@@ -418,73 +418,94 @@
  
        <!-- LEVEL & RPG MASTERY MODAL DIALOG (Opened via clicking XP Stats pill) -->
        <dialog id="levels-dialog" class="levels-dialog day-detail-dialog" closedby="any" aria-labelledby="levels-dialog-title">
-         <div class="levels-dialog-shell day-dialog-shell">
-           <!-- Header with Badge, Title, All Levels Toggle Button, and Close Button -->
-           <div class="day-dialog-header levels-dialog-header">
-             <div class="day-dialog-header-info levels-dialog-header-info">
-               <div class="levels-dialog-badge-row">
-                 <span class="levels-dialog-badge" id="levels-dialog-badge">RPG Mastery</span>
-                 <button type="button" class="levels-all-btn" id="btn-toggle-all-levels" title="View all 100 RPG Levels and XP requirements">
-                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                   </svg>
-                   <span id="toggle-levels-text">All Levels</span>
-                 </button>
-               </div>
-               <h2 class="day-dialog-title levels-dialog-title" id="levels-dialog-title">Level 1 — Novice Seeker</h2>
-             </div>
-             <button class="day-dialog-close-btn levels-close-btn" id="btn-close-levels-dialog" aria-label="Close Level Stats">
-               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                 <line x1="18" y1="6" x2="6" y2="18"></line>
-                 <line x1="6" y1="6" x2="18" y2="18"></line>
-               </svg>
-             </button>
-           </div>
- 
-           <!-- 3 Minimal Highlight Metric Cards (Yellow Color Theme) -->
-           <div class="day-summary-strip levels-summary-strip" aria-label="Level Summary Metrics">
-             <!-- Current Level -->
-             <div class="day-pill levels-pill">
-               <span class="day-pill-label levels-pill-label">Current Level</span>
-               <span class="day-pill-value levels-pill-value" id="levels-pill-level">Lv. 1</span>
-             </div>
- 
-             <!-- Current Tier -->
-             <div class="day-pill levels-pill">
-               <span class="day-pill-label levels-pill-label">Mastery Tier</span>
-               <span class="day-pill-value levels-pill-value" id="levels-pill-tier">The Initiate</span>
-             </div>
- 
-             <!-- Progress / XP to Next -->
-             <div class="day-pill levels-pill levels-pill-xp">
-               <span class="day-pill-label levels-pill-label">XP To Level Up</span>
-               <span class="day-pill-value levels-pill-value" id="levels-pill-next">25 XP</span>
-             </div>
-           </div>
- 
-           <!-- Level Detailed Progress Bar Bar Strip -->
-           <div class="levels-progress-card">
-             <div class="levels-progress-labels">
-               <span class="levels-progress-sub" id="levels-progress-fraction">0 / 25 XP</span>
-               <span class="levels-progress-percent" id="levels-progress-percent">0%</span>
-             </div>
-             <div class="levels-bar-track">
-               <div class="levels-bar-fill" id="levels-bar-fill" style="width: 0%;"></div>
-             </div>
-             <div class="levels-total-row">
-               <span>Lifetime Total</span>
-               <span class="levels-total-val" id="levels-total-xp">0 XP</span>
-             </div>
-           </div>
- 
-           <!-- Milestone Feed / All Levels List -->
-           <div class="day-timeline-wrapper levels-timeline-wrapper">
-             <div class="day-timeline-heading levels-timeline-heading">
-               <span id="levels-feed-heading">Cleared Milestones</span>
-               <span class="day-timeline-count levels-timeline-count" id="levels-feed-count">1 Cleared</span>
-             </div>
-             <div class="day-sessions-list levels-feed-list" id="levels-feed-list">
+         <div class="levels-dialog-shell day-dialog-shell" id="levels-dialog-shell">
+            <!-- Header for My Journey View (Hidden in Catalog View) -->
+            <div class="day-dialog-header levels-dialog-header levels-journey-only">
+              <div class="day-dialog-header-info levels-dialog-header-info">
+                <div class="levels-dialog-badge-row">
+                  <span class="levels-dialog-badge" id="levels-dialog-badge">Tier 1: Novice</span>
+                  <button type="button" class="levels-all-btn" id="btn-toggle-all-levels" title="View all 1,000 RPG Levels and XP requirements">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    <span id="toggle-levels-text">All Levels</span>
+                  </button>
+                </div>
+                <h2 class="day-dialog-title levels-dialog-title" id="levels-dialog-title">Level 1 — Novice I</h2>
+              </div>
+              <button class="day-dialog-close-btn levels-close-btn" id="btn-close-levels-dialog" aria-label="Close Level Stats">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Header for All Levels Catalog Page (Visible only in Catalog View) -->
+            <div class="levels-catalog-header levels-catalog-only">
+              <button type="button" class="levels-back-btn" id="btn-back-to-journey" title="Return to My Journey">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                <span>My Journey</span>
+              </button>
+              <div class="levels-catalog-titles">
+                <span class="levels-catalog-kicker">RPG Codex</span>
+                <h2 class="levels-catalog-title">All 1,000 Levels</h2>
+              </div>
+              <button class="day-dialog-close-btn levels-close-btn" id="btn-close-levels-catalog" aria-label="Close Level Stats">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <!-- 3 Minimal Highlight Metric Cards (My Journey only) -->
+            <div class="day-summary-strip levels-summary-strip levels-journey-only" aria-label="Level Summary Metrics">
+              <!-- Current Level -->
+              <div class="day-pill levels-pill">
+                <span class="day-pill-label levels-pill-label">Current Level</span>
+                <span class="day-pill-value levels-pill-value" id="levels-pill-level">Lv. 1</span>
+              </div>
+
+              <!-- Current Tier -->
+              <div class="day-pill levels-pill">
+                <span class="day-pill-label levels-pill-label">Mastery Tier</span>
+                <span class="day-pill-value levels-pill-value" id="levels-pill-tier">Novice</span>
+              </div>
+
+              <!-- Progress / XP to Next -->
+              <div class="day-pill levels-pill levels-pill-xp">
+                <span class="day-pill-label levels-pill-label">XP To Level Up</span>
+                <span class="day-pill-value levels-pill-value" id="levels-pill-next">50 XP</span>
+              </div>
+            </div>
+
+            <!-- Level Detailed Progress Bar Bar Strip (My Journey only) -->
+            <div class="levels-progress-card levels-journey-only">
+              <div class="levels-progress-labels">
+                <span class="levels-progress-sub" id="levels-progress-fraction">0 / 50 XP</span>
+                <span class="levels-progress-percent" id="levels-progress-percent">0%</span>
+              </div>
+              <div class="levels-bar-track">
+                <div class="levels-bar-fill" id="levels-bar-fill" style="width: 0%;"></div>
+              </div>
+              <div class="levels-total-row">
+                <span>Lifetime Total</span>
+                <span class="levels-total-val" id="levels-total-xp">0 XP</span>
+              </div>
+            </div>
+
+            <!-- Milestone Feed / All Levels List -->
+            <div class="day-timeline-wrapper levels-timeline-wrapper">
+              <div class="day-timeline-heading levels-timeline-heading">
+                <span id="levels-feed-heading">Tier 1: Novice</span>
+                <span class="day-timeline-count levels-timeline-count" id="levels-feed-count">1 Cleared</span>
+              </div>
+              <div class="day-sessions-list levels-feed-list" id="levels-feed-list">
                <!-- Dynamically populated level item cards -->
              </div>
            </div>
@@ -721,7 +742,7 @@
   <!-- JAVASCRIPT LOGIC (Local zero-latency assets, resilient against CDN outages and content blockers) -->
   <script src="assets/socket.io.min.js"></script>
   <script src="aura-particles.js?v=5.3"></script>
-  <script src="app.js?v=7.0"></script>
+  <script src="app.js?v=7.1"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

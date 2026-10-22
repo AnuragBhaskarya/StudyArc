@@ -2506,6 +2506,89 @@ input:checked + .switch-slider:before {
   box-sizing: border-box;
 }
 
+/* Catalog vs My Journey visibility */
+.levels-dialog-shell.is-catalog-mode .levels-journey-only {
+  display: none !important;
+}
+
+.levels-dialog-shell:not(.is-catalog-mode) .levels-catalog-only {
+  display: none !important;
+}
+
+.levels-dialog-shell.is-catalog-mode .levels-feed-list {
+  max-height: 490px;
+}
+
+/* Dedicated Header for All Levels Catalog Page */
+.levels-catalog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(251, 191, 36, 0.16);
+}
+
+.levels-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #FBBF24;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  padding: 0.3rem 0.68rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 140ms ease;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.levels-back-btn:hover {
+  background: rgba(251, 191, 36, 0.22);
+  color: #ffffff;
+  border-color: rgba(251, 191, 36, 0.55);
+  transform: translateX(-2px);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.28);
+}
+
+.levels-back-btn:active {
+  transform: scale(0.96);
+}
+
+.levels-back-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.levels-catalog-titles {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.12rem;
+  min-width: 0;
+  text-align: center;
+}
+
+.levels-catalog-kicker {
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #FCD34D;
+}
+
+.levels-catalog-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.2;
+}
+
 .levels-dialog-header {
   display: flex;
   align-items: center;
@@ -2907,14 +2990,57 @@ input:checked + .switch-slider:before {
 }
 
 .level-item-tier {
+  display: none !important;
+}
+
+/* Sticky Tier Section Headers inside Levels Feed List */
+.level-tier-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  background: rgba(14, 18, 10, 0.95);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  border-radius: 9px;
+  padding: 0.38rem 0.75rem;
+  margin: 0.35rem 0 0.25rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 0 8px rgba(251, 191, 36, 0.08);
+}
+
+.level-tier-sticky-left {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.level-tier-badge {
   font-size: 0.58rem;
-  font-weight: 500;
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.06);
-  padding: 0.04rem 0.32rem;
+  font-weight: 700;
+  color: #070d09;
+  background: linear-gradient(135deg, #FDE68A 0%, #F59E0B 100%);
+  padding: 0.1rem 0.4rem;
   border-radius: 4px;
-  flex-shrink: 0;
-  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
+}
+
+.level-tier-name {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #FDE68A;
+  letter-spacing: 0.01em;
+}
+
+.level-tier-range {
+  font-size: 0.62rem;
+  color: #a3a380;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .level-item-subtitle {
@@ -2961,6 +3087,18 @@ input:checked + .switch-slider:before {
   color: #64748b;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.level-badge-catalog {
+  color: #FCD34D;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.22);
+}
+
+.level-card.is-user-current {
+  border-color: rgba(251, 191, 36, 0.55);
+  background: rgba(251, 191, 36, 0.1);
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.2);
 }
 
 @media (hover: hover) and (pointer: fine) and (min-width: 769px) {
