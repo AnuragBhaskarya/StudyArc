@@ -897,7 +897,7 @@
     const tiers = [
       { threshold: 1e9, suffix: 'B' },
       { threshold: 1e6, suffix: 'M' },
-      { threshold: 1e3, suffix: 'k' },
+      { threshold: 1e3, suffix: 'K' },
     ];
 
     for (const { threshold, suffix } of tiers) {
