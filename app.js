@@ -3797,29 +3797,66 @@
         }
       };
 
-      // Calorie Tracker entrance animation engine:
-      // Tracks elements approaching viewport edge, triggers the 0.8s bezier entrance,
-      // and permanently keeps them .visible so scrolling back up is 100% instantaneous with zero delay.
-      const unrevealed = journeyElements.slice();
+      // Bidirectional Re-appearing Calorie Tracker Animation Engine:
+      // Dynamically animates cards when scrolling down (swoop from bottom)
+      // and when scrolling up (swoop from top), resetting smoothly off-screen.
+      let lastScrollTop = feedList.scrollTop;
+      let scrollDirection = 'down';
+      const HYSTERESIS = 160;
       let journeyRaf = null;
 
-      const checkJourneyEntrance = () => {
-        if (unrevealed.length === 0) return;
+      const updateReappearingCards = () => {
         const scrollTop = feedList.scrollTop;
         const viewportHeight = feedList.clientHeight || 360;
-        const viewBottom = scrollTop + viewportHeight + 25;
+
+        if (scrollTop > lastScrollTop + 1) {
+          scrollDirection = 'down';
+        } else if (scrollTop < lastScrollTop - 1) {
+          scrollDirection = 'up';
+        }
+        lastScrollTop = scrollTop;
+
+        const viewTop = scrollTop;
+        const viewBottom = scrollTop + viewportHeight;
 
         const newlyRevealed = [];
-        for (let i = unrevealed.length - 1; i >= 0; i--) {
-          const el = unrevealed[i];
-          if (el.offsetTop <= viewBottom) {
-            newlyRevealed.push(el);
-            unrevealed.splice(i, 1);
+
+        for (let i = 0; i < journeyElements.length; i++) {
+          const el = journeyElements[i];
+          const elTop = el.offsetTop;
+          const elHeight = el.offsetHeight || 60;
+          const elBottom = elTop + elHeight;
+
+          const isInsideView = (elBottom >= viewTop - 25) && (elTop <= viewBottom + 25);
+          const isFarAbove = elBottom < (viewTop - HYSTERESIS);
+          const isFarBelow = elTop > (viewBottom + HYSTERESIS);
+
+          if (isInsideView) {
+            if (!el.classList.contains('visible')) {
+              el.classList.remove('enter-top', 'enter-bottom');
+              el.classList.add(scrollDirection === 'up' ? 'enter-top' : 'enter-bottom');
+              newlyRevealed.push(el);
+            }
+          } else if (isFarAbove) {
+            if (el.classList.contains('visible') || !el.classList.contains('enter-top')) {
+              el.classList.remove('visible', 'enter-bottom');
+              el.classList.add('enter-top');
+              el.style.transitionDelay = '0ms';
+            }
+          } else if (isFarBelow) {
+            if (el.classList.contains('visible') || !el.classList.contains('enter-bottom')) {
+              el.classList.remove('visible', 'enter-top');
+              el.classList.add('enter-bottom');
+              el.style.transitionDelay = '0ms';
+            }
           }
         }
 
         if (newlyRevealed.length > 0) {
-          newlyRevealed.reverse().forEach((el, index) => {
+          if (scrollDirection === 'up') {
+            newlyRevealed.reverse();
+          }
+          newlyRevealed.forEach((el, index) => {
             void el.offsetWidth;
             const delay = Math.min(index * 35, 140);
             el.style.transitionDelay = `${delay}ms`;
@@ -3833,7 +3870,7 @@
         if (journeyRaf) return;
         journeyRaf = requestAnimationFrame(() => {
           journeyRaf = null;
-          checkJourneyEntrance();
+          updateReappearingCards();
         });
       };
 
@@ -3845,12 +3882,12 @@
 
       // Initial trigger for cards currently in view
       requestAnimationFrame(() => {
-        checkJourneyEntrance();
+        updateReappearingCards();
       });
 
       setTimeout(() => {
         levelsLenis?.resize();
-        checkJourneyEntrance();
+        updateReappearingCards();
       }, 50);
 
       activeJourneyCleanup = () => {

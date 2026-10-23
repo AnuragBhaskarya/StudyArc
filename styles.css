@@ -2954,12 +2954,28 @@ input:checked + .switch-slider:before {
   transform: none;
 }
 
-/* MY JOURNEY MODE: The signature smooth delayed 0.8s Calorie Tracker animation */
+/* MY JOURNEY MODE: Bidirectional Re-appearing Calorie Tracker animation */
 .levels-dialog-shell:not(.is-catalog-mode) .level-card {
   opacity: 0;
-  transform: translateX(80px) translateY(100px) scale(0.1);
-  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
-              opacity 0.7s linear;
+  transform: translateX(80px) translateY(80px) scale(0.1);
+  transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1),
+              opacity 0.55s linear;
+  will-change: transform, opacity;
+}
+
+.levels-dialog-shell:not(.is-catalog-mode) .level-card.enter-top {
+  opacity: 0;
+  transform: translateX(80px) translateY(-70px) scale(0.1);
+}
+
+.levels-dialog-shell:not(.is-catalog-mode) .level-card.enter-bottom {
+  opacity: 0;
+  transform: translateX(80px) translateY(80px) scale(0.1);
+}
+
+.levels-dialog-shell:not(.is-catalog-mode) .level-card.enter-top:not(.visible),
+.levels-dialog-shell:not(.is-catalog-mode) .level-card.enter-bottom:not(.visible) {
+  transition: none !important;
 }
 
 .levels-dialog-shell:not(.is-catalog-mode) .level-card.visible {
@@ -3137,12 +3153,28 @@ input:checked + .switch-slider:before {
   transform: none;
 }
 
-/* MY JOURNEY MODE: The signature smooth delayed 0.8s Calorie Tracker animation */
+/* MY JOURNEY MODE: Bidirectional Re-appearing Calorie Tracker animation */
 .levels-dialog-shell:not(.is-catalog-mode) .level-tier-sticky-header {
   opacity: 0;
-  transform: translateX(80px) translateY(100px) scale(0.1);
-  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
-              opacity 0.7s linear;
+  transform: translateX(80px) translateY(80px) scale(0.1);
+  transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1),
+              opacity 0.55s linear;
+  will-change: transform, opacity;
+}
+
+.levels-dialog-shell:not(.is-catalog-mode) .level-tier-sticky-header.enter-top {
+  opacity: 0;
+  transform: translateX(80px) translateY(-70px) scale(0.1);
+}
+
+.levels-dialog-shell:not(.is-catalog-mode) .level-tier-sticky-header.enter-bottom {
+  opacity: 0;
+  transform: translateX(80px) translateY(80px) scale(0.1);
+}
+
+.levels-dialog-shell:not(.is-catalog-mode) .level-tier-sticky-header.enter-top:not(.visible),
+.levels-dialog-shell:not(.is-catalog-mode) .level-tier-sticky-header.enter-bottom:not(.visible) {
+  transition: none !important;
 }
 
 .levels-dialog-shell:not(.is-catalog-mode) .level-tier-sticky-header.visible {
