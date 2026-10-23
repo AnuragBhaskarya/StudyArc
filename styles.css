@@ -1472,10 +1472,9 @@ body.is-dragging .timer-bead-rim {
   position: relative;
   pointer-events: none;
   overflow: visible;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.7))
-          drop-shadow(0 6px 18px rgba(0, 0, 0, 0.5))
-          drop-shadow(0 12px 30px rgba(0, 0, 0, 0.35))
-          drop-shadow(0 0 24px rgba(0, 0, 0, 0.45));
+  /* Stacked drop-shadow filters forced a costly re-raster of every month
+     whenever a top-layer modal opened. The cells already sit on a dark
+     surface, so no filter is needed here. */
 }
 
 /* Week column: 7 cells stacked */

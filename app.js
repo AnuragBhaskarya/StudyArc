@@ -77,6 +77,12 @@
     sessionDataIndex.byDate.clear();
   }
 
+  // The initial /api/state payload already contains the full session archive.
+  // Only refresh it in the background when it may actually be stale.
+  const HISTORY_ARCHIVE_TTL_MS = 30000;
+  let historyArchiveFetchedAt = 0;
+  let historyArchiveRefreshPending = false;
+
   function loadState() {
     try {
       const data = localStorage.getItem(STORAGE_KEY);
@@ -150,6 +156,7 @@
           closeAuthDialog(true);
           state.subjects = data.subjects || [];
           state.sessions = data.sessions || [];
+          historyArchiveFetchedAt = Date.now();
           dayDetailsCache.clear();
           invalidateSessionIndex();
 
@@ -3232,6 +3239,7 @@
     const dialog = document.getElementById('day-detail-dialog');
     if (!dialog) return;
 
+    pauseAmbientCanvas();
     currentDialogDate = dateStr;
 
     // 1. Open modal immediately on frame 0 to kick off compositor pop-in animation
@@ -3295,6 +3303,7 @@
       dialog.close();
     }
     globalLenis?.start();
+    resumeAmbientCanvas();
   }
 
   // =========================================================================
@@ -3393,6 +3402,8 @@
     const dialog = document.getElementById('levels-dialog');
     if (!dialog) return;
 
+    pauseAmbientCanvas();
+
     // Clear any text selection that may have occurred
     if (window.getSelection) {
       window.getSelection().removeAllRanges();
@@ -3414,17 +3425,12 @@
     globalLenis?.stop();
     initShellLenis();
 
-    // 2. Reset container and render fresh while dialog is open and visible
+    // 2. Reset container and render fresh while dialog is open and visible.
+    // Both render paths sync Lenis dimensions and start at the top, so the
+    // open path does not need a second resize/scroll pass.
     resetLevelsContainer(true);
     showAllLevelsView = false;
     renderLevelsDialogDOM();
-
-    if (typeof levelsLenis !== 'undefined' && levelsLenis) {
-      levelsLenis.scrollTo(0, { immediate: true, force: true });
-      levelsLenis.resize();
-      levelsLenis.start();
-    }
-    setTimeout(() => { levelsLenis?.resize(); }, 40);
   }
 
   function closeLevelsDialog() {
@@ -3436,6 +3442,7 @@
     resetLevelsContainer(true);
     showAllLevelsView = false;
     globalLenis?.start();
+    resumeAmbientCanvas();
   }
 
   class VirtualLevelsScroller {
@@ -3919,159 +3926,26 @@
         activeLevelsScroller?.scrollToLevel(lvlInfo.level, false);
       }, 50);
     } else {
-      // My Journey: Permanent solid DOM rendering with smooth Calorie Tracker entrance animation
-      feedList.innerHTML = '';
-      feedList.scrollTop = 0;
-      feedList.scrollLeft = 0;
-
-      const fragment = document.createDocumentFragment();
-      const tierHeadersList = [];
-      const journeyElements = [];
-      let journeyLastTier = -1;
-
-      itemsToRender.forEach((l) => {
-        if (l.tierIndex !== journeyLastTier) {
-          journeyLastTier = l.tierIndex;
-          const tierHdr = renderTierHeader({
-            type: 'tier',
-            tierIndex: l.tierIndex,
-            tier: l.tier
-          });
-          fragment.appendChild(tierHdr);
-          tierHeadersList.push({ el: tierHdr, tierIndex: l.tierIndex, tier: l.tier });
-          journeyElements.push(tierHdr);
-        }
-        const card = renderCard(l);
-        fragment.appendChild(card);
-        journeyElements.push(card);
+      // My Journey: virtualized feed. Only the visible level cards exist in
+      // the DOM, so opening the dialog no longer parses/lays out 100+ cards.
+      // The same VirtualLevelsScroller powers the catalog view above.
+      activeLevelsScroller = new VirtualLevelsScroller({
+        container: feedList,
+        virtualItems,
+        tierHeaderIndices,
+        renderCard,
+        renderTierHeader,
+        headingEl,
+        isCatalogMode: false,
+        currentLevel: lvlInfo.level
       });
 
-      feedList.appendChild(fragment);
-
-      const updateJourneyTierHeading = () => {
-        const scrollTop = feedList.scrollTop;
-        let activeTier = lvlInfo.tierIndex;
-        let activeName = lvlInfo.tier;
-        for (let i = 0; i < tierHeadersList.length; i++) {
-          if (tierHeadersList[i].el.offsetTop <= scrollTop + 35) {
-            activeTier = tierHeadersList[i].tierIndex;
-            activeName = tierHeadersList[i].tier;
-          }
-        }
-        if (headingEl && activeName) {
-          headingEl.textContent = `Tier ${activeTier}: ${activeName}`;
-        }
-      };
-
-      // Bidirectional Re-appearing Calorie Tracker Animation Engine:
-      // Dynamically animates cards when scrolling down (swoop from bottom)
-      // and when scrolling up (swoop from top), resetting smoothly off-screen.
-      let lastScrollTop = 0;
-      let scrollDirection = 'down';
-      const HYSTERESIS = 160;
-      let journeyRaf = null;
-
-      const updateReappearingCards = (isInitial = false) => {
-        const scrollTop = feedList.scrollTop;
-        const viewportHeight = feedList.clientHeight || 360;
-
-        if (!isInitial) {
-          if (scrollTop > lastScrollTop + 1) {
-            scrollDirection = 'down';
-          } else if (scrollTop < lastScrollTop - 1) {
-            scrollDirection = 'up';
-          }
-        }
-        lastScrollTop = scrollTop;
-
-        const viewTop = scrollTop;
-        const viewBottom = scrollTop + viewportHeight;
-
-        const newlyRevealed = [];
-
-        for (let i = 0; i < journeyElements.length; i++) {
-          const el = journeyElements[i];
-          const elTop = el.offsetTop;
-          const elHeight = el.offsetHeight || 60;
-          const elBottom = elTop + elHeight;
-
-          const isInsideView = (elBottom >= viewTop - 25) && (elTop <= viewBottom + 25);
-          const isFarAbove = elBottom < (viewTop - HYSTERESIS);
-          const isFarBelow = elTop > (viewBottom + HYSTERESIS);
-
-          if (isInsideView) {
-            if (!el.classList.contains('visible')) {
-              el.classList.remove('enter-top', 'enter-bottom');
-              el.classList.add(scrollDirection === 'up' ? 'enter-top' : 'enter-bottom');
-              newlyRevealed.push(el);
-            }
-          } else if (isFarAbove) {
-            if (el.classList.contains('visible') || !el.classList.contains('enter-top')) {
-              el.classList.remove('visible', 'enter-bottom');
-              el.classList.add('enter-top');
-              el.style.transitionDelay = '0ms';
-            }
-          } else if (isFarBelow) {
-            if (el.classList.contains('visible') || !el.classList.contains('enter-bottom')) {
-              el.classList.remove('visible', 'enter-top');
-              el.classList.add('enter-bottom');
-              el.style.transitionDelay = '0ms';
-            }
-          }
-        }
-
-        if (newlyRevealed.length > 0) {
-          if (scrollDirection === 'up') {
-            newlyRevealed.reverse();
-          }
-          newlyRevealed.forEach((el, index) => {
-            void el.offsetWidth;
-            const delay = Math.min(index * 35, 140);
-            el.style.transitionDelay = `${delay}ms`;
-            el.classList.add('visible');
-          });
-        }
-      };
-
-      const onJourneyScroll = () => {
-        updateJourneyTierHeading();
-        if (journeyRaf) return;
-        journeyRaf = requestAnimationFrame(() => {
-          journeyRaf = null;
-          updateReappearingCards(false);
-        });
-      };
-
-      feedList.addEventListener('scroll', onJourneyScroll, { passive: true });
       initShellLenis();
       if (typeof levelsLenis !== 'undefined' && levelsLenis) {
-        levelsLenis.on('scroll', onJourneyScroll);
         levelsLenis.scrollTo(0, { immediate: true, force: true });
         levelsLenis.resize();
         levelsLenis.start();
       }
-
-      // Initial entrance animation pass: Force layout of State A, then transition via RAF
-      void feedList.offsetHeight;
-      requestAnimationFrame(() => {
-        updateReappearingCards(true);
-      });
-
-      setTimeout(() => {
-        levelsLenis?.resize();
-        updateReappearingCards(false);
-      }, 50);
-
-      activeJourneyCleanup = () => {
-        if (journeyRaf) {
-          cancelAnimationFrame(journeyRaf);
-          journeyRaf = null;
-        }
-        feedList.removeEventListener('scroll', onJourneyScroll);
-        if (typeof levelsLenis !== 'undefined' && levelsLenis) {
-          try { levelsLenis.off('scroll', onJourneyScroll); } catch (e) {}
-        }
-      };
     }
   }
 
@@ -5235,9 +5109,63 @@
     });
   }
 
+  async function refreshHistoryArchive(force = false) {
+    if (historyArchiveRefreshPending) return;
+    if (!force && Date.now() - historyArchiveFetchedAt < HISTORY_ARCHIVE_TTL_MS) return;
+
+    historyArchiveRefreshPending = true;
+    try {
+      const res = await fetch('/api/sessions?limit=5000');
+      if (res.ok) {
+        const data = await res.json();
+        const incoming = Array.isArray(data) ? data : (data.sessions || []);
+        const prevLength = state.sessions ? state.sessions.length : -1;
+        const differs = incoming.length !== prevLength;
+
+        if (differs) {
+          state.sessions = incoming;
+          invalidateSessionIndex();
+          saveState();
+        }
+        historyArchiveFetchedAt = Date.now();
+
+        const dialog = document.getElementById('sessions-history-dialog');
+        if (dialog && dialog.open && (differs || !activeHistoryScroller)) {
+          renderHistoryDialogDOM();
+          if (typeof historyLenis !== 'undefined' && historyLenis) {
+            historyLenis.resize();
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('StudyArc: Could not refresh sessions archive:', e);
+      const dialog = document.getElementById('sessions-history-dialog');
+      if (dialog && dialog.open && !activeHistoryScroller) {
+        renderHistoryDialogDOM();
+      }
+    } finally {
+      historyArchiveRefreshPending = false;
+    }
+  }
+
+  function scheduleHistoryArchiveRefresh() {
+    if (historyArchiveRefreshPending) return;
+    if (Date.now() - historyArchiveFetchedAt < HISTORY_ARCHIVE_TTL_MS) return;
+
+    // Never make the modal wait on the network: refresh after the open frame
+    // has been painted, or when the main thread is otherwise idle.
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(() => refreshHistoryArchive(), { timeout: 2000 });
+    } else {
+      setTimeout(() => refreshHistoryArchive(), 250);
+    }
+  }
+
   async function openHistoryDialog() {
     const dialog = document.getElementById('sessions-history-dialog');
     if (!dialog) return;
+
+    pauseAmbientCanvas();
 
     // Clear any text selection that may have occurred
     if (window.getSelection) {
@@ -5286,33 +5214,12 @@
     }
     setTimeout(() => { historyLenis?.resize(); }, 40);
 
-    // 3. Fetch full session archive from backend (up to 5,000 sessions) to ensure 100% complete history
-    try {
-      const res = await fetch('/api/sessions?limit=5000');
-      if (res.ok) {
-        const data = await res.json();
-        const incoming = Array.isArray(data) ? data : (data.sessions || []);
-        if (incoming && incoming.length >= 0) {
-          const prevLength = state.sessions ? state.sessions.length : -1;
-          let differs = incoming.length !== prevLength;
-          if (differs) {
-            state.sessions = incoming;
-            invalidateSessionIndex();
-            saveState();
-          }
-          if (dialog.open && (differs || !activeHistoryScroller)) {
-            renderHistoryDialogDOM();
-            if (typeof historyLenis !== 'undefined' && historyLenis) {
-              historyLenis.resize();
-            }
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('StudyArc: Could not fetch sessions history:', e);
-      if (dialog.open && !activeHistoryScroller) {
-        renderHistoryDialogDOM();
-      }
+    // 3. The initial /api/state payload already contains the archive, so the
+    // modal never waits on the network. Only refresh stale data in idle time.
+    if (state.sessions && state.sessions.length > 0) {
+      scheduleHistoryArchiveRefresh();
+    } else {
+      refreshHistoryArchive(true);
     }
   }
 
@@ -5325,6 +5232,7 @@
     // Reset container as soon as we leave, as if starting from beginning
     resetHistoryContainer(true);
     globalLenis?.start();
+    resumeAmbientCanvas();
   }
 
   function getHistoryScrollerData() {
@@ -5863,6 +5771,9 @@
     const dayDialog = document.getElementById('day-detail-dialog');
     if (dayDialog) {
       dayDialog.addEventListener('click', (e) => {
+        // Clicks on dialog content are never backdrop clicks. Re-checking
+        // coordinates after a content re-layout could otherwise dismiss it.
+        if (e.target.closest('.day-dialog-shell')) return;
         const rect = dayDialog.getBoundingClientRect();
         const isInDialog = (
           rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
@@ -5927,6 +5838,10 @@
     const levelsDialog = document.getElementById('levels-dialog');
     if (levelsDialog) {
       levelsDialog.addEventListener('click', (e) => {
+        // Switching to the catalog re-layouts the dialog. Without this guard
+        // the coordinate check below can treat that click as a backdrop hit
+        // and close the dialog immediately.
+        if (e.target.closest('.day-dialog-shell')) return;
         const rect = levelsDialog.getBoundingClientRect();
         const isInDialog = (
           rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
@@ -5988,6 +5903,7 @@
     const historyDialog = document.getElementById('sessions-history-dialog');
     if (historyDialog) {
       historyDialog.addEventListener('click', (e) => {
+        if (e.target.closest('.day-dialog-shell')) return;
         const rect = historyDialog.getBoundingClientRect();
         const isInDialog = (
           rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
@@ -6095,6 +6011,7 @@
         centerPad?.blur?.();
         document.activeElement?.blur?.();
         globalLenis?.start();
+        resumeAmbientCanvas();
         setTimeout(() => {
           if (window.getSelection) {
             try {
@@ -6250,6 +6167,18 @@
   let levelsLenis = null;
   let dayLenis = null;
 
+  // The ambient canvas is fully covered by the modal backdrop. Keeping its
+  // RAF loop running competes with the dialog's first paint, so park it while
+  // a modal is open and resume only when the last dialog is gone.
+  function pauseAmbientCanvas() {
+    try { window.AmbientAura?.stop(); } catch (e) {}
+  }
+
+  function resumeAmbientCanvas() {
+    if (document.querySelector('dialog[open]')) return;
+    try { window.AmbientAura?.start(); } catch (e) {}
+  }
+
   function initLenis() {
     if (typeof Lenis === 'undefined') return;
 
@@ -6279,6 +6208,7 @@
           content: levelsFeed,
           eventsTarget: levelsFeed,
           autoRaf: true,
+          autoResize: false,
           smoothWheel: true,
           duration: 0.85,
           easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -6297,6 +6227,7 @@
           content: dayFeed,
           eventsTarget: dayFeed,
           autoRaf: true,
+          autoResize: false,
           smoothWheel: true,
           duration: 0.85,
           easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -6315,6 +6246,7 @@
           content: historyFeed,
           eventsTarget: historyFeed,
           autoRaf: true,
+          autoResize: false,
           smoothWheel: true,
           duration: 0.85,
           easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
