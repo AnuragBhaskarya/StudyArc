@@ -2937,10 +2937,17 @@
   let currentDialogDate = null;
 
   function formatDayDateHeader(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return 'Unknown Date';
     try {
       const parts = dateStr.split('-');
-      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-      return d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      if (parts.length < 3) return dateStr;
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10) - 1;
+      const d = parseInt(parts[2], 10);
+      if (isNaN(y) || isNaN(m) || isNaN(d)) return dateStr;
+      const dateObj = new Date(y, m, d);
+      if (isNaN(dateObj.getTime())) return dateStr;
+      return dateObj.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     } catch (_) {
       return dateStr;
     }
@@ -3979,7 +3986,7 @@
   function resetHistoryContainer(cleanDOM = false) {
     const feedList = document.getElementById('history-feed-list');
 
-    // 1. Destroy and clean up any active scrollers, RAF loops, or scroll listeners
+    // 1. Destroy and clean up any active observers, RAF loops, or scroll listeners
     if (activeHistoryCleanup) {
       try { activeHistoryCleanup(); } catch (e) {}
       activeHistoryCleanup = null;
@@ -4006,7 +4013,97 @@
     }
   }
 
-  function openHistoryDialog() {
+  function getShortDateBadge(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return 'DATE';
+    const todayStr = getLocalDateString();
+    if (dateStr === todayStr) return 'TODAY';
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+    if (dateStr === yStr) return 'YESTERDAY';
+
+    try {
+      const parts = dateStr.split('-');
+      if (parts.length < 3) return dateStr.toUpperCase();
+      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      if (isNaN(d.getTime())) return dateStr.toUpperCase();
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }).toUpperCase();
+    } catch (_) {
+      return dateStr;
+    }
+  }
+
+  function createHistoryDateHeader(item) {
+    const dateHdr = document.createElement('div');
+    dateHdr.className = 'history-date-sticky-header';
+    dateHdr.setAttribute('data-date', item.date);
+    dateHdr.setAttribute('data-full-date', item.fullDate);
+    dateHdr.innerHTML = `
+      <div class="history-date-sticky-left">
+        <span class="history-date-badge">${escapeHtml(item.badge)}</span>
+        <span class="history-date-title">${escapeHtml(item.fullDate)}</span>
+      </div>
+      <span class="history-date-meta">${item.sessionsCount} ${item.sessionsCount === 1 ? 'session' : 'sessions'} • ${formatHoursMinutes(item.totalMins * 60)}</span>
+    `;
+    return dateHdr;
+  }
+
+  function createHistorySessionCard(s) {
+    const dur = s.durationMinutes || s.duration_minutes || 0;
+    const xp = s.xp || dur;
+    const taskName = s.taskName || s.task_name || '';
+    const taskNote = taskName ? `<span class="history-session-task">"${escapeHtml(taskName)}"</span>` : '';
+    const timeRangeStr = s.timeRange ? `<span class="history-session-timerange">${escapeHtml(s.timeRange)}</span>` : '';
+    const sep = (taskNote && timeRangeStr) ? '<span class="stat-xp-sep" aria-hidden="true">•</span>' : '';
+
+    const card = document.createElement('div');
+    card.className = 'history-session-card';
+    card.setAttribute('data-session-id', s.id);
+    card.setAttribute('data-date', s.date || '');
+    card.setAttribute('data-duration', dur);
+
+    card.innerHTML = `
+      <div class="history-session-left">
+        <div class="history-session-timeline">
+          <span class="history-session-track-line"></span>
+          <span class="history-session-track-node"></span>
+        </div>
+        <div class="history-session-orb-wrapper">
+          <span class="history-session-orb" style="background-color: ${s.color || '#10E068'}; color: ${s.color || '#10E068'};"></span>
+        </div>
+        <div class="history-session-info">
+          <span class="history-session-subject">${escapeHtml(s.subject || 'Focus Session')}</span>
+          <div class="history-session-sub-row">
+            ${taskNote}
+            ${sep}
+            ${timeRangeStr}
+          </div>
+        </div>
+      </div>
+      <div class="history-session-right">
+        <div class="history-session-duration">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span>${dur} mins</span>
+        </div>
+        <span class="history-session-xp">+${formatCompactNumber(xp)} XP</span>
+        <button class="history-session-delete-btn" data-session-id="${escapeHtml(s.id)}" data-date="${escapeHtml(s.date || '')}" title="Delete session" aria-label="Delete session">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
+          </svg>
+        </button>
+      </div>
+    `;
+    return card;
+  }
+
+  async function openHistoryDialog() {
     const dialog = document.getElementById('sessions-history-dialog');
     if (!dialog) return;
 
@@ -4033,7 +4130,22 @@
 
     // 2. Reset container and render fresh while dialog is open and visible
     resetHistoryContainer(true);
-    renderHistoryDialogDOM();
+
+    // If sessions are already in state, render immediately with zero delay
+    if (state.sessions && state.sessions.length > 0) {
+      renderHistoryDialogDOM();
+    } else {
+      // Show smooth emerald skeleton placeholder while fetching
+      const feedList = document.getElementById('history-feed-list');
+      if (feedList) {
+        feedList.innerHTML = `
+          <div class="day-session-skeleton" style="margin-bottom: 0.55rem;"></div>
+          <div class="day-session-skeleton" style="margin-bottom: 0.55rem;"></div>
+          <div class="day-session-skeleton" style="margin-bottom: 0.55rem;"></div>
+          <div class="day-session-skeleton" style="margin-bottom: 0.55rem;"></div>
+        `;
+      }
+    }
 
     if (typeof historyLenis !== 'undefined' && historyLenis) {
       historyLenis.scrollTo(0, { immediate: true, force: true });
@@ -4041,6 +4153,34 @@
       historyLenis.start();
     }
     setTimeout(() => { historyLenis?.resize(); }, 40);
+
+    // 3. Fetch full session archive from backend (up to 5,000 sessions) to ensure 100% complete history
+    try {
+      const res = await fetch('/api/sessions?limit=5000');
+      if (res.ok) {
+        const data = await res.json();
+        const incoming = Array.isArray(data) ? data : (data.sessions || []);
+        if (incoming && incoming.length >= 0) {
+          const prevLength = state.sessions ? state.sessions.length : -1;
+          const differs = incoming.length !== prevLength || JSON.stringify(incoming) !== JSON.stringify(state.sessions);
+          state.sessions = incoming;
+          saveState();
+          const feedList = document.getElementById('history-feed-list');
+          if (dialog.open && (differs || !feedList || feedList.children.length <= 4)) {
+            renderHistoryDialogDOM();
+            if (typeof historyLenis !== 'undefined' && historyLenis) {
+              historyLenis.resize();
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('StudyArc: Could not fetch sessions history:', e);
+      const feedList = document.getElementById('history-feed-list');
+      if (dialog.open && feedList && feedList.children.length <= 4) {
+        renderHistoryDialogDOM();
+      }
+    }
   }
 
   function closeHistoryDialog() {
@@ -4053,25 +4193,6 @@
     globalLenis?.start();
   }
 
-  function getShortDateBadge(dateStr) {
-    if (!dateStr) return 'DATE';
-    const todayStr = getLocalDateString();
-    if (dateStr === todayStr) return 'TODAY';
-
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-    if (dateStr === yStr) return 'YESTERDAY';
-
-    try {
-      const parts = dateStr.split('-');
-      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }).toUpperCase();
-    } catch (_) {
-      return dateStr;
-    }
-  }
-
   function renderHistoryDialogDOM() {
     const dialog = document.getElementById('sessions-history-dialog');
     if (!dialog) return;
@@ -4080,35 +4201,54 @@
     if (!feedList) return;
 
     if (activeHistoryCleanup) {
-      activeHistoryCleanup();
+      try { activeHistoryCleanup(); } catch (e) {}
       activeHistoryCleanup = null;
     }
 
-    // 1. Gather all historical sessions and sort in descending date order (latest one on top)
+    // 1. Gather all historical sessions and sort in descending date/time order
     const allSessions = (state.sessions || []).slice();
     allSessions.sort((a, b) => {
-      const tA = a.timestamp || (a.date ? new Date(a.date).getTime() : 0);
-      const tB = b.timestamp || (b.date ? new Date(b.date).getTime() : 0);
+      const tA = Number(a.timestamp) || (a.date ? new Date(a.date).getTime() : 0);
+      const tB = Number(b.timestamp) || (b.date ? new Date(b.date).getTime() : 0);
       return tB - tA;
     });
 
-    // 2. Calculate summary metrics
+    // 2. Group sessions strictly by date
+    const dateMap = new Map();
+    allSessions.forEach((s) => {
+      let d = s.date;
+      if (!d || d === 'Unknown') {
+        if (s.timestamp) {
+          const dt = new Date(Number(s.timestamp));
+          if (!isNaN(dt.getTime())) {
+            d = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+          }
+        }
+      }
+      if (!d) d = getLocalDateString();
+      s.date = d;
+      if (!dateMap.has(d)) dateMap.set(d, []);
+      dateMap.get(d).push(s);
+    });
+
+    // 3. Compute Summary Metrics
     const totalSessions = allSessions.length;
     const totalFocusSec = state.totalFocusSeconds || allSessions.reduce((acc, s) => acc + (s.durationMinutes || s.duration_minutes || 0) * 60, 0);
-    const uniqueDates = new Set(allSessions.map(s => s.date).filter(Boolean));
-    const activeDaysCount = uniqueDates.size || Object.keys(state.dayActivity || {}).filter(d => state.dayActivity[d] > 0).length;
+    const activeDaysCount = dateMap.size;
 
     const pillTotalTime = document.getElementById('history-pill-total-time');
     const pillSessions = document.getElementById('history-pill-sessions-count');
     const pillDays = document.getElementById('history-pill-days-count');
+    const headingEl = document.getElementById('history-feed-heading');
     const feedCountEl = document.getElementById('history-feed-count');
 
     if (pillTotalTime) pillTotalTime.textContent = formatHoursMinutes(totalFocusSec);
     if (pillSessions) pillSessions.textContent = totalSessions.toLocaleString();
     if (pillDays) pillDays.textContent = activeDaysCount.toLocaleString();
+    if (headingEl) headingEl.textContent = 'Latest Sessions';
     if (feedCountEl) feedCountEl.textContent = `${totalSessions} ${totalSessions === 1 ? 'session' : 'sessions'} • ${activeDaysCount} active days`;
 
-    // 3. Handle Empty State
+    // 4. Handle Empty State
     if (totalSessions === 0) {
       feedList.innerHTML = `
         <div class="history-empty-card">
@@ -4125,200 +4265,159 @@
       return;
     }
 
-    // 4. Group sessions by date (descending order preserved)
-    const dateGroups = [];
-    const dateMap = new Map();
+    // 5. Build full items list (date headers and sessions)
+    const itemsToRender = [];
+    for (const [dateStr, daySessions] of dateMap.entries()) {
+      const fullDateStr = formatDayDateHeader(dateStr);
+      const dayTotalMins = daySessions.reduce((acc, it) => acc + (it.durationMinutes || it.duration_minutes || 0), 0);
+      const badgeText = getShortDateBadge(dateStr);
 
-    allSessions.forEach(s => {
-      const d = s.date || 'Unknown';
-      if (!dateMap.has(d)) {
-        const group = { date: d, sessions: [] };
-        dateMap.set(d, group);
-        dateGroups.push(group);
-      }
-      dateMap.get(d).sessions.push(s);
-    });
+      itemsToRender.push({
+        type: 'date',
+        date: dateStr,
+        fullDate: fullDateStr,
+        badge: badgeText,
+        sessionsCount: daySessions.length,
+        totalMins: dayTotalMins
+      });
+
+      daySessions.forEach((s) => {
+        itemsToRender.push({
+          type: 'session',
+          session: s,
+          date: dateStr
+        });
+      });
+    }
 
     feedList.innerHTML = '';
-    feedList.scrollTop = 0;
-    feedList.scrollLeft = 0;
+    const renderedElements = [];
+    const dateHeaderElements = [];
 
-    const fragment = document.createDocumentFragment();
-    const historyElements = [];
+    // Progressive Chunked Batch Rendering
+    const BATCH_SIZE = 60;
+    let nextIndex = 0;
 
-    dateGroups.forEach(group => {
-      // Calculate day totals
-      const dayTotalMins = group.sessions.reduce((acc, s) => acc + (s.durationMinutes || s.duration_minutes || 0), 0);
-      const fullDateStr = formatDayDateHeader(group.date);
-      const badgeText = getShortDateBadge(group.date);
-
-      // Sticky Date Card (equivalent to Tiers, Green Theme)
-      const dateHdr = document.createElement('div');
-      dateHdr.className = 'history-date-sticky-header enter-bottom';
-      dateHdr.setAttribute('data-date', group.date);
-      dateHdr.innerHTML = `
-        <div class="history-date-sticky-left">
-          <span class="history-date-badge">${escapeHtml(badgeText)}</span>
-          <span class="history-date-title">${escapeHtml(fullDateStr)}</span>
-        </div>
-        <span class="history-date-meta">${group.sessions.length} ${group.sessions.length === 1 ? 'session' : 'sessions'} • ${formatHoursMinutes(dayTotalMins * 60)}</span>
-      `;
-      fragment.appendChild(dateHdr);
-      historyElements.push(dateHdr);
-
-      // Session Cards under this date (equivalent to Levels)
-      group.sessions.forEach(s => {
-        const dur = s.durationMinutes || s.duration_minutes || 0;
-        const xp = s.xp || dur;
-        const taskName = s.taskName || s.task_name || '';
-        const taskNote = taskName ? `<span class="history-session-task">"${escapeHtml(taskName)}"</span>` : '';
-        const timeRangeStr = s.timeRange ? `<span class="history-session-timerange">${escapeHtml(s.timeRange)}</span>` : '';
-        const sep = (taskNote && timeRangeStr) ? '<span class="stat-xp-sep" aria-hidden="true">•</span>' : '';
-
-        const card = document.createElement('div');
-        card.className = 'history-session-card enter-bottom';
-        card.setAttribute('data-session-id', s.id);
-        card.setAttribute('data-date', s.date || '');
-        card.setAttribute('data-duration', dur);
-
-        card.innerHTML = `
-          <div class="history-session-left">
-            <div class="history-session-timeline">
-              <span class="history-session-track-line"></span>
-              <span class="history-session-track-node"></span>
-            </div>
-            <div class="history-session-orb-wrapper">
-              <span class="history-session-orb" style="background-color: ${s.color || '#10E068'}; color: ${s.color || '#10E068'};"></span>
-            </div>
-            <div class="history-session-info">
-              <span class="history-session-subject">${escapeHtml(s.subject || 'Focus Session')}</span>
-              <div class="history-session-sub-row">
-                ${taskNote}
-                ${sep}
-                ${timeRangeStr}
-              </div>
-            </div>
-          </div>
-          <div class="history-session-right">
-            <div class="history-session-duration">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-              <span>${dur} mins</span>
-            </div>
-            <span class="history-session-xp">+${formatCompactNumber(xp)} XP</span>
-            <button class="history-session-delete-btn" data-session-id="${escapeHtml(s.id)}" data-date="${escapeHtml(s.date || '')}" title="Delete session" aria-label="Delete session">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                <line x1="10" y1="11" x2="10" y2="17"></line>
-                <line x1="14" y1="11" x2="14" y2="17"></line>
-              </svg>
-            </button>
-          </div>
-        `;
-        fragment.appendChild(card);
-        historyElements.push(card);
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          el.style.transitionDelay = '0ms';
+          el.classList.add('visible');
+          observer.unobserve(el);
+        }
       });
+    }, {
+      root: feedList,
+      rootMargin: '280px 0px 280px 0px',
+      threshold: 0
     });
 
-    feedList.appendChild(fragment);
+    const appendBatch = (count) => {
+      if (nextIndex >= itemsToRender.length) return false;
+      const frag = document.createDocumentFragment();
+      const end = Math.min(itemsToRender.length, nextIndex + count);
+      const newItems = [];
 
-    // 5. Bidirectional Re-appearing Calorie Tracker Animation Engine:
-    // Identical swooping entrance & exit physics to My Journey, optimized for high performance.
-    let lastScrollTop = 0;
-    let scrollDirection = 'down';
-    const HYSTERESIS = 160;
-    let historyRaf = null;
-
-    const updateReappearingHistoryCards = (isInitial = false) => {
-      const scrollTop = feedList.scrollTop;
-      const viewportHeight = feedList.clientHeight || 380;
-
-      if (!isInitial) {
-        if (scrollTop > lastScrollTop + 1) {
-          scrollDirection = 'down';
-        } else if (scrollTop < lastScrollTop - 1) {
-          scrollDirection = 'up';
+      for (let i = nextIndex; i < end; i++) {
+        const item = itemsToRender[i];
+        let el;
+        if (item.type === 'date') {
+          el = createHistoryDateHeader(item);
+          dateHeaderElements.push(el);
+        } else {
+          el = createHistorySessionCard(item.session);
         }
+        frag.appendChild(el);
+        renderedElements.push(el);
+        newItems.push(el);
       }
-      lastScrollTop = scrollTop;
+      nextIndex = end;
+      feedList.appendChild(frag);
 
-      const viewTop = scrollTop;
-      const viewBottom = scrollTop + viewportHeight;
-      const newlyRevealed = [];
+      // Register new items with IntersectionObserver
+      newItems.forEach((el) => {
+        observer.observe(el);
+      });
 
-      for (let i = 0; i < historyElements.length; i++) {
-        const el = historyElements[i];
-        const elTop = el.offsetTop;
-        const elHeight = el.offsetHeight || 55;
-        const elBottom = elTop + elHeight;
-
-        const isInsideView = (elBottom >= viewTop - 25) && (elTop <= viewBottom + 25);
-        const isFarAbove = elBottom < (viewTop - HYSTERESIS);
-        const isFarBelow = elTop > (viewBottom + HYSTERESIS);
-
-        if (isInsideView) {
-          if (!el.classList.contains('visible')) {
-            el.classList.remove('enter-top', 'enter-bottom');
-            el.classList.add(scrollDirection === 'up' ? 'enter-top' : 'enter-bottom');
-            newlyRevealed.push(el);
-          }
-        } else if (isFarAbove) {
-          if (el.classList.contains('visible') || !el.classList.contains('enter-top')) {
-            el.classList.remove('visible', 'enter-bottom');
-            el.classList.add('enter-top');
-            el.style.transitionDelay = '0ms';
-          }
-        } else if (isFarBelow) {
-          if (el.classList.contains('visible') || !el.classList.contains('enter-bottom')) {
-            el.classList.remove('visible', 'enter-top');
-            el.classList.add('enter-bottom');
-            el.style.transitionDelay = '0ms';
-          }
-        }
+      if (typeof historyLenis !== 'undefined' && historyLenis) {
+        historyLenis.resize();
       }
-
-      if (newlyRevealed.length > 0) {
-        if (scrollDirection === 'up') {
-          newlyRevealed.reverse();
-        }
-        newlyRevealed.forEach((el, index) => {
-          void el.offsetWidth;
-          const delay = Math.min(index * 35, 140);
-          el.style.transitionDelay = `${delay}ms`;
-          el.classList.add('visible');
-        });
-      }
+      return true;
     };
 
-    const onHistoryScroll = () => {
+    // Render Initial Batch
+    appendBatch(BATCH_SIZE);
+
+    // Initial entrance animation pass for items inside the viewport:
+    // Force layout of State A, then transition via RAF with staggered cascade
+    void feedList.offsetHeight;
+    requestAnimationFrame(() => {
+      const viewBottom = (feedList.clientHeight || 380) + 20;
+      let cascadeIdx = 0;
+      for (let i = 0; i < renderedElements.length; i++) {
+        const el = renderedElements[i];
+        if (el.offsetTop <= viewBottom) {
+          const delay = Math.min(cascadeIdx * 35, 140);
+          cascadeIdx++;
+          el.style.transitionDelay = `${delay}ms`;
+          el.classList.add('visible');
+          observer.unobserve(el);
+        }
+      }
+    });
+
+    // Scroll listener: handles infinite append & dynamic active date heading update
+    let historyRaf = null;
+    const onScroll = () => {
       if (historyRaf) return;
       historyRaf = requestAnimationFrame(() => {
         historyRaf = null;
-        updateReappearingHistoryCards(false);
+
+        // 1. Check if near bottom to append next batch
+        if (feedList.scrollTop + feedList.clientHeight >= feedList.scrollHeight - 350) {
+          appendBatch(BATCH_SIZE);
+        }
+
+        // 2. High-speed momentum scroll fallback
+        const viewTop = feedList.scrollTop;
+        const viewBottom = viewTop + (feedList.clientHeight || 380) + 280;
+        for (let i = 0; i < renderedElements.length; i++) {
+          const el = renderedElements[i];
+          if (!el.classList.contains('visible') && el.offsetTop <= viewBottom && (el.offsetTop + el.offsetHeight) >= (viewTop - 50)) {
+            el.style.transitionDelay = '0ms';
+            el.classList.add('visible');
+            observer.unobserve(el);
+          }
+        }
+
+        // 3. Update sticky heading text with currently active top date
+        if (headingEl && dateHeaderElements.length > 0) {
+          if (viewTop < 15) {
+            headingEl.textContent = 'Latest Sessions';
+          } else {
+            let activeTitle = 'Latest Sessions';
+            for (let i = 0; i < dateHeaderElements.length; i++) {
+              if (dateHeaderElements[i].offsetTop <= viewTop + 45) {
+                activeTitle = dateHeaderElements[i].getAttribute('data-full-date') || activeTitle;
+              }
+            }
+            headingEl.textContent = activeTitle;
+          }
+        }
       });
     };
 
-    feedList.addEventListener('scroll', onHistoryScroll, { passive: true });
+    feedList.addEventListener('scroll', onScroll, { passive: true });
     initShellLenis();
     if (typeof historyLenis !== 'undefined' && historyLenis) {
-      historyLenis.on('scroll', onHistoryScroll);
+      historyLenis.on('scroll', onScroll);
       historyLenis.scrollTo(0, { immediate: true, force: true });
       historyLenis.resize();
       historyLenis.start();
     }
-
-    // Initial entrance animation pass: Force layout of State A, then transition via RAF
-    void feedList.offsetHeight;
-    requestAnimationFrame(() => {
-      updateReappearingHistoryCards(true);
-    });
-
     setTimeout(() => {
       historyLenis?.resize();
-      updateReappearingHistoryCards(false);
     }, 50);
 
     activeHistoryCleanup = () => {
@@ -4326,10 +4425,11 @@
         cancelAnimationFrame(historyRaf);
         historyRaf = null;
       }
-      feedList.removeEventListener('scroll', onHistoryScroll);
+      feedList.removeEventListener('scroll', onScroll);
       if (typeof historyLenis !== 'undefined' && historyLenis) {
-        try { historyLenis.off('scroll', onHistoryScroll); } catch (e) {}
+        try { historyLenis.off('scroll', onScroll); } catch (e) {}
       }
+      observer.disconnect();
     };
   }
 
