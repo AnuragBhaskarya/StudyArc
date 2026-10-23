@@ -3246,10 +3246,10 @@
     }
 
     showAllLevelsView = false;
-    renderLevelsDialogDOM();
     if (typeof dialog.showModal === 'function' && !dialog.open) {
       dialog.showModal();
     }
+    renderLevelsDialogDOM();
 
     // Direct focus to the close button so browser never text-selects "All Levels"
     const closeBtn = document.getElementById('btn-close-levels-dialog');
@@ -3360,9 +3360,8 @@
     }
 
     getVisibleRange(scrollTop, viewportHeight) {
-      // In Catalog mode (All Levels), use focused buffer (140px) so items animate right as they enter view area
-      // In My Journey mode, use generous buffer (360px) so items are pre-loaded immediately without delay
-      const buffer = this.isCatalogMode ? 140 : 360;
+      // In Catalog mode (All Levels), use 300px buffer so items animate right as they enter view area while preventing blank spots on fast scrolls
+      const buffer = 300;
       const minY = Math.max(0, scrollTop - buffer);
       const maxY = scrollTop + viewportHeight + buffer;
 
@@ -3754,10 +3753,11 @@
         activeLevelsScroller?.scrollToLevel(lvlInfo.level);
       }, 60);
     } else {
-      // My Journey: Permanent solid DOM rendering (no virtual destruction, no blank gaps on scroll-up)
+      // My Journey: Permanent solid DOM rendering with Calorie Tracker entrance animation
       feedList.innerHTML = '';
       const fragment = document.createDocumentFragment();
       const tierHeadersList = [];
+      const journeyElements = [];
       let journeyLastTier = -1;
 
       itemsToRender.forEach((l) => {
@@ -3770,9 +3770,11 @@
           });
           fragment.appendChild(tierHdr);
           tierHeadersList.push({ el: tierHdr, tierIndex: l.tierIndex, tier: l.tier });
+          journeyElements.push(tierHdr);
         }
         const card = renderCard(l);
         fragment.appendChild(card);
+        journeyElements.push(card);
       });
 
       feedList.appendChild(fragment);
@@ -3792,6 +3794,33 @@
         }
       };
 
+      // Entrance animation observer (Calorie Tracker pattern: stays visible once animated, eliminating any delay on scroll back)
+      let journeyObserver = null;
+      if ('IntersectionObserver' in window) {
+        journeyObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const target = entry.target;
+              target.classList.add('visible');
+              journeyObserver.unobserve(target);
+            }
+          });
+        }, {
+          root: feedList,
+          rootMargin: '0px 0px -20px 0px',
+          threshold: 0.05
+        });
+
+        journeyElements.forEach((el, index) => {
+          if (index < 7) {
+            el.style.transitionDelay = `${index * 35}ms`;
+          }
+          journeyObserver.observe(el);
+        });
+      } else {
+        journeyElements.forEach((el) => el.classList.add('visible'));
+      }
+
       feedList.addEventListener('scroll', updateJourneyTierHeading, { passive: true });
       initShellLenis();
       if (levelsLenis) {
@@ -3799,6 +3828,10 @@
       }
 
       activeJourneyCleanup = () => {
+        if (journeyObserver) {
+          journeyObserver.disconnect();
+          journeyObserver = null;
+        }
         feedList.removeEventListener('scroll', updateJourneyTierHeading);
         if (levelsLenis) {
           try { levelsLenis.off('scroll', updateJourneyTierHeading); } catch (e) {}
