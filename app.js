@@ -3254,7 +3254,237 @@
     if (dialog && dialog.open) {
       dialog.close();
     }
+    if (activeLevelsScroller) {
+      activeLevelsScroller.destroy();
+      activeLevelsScroller = null;
+    }
     globalLenis?.start();
+  }
+
+  let activeLevelsScroller = null;
+
+  class VirtualLevelsScroller {
+    constructor({
+      container,
+      virtualItems,
+      tierHeaderIndices,
+      renderCard,
+      renderTierHeader,
+      headingEl,
+      isCatalogMode,
+      currentLevel
+    }) {
+      this.container = container;
+      this.virtualItems = virtualItems;
+      this.tierHeaderIndices = tierHeaderIndices;
+      this.renderCard = renderCard;
+      this.renderTierHeader = renderTierHeader;
+      this.headingEl = headingEl;
+      this.isCatalogMode = isCatalogMode;
+      this.currentLevel = currentLevel;
+
+      this.mountedElements = new Map();
+      this.totalHeight = 0;
+      this.itemOffsets = new Float64Array(virtualItems.length);
+      for (let i = 0; i < virtualItems.length; i++) {
+        this.itemOffsets[i] = this.totalHeight;
+        this.totalHeight += virtualItems[i].height;
+      }
+
+      this.container.innerHTML = '';
+
+      this.topSpacer = document.createElement('div');
+      this.topSpacer.className = 'levels-spacer-top';
+      this.topSpacer.style.height = '0px';
+      this.topSpacer.style.display = 'none';
+
+      this.bottomSpacer = document.createElement('div');
+      this.bottomSpacer.className = 'levels-spacer-bottom';
+      this.bottomSpacer.style.height = `${this.totalHeight}px`;
+
+      this.container.appendChild(this.topSpacer);
+      this.container.appendChild(this.bottomSpacer);
+
+      this.rafId = null;
+      this.onScroll = this.onScroll.bind(this);
+      this.container.addEventListener('scroll', this.onScroll, { passive: true });
+
+      if (typeof levelsLenis !== 'undefined' && levelsLenis) {
+        this.lenisHandler = () => this.onScroll();
+        levelsLenis.on('scroll', this.lenisHandler);
+      }
+
+      this.updateWindow(true);
+    }
+
+    destroy() {
+      this.container.removeEventListener('scroll', this.onScroll);
+      if (typeof levelsLenis !== 'undefined' && levelsLenis && this.lenisHandler) {
+        try { levelsLenis.off('scroll', this.lenisHandler); } catch (e) {}
+      }
+      if (this.rafId) {
+        cancelAnimationFrame(this.rafId);
+        this.rafId = null;
+      }
+      this.mountedElements.clear();
+    }
+
+    onScroll() {
+      if (this.rafId) return;
+      this.rafId = requestAnimationFrame(() => {
+        this.rafId = null;
+        this.updateWindow(false);
+      });
+    }
+
+    getVisibleRange(scrollTop, viewportHeight) {
+      const buffer = 260; // Extra buffer above and below visible area
+      const minY = Math.max(0, scrollTop - buffer);
+      const maxY = scrollTop + viewportHeight + buffer;
+
+      let startIndex = 0;
+      let endIndex = this.virtualItems.length - 1;
+
+      let low = 0, high = this.virtualItems.length - 1;
+      while (low <= high) {
+        const mid = (low + high) >> 1;
+        if (this.itemOffsets[mid] + this.virtualItems[mid].height >= minY) {
+          startIndex = mid;
+          high = mid - 1;
+        } else {
+          low = mid + 1;
+        }
+      }
+
+      low = startIndex; high = this.virtualItems.length - 1;
+      while (low <= high) {
+        const mid = (low + high) >> 1;
+        if (this.itemOffsets[mid] <= maxY) {
+          endIndex = mid;
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
+      }
+
+      return { startIndex, endIndex };
+    }
+
+    updateWindow(isInitial = false) {
+      if (this.virtualItems.length === 0) return;
+
+      const scrollTop = this.container.scrollTop;
+      const viewportHeight = this.container.clientHeight || (this.isCatalogMode ? 490 : 310);
+      const { startIndex, endIndex } = this.getVisibleRange(scrollTop, viewportHeight);
+
+      // Identify active tier for sticky header & heading display
+      const firstItem = this.virtualItems[startIndex];
+      const activeTierIdx = firstItem.type === 'tier' ? firstItem.tierIndex : firstItem.level.tierIndex;
+      const activeTierName = firstItem.type === 'tier' ? firstItem.tier : firstItem.level.tier;
+
+      if (this.headingEl && activeTierName) {
+        this.headingEl.textContent = `Tier ${activeTierIdx}: ${activeTierName}`;
+      }
+
+      // Check if the current tier header should be pinned above the visible cards
+      const activeTierHeaderIdx = this.tierHeaderIndices[activeTierIdx];
+      let pinHeaderIdx = null;
+      if (activeTierHeaderIdx !== undefined && activeTierHeaderIdx < startIndex) {
+        pinHeaderIdx = activeTierHeaderIdx;
+      }
+
+      const neededIndices = new Set();
+      if (pinHeaderIdx !== null) neededIndices.add(pinHeaderIdx);
+      for (let i = startIndex; i <= endIndex; i++) {
+        neededIndices.add(i);
+      }
+
+      // 1. Remove elements that leave the view range on both sides (scrolling down and scrolling up)
+      for (const [idx, el] of this.mountedElements.entries()) {
+        if (!neededIndices.has(idx)) {
+          el.remove();
+          this.mountedElements.delete(idx);
+        }
+      }
+
+      // 2. Mount new or reappearing items into correct DOM position
+      const newlyCreatedCards = [];
+      const sortedIndices = Array.from(neededIndices).sort((a, b) => a - b);
+
+      for (let i = 0; i < sortedIndices.length; i++) {
+        const idx = sortedIndices[i];
+        if (this.mountedElements.has(idx)) continue;
+
+        const item = this.virtualItems[idx];
+        let el;
+        if (item.type === 'tier') {
+          el = this.renderTierHeader(item);
+        } else {
+          el = this.renderCard(item.level);
+          newlyCreatedCards.push(el);
+        }
+
+        // Find correct anchor in DOM
+        let anchor = this.bottomSpacer;
+        for (let j = i + 1; j < sortedIndices.length; j++) {
+          if (this.mountedElements.has(sortedIndices[j])) {
+            anchor = this.mountedElements.get(sortedIndices[j]);
+            break;
+          }
+        }
+
+        this.container.insertBefore(el, anchor);
+        this.mountedElements.set(idx, el);
+      }
+
+      // 3. Update top and bottom spacers to maintain exact scroll height
+      let topSpacerHeight = this.itemOffsets[startIndex];
+      if (pinHeaderIdx !== null) {
+        topSpacerHeight = Math.max(0, topSpacerHeight - this.virtualItems[pinHeaderIdx].height);
+      }
+      const bottomSpacerHeight = Math.max(0, this.totalHeight - (this.itemOffsets[endIndex] + this.virtualItems[endIndex].height));
+
+      if (topSpacerHeight > 0) {
+        this.topSpacer.style.display = 'block';
+        this.topSpacer.style.height = `${topSpacerHeight}px`;
+      } else {
+        this.topSpacer.style.display = 'none';
+        this.topSpacer.style.height = '0px';
+      }
+
+      if (bottomSpacerHeight > 0) {
+        this.bottomSpacer.style.display = 'block';
+        this.bottomSpacer.style.height = `${bottomSpacerHeight}px`;
+      } else {
+        this.bottomSpacer.style.display = 'none';
+        this.bottomSpacer.style.height = '0px';
+      }
+
+      // 4. Trigger calorie-tracker lazy loading animation on newly mounted/reappearing cards
+      if (newlyCreatedCards.length > 0) {
+        requestAnimationFrame(() => {
+          newlyCreatedCards.forEach((card, i) => {
+            void card.offsetWidth; // Force reflow so entrance transition fires reliably
+            const delay = Math.min((i % 6) * 35, 180);
+            card.style.transitionDelay = `${delay}ms`;
+            card.classList.add('visible');
+          });
+        });
+      }
+    }
+
+    scrollToLevel(targetLevel, immediate = false) {
+      const vIdx = this.virtualItems.findIndex(it => it.type === 'level' && it.level.level === targetLevel);
+      if (vIdx !== -1) {
+        const targetScroll = Math.max(0, this.itemOffsets[vIdx] - 120);
+        if (typeof levelsLenis !== 'undefined' && levelsLenis) {
+          levelsLenis.scrollTo(targetScroll, { immediate });
+        } else {
+          this.container.scrollTop = targetScroll;
+        }
+        this.updateWindow(false);
+      }
+    }
   }
 
   function renderLevelsDialogDOM() {
@@ -3325,6 +3555,11 @@
     const feedList = document.getElementById('levels-feed-list');
     if (!feedList) return;
 
+    if (activeLevelsScroller) {
+      activeLevelsScroller.destroy();
+      activeLevelsScroller = null;
+    }
+
     let itemsToRender = [];
     if (showAllLevelsView) {
       if (headingEl) headingEl.textContent = 'Tier 1: Novice';
@@ -3338,36 +3573,36 @@
       itemsToRender = RPG_LEVELS.slice(0, maxPreview);
     }
 
-    feedList.innerHTML = '';
-    const frag = document.createDocumentFragment();
+    const virtualItems = [];
+    const tierHeaderIndices = {};
     let lastTierIndex = -1;
 
     itemsToRender.forEach((l) => {
-      // Sticky Tier Section Header
       if (l.tierIndex !== lastTierIndex) {
         lastTierIndex = l.tierIndex;
-        const tierStartLvl = (l.tierIndex - 1) * 10 + 1;
-        const tierEndLvl = l.tierIndex * 10;
-        const tierHdr = document.createElement('div');
-        tierHdr.className = 'level-tier-sticky-header';
-        tierHdr.setAttribute('data-tier-name', l.tier);
-        tierHdr.setAttribute('data-tier-idx', l.tierIndex);
-        tierHdr.innerHTML = `
-          <div class="level-tier-sticky-left">
-            <span class="level-tier-badge">Tier ${l.tierIndex}</span>
-            <span class="level-tier-name">${escapeHtml(l.tier)}</span>
-          </div>
-          <span class="level-tier-range">Lv. ${tierStartLvl} – ${tierEndLvl}</span>
-        `;
-        frag.appendChild(tierHdr);
+        tierHeaderIndices[l.tierIndex] = virtualItems.length;
+        virtualItems.push({
+          type: 'tier',
+          tierIndex: l.tierIndex,
+          tier: l.tier,
+          height: 48
+        });
       }
+      virtualItems.push({
+        type: 'level',
+        level: l,
+        height: 60
+      });
+    });
 
+    const renderCard = (l) => {
       const isCleared = l.level < lvlInfo.level || (l.level === 1000 && lvlInfo.isMax);
       const isCurrent = l.level === lvlInfo.level && !lvlInfo.isMax;
       const isLocked = l.level > lvlInfo.level;
 
       const card = document.createElement('div');
       card.className = `level-card ${isCurrent ? 'is-current' : ''} ${isLocked ? 'is-locked' : ''} ${showAllLevelsView && isCurrent ? 'is-user-current' : ''}`;
+      card.setAttribute('data-level', l.level);
       if (isCurrent) {
         card.setAttribute('data-current-level', 'true');
       }
@@ -3376,7 +3611,6 @@
       let badgeHtml = '';
 
       if (showAllLevelsView) {
-        // Pure catalog view - only show the level info, not user data
         subtitle = `Requires +${formatCompactNumber(l.xpRequired)} XP • Total: ${formatCompactNumber(l.maxXp)} XP`;
         if (isCurrent) {
           badgeHtml = `<span class="level-badge-status level-badge-current">Your Rank</span>`;
@@ -3384,7 +3618,6 @@
           badgeHtml = `<span class="level-badge-status level-badge-catalog">${formatCompactNumber(l.xpRequired)} XP</span>`;
         }
       } else {
-        // My Journey view - show user progress and clear history
         if (isCleared) {
           const clearRecord = clearDates[l.level];
           const dateStr = clearRecord?.formatted || (clearRecord?.date ? formatDayDateHeader(clearRecord.date) : 'Cleared Milestone');
@@ -3422,43 +3655,43 @@
           ${badgeHtml}
         </div>
       `;
-
-      frag.appendChild(card);
-    });
-
-    feedList.appendChild(frag);
-
-    // Dynamic sticky tier update on scroll
-    feedList.onscroll = () => {
-      const headers = feedList.querySelectorAll('.level-tier-sticky-header');
-      let activeTierName = null;
-      let activeTierIdx = null;
-      const listTop = feedList.getBoundingClientRect().top;
-      headers.forEach(h => {
-        const rect = h.getBoundingClientRect();
-        if (rect.top <= listTop + 40) {
-          activeTierName = h.getAttribute('data-tier-name');
-          activeTierIdx = h.getAttribute('data-tier-idx');
-        }
-      });
-      if (activeTierName && headingEl) {
-        headingEl.textContent = `Tier ${activeTierIdx}: ${activeTierName}`;
-      }
+      return card;
     };
+
+    const renderTierHeader = (item) => {
+      const tierStartLvl = (item.tierIndex - 1) * 10 + 1;
+      const tierEndLvl = item.tierIndex * 10;
+      const tierHdr = document.createElement('div');
+      tierHdr.className = 'level-tier-sticky-header';
+      tierHdr.setAttribute('data-tier-name', item.tier);
+      tierHdr.setAttribute('data-tier-idx', item.tierIndex);
+      tierHdr.innerHTML = `
+        <div class="level-tier-sticky-left">
+          <span class="level-tier-badge">Tier ${item.tierIndex}</span>
+          <span class="level-tier-name">${escapeHtml(item.tier)}</span>
+        </div>
+        <span class="level-tier-range">Lv. ${tierStartLvl} – ${tierEndLvl}</span>
+      `;
+      return tierHdr;
+    };
+
+    activeLevelsScroller = new VirtualLevelsScroller({
+      container: feedList,
+      virtualItems,
+      tierHeaderIndices,
+      renderCard,
+      renderTierHeader,
+      headingEl,
+      isCatalogMode: showAllLevelsView,
+      currentLevel: lvlInfo.level
+    });
 
     initShellLenis();
     setTimeout(() => { levelsLenis?.resize(); }, 30);
 
     if (showAllLevelsView) {
       setTimeout(() => {
-        const currentCard = feedList.querySelector('[data-current-level="true"]');
-        if (currentCard) {
-          if (levelsLenis) {
-            levelsLenis.scrollTo(currentCard, { offset: -120 });
-          } else {
-            currentCard.scrollIntoView({ block: 'center', behavior: 'smooth' });
-          }
-        }
+        activeLevelsScroller?.scrollToLevel(lvlInfo.level);
       }, 60);
     }
   }

@@ -2847,10 +2847,22 @@ input:checked + .switch-slider:before {
 .levels-feed-list {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  contain: content;
   max-height: 310px;
   padding: 0.15rem 0.2rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.levels-spacer-top,
+.levels-spacer-bottom {
+  width: 100%;
+  flex-shrink: 0;
+  pointer-events: none;
+  margin: 0;
+  padding: 0;
 }
 
 .levels-feed-list::-webkit-scrollbar {
@@ -2871,8 +2883,21 @@ input:checked + .switch-slider:before {
   background: #0d1109;
   border: 1px solid rgba(251, 191, 36, 0.14);
   border-radius: 12px;
-  transition: all 140ms ease;
   gap: 0.65rem;
+  margin-bottom: 0.55rem;
+  box-sizing: border-box;
+
+  /* Calorie tracker lazy loading entrance animation */
+  opacity: 0;
+  transform: translateX(80px) translateY(100px) scale(0.1);
+  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+              opacity 0.7s linear;
+  will-change: transform, opacity;
+}
+
+.level-card.visible {
+  opacity: 1;
+  transform: none;
 }
 
 .level-card.is-current {
@@ -2882,9 +2907,13 @@ input:checked + .switch-slider:before {
 }
 
 .level-card.is-locked {
-  opacity: 0.52;
   border-color: rgba(255, 255, 255, 0.05);
   background: #070905;
+}
+
+.level-card.is-locked.visible {
+  opacity: 0.52;
+  transform: none;
 }
 
 .level-left {
@@ -2916,8 +2945,10 @@ input:checked + .switch-slider:before {
   pointer-events: none;
 }
 
-.level-card:first-child .level-track-line { top: 50%; }
-.level-card:last-child .level-track-line { bottom: 50%; }
+.level-card:first-child .level-track-line,
+.level-card[data-level="1"] .level-track-line { top: 50%; }
+.level-card:last-child .level-track-line,
+.level-card[data-level="1000"] .level-track-line { bottom: 50%; }
 .level-card:only-child .level-track-line { display: none; }
 
 .level-track-node {
@@ -3016,7 +3047,8 @@ input:checked + .switch-slider:before {
   border: 1px solid rgba(251, 191, 36, 0.22);
   border-radius: 9px;
   padding: 0.38rem 0.75rem;
-  margin: 0.35rem 0 0.25rem 0;
+  margin: 0.35rem 0 0.55rem 0;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
