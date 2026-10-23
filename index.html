@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=9.8">
+  <link rel="stylesheet" href="styles.css?v=9.9">
   <script>
     (function () {
       try {
@@ -529,15 +529,14 @@
        </dialog>
 
       <!-- SESSIONS HISTORY & ARCHIVE CHRONICLE MODAL DIALOG (Opened via clicking Total Focus Stats pill) -->
-      <dialog id="sessions-history-dialog" class="sessions-history-dialog day-detail-dialog" closedby="any" aria-labelledby="history-dialog-title">
+      <dialog id="sessions-history-dialog" class="sessions-history-dialog day-detail-dialog" closedby="any" aria-labelledby="history-dialog-badge">
         <div class="history-dialog-shell day-dialog-shell" id="history-dialog-shell" tabindex="-1">
           <!-- Header -->
           <div class="day-dialog-header history-dialog-header">
             <div class="day-dialog-header-info history-dialog-header-info">
               <div class="history-dialog-badge-row">
-                <span class="day-dialog-badge history-dialog-badge" id="history-dialog-badge">Archive Chronicle</span>
+                <span class="day-dialog-badge history-dialog-badge" id="history-dialog-badge">Session History</span>
               </div>
-              <h2 class="day-dialog-title history-dialog-title" id="history-dialog-title">Sessions History</h2>
             </div>
             <button class="day-dialog-close-btn" id="btn-close-history-dialog" aria-label="Close Sessions History">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -593,17 +592,22 @@
       </dialog>
 
       <!-- SESSIONS HISTORY CALENDAR JUMP MODAL -->
-      <dialog id="history-calendar-dialog" class="history-calendar-dialog" closedby="any" aria-labelledby="history-calendar-title">
+      <dialog id="history-calendar-dialog" class="history-calendar-dialog" closedby="any" aria-labelledby="history-calendar-title-btn">
         <div class="history-calendar-shell" id="history-calendar-shell" tabindex="-1">
           <!-- Calendar Header -->
           <div class="history-calendar-header">
-            <div class="history-calendar-nav">
+            <div class="history-calendar-nav" id="history-calendar-nav">
               <button type="button" class="history-cal-nav-btn" id="history-cal-prev-month" aria-label="Previous Month">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
               </button>
-              <h3 class="history-calendar-title" id="history-calendar-title">October 2026</h3>
+              <button type="button" class="history-cal-title-btn" id="history-calendar-title-btn" aria-label="Select month and year dial" aria-expanded="false">
+                <span class="history-cal-title-text" id="history-calendar-title">Oct 2026</span>
+                <svg class="history-cal-chevron" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
               <button type="button" class="history-cal-nav-btn" id="history-cal-next-month" aria-label="Next Month">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="9 18 15 12 9 6"></polyline>
@@ -618,35 +622,69 @@
             </button>
           </div>
 
-          <!-- Quick Jump Shortcuts Strip -->
-          <div class="history-cal-shortcuts">
-            <button type="button" class="history-cal-pill-btn" data-jump="today">Today</button>
-            <button type="button" class="history-cal-pill-btn" data-jump="yesterday">Yesterday</button>
-            <button type="button" class="history-cal-pill-btn" data-jump="latest">Latest</button>
-            <button type="button" class="history-cal-pill-btn" data-jump="oldest">First</button>
+          <!-- Main Calendar View (Month Swiping & Grid) -->
+          <div class="history-cal-main-view" id="history-cal-main-view">
+            <!-- Quick Jump Shortcuts Strip -->
+            <div class="history-cal-shortcuts">
+              <button type="button" class="history-cal-pill-btn" data-jump="today">Today</button>
+              <button type="button" class="history-cal-pill-btn" data-jump="yesterday">Yesterday</button>
+              <button type="button" class="history-cal-pill-btn" data-jump="latest">Latest</button>
+              <button type="button" class="history-cal-pill-btn" data-jump="oldest">First</button>
+            </div>
+
+            <!-- Weekdays Row -->
+            <div class="history-cal-weekdays">
+              <span>Su</span>
+              <span>Mo</span>
+              <span>Tu</span>
+              <span>We</span>
+              <span>Th</span>
+              <span>Fr</span>
+              <span>Sa</span>
+            </div>
+
+            <!-- Swipeable Month Carousel with strict Snapping -->
+            <div class="history-cal-carousel-wrapper" id="history-cal-carousel-wrapper">
+              <div class="history-cal-carousel" id="history-cal-carousel">
+                <div class="history-cal-slide" id="history-cal-slide-prev" aria-hidden="true">
+                  <div class="history-cal-grid" id="history-cal-grid-prev"></div>
+                </div>
+                <div class="history-cal-slide active-slide" id="history-cal-slide-curr">
+                  <div class="history-cal-grid" id="history-cal-grid"></div>
+                </div>
+                <div class="history-cal-slide" id="history-cal-slide-next" aria-hidden="true">
+                  <div class="history-cal-grid" id="history-cal-grid-next"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Month Summary Footer -->
+            <div class="history-cal-footer">
+              <span class="history-cal-footer-stat" id="history-cal-month-sessions">0 sessions</span>
+              <span class="history-cal-footer-dot">•</span>
+              <span class="history-cal-footer-stat" id="history-cal-month-time">0h 0m</span>
+            </div>
           </div>
 
-          <!-- Weekdays Row -->
-          <div class="history-cal-weekdays">
-            <span>Su</span>
-            <span>Mo</span>
-            <span>Tu</span>
-            <span>We</span>
-            <span>Th</span>
-            <span>Fr</span>
-            <span>Sa</span>
-          </div>
-
-          <!-- Days Grid -->
-          <div class="history-cal-grid" id="history-cal-grid">
-            <!-- Dynamically populated day cells -->
-          </div>
-
-          <!-- Month Summary Footer -->
-          <div class="history-cal-footer">
-            <span class="history-cal-footer-stat" id="history-cal-month-sessions">0 sessions</span>
-            <span class="history-cal-footer-dot">•</span>
-            <span class="history-cal-footer-stat" id="history-cal-month-time">0h 0m</span>
+          <!-- Dial Picker Overlay / View (Month & Year Dials) -->
+          <div class="history-cal-dial-view" id="history-cal-dial-view" style="display: none;">
+            <div class="history-cal-dial-header">
+              <div class="history-cal-dial-title-group">
+                <span class="history-cal-dial-title">Month & Year Dial</span>
+                <span class="history-cal-dial-hint">Scroll or tap to select</span>
+              </div>
+              <button type="button" class="history-cal-dial-done-btn" id="history-cal-dial-done-btn">Done</button>
+            </div>
+            
+            <div class="history-cal-dial-frame">
+              <div class="history-cal-dial-gradient top" aria-hidden="true"></div>
+              <div class="history-cal-dial-gradient bottom" aria-hidden="true"></div>
+              <div class="history-cal-dial-lens" aria-hidden="true"></div>
+              
+              <div class="history-cal-drum" id="history-cal-drum-month" role="listbox" aria-label="Select Month"></div>
+              <div class="history-cal-drum-divider" aria-hidden="true"></div>
+              <div class="history-cal-drum" id="history-cal-drum-year" role="listbox" aria-label="Select Year"></div>
+            </div>
           </div>
         </div>
       </dialog>
@@ -882,7 +920,7 @@
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
   <script src="aura-particles.js?v=5.3"></script>
-  <script src="app.js?v=9.4"></script>
+  <script src="app.js?v=9.5"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

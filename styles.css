@@ -4220,14 +4220,15 @@ input:checked + .switch-slider:before {
 }
 
 .history-dialog-badge {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.28rem 0.8rem;
   color: #4EFA8F;
-  background: rgba(16, 224, 104, 0.1);
-  border: 1px solid rgba(16, 224, 104, 0.28);
-  box-shadow: 0 0 10px rgba(16, 224, 104, 0.15);
-}
-
-.history-dialog-title {
-  color: #ffffff;
+  background: rgba(16, 224, 104, 0.12);
+  border: 1px solid rgba(16, 224, 104, 0.32);
+  box-shadow: 0 0 14px rgba(16, 224, 104, 0.18);
+  border-radius: 9999px;
 }
 
 .history-summary-strip {
@@ -4789,13 +4790,254 @@ input:checked + .switch-slider:before {
   transform: scale(1.06);
 }
 
-.history-calendar-title {
-  font-size: 0.95rem;
+.history-cal-title-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: rgba(16, 224, 104, 0.08);
+  border: 1px solid rgba(16, 224, 104, 0.22);
+  border-radius: 9999px;
+  padding: 0.22rem 0.75rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: #F0FDF4;
-  letter-spacing: -0.01em;
-  min-width: 125px;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 110px;
+  user-select: none;
+}
+
+.history-cal-title-btn:hover {
+  background: rgba(16, 224, 104, 0.18);
+  border-color: rgba(16, 224, 104, 0.45);
+  color: #4EFA8F;
+  box-shadow: 0 0 10px rgba(16, 224, 104, 0.2);
+}
+
+.history-cal-chevron {
+  color: #4EFA8F;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.history-cal-title-btn.is-open .history-cal-chevron {
+  transform: rotate(180deg);
+}
+
+.history-cal-title-btn.is-open {
+  background: rgba(16, 224, 104, 0.22);
+  border-color: rgba(16, 224, 104, 0.55);
+  box-shadow: 0 0 12px rgba(16, 224, 104, 0.28);
+}
+
+.history-calendar-shell.is-dial-open .history-cal-nav-btn {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.85);
+}
+
+.history-cal-main-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.history-cal-carousel-wrapper {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  border-radius: 10px;
+  touch-action: pan-x;
+}
+
+.history-cal-carousel {
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.history-cal-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.history-cal-slide {
+  flex: 0 0 100%;
+  min-width: 100%;
+  width: 100%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+/* Dial Picker Container & Controls */
+.history-cal-dial-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: historyDialPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes historyDialPop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.history-cal-dial-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.1rem 0.2rem 0.5rem;
+  border-bottom: 1px solid rgba(16, 224, 104, 0.12);
+}
+
+.history-cal-dial-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.history-cal-dial-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #F0FDF4;
+  letter-spacing: 0.02em;
+}
+
+.history-cal-dial-hint {
+  font-size: 0.65rem;
+  color: #527961;
+}
+
+.history-cal-dial-done-btn {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.85rem;
+  border-radius: 9999px;
+  background: #10E068;
+  color: #041209;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 0 10px rgba(16, 224, 104, 0.35);
+}
+
+.history-cal-dial-done-btn:hover {
+  background: #4EFA8F;
+  transform: translateY(-1px);
+  box-shadow: 0 0 14px rgba(16, 224, 104, 0.55);
+}
+
+.history-cal-dial-frame {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  background: #051009;
+  border-radius: 14px;
+  border: 1px solid rgba(16, 224, 104, 0.18);
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+.history-cal-dial-lens {
+  position: absolute;
+  top: 80px;
+  left: 8px;
+  right: 8px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(16, 224, 104, 0.12);
+  border-top: 1px solid rgba(16, 224, 104, 0.45);
+  border-bottom: 1px solid rgba(16, 224, 104, 0.45);
+  box-shadow: 0 0 16px rgba(16, 224, 104, 0.18), inset 0 0 10px rgba(16, 224, 104, 0.08);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.history-cal-dial-gradient {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 75px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.history-cal-dial-gradient.top {
+  top: 0;
+  background: linear-gradient(to bottom, #051009 25%, transparent 100%);
+}
+
+.history-cal-dial-gradient.bottom {
+  bottom: 0;
+  background: linear-gradient(to top, #051009 25%, transparent 100%);
+}
+
+.history-cal-drum {
+  flex: 1;
+  height: 200px;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  z-index: 1;
   text-align: center;
+}
+
+.history-cal-drum::-webkit-scrollbar {
+  display: none;
+}
+
+.history-cal-drum-spacer {
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.history-cal-drum-divider {
+  width: 1px;
+  height: 140px;
+  background: rgba(16, 224, 104, 0.15);
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.history-cal-drum-item {
+  height: 40px;
+  line-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4b6b55;
+  scroll-snap-align: center;
+  scroll-snap-stop: normal;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.14s ease;
+}
+
+.history-cal-drum-item:hover {
+  color: #a7f3d0;
+}
+
+.history-cal-drum-item.is-selected {
+  color: #4EFA8F;
+  font-weight: 800;
+  font-size: 1.08rem;
+  text-shadow: 0 0 12px rgba(16, 224, 104, 0.6);
+  transform: scale(1.08);
 }
 
 .history-cal-close-btn {

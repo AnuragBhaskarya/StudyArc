@@ -2947,7 +2947,7 @@
       if (isNaN(y) || isNaN(m) || isNaN(d)) return dateStr;
       const dateObj = new Date(y, m, d);
       if (isNaN(dateObj.getTime())) return dateStr;
-      return dateObj.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      return dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
     } catch (_) {
       return dateStr;
     }
@@ -4378,17 +4378,311 @@
   // =========================================================================
   // SESSIONS HISTORY CALENDAR JUMP MODAL CONTROLLER
   // =========================================================================
-  const CAL_MONTH_NAMES = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+  const CAL_MONTH_NAMES_SHORT = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
   ];
   let currentCalYear = 2026;
   let currentCalMonth = 9; // 0-indexed (9 = Oct)
   let activeSelectedDate = '';
 
+  // Dial picker state
+  const DIAL_ITEM_HEIGHT = 40;
+  let dialYearsList = [];
+  let pendingDialMonth = 9;
+  let pendingDialYear = 2026;
+  let isDialViewOpen = false;
+  let isCarouselSnapping = false;
+
+  function renderMonthDaysInto(year, month, containerEl, isCurrent) {
+    if (!containerEl) return { totalMins: 0, sessionCount: 0 };
+    containerEl.innerHTML = '';
+
+    const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sun
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayStr = getLocalDateString();
+
+    let monthTotalMins = 0;
+    let monthSessionCount = 0;
+
+    // Fast session lookup map by date
+    const sessionsByDate = {};
+    if (state.sessions) {
+      for (let i = 0; i < state.sessions.length; i++) {
+        const s = state.sessions[i];
+        let d = s.date;
+        if (!d && s.timestamp) {
+          const dt = new Date(Number(s.timestamp));
+          if (!isNaN(dt.getTime())) {
+            d = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+          }
+        }
+        if (d) {
+          if (!sessionsByDate[d]) sessionsByDate[d] = [];
+          sessionsByDate[d].push(s);
+        }
+      }
+    }
+
+    // Render leading empty spacer days
+    for (let i = 0; i < firstDayIndex; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'history-cal-day empty';
+      containerEl.appendChild(emptyCell);
+    }
+
+    // Render day cells
+    for (let day = 1; day <= daysInMonth; day++) {
+      const cellDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const daySessions = sessionsByDate[cellDateStr] || [];
+      const hasSessions = daySessions.length > 0;
+      const isToday = cellDateStr === todayStr;
+      const isActive = isCurrent && (cellDateStr === activeSelectedDate);
+
+      const dayMins = daySessions.reduce((acc, it) => acc + (it.durationMinutes || it.duration_minutes || 0), 0);
+      monthTotalMins += dayMins;
+      monthSessionCount += daySessions.length;
+
+      const cell = document.createElement('div');
+      cell.className = `history-cal-day ${hasSessions ? 'has-sessions' : ''} ${isToday ? 'is-today' : ''} ${isActive ? 'is-active-day' : ''}`;
+      cell.setAttribute('data-date', cellDateStr);
+
+      let inner = `<span>${day}</span>`;
+      if (hasSessions) {
+        inner += `<span class="history-cal-day-dot" aria-hidden="true"></span>`;
+        cell.title = `${daySessions.length} ${daySessions.length === 1 ? 'session' : 'sessions'} • ${dayMins} mins focus (Click to jump)`;
+      } else {
+        cell.title = `No sessions recorded`;
+      }
+      cell.innerHTML = inner;
+
+      if (isCurrent) {
+        cell.addEventListener('click', () => {
+          handleCalendarDateSelect(cellDateStr, hasSessions);
+        });
+      }
+
+      containerEl.appendChild(cell);
+    }
+
+    return { totalMins: monthTotalMins, sessionCount: monthSessionCount };
+  }
+
+  function renderHistoryCalendarGrid() {
+    const titleEl = document.getElementById('history-calendar-title');
+    const monthSessionsEl = document.getElementById('history-cal-month-sessions');
+    const monthTimeEl = document.getElementById('history-cal-month-time');
+    const carousel = document.getElementById('history-cal-carousel');
+
+    if (titleEl) {
+      titleEl.textContent = `${CAL_MONTH_NAMES_SHORT[currentCalMonth]} ${currentCalYear}`;
+    }
+
+    // Compute previous and next month
+    let prevY = currentCalYear, prevM = currentCalMonth - 1;
+    if (prevM < 0) { prevM = 11; prevY--; }
+
+    let nextY = currentCalYear, nextM = currentCalMonth + 1;
+    if (nextM > 11) { nextM = 0; nextY++; }
+
+    const gridPrev = document.getElementById('history-cal-grid-prev');
+    const gridCurr = document.getElementById('history-cal-grid');
+    const gridNext = document.getElementById('history-cal-grid-next');
+
+    renderMonthDaysInto(prevY, prevM, gridPrev, false);
+    const currStats = renderMonthDaysInto(currentCalYear, currentCalMonth, gridCurr, true);
+    renderMonthDaysInto(nextY, nextM, gridNext, false);
+
+    if (monthSessionsEl) {
+      monthSessionsEl.textContent = `${currStats.sessionCount} ${currStats.sessionCount === 1 ? 'session' : 'sessions'}`;
+    }
+    if (monthTimeEl) {
+      monthTimeEl.textContent = `${formatHoursMinutes(currStats.totalMins * 60)} focus`;
+    }
+
+    // Center carousel on current month slide
+    if (carousel && carousel.clientWidth) {
+      isCarouselSnapping = true;
+      carousel.scrollLeft = carousel.clientWidth;
+      requestAnimationFrame(() => {
+        if (carousel && carousel.clientWidth) {
+          carousel.scrollLeft = carousel.clientWidth;
+        }
+        setTimeout(() => { isCarouselSnapping = false; }, 60);
+      });
+    }
+  }
+
+  function buildDialDrums() {
+    const monthDrum = document.getElementById('history-cal-drum-month');
+    const yearDrum = document.getElementById('history-cal-drum-year');
+    if (!monthDrum || !yearDrum) return;
+
+    // 1. Month drum items
+    let mHtml = '<div class="history-cal-drum-spacer"></div>';
+    CAL_MONTH_NAMES_SHORT.forEach((m, idx) => {
+      mHtml += `<div class="history-cal-drum-item" data-month="${idx}">${m}</div>`;
+    });
+    mHtml += '<div class="history-cal-drum-spacer"></div>';
+    monthDrum.innerHTML = mHtml;
+
+    // 2. Year drum items (from minYear to maxYear based on user sessions)
+    const currentY = new Date().getFullYear();
+    let minYear = Math.min(2023, currentY);
+    let maxYear = Math.max(currentY + 1, 2026);
+
+    if (state.sessions && state.sessions.length > 0) {
+      state.sessions.forEach(s => {
+        const y = s.date ? parseInt(s.date.split('-')[0], 10) : 0;
+        if (y > 2000) {
+          if (y < minYear) minYear = y;
+          if (y > maxYear) maxYear = y;
+        }
+      });
+    }
+
+    dialYearsList = [];
+    for (let y = minYear; y <= maxYear; y++) {
+      dialYearsList.push(y);
+    }
+
+    let yHtml = '<div class="history-cal-drum-spacer"></div>';
+    dialYearsList.forEach((yr, idx) => {
+      yHtml += `<div class="history-cal-drum-item" data-year="${yr}" data-idx="${idx}">${yr}</div>`;
+    });
+    yHtml += '<div class="history-cal-drum-spacer"></div>';
+    yearDrum.innerHTML = yHtml;
+
+    // Click handlers for month items
+    monthDrum.querySelectorAll('.history-cal-drum-item').forEach((item) => {
+      item.addEventListener('click', () => {
+        const m = parseInt(item.getAttribute('data-month'), 10);
+        pendingDialMonth = m;
+        monthDrum.scrollTo({ top: m * DIAL_ITEM_HEIGHT, behavior: 'smooth' });
+        updateDrumSelectedState(monthDrum, m);
+      });
+    });
+
+    // Click handlers for year items
+    yearDrum.querySelectorAll('.history-cal-drum-item').forEach((item) => {
+      item.addEventListener('click', () => {
+        const idx = parseInt(item.getAttribute('data-idx'), 10);
+        pendingDialYear = dialYearsList[idx];
+        yearDrum.scrollTo({ top: idx * DIAL_ITEM_HEIGHT, behavior: 'smooth' });
+        updateDrumSelectedState(yearDrum, idx);
+      });
+    });
+
+    // Scroll snapping listeners with selection updates
+    let monthDebounce = null;
+    monthDrum.addEventListener('scroll', () => {
+      clearTimeout(monthDebounce);
+      monthDebounce = setTimeout(() => {
+        const idx = Math.max(0, Math.min(11, Math.round(monthDrum.scrollTop / DIAL_ITEM_HEIGHT)));
+        pendingDialMonth = idx;
+        updateDrumSelectedState(monthDrum, idx);
+      }, 35);
+    }, { passive: true });
+
+    let yearDebounce = null;
+    yearDrum.addEventListener('scroll', () => {
+      clearTimeout(yearDebounce);
+      yearDebounce = setTimeout(() => {
+        const idx = Math.max(0, Math.min(dialYearsList.length - 1, Math.round(yearDrum.scrollTop / DIAL_ITEM_HEIGHT)));
+        pendingDialYear = dialYearsList[idx];
+        updateDrumSelectedState(yearDrum, idx);
+      }, 35);
+    }, { passive: true });
+  }
+
+  function updateDrumSelectedState(drumEl, selectedIdx) {
+    if (!drumEl) return;
+    const items = drumEl.querySelectorAll('.history-cal-drum-item');
+    items.forEach((it, idx) => {
+      if (idx === selectedIdx) {
+        it.classList.add('is-selected');
+      } else {
+        it.classList.remove('is-selected');
+      }
+    });
+  }
+
+  function openCalendarDialView() {
+    const mainView = document.getElementById('history-cal-main-view');
+    const dialView = document.getElementById('history-cal-dial-view');
+    const titleBtn = document.getElementById('history-calendar-title-btn');
+    const shell = document.getElementById('history-calendar-shell');
+    if (!dialView) return;
+
+    isDialViewOpen = true;
+    pendingDialMonth = currentCalMonth;
+    pendingDialYear = currentCalYear;
+
+    buildDialDrums();
+
+    if (mainView) mainView.style.display = 'none';
+    dialView.style.display = 'flex';
+    if (titleBtn) {
+      titleBtn.classList.add('is-open');
+      titleBtn.setAttribute('aria-expanded', 'true');
+    }
+    if (shell) shell.classList.add('is-dial-open');
+
+    const monthDrum = document.getElementById('history-cal-drum-month');
+    const yearDrum = document.getElementById('history-cal-drum-year');
+
+    setTimeout(() => {
+      if (monthDrum) {
+        monthDrum.scrollTop = currentCalMonth * DIAL_ITEM_HEIGHT;
+        updateDrumSelectedState(monthDrum, currentCalMonth);
+      }
+      if (yearDrum) {
+        const yIdx = dialYearsList.indexOf(currentCalYear);
+        const targetIdx = yIdx >= 0 ? yIdx : 0;
+        yearDrum.scrollTop = targetIdx * DIAL_ITEM_HEIGHT;
+        updateDrumSelectedState(yearDrum, targetIdx);
+      }
+    }, 25);
+  }
+
+  function closeCalendarDialView(applyChanges = true) {
+    const mainView = document.getElementById('history-cal-main-view');
+    const dialView = document.getElementById('history-cal-dial-view');
+    const titleBtn = document.getElementById('history-calendar-title-btn');
+    const shell = document.getElementById('history-calendar-shell');
+    if (!dialView) return;
+
+    isDialViewOpen = false;
+
+    if (applyChanges) {
+      currentCalMonth = pendingDialMonth;
+      currentCalYear = pendingDialYear;
+    }
+
+    dialView.style.display = 'none';
+    if (mainView) mainView.style.display = 'flex';
+    if (titleBtn) {
+      titleBtn.classList.remove('is-open');
+      titleBtn.setAttribute('aria-expanded', 'false');
+    }
+    if (shell) shell.classList.remove('is-dial-open');
+
+    renderHistoryCalendarGrid();
+  }
+
+  function toggleCalendarDialView() {
+    if (isDialViewOpen) {
+      closeCalendarDialView(true);
+    } else {
+      openCalendarDialView();
+    }
+  }
+
   function openHistoryCalendarModal(initialDateStr) {
     const dialog = document.getElementById('history-calendar-dialog');
     if (!dialog) return;
+
+    closeCalendarDialView(false);
 
     let targetDate = new Date();
     if (initialDateStr && typeof initialDateStr === 'string') {
@@ -4411,103 +4705,28 @@
     if (typeof dialog.showModal === 'function' && !dialog.open) {
       dialog.showModal();
     }
+
+    const carousel = document.getElementById('history-cal-carousel');
+    if (carousel) {
+      setTimeout(() => {
+        if (carousel && carousel.clientWidth) {
+          carousel.scrollLeft = carousel.clientWidth;
+        }
+      }, 35);
+    }
   }
 
   function closeHistoryCalendarModal() {
     const dialog = document.getElementById('history-calendar-dialog');
     if (!dialog || !dialog.open) return;
 
+    closeCalendarDialView(false);
+
     dialog.classList.add('is-closing');
     setTimeout(() => {
       dialog.close();
       dialog.classList.remove('is-closing');
     }, 200);
-  }
-
-  function renderHistoryCalendarGrid() {
-    const titleEl = document.getElementById('history-calendar-title');
-    const gridEl = document.getElementById('history-cal-grid');
-    const monthSessionsEl = document.getElementById('history-cal-month-sessions');
-    const monthTimeEl = document.getElementById('history-cal-month-time');
-    if (!gridEl) return;
-
-    if (titleEl) {
-      titleEl.textContent = `${CAL_MONTH_NAMES[currentCalMonth]} ${currentCalYear}`;
-    }
-
-    gridEl.innerHTML = '';
-
-    const firstDayIndex = new Date(currentCalYear, currentCalMonth, 1).getDay(); // 0 = Sun
-    const daysInMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
-    const todayStr = getLocalDateString();
-
-    let monthTotalMins = 0;
-    let monthSessionCount = 0;
-
-    // Render leading empty spacer days
-    for (let i = 0; i < firstDayIndex; i++) {
-      const emptyCell = document.createElement('div');
-      emptyCell.className = 'history-cal-day empty';
-      gridEl.appendChild(emptyCell);
-    }
-
-    // Fast session lookup map by date
-    const sessionsByDate = {};
-    if (state.sessions) {
-      for (let i = 0; i < state.sessions.length; i++) {
-        const s = state.sessions[i];
-        let d = s.date;
-        if (!d && s.timestamp) {
-          const dt = new Date(Number(s.timestamp));
-          if (!isNaN(dt.getTime())) {
-            d = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-          }
-        }
-        if (d) {
-          if (!sessionsByDate[d]) sessionsByDate[d] = [];
-          sessionsByDate[d].push(s);
-        }
-      }
-    }
-
-    // Render day cells
-    for (let day = 1; day <= daysInMonth; day++) {
-      const cellDateStr = `${currentCalYear}-${String(currentCalMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const daySessions = sessionsByDate[cellDateStr] || [];
-      const hasSessions = daySessions.length > 0;
-      const isToday = cellDateStr === todayStr;
-      const isActive = cellDateStr === activeSelectedDate;
-
-      const dayMins = daySessions.reduce((acc, it) => acc + (it.durationMinutes || it.duration_minutes || 0), 0);
-      monthTotalMins += dayMins;
-      monthSessionCount += daySessions.length;
-
-      const cell = document.createElement('div');
-      cell.className = `history-cal-day ${hasSessions ? 'has-sessions' : ''} ${isToday ? 'is-today' : ''} ${isActive ? 'is-active-day' : ''}`;
-      cell.setAttribute('data-date', cellDateStr);
-
-      let inner = `<span>${day}</span>`;
-      if (hasSessions) {
-        inner += `<span class="history-cal-day-dot" aria-hidden="true"></span>`;
-        cell.title = `${daySessions.length} ${daySessions.length === 1 ? 'session' : 'sessions'} • ${dayMins} mins focus (Click to jump)`;
-      } else {
-        cell.title = `No sessions recorded`;
-      }
-      cell.innerHTML = inner;
-
-      cell.addEventListener('click', () => {
-        handleCalendarDateSelect(cellDateStr, hasSessions);
-      });
-
-      gridEl.appendChild(cell);
-    }
-
-    if (monthSessionsEl) {
-      monthSessionsEl.textContent = `${monthSessionCount} ${monthSessionCount === 1 ? 'session' : 'sessions'}`;
-    }
-    if (monthTimeEl) {
-      monthTimeEl.textContent = `${formatHoursMinutes(monthTotalMins * 60)} focus`;
-    }
   }
 
   function handleCalendarDateSelect(dateStr, hasSessions) {
@@ -4572,6 +4791,7 @@
   }
 
   function handleCalendarShortcutJump(jumpType) {
+    closeCalendarDialView(false);
     if (!activeHistoryScroller) return;
     const availableDates = Object.keys(activeHistoryScroller.dateHeaderIndices).sort();
     if (availableDates.length === 0) return;
@@ -4607,9 +4827,20 @@
     const closeBtn = document.getElementById('btn-close-calendar-dialog');
     const prevBtn = document.getElementById('history-cal-prev-month');
     const nextBtn = document.getElementById('history-cal-next-month');
+    const titleBtn = document.getElementById('history-calendar-title-btn');
+    const dialDoneBtn = document.getElementById('history-cal-dial-done-btn');
+    const carousel = document.getElementById('history-cal-carousel');
 
     if (closeBtn) {
       closeBtn.addEventListener('click', closeHistoryCalendarModal);
+    }
+
+    if (titleBtn) {
+      titleBtn.addEventListener('click', toggleCalendarDialView);
+    }
+
+    if (dialDoneBtn) {
+      dialDoneBtn.addEventListener('click', () => closeCalendarDialView(true));
     }
 
     if (dialog) {
@@ -4624,25 +4855,101 @@
       });
     }
 
-    if (prevBtn) {
-      prevBtn.addEventListener('click', () => {
+    function onCarouselSnap() {
+      if (!carousel || isCarouselSnapping) return;
+      const width = carousel.clientWidth;
+      if (!width) return;
+      const left = carousel.scrollLeft;
+
+      if (left < width * 0.35) {
+        // Snapped to Prev Month
+        isCarouselSnapping = true;
         currentCalMonth--;
         if (currentCalMonth < 0) {
           currentCalMonth = 11;
           currentCalYear--;
         }
         renderHistoryCalendarGrid();
-      });
-    }
-
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
+      } else if (left > width * 1.65) {
+        // Snapped to Next Month
+        isCarouselSnapping = true;
         currentCalMonth++;
         if (currentCalMonth > 11) {
           currentCalMonth = 0;
           currentCalYear++;
         }
         renderHistoryCalendarGrid();
+      }
+    }
+
+    if (carousel) {
+      let snapTimeout = null;
+      carousel.addEventListener('scroll', () => {
+        if (isCarouselSnapping) return;
+        clearTimeout(snapTimeout);
+        snapTimeout = setTimeout(onCarouselSnap, 90);
+      }, { passive: true });
+
+      carousel.addEventListener('scrollend', onCarouselSnap);
+
+      // Touch swipe tracking with strict snapping
+      let touchStartX = 0;
+      let touchStartY = 0;
+      carousel.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }
+      }, { passive: true });
+
+      carousel.addEventListener('touchend', (e) => {
+        if (e.changedTouches.length === 1) {
+          const diffX = e.changedTouches[0].clientX - touchStartX;
+          const diffY = e.changedTouches[0].clientY - touchStartY;
+          if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+            if (diffX < 0) {
+              // Swipe left -> Next Month
+              carousel.scrollTo({ left: carousel.clientWidth * 2, behavior: 'smooth' });
+              setTimeout(onCarouselSnap, 240);
+            } else {
+              // Swipe right -> Prev Month
+              carousel.scrollTo({ left: 0, behavior: 'smooth' });
+              setTimeout(onCarouselSnap, 240);
+            }
+          }
+        }
+      }, { passive: true });
+    }
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        if (carousel && carousel.clientWidth) {
+          carousel.scrollTo({ left: 0, behavior: 'smooth' });
+          setTimeout(onCarouselSnap, 240);
+        } else {
+          currentCalMonth--;
+          if (currentCalMonth < 0) {
+            currentCalMonth = 11;
+            currentCalYear--;
+          }
+          renderHistoryCalendarGrid();
+        }
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        if (carousel && carousel.clientWidth) {
+          carousel.scrollTo({ left: carousel.clientWidth * 2, behavior: 'smooth' });
+          setTimeout(onCarouselSnap, 240);
+        } else {
+          currentCalMonth++;
+          if (currentCalMonth > 11) {
+            currentCalMonth = 0;
+            currentCalYear++;
+          }
+          renderHistoryCalendarGrid();
+        }
       });
     }
 
