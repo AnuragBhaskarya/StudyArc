@@ -3006,10 +3006,11 @@ input:checked + .switch-slider:before {
   pointer-events: none;
 }
 
-.level-card:first-child .level-track-line,
-.level-card[data-level="1"] .level-track-line { top: 50%; }
-.level-card:last-child .level-track-line,
-.level-card[data-level="1000"] .level-track-line { bottom: 50%; }
+.levels-dialog-shell.is-catalog-mode .level-card[data-level="1"] .level-track-line { top: 50%; }
+.levels-dialog-shell.is-catalog-mode .level-card[data-level="1000"] .level-track-line { bottom: 50%; }
+
+.levels-dialog-shell:not(.is-catalog-mode) .level-card:first-of-type .level-track-line { top: 50%; }
+.levels-dialog-shell:not(.is-catalog-mode) .level-card[data-level="1"] .level-track-line { top: -0.65rem; bottom: 50%; }
 .level-card:only-child .level-track-line { display: none; }
 
 .level-track-node {

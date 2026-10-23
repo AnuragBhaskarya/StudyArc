@@ -3247,6 +3247,8 @@
 
     showAllLevelsView = false;
     renderLevelsDialogDOM();
+    const feedList = document.getElementById('levels-feed-list');
+    if (feedList) feedList.scrollTop = 0;
     if (typeof dialog.showModal === 'function' && !dialog.open) {
       dialog.showModal();
     }
@@ -3629,8 +3631,8 @@
       if (headingEl) headingEl.textContent = `Tier ${lvlInfo.tierIndex}: ${lvlInfo.tier}`;
       const clearedCount = Math.max(0, lvlInfo.level - 1);
       if (countEl) countEl.textContent = `${clearedCount} Cleared • Lv. ${lvlInfo.level}`;
-      const maxPreview = Math.min(RPG_LEVELS.length, lvlInfo.level + 2);
-      itemsToRender = RPG_LEVELS.slice(0, maxPreview);
+      const maxPreview = Math.min(RPG_LEVELS.length, lvlInfo.level);
+      itemsToRender = RPG_LEVELS.slice(0, maxPreview).slice().reverse();
     }
 
     const virtualItems = [];
@@ -4247,6 +4249,8 @@
         if (window.getSelection) window.getSelection().removeAllRanges();
         showAllLevelsView = false;
         renderLevelsDialogDOM();
+        const feedList = document.getElementById('levels-feed-list');
+        if (feedList) feedList.scrollTop = 0;
       });
     }
 
