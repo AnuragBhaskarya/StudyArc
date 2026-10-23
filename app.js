@@ -4044,6 +4044,9 @@
     dateHdr.className = 'history-date-sticky-header';
     dateHdr.setAttribute('data-date', item.date);
     dateHdr.setAttribute('data-full-date', item.fullDate);
+    dateHdr.setAttribute('role', 'button');
+    dateHdr.setAttribute('tabindex', '0');
+    dateHdr.setAttribute('title', 'Click to jump to date via calendar');
     dateHdr.innerHTML = `
       <div class="history-date-sticky-left">
         <span class="history-date-badge">${escapeHtml(item.badge)}</span>
@@ -4051,6 +4054,9 @@
       </div>
       <span class="history-date-meta">${item.sessionsCount} ${item.sessionsCount === 1 ? 'session' : 'sessions'} • ${formatHoursMinutes(item.totalMins * 60)}</span>
     `;
+    dateHdr.addEventListener('click', () => {
+      openHistoryCalendarModal(item.date);
+    });
     return dateHdr;
   }
 
@@ -4144,6 +4150,15 @@
       this.container.appendChild(this.topSpacer);
       this.container.appendChild(this.bottomSpacer);
 
+      this.pinnedHeader = document.getElementById('history-pinned-date-header');
+      this.currentPinnedDate = null;
+      if (this.pinnedHeader) {
+        this.pinnedHeaderClickHandler = () => {
+          openHistoryCalendarModal(this.currentPinnedDate);
+        };
+        this.pinnedHeader.addEventListener('click', this.pinnedHeaderClickHandler);
+      }
+
       this.rafId = null;
       this.onScroll = this.onScroll.bind(this);
       this.container.addEventListener('scroll', this.onScroll, { passive: true });
@@ -4162,6 +4177,12 @@
       this.container.removeEventListener('scroll', this.onScroll);
       if (typeof historyLenis !== 'undefined' && historyLenis && this.lenisHandler) {
         try { historyLenis.off('scroll', this.lenisHandler); } catch (e) {}
+      }
+      if (this.pinnedHeader && this.pinnedHeaderClickHandler) {
+        this.pinnedHeader.removeEventListener('click', this.pinnedHeaderClickHandler);
+      }
+      if (this.pinnedHeader) {
+        this.pinnedHeader.style.display = 'none';
       }
       if (this.rafId) {
         cancelAnimationFrame(this.rafId);
@@ -4310,7 +4331,329 @@
           });
         });
       }
+
+      // 5. Update Persistent Pinned Date Header Overlay:
+      // Detects which date header is currently active at top of viewport
+      if (this.pinnedHeader && this.virtualItems.length > 0) {
+        let activeHeaderItem = null;
+        for (let i = 0; i < this.virtualItems.length; i++) {
+          const it = this.virtualItems[i];
+          if (it.type === 'header') {
+            if (this.itemOffsets[i] <= scrollTop + 5) {
+              activeHeaderItem = it;
+            } else {
+              break;
+            }
+          }
+        }
+        if (!activeHeaderItem) {
+          for (let i = 0; i < this.virtualItems.length; i++) {
+            if (this.virtualItems[i].type === 'header') {
+              activeHeaderItem = this.virtualItems[i];
+              break;
+            }
+          }
+        }
+
+        if (activeHeaderItem) {
+          this.pinnedHeader.style.display = 'flex';
+          if (this.currentPinnedDate !== activeHeaderItem.date) {
+            this.currentPinnedDate = activeHeaderItem.date;
+            const badgeEl = document.getElementById('history-pinned-badge');
+            const titleEl = document.getElementById('history-pinned-title');
+            const metaEl = document.getElementById('history-pinned-meta');
+
+            if (badgeEl) badgeEl.textContent = activeHeaderItem.badge;
+            if (titleEl) titleEl.textContent = activeHeaderItem.fullDate;
+            if (metaEl) {
+              const sCount = activeHeaderItem.sessionsCount;
+              metaEl.textContent = `${sCount} ${sCount === 1 ? 'session' : 'sessions'} • ${formatHoursMinutes(activeHeaderItem.totalMins * 60)}`;
+            }
+          }
+        }
+      }
     }
+  }
+
+  // =========================================================================
+  // SESSIONS HISTORY CALENDAR JUMP MODAL CONTROLLER
+  // =========================================================================
+  const CAL_MONTH_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  let currentCalYear = 2026;
+  let currentCalMonth = 9; // 0-indexed (9 = Oct)
+  let activeSelectedDate = '';
+
+  function openHistoryCalendarModal(initialDateStr) {
+    const dialog = document.getElementById('history-calendar-dialog');
+    if (!dialog) return;
+
+    let targetDate = new Date();
+    if (initialDateStr && typeof initialDateStr === 'string') {
+      const parts = initialDateStr.split('-');
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        if (!isNaN(d.getTime())) {
+          targetDate = d;
+        }
+      }
+    }
+
+    currentCalYear = targetDate.getFullYear();
+    currentCalMonth = targetDate.getMonth();
+    activeSelectedDate = initialDateStr || getLocalDateString(targetDate);
+
+    renderHistoryCalendarGrid();
+
+    dialog.classList.remove('is-closing');
+    if (typeof dialog.showModal === 'function' && !dialog.open) {
+      dialog.showModal();
+    }
+  }
+
+  function closeHistoryCalendarModal() {
+    const dialog = document.getElementById('history-calendar-dialog');
+    if (!dialog || !dialog.open) return;
+
+    dialog.classList.add('is-closing');
+    setTimeout(() => {
+      dialog.close();
+      dialog.classList.remove('is-closing');
+    }, 200);
+  }
+
+  function renderHistoryCalendarGrid() {
+    const titleEl = document.getElementById('history-calendar-title');
+    const gridEl = document.getElementById('history-cal-grid');
+    const monthSessionsEl = document.getElementById('history-cal-month-sessions');
+    const monthTimeEl = document.getElementById('history-cal-month-time');
+    if (!gridEl) return;
+
+    if (titleEl) {
+      titleEl.textContent = `${CAL_MONTH_NAMES[currentCalMonth]} ${currentCalYear}`;
+    }
+
+    gridEl.innerHTML = '';
+
+    const firstDayIndex = new Date(currentCalYear, currentCalMonth, 1).getDay(); // 0 = Sun
+    const daysInMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
+    const todayStr = getLocalDateString();
+
+    let monthTotalMins = 0;
+    let monthSessionCount = 0;
+
+    // Render leading empty spacer days
+    for (let i = 0; i < firstDayIndex; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'history-cal-day empty';
+      gridEl.appendChild(emptyCell);
+    }
+
+    // Fast session lookup map by date
+    const sessionsByDate = {};
+    if (state.sessions) {
+      for (let i = 0; i < state.sessions.length; i++) {
+        const s = state.sessions[i];
+        let d = s.date;
+        if (!d && s.timestamp) {
+          const dt = new Date(Number(s.timestamp));
+          if (!isNaN(dt.getTime())) {
+            d = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+          }
+        }
+        if (d) {
+          if (!sessionsByDate[d]) sessionsByDate[d] = [];
+          sessionsByDate[d].push(s);
+        }
+      }
+    }
+
+    // Render day cells
+    for (let day = 1; day <= daysInMonth; day++) {
+      const cellDateStr = `${currentCalYear}-${String(currentCalMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const daySessions = sessionsByDate[cellDateStr] || [];
+      const hasSessions = daySessions.length > 0;
+      const isToday = cellDateStr === todayStr;
+      const isActive = cellDateStr === activeSelectedDate;
+
+      const dayMins = daySessions.reduce((acc, it) => acc + (it.durationMinutes || it.duration_minutes || 0), 0);
+      monthTotalMins += dayMins;
+      monthSessionCount += daySessions.length;
+
+      const cell = document.createElement('div');
+      cell.className = `history-cal-day ${hasSessions ? 'has-sessions' : ''} ${isToday ? 'is-today' : ''} ${isActive ? 'is-active-day' : ''}`;
+      cell.setAttribute('data-date', cellDateStr);
+
+      let inner = `<span>${day}</span>`;
+      if (hasSessions) {
+        inner += `<span class="history-cal-day-dot" aria-hidden="true"></span>`;
+        cell.title = `${daySessions.length} ${daySessions.length === 1 ? 'session' : 'sessions'} • ${dayMins} mins focus (Click to jump)`;
+      } else {
+        cell.title = `No sessions recorded`;
+      }
+      cell.innerHTML = inner;
+
+      cell.addEventListener('click', () => {
+        handleCalendarDateSelect(cellDateStr, hasSessions);
+      });
+
+      gridEl.appendChild(cell);
+    }
+
+    if (monthSessionsEl) {
+      monthSessionsEl.textContent = `${monthSessionCount} ${monthSessionCount === 1 ? 'session' : 'sessions'}`;
+    }
+    if (monthTimeEl) {
+      monthTimeEl.textContent = `${formatHoursMinutes(monthTotalMins * 60)} focus`;
+    }
+  }
+
+  function handleCalendarDateSelect(dateStr, hasSessions) {
+    closeHistoryCalendarModal();
+
+    if (!activeHistoryScroller) return;
+
+    let targetDate = dateStr;
+
+    // If the selected date does not have recorded sessions, find the closest available date in history
+    if (!hasSessions || activeHistoryScroller.dateHeaderIndices[targetDate] === undefined) {
+      const availableDates = Object.keys(activeHistoryScroller.dateHeaderIndices).sort();
+      if (availableDates.length === 0) return;
+
+      const selectedTime = new Date(dateStr).getTime();
+      let closestDate = availableDates[0];
+      let minDiff = Infinity;
+
+      for (let i = 0; i < availableDates.length; i++) {
+        const d = availableDates[i];
+        const diff = Math.abs(new Date(d).getTime() - selectedTime);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestDate = d;
+        }
+      }
+      targetDate = closestDate;
+      showToast(`Jumped to nearest session date: ${formatDayDateHeader(targetDate)}`);
+    }
+
+    const targetIdx = activeHistoryScroller.dateHeaderIndices[targetDate];
+    if (targetIdx !== undefined) {
+      activeSelectedDate = targetDate;
+      const targetOffset = activeHistoryScroller.itemOffsets[targetIdx];
+
+      if (typeof historyLenis !== 'undefined' && historyLenis) {
+        historyLenis.scrollTo(targetOffset, {
+          duration: 0.85,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          onComplete: () => {
+            flashDateHeader(targetDate);
+          }
+        });
+      } else {
+        activeHistoryScroller.container.scrollTo({ top: targetOffset, behavior: 'smooth' });
+        setTimeout(() => flashDateHeader(targetDate), 400);
+      }
+    }
+  }
+
+  function flashDateHeader(dateStr) {
+    if (!activeHistoryScroller) return;
+    const idx = activeHistoryScroller.dateHeaderIndices[dateStr];
+    if (idx === undefined) return;
+
+    const el = activeHistoryScroller.mountedElements.get(idx);
+    if (el) {
+      el.classList.remove('pulse-highlight');
+      void el.offsetWidth;
+      el.classList.add('pulse-highlight');
+    }
+  }
+
+  function handleCalendarShortcutJump(jumpType) {
+    if (!activeHistoryScroller) return;
+    const availableDates = Object.keys(activeHistoryScroller.dateHeaderIndices).sort();
+    if (availableDates.length === 0) return;
+
+    let targetDate = '';
+    const todayStr = getLocalDateString();
+
+    if (jumpType === 'today') {
+      targetDate = todayStr;
+    } else if (jumpType === 'yesterday') {
+      const y = new Date();
+      y.setDate(y.getDate() - 1);
+      targetDate = getLocalDateString(y);
+    } else if (jumpType === 'latest') {
+      // Last date in chronological order (or first in descending feed)
+      targetDate = availableDates[availableDates.length - 1];
+    } else if (jumpType === 'oldest') {
+      targetDate = availableDates[0];
+    }
+
+    if (targetDate) {
+      const parts = targetDate.split('-');
+      if (parts.length === 3) {
+        currentCalYear = parseInt(parts[0], 10);
+        currentCalMonth = parseInt(parts[1], 10) - 1;
+      }
+      handleCalendarDateSelect(targetDate, activeHistoryScroller.dateHeaderIndices[targetDate] !== undefined);
+    }
+  }
+
+  function initHistoryCalendarEvents() {
+    const dialog = document.getElementById('history-calendar-dialog');
+    const closeBtn = document.getElementById('btn-close-calendar-dialog');
+    const prevBtn = document.getElementById('history-cal-prev-month');
+    const nextBtn = document.getElementById('history-cal-next-month');
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeHistoryCalendarModal);
+    }
+
+    if (dialog) {
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+          closeHistoryCalendarModal();
+        }
+      });
+      dialog.addEventListener('cancel', (e) => {
+        e.preventDefault();
+        closeHistoryCalendarModal();
+      });
+    }
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        currentCalMonth--;
+        if (currentCalMonth < 0) {
+          currentCalMonth = 11;
+          currentCalYear--;
+        }
+        renderHistoryCalendarGrid();
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        currentCalMonth++;
+        if (currentCalMonth > 11) {
+          currentCalMonth = 0;
+          currentCalYear++;
+        }
+        renderHistoryCalendarGrid();
+      });
+    }
+
+    // Shortcut pills: Today, Yesterday, Latest, Oldest
+    const shortcuts = document.querySelectorAll('.history-cal-pill-btn');
+    shortcuts.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const jumpType = btn.getAttribute('data-jump');
+        handleCalendarShortcutJump(jumpType);
+      });
+    });
   }
 
   async function openHistoryDialog() {
@@ -4397,6 +4740,7 @@
   }
 
   function closeHistoryDialog() {
+    closeHistoryCalendarModal();
     const dialog = document.getElementById('sessions-history-dialog');
     if (dialog && dialog.open) {
       dialog.close();
@@ -5016,6 +5360,7 @@
     if (btnCloseHistory) {
       btnCloseHistory.addEventListener('click', closeHistoryDialog);
     }
+    initHistoryCalendarEvents();
 
     // Sessions History Feed: Delete session action via event delegation
     const historyFeedList = document.getElementById('history-feed-list');

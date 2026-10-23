@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=9.7">
+  <link rel="stylesheet" href="styles.css?v=9.8">
   <script>
     (function () {
       try {
@@ -566,9 +566,87 @@
 
           <!-- Milestone Feed / All Sessions List -->
           <div class="day-timeline-wrapper history-timeline-wrapper">
+            <!-- Persistent Pinned Header Overlay (Always at top, updates as list scrolls) -->
+            <div class="history-pinned-date-header" id="history-pinned-date-header" role="button" tabindex="0" title="Click to jump to date via calendar" style="display: none;">
+              <div class="history-date-sticky-left">
+                <span class="history-date-badge" id="history-pinned-badge">TODAY</span>
+                <span class="history-date-title" id="history-pinned-title">Today</span>
+              </div>
+              <div class="history-pinned-right">
+                <span class="history-date-meta" id="history-pinned-meta">0 sessions • 0m</span>
+                <span class="history-pinned-cal-chip" aria-label="Open Calendar">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </span>
+              </div>
+            </div>
+
             <div class="day-sessions-list history-feed-list" id="history-feed-list" data-lenis-prevent>
               <!-- Dynamically populated sticky date cards & session cards -->
             </div>
+          </div>
+        </div>
+      </dialog>
+
+      <!-- SESSIONS HISTORY CALENDAR JUMP MODAL -->
+      <dialog id="history-calendar-dialog" class="history-calendar-dialog" closedby="any" aria-labelledby="history-calendar-title">
+        <div class="history-calendar-shell" id="history-calendar-shell" tabindex="-1">
+          <!-- Calendar Header -->
+          <div class="history-calendar-header">
+            <div class="history-calendar-nav">
+              <button type="button" class="history-cal-nav-btn" id="history-cal-prev-month" aria-label="Previous Month">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <h3 class="history-calendar-title" id="history-calendar-title">October 2026</h3>
+              <button type="button" class="history-cal-nav-btn" id="history-cal-next-month" aria-label="Next Month">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+            <button type="button" class="history-cal-close-btn" id="btn-close-calendar-dialog" aria-label="Close Calendar">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Quick Jump Shortcuts Strip -->
+          <div class="history-cal-shortcuts">
+            <button type="button" class="history-cal-pill-btn" data-jump="today">Today</button>
+            <button type="button" class="history-cal-pill-btn" data-jump="yesterday">Yesterday</button>
+            <button type="button" class="history-cal-pill-btn" data-jump="latest">Latest</button>
+            <button type="button" class="history-cal-pill-btn" data-jump="oldest">First</button>
+          </div>
+
+          <!-- Weekdays Row -->
+          <div class="history-cal-weekdays">
+            <span>Su</span>
+            <span>Mo</span>
+            <span>Tu</span>
+            <span>We</span>
+            <span>Th</span>
+            <span>Fr</span>
+            <span>Sa</span>
+          </div>
+
+          <!-- Days Grid -->
+          <div class="history-cal-grid" id="history-cal-grid">
+            <!-- Dynamically populated day cells -->
+          </div>
+
+          <!-- Month Summary Footer -->
+          <div class="history-cal-footer">
+            <span class="history-cal-footer-stat" id="history-cal-month-sessions">0 sessions</span>
+            <span class="history-cal-footer-dot">•</span>
+            <span class="history-cal-footer-stat" id="history-cal-month-time">0h 0m</span>
           </div>
         </div>
       </dialog>
@@ -804,7 +882,7 @@
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
   <script src="aura-particles.js?v=5.3"></script>
-  <script src="app.js?v=9.3"></script>
+  <script src="app.js?v=9.4"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>
