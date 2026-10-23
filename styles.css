@@ -4252,9 +4252,12 @@ input:checked + .switch-slider:before {
   gap: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  contain: content;
   max-height: 380px;
   padding: 0 0.25rem 0.55rem 0.25rem;
   -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .history-spacer-top,
@@ -4276,7 +4279,7 @@ input:checked + .switch-slider:before {
   border: 1px solid rgba(16, 224, 104, 0.24);
   border-radius: 10px;
   padding: 0.42rem 0.75rem;
-  margin: 0 0 0.55rem 0;
+  margin: 0 0 9px 0;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -4292,7 +4295,6 @@ input:checked + .switch-slider:before {
 .history-date-sticky-header.visible {
   opacity: 1;
   transform: none;
-  will-change: auto;
 }
 
 .history-date-sticky-left {
@@ -4345,7 +4347,7 @@ input:checked + .switch-slider:before {
   border: 1px solid rgba(16, 224, 104, 0.16);
   border-radius: 12px;
   gap: 0.65rem;
-  margin-bottom: 0.55rem;
+  margin-bottom: 9px;
   box-sizing: border-box;
   opacity: 0;
   transform: translateX(80px) translateY(100px) scale(0.1);

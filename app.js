@@ -4130,6 +4130,7 @@
       this.topSpacer = document.createElement('div');
       this.topSpacer.className = 'history-spacer-top';
       this.topSpacer.style.height = '0px';
+      this.topSpacer.style.display = 'none';
 
       this.bottomSpacer = document.createElement('div');
       this.bottomSpacer.className = 'history-spacer-bottom';
@@ -4139,7 +4140,6 @@
       this.container.appendChild(this.bottomSpacer);
 
       this.rafId = null;
-      this.animRafId = null;
       this.lastScrollTop = 0;
       this.onScroll = this.onScroll.bind(this);
       this.container.addEventListener('scroll', this.onScroll, { passive: true });
@@ -4162,10 +4162,6 @@
       if (this.rafId) {
         cancelAnimationFrame(this.rafId);
         this.rafId = null;
-      }
-      if (this.animRafId) {
-        cancelAnimationFrame(this.animRafId);
-        this.animRafId = null;
       }
       this.mountedElements.clear();
     }
@@ -4224,16 +4220,9 @@
 
       const { startIndex, endIndex } = this.getVisibleRange(scrollTop, viewportHeight);
 
-      // 1. Identify which date is currently near the top of the viewport
-      let activeTopIdx = startIndex;
-      for (let i = startIndex; i <= endIndex; i++) {
-        if (this.itemOffsets[i] + this.virtualItems[i].height > scrollTop + 10) {
-          activeTopIdx = i;
-          break;
-        }
-      }
-      const activeTopItem = this.virtualItems[activeTopIdx];
-      const activeDateStr = activeTopItem.date;
+      // 1. Identify active date based on the first item in the visible/buffer window (exact match with All Levels tier pinning)
+      const firstItem = this.virtualItems[startIndex];
+      const activeDateStr = firstItem.date;
 
       // 2. Pin the active date header if it has scrolled above the virtual window
       const activeDateHeaderIdx = this.dateHeaderIndices[activeDateStr];
@@ -4291,8 +4280,21 @@
       }
       const bottomSpacerHeight = Math.max(0, this.totalHeight - (this.itemOffsets[endIndex] + this.virtualItems[endIndex].height));
 
-      this.topSpacer.style.height = `${topSpacerHeight}px`;
-      this.bottomSpacer.style.height = `${bottomSpacerHeight}px`;
+      if (topSpacerHeight > 0) {
+        this.topSpacer.style.display = 'block';
+        this.topSpacer.style.height = `${topSpacerHeight}px`;
+      } else {
+        this.topSpacer.style.display = 'none';
+        this.topSpacer.style.height = '0px';
+      }
+
+      if (bottomSpacerHeight > 0) {
+        this.bottomSpacer.style.display = 'block';
+        this.bottomSpacer.style.height = `${bottomSpacerHeight}px`;
+      } else {
+        this.bottomSpacer.style.display = 'none';
+        this.bottomSpacer.style.height = '0px';
+      }
 
       // 6. Trigger signature Calorie Tracker swooping entrance / reappearing animation
       const viewTop = scrollTop;
@@ -4315,9 +4317,7 @@
       }
 
       if (toAnimate.length > 0) {
-        if (this.animRafId) cancelAnimationFrame(this.animRafId);
-        this.animRafId = requestAnimationFrame(() => {
-          this.animRafId = null;
+        requestAnimationFrame(() => {
           toAnimate.forEach(({ el, isPinned }, i) => {
             void el.offsetWidth; // Force reflow for the signature delayed Calorie Tracker transition
             const delay = isPinned ? 0 : Math.min((i % 5) * 35, 140);
