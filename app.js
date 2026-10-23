@@ -3269,6 +3269,10 @@
     if (dialog && dialog.open) {
       dialog.close();
     }
+    if (activeJourneyCleanup) {
+      activeJourneyCleanup();
+      activeJourneyCleanup = null;
+    }
     if (activeLevelsScroller) {
       activeLevelsScroller.destroy();
       activeLevelsScroller = null;
@@ -3277,6 +3281,7 @@
   }
 
   let activeLevelsScroller = null;
+  let activeJourneyCleanup = null;
 
   class VirtualLevelsScroller {
     constructor({
@@ -3610,6 +3615,10 @@
       activeLevelsScroller.destroy();
       activeLevelsScroller = null;
     }
+    if (activeJourneyCleanup) {
+      activeJourneyCleanup();
+      activeJourneyCleanup = null;
+    }
 
     let itemsToRender = [];
     if (showAllLevelsView) {
@@ -3726,24 +3735,77 @@
       return tierHdr;
     };
 
-    activeLevelsScroller = new VirtualLevelsScroller({
-      container: feedList,
-      virtualItems,
-      tierHeaderIndices,
-      renderCard,
-      renderTierHeader,
-      headingEl,
-      isCatalogMode: showAllLevelsView,
-      currentLevel: lvlInfo.level
-    });
-
-    initShellLenis();
-    setTimeout(() => { levelsLenis?.resize(); }, 30);
-
     if (showAllLevelsView) {
+      // 1,000 Levels Codex Catalog: Uses the Virtual Scroller with the beloved 0.8s delayed calorie-tracker animation
+      activeLevelsScroller = new VirtualLevelsScroller({
+        container: feedList,
+        virtualItems,
+        tierHeaderIndices,
+        renderCard,
+        renderTierHeader,
+        headingEl,
+        isCatalogMode: true,
+        currentLevel: lvlInfo.level
+      });
+
+      initShellLenis();
+      setTimeout(() => { levelsLenis?.resize(); }, 30);
       setTimeout(() => {
         activeLevelsScroller?.scrollToLevel(lvlInfo.level);
       }, 60);
+    } else {
+      // My Journey: Permanent solid DOM rendering (no virtual destruction, no blank gaps on scroll-up)
+      feedList.innerHTML = '';
+      const fragment = document.createDocumentFragment();
+      const tierHeadersList = [];
+      let journeyLastTier = -1;
+
+      itemsToRender.forEach((l) => {
+        if (l.tierIndex !== journeyLastTier) {
+          journeyLastTier = l.tierIndex;
+          const tierHdr = renderTierHeader({
+            type: 'tier',
+            tierIndex: l.tierIndex,
+            tier: l.tier
+          });
+          fragment.appendChild(tierHdr);
+          tierHeadersList.push({ el: tierHdr, tierIndex: l.tierIndex, tier: l.tier });
+        }
+        const card = renderCard(l);
+        fragment.appendChild(card);
+      });
+
+      feedList.appendChild(fragment);
+
+      const updateJourneyTierHeading = () => {
+        const scrollTop = feedList.scrollTop;
+        let activeTier = lvlInfo.tierIndex;
+        let activeName = lvlInfo.tier;
+        for (let i = 0; i < tierHeadersList.length; i++) {
+          if (tierHeadersList[i].el.offsetTop <= scrollTop + 35) {
+            activeTier = tierHeadersList[i].tierIndex;
+            activeName = tierHeadersList[i].tier;
+          }
+        }
+        if (headingEl && activeName) {
+          headingEl.textContent = `Tier ${activeTier}: ${activeName}`;
+        }
+      };
+
+      feedList.addEventListener('scroll', updateJourneyTierHeading, { passive: true });
+      initShellLenis();
+      if (levelsLenis) {
+        levelsLenis.on('scroll', updateJourneyTierHeading);
+      }
+
+      activeJourneyCleanup = () => {
+        feedList.removeEventListener('scroll', updateJourneyTierHeading);
+        if (levelsLenis) {
+          try { levelsLenis.off('scroll', updateJourneyTierHeading); } catch (e) {}
+        }
+      };
+
+      setTimeout(() => { levelsLenis?.resize(); }, 30);
     }
   }
 
