@@ -3756,10 +3756,11 @@
         activeLevelsScroller?.scrollToLevel(lvlInfo.level);
       }, 60);
     } else {
-      // My Journey: Permanent solid DOM rendering (no virtual destruction, no blank gaps on scroll-up)
+      // My Journey: Permanent solid DOM rendering with smooth Calorie Tracker entrance animation
       feedList.innerHTML = '';
       const fragment = document.createDocumentFragment();
       const tierHeadersList = [];
+      const journeyElements = [];
       let journeyLastTier = -1;
 
       itemsToRender.forEach((l) => {
@@ -3772,9 +3773,11 @@
           });
           fragment.appendChild(tierHdr);
           tierHeadersList.push({ el: tierHdr, tierIndex: l.tierIndex, tier: l.tier });
+          journeyElements.push(tierHdr);
         }
         const card = renderCard(l);
         fragment.appendChild(card);
+        journeyElements.push(card);
       });
 
       feedList.appendChild(fragment);
@@ -3794,16 +3797,70 @@
         }
       };
 
-      feedList.addEventListener('scroll', updateJourneyTierHeading, { passive: true });
+      // Calorie Tracker entrance animation engine:
+      // Tracks elements approaching viewport edge, triggers the 0.8s bezier entrance,
+      // and permanently keeps them .visible so scrolling back up is 100% instantaneous with zero delay.
+      const unrevealed = journeyElements.slice();
+      let journeyRaf = null;
+
+      const checkJourneyEntrance = () => {
+        if (unrevealed.length === 0) return;
+        const scrollTop = feedList.scrollTop;
+        const viewportHeight = feedList.clientHeight || 360;
+        const viewBottom = scrollTop + viewportHeight + 25;
+
+        const newlyRevealed = [];
+        for (let i = unrevealed.length - 1; i >= 0; i--) {
+          const el = unrevealed[i];
+          if (el.offsetTop <= viewBottom) {
+            newlyRevealed.push(el);
+            unrevealed.splice(i, 1);
+          }
+        }
+
+        if (newlyRevealed.length > 0) {
+          newlyRevealed.reverse().forEach((el, index) => {
+            void el.offsetWidth;
+            const delay = Math.min(index * 35, 140);
+            el.style.transitionDelay = `${delay}ms`;
+            el.classList.add('visible');
+          });
+        }
+      };
+
+      const onJourneyScroll = () => {
+        updateJourneyTierHeading();
+        if (journeyRaf) return;
+        journeyRaf = requestAnimationFrame(() => {
+          journeyRaf = null;
+          checkJourneyEntrance();
+        });
+      };
+
+      feedList.addEventListener('scroll', onJourneyScroll, { passive: true });
       initShellLenis();
       if (levelsLenis) {
-        levelsLenis.on('scroll', updateJourneyTierHeading);
+        levelsLenis.on('scroll', onJourneyScroll);
       }
 
+      // Initial trigger for cards currently in view
+      requestAnimationFrame(() => {
+        checkJourneyEntrance();
+      });
+
+      setTimeout(() => {
+        levelsLenis?.resize();
+        checkJourneyEntrance();
+      }, 50);
+
       activeJourneyCleanup = () => {
-        feedList.removeEventListener('scroll', updateJourneyTierHeading);
+        if (journeyRaf) {
+          cancelAnimationFrame(journeyRaf);
+          journeyRaf = null;
+        }
+        feedList.removeEventListener('scroll', onJourneyScroll);
         if (levelsLenis) {
-          try { levelsLenis.off('scroll', updateJourneyTierHeading); } catch (e) {}
+          try { levelsLenis.off('scroll', onJourneyScroll); } catch (e) {}
         }
       };
 
