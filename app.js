@@ -4292,17 +4292,32 @@
 
     feedList.appendChild(fragment);
 
-    // 6. Bidirectional Re-appearing Calorie Tracker Animation Engine (Identical to My Journey)
+    // Measure element bounds once in a single batch pass so scroll frames do ZERO layout reads
+    const elementMetrics = [];
+    for (let i = 0; i < historyElements.length; i++) {
+      const el = historyElements[i];
+      const elTop = el.offsetTop;
+      const elHeight = el.offsetHeight || 56;
+      elementMetrics.push({
+        el,
+        top: elTop,
+        height: elHeight,
+        bottom: elTop + elHeight
+      });
+    }
+
+    // 6. Reactive Bidirectional Calorie Tracker Animation Engine (Velocity-Adaptive & Pre-Triggered)
     let lastScrollTop = 0;
     let scrollDirection = 'down';
-    const HYSTERESIS = 160;
     let historyRaf = null;
 
     const updateReappearingHistoryCards = (isInitial = false) => {
       const scrollTop = feedList.scrollTop;
       const viewportHeight = feedList.clientHeight || 380;
 
+      let scrollSpeed = 0;
       if (!isInitial) {
+        scrollSpeed = Math.abs(scrollTop - lastScrollTop);
         if (scrollTop > lastScrollTop + 1) {
           scrollDirection = 'down';
         } else if (scrollTop < lastScrollTop - 1) {
@@ -4311,20 +4326,28 @@
       }
       lastScrollTop = scrollTop;
 
+      const isFastScrolling = scrollSpeed > 8;
+      // Generous forward lookahead buffer (360px up to 600px when scrolling fast, matching My Journey's broad pre-trigger)
+      const leadBuffer = isFastScrolling ? Math.min(600, 360 + scrollSpeed * 8) : 360;
+      const trailBuffer = 120;
+      const HYSTERESIS = leadBuffer + 250;
+
       const viewTop = scrollTop;
       const viewBottom = scrollTop + viewportHeight;
 
+      // Expand detection range ahead in the direction of movement so cards are ready BEFORE they hit the screen
+      const minThreshold = scrollDirection === 'up' ? (viewTop - leadBuffer) : (viewTop - trailBuffer);
+      const maxThreshold = scrollDirection === 'down' ? (viewBottom + leadBuffer) : (viewBottom + trailBuffer);
+
       const newlyRevealed = [];
 
-      for (let i = 0; i < historyElements.length; i++) {
-        const el = historyElements[i];
-        const elTop = el.offsetTop;
-        const elHeight = el.offsetHeight || 56;
-        const elBottom = elTop + elHeight;
+      for (let i = 0; i < elementMetrics.length; i++) {
+        const m = elementMetrics[i];
+        const el = m.el;
 
-        const isInsideView = (elBottom >= viewTop - 25) && (elTop <= viewBottom + 25);
-        const isFarAbove = elBottom < (viewTop - HYSTERESIS);
-        const isFarBelow = elTop > (viewBottom + HYSTERESIS);
+        const isInsideView = (m.bottom >= minThreshold) && (m.top <= maxThreshold);
+        const isFarAbove = m.bottom < (viewTop - HYSTERESIS);
+        const isFarBelow = m.top > (viewBottom + HYSTERESIS);
 
         if (isInsideView) {
           if (!el.classList.contains('visible')) {
@@ -4337,12 +4360,14 @@
             el.classList.remove('visible', 'enter-bottom');
             el.classList.add('enter-top');
             el.style.transitionDelay = '0ms';
+            el.style.transitionDuration = '';
           }
         } else if (isFarBelow) {
           if (el.classList.contains('visible') || !el.classList.contains('enter-bottom')) {
             el.classList.remove('visible', 'enter-top');
             el.classList.add('enter-bottom');
             el.style.transitionDelay = '0ms';
+            el.style.transitionDuration = '';
           }
         }
       }
@@ -4351,12 +4376,19 @@
         if (scrollDirection === 'up') {
           newlyRevealed.reverse();
         }
-        newlyRevealed.forEach((el, index) => {
-          void el.offsetWidth;
-          const delay = Math.min(index * 35, 140);
-          el.style.transitionDelay = `${delay}ms`;
+        for (let i = 0; i < newlyRevealed.length; i++) {
+          const el = newlyRevealed[i];
+          if (isFastScrolling) {
+            // Immediate zero-delay load for lightning-fast responsiveness when fast scrolling
+            el.style.transitionDelay = '0ms';
+            el.style.transitionDuration = '0.32s';
+          } else {
+            const delay = isInitial ? Math.min(i * 35, 140) : Math.min(i * 20, 60);
+            el.style.transitionDelay = `${delay}ms`;
+            el.style.transitionDuration = '';
+          }
           el.classList.add('visible');
-        });
+        }
       }
     };
 
