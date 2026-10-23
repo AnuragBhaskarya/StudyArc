@@ -4179,8 +4179,8 @@
     }
 
     getVisibleRange(scrollTop, viewportHeight) {
-      // 140px focused buffer matching All Levels tab so items animate right as they enter view area
-      const buffer = 140;
+      // 400px generous lookahead & lookbehind buffer so items are smoothly pre-rendered ahead of viewport
+      const buffer = 400;
       const minY = Math.max(0, scrollTop - buffer);
       const maxY = scrollTop + viewportHeight + buffer;
 
@@ -4216,20 +4216,10 @@
       if (this.virtualItems.length === 0) return;
 
       const scrollTop = this.container.scrollTop;
-      const viewportHeight = this.container.clientHeight || 380;
+      const viewportHeight = this.container.clientHeight || 520;
       const { startIndex, endIndex } = this.getVisibleRange(scrollTop, viewportHeight);
 
-      // Identify active date group for sticky header pinning
-      const firstItem = this.virtualItems[startIndex];
-      const activeDate = firstItem ? firstItem.date : null;
-      const activeDateHeaderIdx = activeDate ? this.dateHeaderIndices[activeDate] : undefined;
-      let pinHeaderIdx = null;
-      if (activeDateHeaderIdx !== undefined && activeDateHeaderIdx < startIndex) {
-        pinHeaderIdx = activeDateHeaderIdx;
-      }
-
       const neededIndices = new Set();
-      if (pinHeaderIdx !== null) neededIndices.add(pinHeaderIdx);
       for (let i = startIndex; i <= endIndex; i++) {
         neededIndices.add(i);
       }
@@ -4243,10 +4233,7 @@
       }
 
       // 2. Mount new or reappearing items into correct DOM position
-      const sortedIndices = Array.from(neededIndices).sort((a, b) => a - b);
-
-      for (let i = 0; i < sortedIndices.length; i++) {
-        const idx = sortedIndices[i];
+      for (let idx = startIndex; idx <= endIndex; idx++) {
         if (this.mountedElements.has(idx)) continue;
 
         const item = this.virtualItems[idx];
@@ -4259,9 +4246,9 @@
 
         // Find correct anchor in DOM
         let anchor = this.bottomSpacer;
-        for (let j = i + 1; j < sortedIndices.length; j++) {
-          if (this.mountedElements.has(sortedIndices[j])) {
-            anchor = this.mountedElements.get(sortedIndices[j]);
+        for (let j = idx + 1; j <= endIndex; j++) {
+          if (this.mountedElements.has(j)) {
+            anchor = this.mountedElements.get(j);
             break;
           }
         }
@@ -4271,10 +4258,7 @@
       }
 
       // 3. Update top and bottom spacers to maintain exact scroll height
-      let topSpacerHeight = this.itemOffsets[startIndex];
-      if (pinHeaderIdx !== null) {
-        topSpacerHeight = Math.max(0, topSpacerHeight - this.virtualItems[pinHeaderIdx].height);
-      }
+      const topSpacerHeight = this.itemOffsets[startIndex];
       const bottomSpacerHeight = Math.max(0, this.totalHeight - (this.itemOffsets[endIndex] + this.virtualItems[endIndex].height));
 
       if (topSpacerHeight > 0) {
@@ -4294,7 +4278,9 @@
       }
 
       // 4. Trigger animations:
-      // The beloved original delayed entrance with cascade as cards reach view threshold (exact match with All Levels)
+      // Broad pre-trigger (matching My Journey's lookahead approach):
+      // Triggers animation when card approaches view (within 260px below viewport)
+      // so cards are smoothly swooping in and NEVER appear as blank empty space!
       const viewTop = scrollTop;
       const viewBottom = scrollTop + viewportHeight;
       const toAnimate = [];
@@ -4305,8 +4291,8 @@
         const itemTop = this.itemOffsets[idx];
         const itemBottom = itemTop + this.virtualItems[idx].height;
 
-        const isEnteringView = (idx === pinHeaderIdx) || (
-          itemBottom >= viewTop - 10 && itemTop <= viewBottom + 25
+        const isEnteringView = (
+          itemBottom >= viewTop - 60 && itemTop <= viewBottom + 260
         );
 
         if (isEnteringView) {
@@ -4318,7 +4304,7 @@
         requestAnimationFrame(() => {
           toAnimate.forEach((el, i) => {
             void el.offsetWidth; // Force reflow for the signature delayed multi-effect transition
-            const delay = Math.min((i % 5) * 35, 140);
+            const delay = isInitial ? Math.min((i % 5) * 35, 140) : 0;
             el.style.transitionDelay = `${delay}ms`;
             el.classList.add('visible');
           });
@@ -4509,7 +4495,7 @@
         badge: badgeText,
         sessionsCount: daySessions.length,
         totalMins: dayTotalMins,
-        height: 58
+        height: 52
       });
 
       daySessions.forEach((s) => {
@@ -4518,7 +4504,7 @@
           type: 'session',
           session: s,
           date: dateStr,
-          height: 65
+          height: 64
         });
       });
     }
