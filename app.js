@@ -56,6 +56,27 @@
   let state = loadState();
   const dayDetailsCache = new Map();
 
+  // Central high-speed precomputed cache & indices for zero-lag 60/120fps modal opens
+  const sessionDataIndex = {
+    dirty: true,
+    byDate: new Map(),           // dateStr -> Array<session>
+    sortedAsc: null,             // Pre-sorted ascending (for level calculation)
+    sortedDesc: null,            // Pre-sorted descending (for history feed)
+    levelClearDates: null,       // Cached level clear dates dictionary
+    historyScrollerData: null,   // Pre-built { virtualItems, dateHeaderIndices, stats }
+    dateHeaderCache: new Map(),  // dateStr -> "Fri, Oct 23, 2026"
+    shortBadgeCache: new Map(),  // dateStr -> "TODAY", "YESTERDAY", "OCT 23"
+  };
+
+  function invalidateSessionIndex() {
+    sessionDataIndex.dirty = true;
+    sessionDataIndex.sortedAsc = null;
+    sessionDataIndex.sortedDesc = null;
+    sessionDataIndex.levelClearDates = null;
+    sessionDataIndex.historyScrollerData = null;
+    sessionDataIndex.byDate.clear();
+  }
+
   function loadState() {
     try {
       const data = localStorage.getItem(STORAGE_KEY);
@@ -130,6 +151,7 @@
           state.subjects = data.subjects || [];
           state.sessions = data.sessions || [];
           dayDetailsCache.clear();
+          invalidateSessionIndex();
 
           const oldActivityStr = JSON.stringify(state.dayActivity);
           const newActivityStr = JSON.stringify(data.dayActivity || {});
@@ -152,6 +174,12 @@
           renderStats();
           if (activityChanged) {
             renderHeatmap();
+          }
+
+          if (window.requestIdleCallback) {
+            window.requestIdleCallback(() => warmUpSessionCaches());
+          } else {
+            setTimeout(warmUpSessionCaches, 60);
           }
 
           // Start multi-device real-time SSE stream
@@ -834,6 +862,8 @@
     state.authenticated = false;
     state.user = null;
     state.sessions = [];
+    dayDetailsCache.clear();
+    invalidateSessionIndex();
     state.dayActivity = {};
     state.subjects = [];
     state.streak = 0;
@@ -1547,6 +1577,7 @@
       xp: minutesCompleted
     });
     dayDetailsCache.delete(todayStr);
+    invalidateSessionIndex();
 
     updateStreak();
     saveState();
@@ -2936,8 +2967,59 @@
   // =========================================================================
   let currentDialogDate = null;
 
+  function ensureSessionIndex() {
+    if (!sessionDataIndex.dirty) return;
+
+    const sessions = state.sessions || [];
+    const byDate = sessionDataIndex.byDate;
+    byDate.clear();
+
+    const todayStr = getLocalDateString();
+    const len = sessions.length;
+
+    for (let i = 0; i < len; i++) {
+      const s = sessions[i];
+      let ts = s.timestamp ? Number(s.timestamp) : 0;
+      let d = s.date;
+
+      if (!d || d === 'Unknown') {
+        if (ts > 0) {
+          const dt = new Date(ts);
+          if (!isNaN(dt.getTime())) {
+            d = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+          }
+        }
+      }
+      if (!d) d = todayStr;
+      s.date = d;
+      if (!s._ts) {
+        s._ts = ts > 0 ? ts : (s.date ? new Date(s.date).getTime() : 0);
+      }
+
+      let list = byDate.get(d);
+      if (!list) {
+        list = [];
+        byDate.set(d, list);
+      }
+      list.push(s);
+    }
+
+    sessionDataIndex.dirty = false;
+  }
+
+  function warmUpSessionCaches() {
+    try {
+      ensureSessionIndex();
+      calculateLevelClearDates();
+      getHistoryScrollerData();
+    } catch (_) {}
+  }
+
   function formatDayDateHeader(dateStr) {
     if (!dateStr || typeof dateStr !== 'string') return 'Unknown Date';
+    if (sessionDataIndex.dateHeaderCache.has(dateStr)) {
+      return sessionDataIndex.dateHeaderCache.get(dateStr);
+    }
     try {
       const parts = dateStr.split('-');
       if (parts.length < 3) return dateStr;
@@ -2947,7 +3029,9 @@
       if (isNaN(y) || isNaN(m) || isNaN(d)) return dateStr;
       const dateObj = new Date(y, m, d);
       if (isNaN(dateObj.getTime())) return dateStr;
-      return dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+      const formatted = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+      sessionDataIndex.dateHeaderCache.set(dateStr, formatted);
+      return formatted;
     } catch (_) {
       return dateStr;
     }
@@ -2958,6 +3042,8 @@
     if (dayDetailsCache.has(dateStr)) {
       return dayDetailsCache.get(dateStr);
     }
+
+    ensureSessionIndex();
 
     const todayStr = getLocalDateString();
     const isToday = (dateStr === todayStr);
@@ -2981,10 +3067,12 @@
       return emptyData;
     }
 
-    // 3. Check if state.sessions has all records for this date
-    const matching = (state.sessions || []).filter(s => s.date === dateStr);
+    // 3. Fast O(1) indexed lookup from pre-built byDate Map
+    const matching = sessionDataIndex.byDate.get(dateStr) || [];
     let matchingMins = 0;
-    matching.forEach(s => matchingMins += (s.durationMinutes || s.duration_minutes || 0));
+    for (let i = 0; i < matching.length; i++) {
+      matchingMins += (matching[i].durationMinutes || matching[i].duration_minutes || 0);
+    }
 
     // If the sum of durations in state.sessions matches known dayActivity minutes, we have all records!
     if (matchingMins >= activityMins && matching.length > 0) {
@@ -2994,7 +3082,7 @@
       const mins = matchingMins % 60;
       const formattedTotal = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
 
-      const sortedMatching = [...matching].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+      const sortedMatching = matching.slice().sort((a, b) => (a._ts || a.timestamp || 0) - (b._ts || b.timestamp || 0));
 
       const fullData = {
         date: dateStr,
@@ -3007,7 +3095,7 @@
         totalXp: matchingMins,
         sessions: sortedMatching.map(s => {
           const duration = s.durationMinutes || s.duration_minutes || 0;
-          const ts = s.timestamp || Date.now();
+          const ts = s._ts || s.timestamp || Date.now();
           const endD = new Date(ts);
           const startD = new Date(ts - duration * 60000);
           const timeRange = s.timeRange || `${formatTime(startD)} – ${formatTime(endD)}`;
@@ -3146,26 +3234,24 @@
 
     currentDialogDate = dateStr;
 
-    // 1. Instant Synchronous Resolution: Cache, Zero-Minute Rest Day, or Already in state.sessions
+    // 1. Open modal immediately on frame 0 to kick off compositor pop-in animation
+    if (typeof dialog.showModal === 'function' && !dialog.open) {
+      dialog.showModal();
+    }
+    globalLenis?.stop();
+
+    // 2. Instant Synchronous Resolution: Cache, Zero-Minute Rest Day, or Already in state.sessions
     let dayData = getDayDataFromClient(dateStr);
     if (dayData) {
       renderDayDialogDOM(dayData);
-      if (typeof dialog.showModal === 'function' && !dialog.open) {
-        dialog.showModal();
-      }
-      globalLenis?.stop();
       initShellLenis();
       setTimeout(() => { dayLenis?.resize(); }, 40);
       return;
     }
 
-    // 2. Fallback for older dates outside recent memory:
+    // 3. Fallback for older dates outside recent memory:
     // Pre-populate with known activity stats & skeleton feed immediately so NO PREVIOUS DAY DATA IS EVER SHOWN
     renderDayDialogSkeleton(dateStr);
-    if (typeof dialog.showModal === 'function' && !dialog.open) {
-      dialog.showModal();
-    }
-    globalLenis?.stop();
     initShellLenis();
     setTimeout(() => { dayLenis?.resize(); }, 40);
 
@@ -3217,29 +3303,39 @@
   let showAllLevelsView = false;
 
   function calculateLevelClearDates() {
+    ensureSessionIndex();
+    if (sessionDataIndex.levelClearDates) {
+      return sessionDataIndex.levelClearDates;
+    }
+
     const dates = Object.assign({}, state.levelClearHistory || {});
-    const sessions = (state.sessions || []).slice();
-    sessions.sort((a, b) => {
-      const tA = a.timestamp || (a.date ? new Date(a.date).getTime() : 0);
-      const tB = b.timestamp || (b.date ? new Date(b.date).getTime() : 0);
-      return tA - tB;
-    });
+
+    if (!sessionDataIndex.sortedAsc) {
+      const sessions = (state.sessions || []).slice();
+      sessions.sort((a, b) => (a._ts || 0) - (b._ts || 0));
+      sessionDataIndex.sortedAsc = sessions;
+    }
+    const sessions = sessionDataIndex.sortedAsc;
 
     let cum = 0;
     let nextLvlIdx = 0;
-    for (const s of sessions) {
+    const totalLevels = RPG_LEVELS.length;
+
+    for (let i = 0; i < sessions.length; i++) {
+      const s = sessions[i];
       cum += Number(s.xp || s.durationMinutes || 0);
-      while (nextLvlIdx < RPG_LEVELS.length && cum >= RPG_LEVELS[nextLvlIdx].maxXp) {
+      while (nextLvlIdx < totalLevels && cum >= RPG_LEVELS[nextLvlIdx].maxXp) {
         const l = RPG_LEVELS[nextLvlIdx];
         if (!dates[l.level]) {
           dates[l.level] = {
             date: s.date,
-            timestamp: s.timestamp,
+            timestamp: s._ts || s.timestamp,
             formatted: s.date ? formatDayDateHeader(s.date) : 'Cleared'
           };
         }
         nextLvlIdx++;
       }
+      if (nextLvlIdx >= totalLevels) break;
     }
 
     const currentLvl = getLevelInfo(state.xp).level;
@@ -3251,6 +3347,8 @@
         };
       }
     }
+
+    sessionDataIndex.levelClearDates = dates;
     return dates;
   }
 
@@ -4023,17 +4121,27 @@
     const todayStr = getLocalDateString();
     if (dateStr === todayStr) return 'TODAY';
 
+    const cacheKey = `${todayStr}_${dateStr}`;
+    if (sessionDataIndex.shortBadgeCache.has(cacheKey)) {
+      return sessionDataIndex.shortBadgeCache.get(cacheKey);
+    }
+
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-    if (dateStr === yStr) return 'YESTERDAY';
+    if (dateStr === yStr) {
+      sessionDataIndex.shortBadgeCache.set(cacheKey, 'YESTERDAY');
+      return 'YESTERDAY';
+    }
 
     try {
       const parts = dateStr.split('-');
       if (parts.length < 3) return dateStr.toUpperCase();
       const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
       if (isNaN(d.getTime())) return dateStr.toUpperCase();
-      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }).toUpperCase();
+      const formatted = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }).toUpperCase();
+      sessionDataIndex.shortBadgeCache.set(cacheKey, formatted);
+      return formatted;
     } catch (_) {
       return dateStr;
     }
@@ -4400,31 +4508,14 @@
     if (!containerEl) return { totalMins: 0, sessionCount: 0 };
     containerEl.innerHTML = '';
 
+    ensureSessionIndex();
+
     const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sun
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const todayStr = getLocalDateString();
 
     let monthTotalMins = 0;
     let monthSessionCount = 0;
-
-    // Fast session lookup map by date
-    const sessionsByDate = {};
-    if (state.sessions) {
-      for (let i = 0; i < state.sessions.length; i++) {
-        const s = state.sessions[i];
-        let d = s.date;
-        if (!d && s.timestamp) {
-          const dt = new Date(Number(s.timestamp));
-          if (!isNaN(dt.getTime())) {
-            d = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-          }
-        }
-        if (d) {
-          if (!sessionsByDate[d]) sessionsByDate[d] = [];
-          sessionsByDate[d].push(s);
-        }
-      }
-    }
 
     // 1. Leading spacer empty days
     for (let i = 0; i < firstDayIndex; i++) {
@@ -4437,12 +4528,15 @@
     // 2. Actual active day cells
     for (let day = 1; day <= daysInMonth; day++) {
       const cellDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const daySessions = sessionsByDate[cellDateStr] || [];
+      const daySessions = sessionDataIndex.byDate.get(cellDateStr) || [];
       const hasSessions = daySessions.length > 0;
       const isToday = cellDateStr === todayStr;
       const isActive = isCurrent && (cellDateStr === activeSelectedDate);
 
-      const dayMins = daySessions.reduce((acc, it) => acc + (it.durationMinutes || it.duration_minutes || 0), 0);
+      let dayMins = 0;
+      for (let j = 0; j < daySessions.length; j++) {
+        dayMins += (daySessions[j].durationMinutes || daySessions[j].duration_minutes || 0);
+      }
       monthTotalMins += dayMins;
       monthSessionCount += daySessions.length;
 
@@ -4856,12 +4950,12 @@
     currentCalMonth = targetDate.getMonth();
     activeSelectedDate = initialDateStr || getLocalDateString(targetDate);
 
-    renderHistoryCalendarGrid();
-
     dialog.classList.remove('is-closing');
     if (typeof dialog.showModal === 'function' && !dialog.open) {
       dialog.showModal();
     }
+
+    renderHistoryCalendarGrid();
   }
 
   function closeHistoryCalendarModal() {
@@ -5201,13 +5295,11 @@
         if (incoming && incoming.length >= 0) {
           const prevLength = state.sessions ? state.sessions.length : -1;
           let differs = incoming.length !== prevLength;
-          if (!differs && incoming.length > 0 && state.sessions && state.sessions.length > 0) {
-            differs = (incoming[0].id !== state.sessions[0].id ||
-                       incoming[0].timestamp !== state.sessions[0].timestamp ||
-                       incoming[incoming.length - 1].id !== state.sessions[state.sessions.length - 1].id);
+          if (differs) {
+            state.sessions = incoming;
+            invalidateSessionIndex();
+            saveState();
           }
-          state.sessions = incoming;
-          saveState();
           if (dialog.open && (differs || !activeHistoryScroller)) {
             renderHistoryDialogDOM();
             if (typeof historyLenis !== 'undefined' && historyLenis) {
@@ -5235,6 +5327,87 @@
     globalLenis?.start();
   }
 
+  function getHistoryScrollerData() {
+    ensureSessionIndex();
+    if (sessionDataIndex.historyScrollerData) {
+      return sessionDataIndex.historyScrollerData;
+    }
+
+    if (!sessionDataIndex.sortedDesc) {
+      const sessions = (state.sessions || []).slice();
+      sessions.sort((a, b) => (b._ts || 0) - (a._ts || 0));
+      sessionDataIndex.sortedDesc = sessions;
+    }
+    const allSessions = sessionDataIndex.sortedDesc;
+
+    // Group sessions by date using insertion order (descending dates)
+    const dateMap = new Map();
+    for (let i = 0; i < allSessions.length; i++) {
+      const s = allSessions[i];
+      const d = s.date;
+      let list = dateMap.get(d);
+      if (!list) {
+        list = [];
+        dateMap.set(d, list);
+      }
+      list.push(s);
+    }
+
+    const totalSessions = allSessions.length;
+    let totalFocusSec = state.totalFocusSeconds || 0;
+    if (!totalFocusSec) {
+      for (let i = 0; i < allSessions.length; i++) {
+        totalFocusSec += (allSessions[i].durationMinutes || allSessions[i].duration_minutes || 0) * 60;
+      }
+    }
+    const activeDaysCount = dateMap.size;
+
+    const virtualItems = [];
+    const dateHeaderIndices = {};
+
+    for (const [dateStr, daySessions] of dateMap.entries()) {
+      const fullDateStr = formatDayDateHeader(dateStr);
+      let dayTotalMins = 0;
+      for (let j = 0; j < daySessions.length; j++) {
+        dayTotalMins += (daySessions[j].durationMinutes || daySessions[j].duration_minutes || 0);
+      }
+      const badgeText = getShortDateBadge(dateStr);
+
+      dateHeaderIndices[dateStr] = virtualItems.length;
+      virtualItems.push({
+        type: 'header',
+        date: dateStr,
+        fullDate: fullDateStr,
+        badge: badgeText,
+        sessionsCount: daySessions.length,
+        totalMins: dayTotalMins,
+        height: 52
+      });
+
+      for (let j = 0; j < daySessions.length; j++) {
+        const s = daySessions[j];
+        s.fullDate = fullDateStr;
+        virtualItems.push({
+          type: 'session',
+          session: s,
+          date: dateStr,
+          height: 64
+        });
+      }
+    }
+
+    sessionDataIndex.historyScrollerData = {
+      virtualItems,
+      dateHeaderIndices,
+      stats: {
+        totalSessions,
+        totalFocusSec,
+        activeDaysCount
+      }
+    };
+    return sessionDataIndex.historyScrollerData;
+  }
+
   function renderHistoryDialogDOM() {
     const dialog = document.getElementById('sessions-history-dialog');
     if (!dialog) return;
@@ -5251,36 +5424,8 @@
       activeHistoryCleanup = null;
     }
 
-    // 1. Gather all historical sessions and sort in descending date/time order
-    const allSessions = (state.sessions || []).slice();
-    allSessions.sort((a, b) => {
-      const tA = Number(a.timestamp) || (a.date ? new Date(a.date).getTime() : 0);
-      const tB = Number(b.timestamp) || (b.date ? new Date(b.date).getTime() : 0);
-      return tB - tA;
-    });
-
-    // 2. Group sessions strictly by date
-    const dateMap = new Map();
-    allSessions.forEach((s) => {
-      let d = s.date;
-      if (!d || d === 'Unknown') {
-        if (s.timestamp) {
-          const dt = new Date(Number(s.timestamp));
-          if (!isNaN(dt.getTime())) {
-            d = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-          }
-        }
-      }
-      if (!d) d = getLocalDateString();
-      s.date = d;
-      if (!dateMap.has(d)) dateMap.set(d, []);
-      dateMap.get(d).push(s);
-    });
-
-    // 3. Compute Summary Metrics
-    const totalSessions = allSessions.length;
-    const totalFocusSec = state.totalFocusSeconds || allSessions.reduce((acc, s) => acc + (s.durationMinutes || s.duration_minutes || 0) * 60, 0);
-    const activeDaysCount = dateMap.size;
+    const data = getHistoryScrollerData();
+    const { totalSessions, totalFocusSec, activeDaysCount } = data.stats;
 
     const pillTotalTime = document.getElementById('history-pill-total-time');
     const pillSessions = document.getElementById('history-pill-sessions-count');
@@ -5290,7 +5435,7 @@
     if (pillSessions) pillSessions.textContent = totalSessions.toLocaleString();
     if (pillDays) pillDays.textContent = activeDaysCount.toLocaleString();
 
-    // 4. Handle Empty State
+    // Handle Empty State
     if (totalSessions === 0) {
       feedList.innerHTML = `
         <div class="history-empty-card">
@@ -5307,42 +5452,11 @@
       return;
     }
 
-    // 5. Build virtual items structure for VirtualHistoryScroller
-    const virtualItems = [];
-    const dateHeaderIndices = {};
-
-    for (const [dateStr, daySessions] of dateMap.entries()) {
-      const fullDateStr = formatDayDateHeader(dateStr);
-      const dayTotalMins = daySessions.reduce((acc, it) => acc + (it.durationMinutes || it.duration_minutes || 0), 0);
-      const badgeText = getShortDateBadge(dateStr);
-
-      dateHeaderIndices[dateStr] = virtualItems.length;
-      virtualItems.push({
-        type: 'header',
-        date: dateStr,
-        fullDate: fullDateStr,
-        badge: badgeText,
-        sessionsCount: daySessions.length,
-        totalMins: dayTotalMins,
-        height: 52
-      });
-
-      daySessions.forEach((s) => {
-        s.fullDate = fullDateStr;
-        virtualItems.push({
-          type: 'session',
-          session: s,
-          date: dateStr,
-          height: 64
-        });
-      });
-    }
-
-    // 6. Instantiate VirtualHistoryScroller with full virtualization & All Levels animation
+    // Instantiate VirtualHistoryScroller with precomputed virtual items
     activeHistoryScroller = new VirtualHistoryScroller({
       container: feedList,
-      virtualItems,
-      dateHeaderIndices,
+      virtualItems: data.virtualItems,
+      dateHeaderIndices: data.dateHeaderIndices,
       renderSessionCard: createHistorySessionCard,
       renderDateHeader: createHistoryDateHeader
     });
@@ -5374,6 +5488,7 @@
     if (idx !== -1) {
       duration = state.sessions[idx].durationMinutes || state.sessions[idx].duration_minutes || 0;
       state.sessions.splice(idx, 1);
+      invalidateSessionIndex();
     } else if (cardEl) {
       duration = parseInt(cardEl.dataset.duration || cardEl.querySelector('.day-session-duration')?.textContent || '0', 10) || 0;
     }
@@ -5558,6 +5673,7 @@
           }
           if (backendPayload.sessions) {
             state.sessions = backendPayload.sessions;
+            invalidateSessionIndex();
           }
           saveState();
           renderStats();
@@ -5915,6 +6031,7 @@
               state.sessions = [];
               state.subjects = [];
               dayDetailsCache.clear();
+              invalidateSessionIndex();
               state.timer.targetSeconds = 60 * 60;
               state.timer.remainingSeconds = 60 * 60;
               state.timer.status = 'idle';
@@ -6234,6 +6351,12 @@
 
     // Full authentication and state sync (subjects, history, stats)
     await checkAuthAndSync();
+
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(() => warmUpSessionCaches());
+    } else {
+      setTimeout(warmUpSessionCaches, 60);
+    }
   }
 
   if (document.readyState === 'loading') {

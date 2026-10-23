@@ -2115,6 +2115,7 @@ input:checked + .switch-slider:before {
   outline: none;
   animation: dialog-pop-in 170ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   overflow: hidden;
+  will-change: transform, opacity;
 }
 
 .day-detail-dialog::backdrop {
@@ -2641,6 +2642,7 @@ input:checked + .switch-slider:before {
   outline: none;
   animation: dialog-pop-in 170ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   overflow: hidden;
+  will-change: transform, opacity;
 }
 
 .levels-dialog::backdrop {
@@ -4284,6 +4286,22 @@ input:checked + .switch-slider:before {
   border-radius: 20px;
   background: #080f0b;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.9), 0 0 35px rgba(16, 224, 104, 0.08);
+  width: 92vw;
+  max-width: 530px;
+  max-height: 86vh;
+  max-height: 86dvh;
+  margin: auto;
+  outline: none;
+  animation: dialog-pop-in 170ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  overflow: hidden;
+  will-change: transform, opacity;
+}
+
+.sessions-history-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  animation: backdrop-fade-in 150ms ease forwards;
 }
 
 .history-dialog-shell {
