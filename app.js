@@ -3236,6 +3236,43 @@
     return dates;
   }
 
+  let activeLevelsScroller = null;
+  let activeJourneyCleanup = null;
+
+  function resetLevelsContainer(cleanDOM = false) {
+    const feedList = document.getElementById('levels-feed-list');
+
+    // 1. Destroy and clean up any active scrollers, RAF loops, or scroll listeners
+    if (activeJourneyCleanup) {
+      try { activeJourneyCleanup(); } catch (e) {}
+      activeJourneyCleanup = null;
+    }
+    if (activeLevelsScroller) {
+      try { activeLevelsScroller.destroy(); } catch (e) {}
+      activeLevelsScroller = null;
+    }
+
+    // 2. Halt and reset smooth scrolling (Lenis) momentum immediately
+    if (typeof levelsLenis !== 'undefined' && levelsLenis) {
+      try {
+        levelsLenis.stop();
+        levelsLenis.scrollTo(0, { immediate: true, force: true });
+        levelsLenis.scroll = 0;
+        levelsLenis.targetScroll = 0;
+        levelsLenis.velocity = 0;
+      } catch (e) {}
+    }
+
+    // 3. Reset DOM container scroll positions
+    if (feedList) {
+      feedList.scrollTop = 0;
+      feedList.scrollLeft = 0;
+      if (cleanDOM) {
+        feedList.innerHTML = '';
+      }
+    }
+  }
+
   function openLevelsDialog() {
     const dialog = document.getElementById('levels-dialog');
     if (!dialog) return;
@@ -3245,10 +3282,11 @@
       window.getSelection().removeAllRanges();
     }
 
+    // Reset container as soon as we leave or start, starting fresh from beginning
+    resetLevelsContainer(true);
     showAllLevelsView = false;
     renderLevelsDialogDOM();
-    const feedList = document.getElementById('levels-feed-list');
-    if (feedList) feedList.scrollTop = 0;
+
     if (typeof dialog.showModal === 'function' && !dialog.open) {
       dialog.showModal();
     }
@@ -3263,6 +3301,11 @@
 
     globalLenis?.stop();
     initShellLenis();
+    if (typeof levelsLenis !== 'undefined' && levelsLenis) {
+      levelsLenis.scrollTo(0, { immediate: true, force: true });
+      levelsLenis.resize();
+      levelsLenis.start();
+    }
     setTimeout(() => { levelsLenis?.resize(); }, 40);
   }
 
@@ -3271,19 +3314,11 @@
     if (dialog && dialog.open) {
       dialog.close();
     }
-    if (activeJourneyCleanup) {
-      activeJourneyCleanup();
-      activeJourneyCleanup = null;
-    }
-    if (activeLevelsScroller) {
-      activeLevelsScroller.destroy();
-      activeLevelsScroller = null;
-    }
+    // Reset container as soon as we leave, as if starting from beginning
+    resetLevelsContainer(true);
+    showAllLevelsView = false;
     globalLenis?.start();
   }
-
-  let activeLevelsScroller = null;
-  let activeJourneyCleanup = null;
 
   class VirtualLevelsScroller {
     constructor({
@@ -3328,6 +3363,7 @@
       this.container.appendChild(this.bottomSpacer);
 
       this.rafId = null;
+      this.animRafId = null;
       this.onScroll = this.onScroll.bind(this);
       this.container.addEventListener('scroll', this.onScroll, { passive: true });
 
@@ -3349,6 +3385,10 @@
       if (this.rafId) {
         cancelAnimationFrame(this.rafId);
         this.rafId = null;
+      }
+      if (this.animRafId) {
+        cancelAnimationFrame(this.animRafId);
+        this.animRafId = null;
       }
       this.mountedElements.clear();
     }
@@ -3516,7 +3556,12 @@
       }
 
       if (toAnimate.length > 0) {
-        requestAnimationFrame(() => {
+        if (this.animRafId) {
+          cancelAnimationFrame(this.animRafId);
+          this.animRafId = null;
+        }
+        this.animRafId = requestAnimationFrame(() => {
+          this.animRafId = null;
           toAnimate.forEach((el, i) => {
             if (this.isCatalogMode) {
               void el.offsetWidth; // Force reflow for the signature delayed multi-effect transition
@@ -3751,13 +3796,18 @@
       });
 
       initShellLenis();
-      setTimeout(() => { levelsLenis?.resize(); }, 30);
-      setTimeout(() => {
-        activeLevelsScroller?.scrollToLevel(lvlInfo.level);
-      }, 60);
+      if (typeof levelsLenis !== 'undefined' && levelsLenis) {
+        levelsLenis.scrollTo(0, { immediate: true, force: true });
+        levelsLenis.resize();
+        levelsLenis.start();
+      }
+      setTimeout(() => { levelsLenis?.resize(); }, 40);
     } else {
       // My Journey: Permanent solid DOM rendering with smooth Calorie Tracker entrance animation
       feedList.innerHTML = '';
+      feedList.scrollTop = 0;
+      feedList.scrollLeft = 0;
+
       const fragment = document.createDocumentFragment();
       const tierHeadersList = [];
       const journeyElements = [];
@@ -3800,19 +3850,21 @@
       // Bidirectional Re-appearing Calorie Tracker Animation Engine:
       // Dynamically animates cards when scrolling down (swoop from bottom)
       // and when scrolling up (swoop from top), resetting smoothly off-screen.
-      let lastScrollTop = feedList.scrollTop;
+      let lastScrollTop = 0;
       let scrollDirection = 'down';
       const HYSTERESIS = 160;
       let journeyRaf = null;
 
-      const updateReappearingCards = () => {
+      const updateReappearingCards = (isInitial = false) => {
         const scrollTop = feedList.scrollTop;
         const viewportHeight = feedList.clientHeight || 360;
 
-        if (scrollTop > lastScrollTop + 1) {
-          scrollDirection = 'down';
-        } else if (scrollTop < lastScrollTop - 1) {
-          scrollDirection = 'up';
+        if (!isInitial) {
+          if (scrollTop > lastScrollTop + 1) {
+            scrollDirection = 'down';
+          } else if (scrollTop < lastScrollTop - 1) {
+            scrollDirection = 'up';
+          }
         }
         lastScrollTop = scrollTop;
 
@@ -3870,25 +3922,29 @@
         if (journeyRaf) return;
         journeyRaf = requestAnimationFrame(() => {
           journeyRaf = null;
-          updateReappearingCards();
+          updateReappearingCards(false);
         });
       };
 
       feedList.addEventListener('scroll', onJourneyScroll, { passive: true });
       initShellLenis();
-      if (levelsLenis) {
+      if (typeof levelsLenis !== 'undefined' && levelsLenis) {
         levelsLenis.on('scroll', onJourneyScroll);
+        levelsLenis.scrollTo(0, { immediate: true, force: true });
+        levelsLenis.resize();
+        levelsLenis.start();
       }
 
-      // Initial trigger for cards currently in view
+      // Initial synchronous trigger + RAF + resize pass
+      updateReappearingCards(true);
       requestAnimationFrame(() => {
-        updateReappearingCards();
+        updateReappearingCards(false);
       });
 
       setTimeout(() => {
         levelsLenis?.resize();
-        updateReappearingCards();
-      }, 50);
+        updateReappearingCards(false);
+      }, 40);
 
       activeJourneyCleanup = () => {
         if (journeyRaf) {
@@ -3896,12 +3952,10 @@
           journeyRaf = null;
         }
         feedList.removeEventListener('scroll', onJourneyScroll);
-        if (levelsLenis) {
+        if (typeof levelsLenis !== 'undefined' && levelsLenis) {
           try { levelsLenis.off('scroll', onJourneyScroll); } catch (e) {}
         }
       };
-
-      setTimeout(() => { levelsLenis?.resize(); }, 30);
     }
   }
 
@@ -4331,6 +4385,7 @@
     if (btnToggleAllLevels) {
       btnToggleAllLevels.addEventListener('click', () => {
         if (window.getSelection) window.getSelection().removeAllRanges();
+        resetLevelsContainer(true);
         showAllLevelsView = true;
         renderLevelsDialogDOM();
       });
@@ -4341,14 +4396,13 @@
     if (btnBackToJourney) {
       btnBackToJourney.addEventListener('click', () => {
         if (window.getSelection) window.getSelection().removeAllRanges();
+        resetLevelsContainer(true);
         showAllLevelsView = false;
         renderLevelsDialogDOM();
-        const feedList = document.getElementById('levels-feed-list');
-        if (feedList) feedList.scrollTop = 0;
       });
     }
 
-    // RPG Levels Dialog: backdrop click light-dismiss fallback
+    // RPG Levels Dialog: backdrop click & native cancel/close light-dismiss fallback
     const levelsDialog = document.getElementById('levels-dialog');
     if (levelsDialog) {
       levelsDialog.addEventListener('click', (e) => {
@@ -4360,6 +4414,9 @@
         if (!isInDialog) {
           closeLevelsDialog();
         }
+      });
+      levelsDialog.addEventListener('cancel', () => {
+        closeLevelsDialog();
       });
     }
 
