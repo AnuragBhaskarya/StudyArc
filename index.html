@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=10.1">
+  <link rel="stylesheet" href="styles.css?v=10.2">
   <script>
     (function () {
       try {
@@ -673,9 +673,13 @@
               <div class="history-cal-dial-gradient bottom" aria-hidden="true"></div>
               <div class="history-cal-dial-lens" aria-hidden="true"></div>
               
-              <div class="history-cal-drum" id="history-cal-drum-month" data-lenis-prevent role="listbox" aria-label="Select Month"></div>
+              <div class="history-cal-drum" id="history-cal-drum-month" data-lenis-prevent role="listbox" aria-label="Select Month">
+                <div class="history-cal-drum-wheel" id="history-cal-drum-wheel-month"></div>
+              </div>
               <div class="history-cal-drum-divider" aria-hidden="true"></div>
-              <div class="history-cal-drum" id="history-cal-drum-year" data-lenis-prevent role="listbox" aria-label="Select Year"></div>
+              <div class="history-cal-drum" id="history-cal-drum-year" data-lenis-prevent role="listbox" aria-label="Select Year">
+                <div class="history-cal-drum-wheel" id="history-cal-drum-wheel-year"></div>
+              </div>
             </div>
 
             <!-- Full-width Done button (Container max-width, no X icon) -->
@@ -915,7 +919,7 @@
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
   <script src="aura-particles.js?v=5.3"></script>
-  <script src="app.js?v=9.7"></script>
+  <script src="app.js?v=9.8"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

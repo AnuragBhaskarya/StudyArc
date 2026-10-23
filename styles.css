@@ -4975,11 +4975,9 @@ input:checked + .switch-slider:before {
 .history-cal-drum {
   flex: 1;
   height: 200px;
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  overflow: hidden;
+  position: relative;
+  touch-action: none;
   user-select: none;
   z-index: 1;
   text-align: center;
@@ -4990,14 +4988,16 @@ input:checked + .switch-slider:before {
   cursor: grabbing;
 }
 
-.history-cal-drum::-webkit-scrollbar {
-  display: none;
+.history-cal-drum-wheel {
+  position: absolute;
+  top: 80px;
+  left: 0;
+  width: 100%;
+  will-change: transform;
 }
 
-.history-cal-drum-spacer {
-  height: 80px;
-  flex-shrink: 0;
-  pointer-events: none;
+.history-cal-drum-wheel.animating {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .history-cal-drum-divider {
@@ -5017,11 +5017,9 @@ input:checked + .switch-slider:before {
   font-size: 0.95rem;
   font-weight: 600;
   color: #4b6b55;
-  scroll-snap-align: center;
-  scroll-snap-stop: normal;
   cursor: pointer;
   user-select: none;
-  transition: all 0.14s ease;
+  transition: color 0.14s ease, transform 0.14s ease, opacity 0.14s ease;
 }
 
 .history-cal-drum-item:hover {

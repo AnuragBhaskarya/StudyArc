@@ -4593,18 +4593,153 @@
     finishCalendarMonthSwipe(delta);
   }
 
+  let monthDrumWheel = null;
+  let yearDrumWheel = null;
+
+  function createDialDrumWheel({ drumEl, wheelEl, count, onSelect }) {
+    const ITEM_HEIGHT = 40;
+    let currentIndex = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let startY = 0;
+    let startDragY = 0;
+    let startTime = 0;
+    let activePointerId = null;
+
+    function updateVisuals(activeIdx) {
+      const items = wheelEl.querySelectorAll('.history-cal-drum-item');
+      items.forEach((it, idx) => {
+        if (idx === activeIdx) {
+          it.classList.add('is-selected');
+        } else {
+          it.classList.remove('is-selected');
+        }
+      });
+    }
+
+    function setIndex(index, animated = true) {
+      const clamped = Math.max(0, Math.min(count - 1, index));
+      currentIndex = clamped;
+      currentY = -clamped * ITEM_HEIGHT;
+
+      if (animated) {
+        wheelEl.classList.add('animating');
+      } else {
+        wheelEl.classList.remove('animating');
+      }
+
+      wheelEl.style.transform = `translate3d(0, ${currentY}px, 0)`;
+      updateVisuals(clamped);
+      if (onSelect) onSelect(clamped);
+
+      if (animated) {
+        const handleEnd = () => {
+          wheelEl.removeEventListener('transitionend', handleEnd);
+          wheelEl.classList.remove('animating');
+        };
+        wheelEl.addEventListener('transitionend', handleEnd, { once: true });
+      }
+    }
+
+    function onPointerDown(e) {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      isDragging = true;
+      wheelEl.classList.remove('animating');
+      startY = e.clientY;
+      startDragY = currentY;
+      startTime = Date.now();
+      activePointerId = e.pointerId;
+      try { drumEl.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+
+    function onPointerMove(e) {
+      if (!isDragging || e.pointerId !== activePointerId) return;
+      if (e.cancelable) e.preventDefault();
+
+      const dy = e.clientY - startY;
+      let targetY = startDragY + dy;
+
+      // Soft rubber banding beyond edges
+      const minY = -(count - 1) * ITEM_HEIGHT;
+      const maxY = 0;
+      if (targetY > maxY) {
+        targetY = maxY + (targetY - maxY) * 0.3;
+      } else if (targetY < minY) {
+        targetY = minY + (targetY - minY) * 0.3;
+      }
+
+      currentY = targetY;
+      wheelEl.style.transform = `translate3d(0, ${currentY}px, 0)`;
+
+      const liveIdx = Math.max(0, Math.min(count - 1, Math.round(-currentY / ITEM_HEIGHT)));
+      updateVisuals(liveIdx);
+    }
+
+    function onPointerUp(e) {
+      if (!isDragging || e.pointerId !== activePointerId) return;
+      isDragging = false;
+      try { drumEl.releasePointerCapture(e.pointerId); } catch (_) {}
+
+      const dy = e.clientY - startY;
+      const elapsed = Math.max(1, Date.now() - startTime);
+      const velocity = dy / elapsed; // px per ms
+
+      // Flick momentum projection
+      let projectedY = currentY + velocity * 130;
+      let snapIndex = Math.round(-projectedY / ITEM_HEIGHT);
+      snapIndex = Math.max(0, Math.min(count - 1, snapIndex));
+
+      setIndex(snapIndex, true);
+    }
+
+    drumEl.addEventListener('pointerdown', onPointerDown);
+    drumEl.addEventListener('pointermove', onPointerMove);
+    drumEl.addEventListener('pointerup', onPointerUp);
+    drumEl.addEventListener('pointercancel', onPointerUp);
+
+    // Mouse wheel / trackpad scroll
+    let wheelTimeout = null;
+    drumEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      wheelEl.classList.remove('animating');
+
+      const step = e.deltaY > 0 ? 1 : -1;
+      clearTimeout(wheelTimeout);
+      wheelTimeout = setTimeout(() => {
+        setIndex(currentIndex + step, true);
+      }, 35);
+    }, { passive: false });
+
+    // Tap/click on an item directly centers it
+    wheelEl.addEventListener('click', (e) => {
+      const item = e.target.closest('.history-cal-drum-item');
+      if (!item) return;
+      const idx = parseInt(item.getAttribute('data-idx'), 10);
+      if (!isNaN(idx)) {
+        setIndex(idx, true);
+      }
+    });
+
+    return {
+      setIndex,
+      getIndex: () => currentIndex
+    };
+  }
+
   function buildDialDrums() {
     const monthDrum = document.getElementById('history-cal-drum-month');
     const yearDrum = document.getElementById('history-cal-drum-year');
-    if (!monthDrum || !yearDrum) return;
+    const monthWheel = document.getElementById('history-cal-drum-wheel-month');
+    const yearWheel = document.getElementById('history-cal-drum-wheel-year');
+    if (!monthDrum || !yearDrum || !monthWheel || !yearWheel) return;
 
     // 1. Month drum items
-    let mHtml = '<div class="history-cal-drum-spacer"></div>';
+    let mHtml = '';
     CAL_MONTH_NAMES_SHORT.forEach((m, idx) => {
-      mHtml += `<div class="history-cal-drum-item" data-month="${idx}">${m}</div>`;
+      mHtml += `<div class="history-cal-drum-item" data-idx="${idx}">${m}</div>`;
     });
-    mHtml += '<div class="history-cal-drum-spacer"></div>';
-    monthDrum.innerHTML = mHtml;
+    monthWheel.innerHTML = mHtml;
 
     // 2. Year drum items: from 2000 to currentYear
     const currentYearMax = new Date().getFullYear();
@@ -4613,144 +4748,32 @@
       dialYearsList.push(y);
     }
 
-    let yHtml = '<div class="history-cal-drum-spacer"></div>';
+    let yHtml = '';
     dialYearsList.forEach((yr, idx) => {
-      yHtml += `<div class="history-cal-drum-item" data-year="${yr}" data-idx="${idx}">${yr}</div>`;
+      yHtml += `<div class="history-cal-drum-item" data-idx="${idx}">${yr}</div>`;
     });
-    yHtml += '<div class="history-cal-drum-spacer"></div>';
-    yearDrum.innerHTML = yHtml;
+    yearWheel.innerHTML = yHtml;
 
-    // Click handlers for month items
-    monthDrum.querySelectorAll('.history-cal-drum-item').forEach((item) => {
-      item.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const m = parseInt(item.getAttribute('data-month'), 10);
-        pendingDialMonth = m;
-        monthDrum.scrollTo({ top: m * DIAL_ITEM_HEIGHT, behavior: 'smooth' });
-        updateDrumSelectedState(monthDrum, m);
-      });
-    });
-
-    // Click handlers for year items
-    yearDrum.querySelectorAll('.history-cal-drum-item').forEach((item) => {
-      item.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const idx = parseInt(item.getAttribute('data-idx'), 10);
-        pendingDialYear = dialYearsList[idx];
-        yearDrum.scrollTo({ top: idx * DIAL_ITEM_HEIGHT, behavior: 'smooth' });
-        updateDrumSelectedState(yearDrum, idx);
-      });
-    });
-
-    // Attach full pointer drag and wheel interaction handlers
-    attachDrumScrollAndDrag(monthDrum, false);
-    attachDrumScrollAndDrag(yearDrum, true);
-  }
-
-  function updateDrumSelectedState(drumEl, selectedIdx) {
-    if (!drumEl) return;
-    const items = drumEl.querySelectorAll('.history-cal-drum-item');
-    items.forEach((it, idx) => {
-      if (idx === selectedIdx) {
-        it.classList.add('is-selected');
-      } else {
-        it.classList.remove('is-selected');
-      }
-    });
-  }
-
-  function attachDrumScrollAndDrag(drumEl, isYearDrum) {
-    let isPointerDown = false;
-    let startY = 0;
-    let startScrollTop = 0;
-
-    // Pointer Drag (Works for desktop mouse click-and-drag and touch)
-    drumEl.addEventListener('pointerdown', (e) => {
-      isPointerDown = true;
-      startY = e.clientY;
-      startScrollTop = drumEl.scrollTop;
-      drumEl.style.scrollSnapType = 'none';
-      drumEl.setPointerCapture(e.pointerId);
-    });
-
-    drumEl.addEventListener('pointermove', (e) => {
-      if (!isPointerDown) return;
-      const dy = e.clientY - startY;
-      drumEl.scrollTop = startScrollTop - dy;
-
-      const idx = Math.round(drumEl.scrollTop / DIAL_ITEM_HEIGHT);
-      updateDrumSelectedState(drumEl, idx);
-      if (isYearDrum) {
-        if (dialYearsList[idx] !== undefined) pendingDialYear = dialYearsList[idx];
-      } else {
-        pendingDialMonth = Math.max(0, Math.min(11, idx));
+    // Attach transform-based controllers
+    monthDrumWheel = createDialDrumWheel({
+      drumEl: monthDrum,
+      wheelEl: monthWheel,
+      count: 12,
+      onSelect: (idx) => {
+        pendingDialMonth = idx;
       }
     });
 
-    const onPointerUp = (e) => {
-      if (!isPointerDown) return;
-      isPointerDown = false;
-      try { drumEl.releasePointerCapture(e.pointerId); } catch (_) {}
-      drumEl.style.scrollSnapType = 'y mandatory';
-
-      const snapIdx = Math.round(drumEl.scrollTop / DIAL_ITEM_HEIGHT);
-      const maxIdx = isYearDrum ? dialYearsList.length - 1 : 11;
-      const clampedIdx = Math.max(0, Math.min(maxIdx, snapIdx));
-
-      drumEl.scrollTo({ top: clampedIdx * DIAL_ITEM_HEIGHT, behavior: 'smooth' });
-      updateDrumSelectedState(drumEl, clampedIdx);
-      if (isYearDrum) {
-        pendingDialYear = dialYearsList[clampedIdx];
-      } else {
-        pendingDialMonth = clampedIdx;
-      }
-    };
-
-    drumEl.addEventListener('pointerup', onPointerUp);
-    drumEl.addEventListener('pointercancel', onPointerUp);
-
-    // Direct Mouse Wheel Listener (Prevents window Lenis scroll capture)
-    let wheelDebounce = null;
-    drumEl.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      drumEl.scrollTop += e.deltaY;
-
-      const curIdx = Math.round(drumEl.scrollTop / DIAL_ITEM_HEIGHT);
-      updateDrumSelectedState(drumEl, curIdx);
-
-      clearTimeout(wheelDebounce);
-      wheelDebounce = setTimeout(() => {
-        const snapIdx = Math.round(drumEl.scrollTop / DIAL_ITEM_HEIGHT);
-        const maxIdx = isYearDrum ? dialYearsList.length - 1 : 11;
-        const clampedIdx = Math.max(0, Math.min(maxIdx, snapIdx));
-        drumEl.scrollTo({ top: clampedIdx * DIAL_ITEM_HEIGHT, behavior: 'smooth' });
-        updateDrumSelectedState(drumEl, clampedIdx);
-        if (isYearDrum) {
-          pendingDialYear = dialYearsList[clampedIdx];
-        } else {
-          pendingDialMonth = clampedIdx;
+    yearDrumWheel = createDialDrumWheel({
+      drumEl: yearDrum,
+      wheelEl: yearWheel,
+      count: dialYearsList.length,
+      onSelect: (idx) => {
+        if (dialYearsList[idx] !== undefined) {
+          pendingDialYear = dialYearsList[idx];
         }
-      }, 60);
-    }, { passive: false });
-
-    // Scroll event listener (for native momentum scroll on mobile)
-    let scrollDebounce = null;
-    drumEl.addEventListener('scroll', () => {
-      if (isPointerDown) return;
-      clearTimeout(scrollDebounce);
-      scrollDebounce = setTimeout(() => {
-        const snapIdx = Math.round(drumEl.scrollTop / DIAL_ITEM_HEIGHT);
-        const maxIdx = isYearDrum ? dialYearsList.length - 1 : 11;
-        const clampedIdx = Math.max(0, Math.min(maxIdx, snapIdx));
-        updateDrumSelectedState(drumEl, clampedIdx);
-        if (isYearDrum) {
-          pendingDialYear = dialYearsList[clampedIdx];
-        } else {
-          pendingDialMonth = clampedIdx;
-        }
-      }, 40);
-    }, { passive: true });
+      }
+    });
   }
 
   function openCalendarDialView() {
@@ -4769,21 +4792,15 @@
     dialView.style.display = 'flex';
     if (shell) shell.classList.add('is-dial-open');
 
-    const monthDrum = document.getElementById('history-cal-drum-month');
-    const yearDrum = document.getElementById('history-cal-drum-year');
-
-    setTimeout(() => {
-      if (monthDrum) {
-        monthDrum.scrollTop = currentCalMonth * DIAL_ITEM_HEIGHT;
-        updateDrumSelectedState(monthDrum, currentCalMonth);
-      }
-      if (yearDrum) {
-        const yIdx = dialYearsList.indexOf(currentCalYear);
-        const targetIdx = yIdx >= 0 ? yIdx : dialYearsList.length - 1;
-        yearDrum.scrollTop = targetIdx * DIAL_ITEM_HEIGHT;
-        updateDrumSelectedState(yearDrum, targetIdx);
-      }
-    }, 20);
+    // Immediately set wheel positions to currentCalMonth and currentCalYear without delay
+    if (monthDrumWheel) {
+      monthDrumWheel.setIndex(currentCalMonth, false);
+    }
+    if (yearDrumWheel) {
+      const yIdx = dialYearsList.indexOf(currentCalYear);
+      const targetIdx = yIdx >= 0 ? yIdx : dialYearsList.length - 1;
+      yearDrumWheel.setIndex(targetIdx, false);
+    }
   }
 
   function closeCalendarDialView(applyChanges = true) {
@@ -4795,6 +4812,10 @@
     isDialViewOpen = false;
 
     if (applyChanges) {
+      if (monthDrumWheel) pendingDialMonth = monthDrumWheel.getIndex();
+      if (yearDrumWheel && dialYearsList[yearDrumWheel.getIndex()] !== undefined) {
+        pendingDialYear = dialYearsList[yearDrumWheel.getIndex()];
+      }
       currentCalMonth = pendingDialMonth;
       currentCalYear = pendingDialYear;
     }
