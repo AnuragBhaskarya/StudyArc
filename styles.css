@@ -499,6 +499,11 @@ body.is-timer-paused .aura-blob-center {
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;
   user-select: none !important;
+  pointer-events: none; /* Let transparent SVG bounds pass clicks through to elements below */
+}
+
+.timer-bead-group {
+  pointer-events: auto;
 }
 
 .timer-svg::selection,
@@ -913,6 +918,8 @@ body.is-dragging .timer-bead-rim {
   padding: 0.2rem 0;
   flex-shrink: 0;
   overflow: visible;
+  position: relative;
+  z-index: 15;
 }
 
 .stat-item {
@@ -962,10 +969,14 @@ body.is-dragging .timer-bead-rim {
 }
 
 .stat-item-xp {
+  position: relative;
+  z-index: 16;
   border-color: rgba(251, 191, 36, 0.12);
   transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .stat-item-xp:hover {
@@ -1082,7 +1093,13 @@ body.is-dragging .timer-bead-rim {
   border-radius: 12px;
   padding: 0.55rem 0.7rem;
   transition: all 160ms ease;
+  -webkit-user-select: none;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stat-item-clickable * {
+  pointer-events: none;
 }
 
 .stat-item-clickable:hover {
@@ -2528,7 +2545,7 @@ input:checked + .switch-slider:before {
 }
 
 .levels-dialog-shell.is-catalog-mode .levels-feed-list {
-  max-height: 490px;
+  max-height: 520px;
 }
 
 /* Dedicated Header for All Levels Catalog Page */
@@ -2652,6 +2669,28 @@ input:checked + .switch-slider:before {
   transition: all 140ms ease;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  outline: none;
+}
+
+.levels-all-btn:focus {
+  outline: none;
+}
+
+.levels-all-btn:focus-visible {
+  outline: 2px solid rgba(251, 191, 36, 0.6);
+  outline-offset: 1px;
+}
+
+.levels-back-btn,
+#toggle-levels-text {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  user-select: none !important;
 }
 
 .levels-all-btn:hover {
@@ -2707,6 +2746,8 @@ input:checked + .switch-slider:before {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.55rem;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .levels-pill {
@@ -2763,6 +2804,8 @@ input:checked + .switch-slider:before {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .levels-progress-labels {
@@ -2851,9 +2894,11 @@ input:checked + .switch-slider:before {
   overflow-y: auto;
   overflow-x: hidden;
   contain: content;
-  max-height: 310px;
+  max-height: 360px;
   padding: 0.15rem 0.2rem;
   -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .levels-spacer-top,
@@ -2887,11 +2932,11 @@ input:checked + .switch-slider:before {
   margin-bottom: 0.55rem;
   box-sizing: border-box;
 
-  /* Calorie tracker lazy loading entrance animation */
+  /* Calorie tracker lazy loading entrance animation — high-performance snappy timing */
   opacity: 0;
-  transform: translateX(80px) translateY(100px) scale(0.1);
-  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
-              opacity 0.7s linear;
+  transform: translateX(60px) translateY(65px) scale(0.25);
+  transition: transform 0.42s cubic-bezier(0.2, 0.8, 0.2, 1),
+              opacity 0.32s ease-out;
   will-change: transform, opacity;
 }
 
@@ -3041,9 +3086,7 @@ input:checked + .switch-slider:before {
   position: sticky;
   top: 0;
   z-index: 8;
-  background: rgba(14, 18, 10, 0.95);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(14, 18, 10, 0.98);
   border: 1px solid rgba(251, 191, 36, 0.22);
   border-radius: 9px;
   padding: 0.38rem 0.75rem;
@@ -3054,11 +3097,11 @@ input:checked + .switch-slider:before {
   justify-content: space-between;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 0 8px rgba(251, 191, 36, 0.08);
 
-  /* Calorie tracker lazy loading entrance animation */
+  /* Calorie tracker lazy loading entrance animation — high-performance snappy timing */
   opacity: 0;
-  transform: translateX(80px) translateY(100px) scale(0.1);
-  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
-              opacity 0.7s linear;
+  transform: translateX(60px) translateY(65px) scale(0.25);
+  transition: transform 0.42s cubic-bezier(0.2, 0.8, 0.2, 1),
+              opacity 0.32s ease-out;
   will-change: transform, opacity;
 }
 

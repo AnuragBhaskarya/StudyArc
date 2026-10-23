@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=8.1">
+  <link rel="stylesheet" href="styles.css?v=8.2">
   <script>
     (function () {
       try {
@@ -418,7 +418,7 @@
  
        <!-- LEVEL & RPG MASTERY MODAL DIALOG (Opened via clicking XP Stats pill) -->
        <dialog id="levels-dialog" class="levels-dialog day-detail-dialog" closedby="any" aria-labelledby="levels-dialog-title">
-         <div class="levels-dialog-shell day-dialog-shell" id="levels-dialog-shell">
+         <div class="levels-dialog-shell day-dialog-shell" id="levels-dialog-shell" tabindex="-1">
             <!-- Header for My Journey View (Hidden in Catalog View) -->
             <div class="day-dialog-header levels-dialog-header levels-journey-only">
               <div class="day-dialog-header-info levels-dialog-header-info">
@@ -434,7 +434,7 @@
                 </div>
                 <h2 class="day-dialog-title levels-dialog-title" id="levels-dialog-title">Level 1 — Novice I</h2>
               </div>
-              <button class="day-dialog-close-btn levels-close-btn" id="btn-close-levels-dialog" aria-label="Close Level Stats">
+              <button class="day-dialog-close-btn levels-close-btn" id="btn-close-levels-dialog" aria-label="Close Level Stats" autofocus>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -739,7 +739,7 @@
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
   <script src="aura-particles.js?v=5.3"></script>
-  <script src="app.js?v=7.5"></script>
+  <script src="app.js?v=7.6"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

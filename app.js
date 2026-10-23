@@ -3239,11 +3239,26 @@
   function openLevelsDialog() {
     const dialog = document.getElementById('levels-dialog');
     if (!dialog) return;
+
+    // Clear any text selection that may have occurred
+    if (window.getSelection) {
+      window.getSelection().removeAllRanges();
+    }
+
     showAllLevelsView = false;
     renderLevelsDialogDOM();
     if (typeof dialog.showModal === 'function' && !dialog.open) {
       dialog.showModal();
     }
+
+    // Direct focus to the close button so browser never text-selects "All Levels"
+    const closeBtn = document.getElementById('btn-close-levels-dialog');
+    if (closeBtn) {
+      try { closeBtn.focus({ preventScroll: true }); } catch (e) {}
+    } else if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur();
+    }
+
     globalLenis?.stop();
     initShellLenis();
     setTimeout(() => { levelsLenis?.resize(); }, 40);
@@ -3310,7 +3325,9 @@
       this.container.addEventListener('scroll', this.onScroll, { passive: true });
 
       if (typeof levelsLenis !== 'undefined' && levelsLenis) {
-        this.lenisHandler = () => this.onScroll();
+        this.lenisHandler = () => {
+          this.updateWindow(false);
+        };
         levelsLenis.on('scroll', this.lenisHandler);
       }
 
@@ -3338,7 +3355,7 @@
     }
 
     getVisibleRange(scrollTop, viewportHeight) {
-      const buffer = 120; // Focused buffer so items animate right as they enter view area
+      const buffer = 360; // Generous buffer (~6-7 cards) prevents empty gaps during rapid scrolls
       const minY = Math.max(0, scrollTop - buffer);
       const maxY = scrollTop + viewportHeight + buffer;
 
@@ -3374,7 +3391,7 @@
       if (this.virtualItems.length === 0) return;
 
       const scrollTop = this.container.scrollTop;
-      const viewportHeight = this.container.clientHeight || (this.isCatalogMode ? 490 : 310);
+      const viewportHeight = this.container.clientHeight || (this.isCatalogMode ? 520 : 360);
       const { startIndex, endIndex } = this.getVisibleRange(scrollTop, viewportHeight);
 
       // Identify active tier for sticky header & heading display
@@ -3470,10 +3487,10 @@
         const itemTop = this.itemOffsets[idx];
         const itemBottom = itemTop + this.virtualItems[idx].height;
 
-        // Triggers right as the element reaches the view area boundary so the user watches
-        // it animate into view (pinHeaderIdx is pinned at top: 0 so it's always in view)
+        // Pre-triggers 160px before entering viewport so items are in active, smooth motion
+        // as they cross the visible boundary, completely preventing empty delay on hard scrolls
         const isEnteringView = (idx === pinHeaderIdx) || (
-          itemBottom >= viewTop - 10 && itemTop <= viewBottom + 25
+          itemBottom >= viewTop - 60 && itemTop <= viewBottom + 160
         );
 
         if (isEnteringView) {
@@ -3484,8 +3501,7 @@
       if (toAnimate.length > 0) {
         requestAnimationFrame(() => {
           toAnimate.forEach((el, i) => {
-            void el.offsetWidth; // Force reflow so entrance transition fires reliably
-            const delay = Math.min((i % 5) * 35, 140);
+            const delay = Math.min((i % 4) * 16, 48);
             el.style.transitionDelay = `${delay}ms`;
             el.classList.add('visible');
           });
@@ -4113,7 +4129,8 @@
     // RPG Levels Dialog: Open via clicking or Enter on XP pill
     const statItemXp = document.getElementById('stat-item-xp');
     if (statItemXp) {
-      statItemXp.addEventListener('click', () => {
+      statItemXp.addEventListener('click', (e) => {
+        e.stopPropagation();
         openLevelsDialog();
       });
       statItemXp.addEventListener('keydown', (e) => {
@@ -4140,6 +4157,7 @@
     const btnToggleAllLevels = document.getElementById('btn-toggle-all-levels');
     if (btnToggleAllLevels) {
       btnToggleAllLevels.addEventListener('click', () => {
+        if (window.getSelection) window.getSelection().removeAllRanges();
         showAllLevelsView = true;
         renderLevelsDialogDOM();
       });
@@ -4149,6 +4167,7 @@
     const btnBackToJourney = document.getElementById('btn-back-to-journey');
     if (btnBackToJourney) {
       btnBackToJourney.addEventListener('click', () => {
+        if (window.getSelection) window.getSelection().removeAllRanges();
         showAllLevelsView = false;
         renderLevelsDialogDOM();
       });
