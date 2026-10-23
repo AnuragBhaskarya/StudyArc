@@ -3338,7 +3338,7 @@
     }
 
     getVisibleRange(scrollTop, viewportHeight) {
-      const buffer = 260; // Extra buffer above and below visible area
+      const buffer = 120; // Focused buffer so items animate right as they enter view area
       const minY = Math.max(0, scrollTop - buffer);
       const maxY = scrollTop + viewportHeight + buffer;
 
@@ -3408,7 +3408,6 @@
       }
 
       // 2. Mount new or reappearing items into correct DOM position
-      const newlyCreatedCards = [];
       const sortedIndices = Array.from(neededIndices).sort((a, b) => a - b);
 
       for (let i = 0; i < sortedIndices.length; i++) {
@@ -3421,7 +3420,6 @@
           el = this.renderTierHeader(item);
         } else {
           el = this.renderCard(item.level);
-          newlyCreatedCards.push(el);
         }
 
         // Find correct anchor in DOM
@@ -3460,14 +3458,36 @@
         this.bottomSpacer.style.height = '0px';
       }
 
-      // 4. Trigger calorie-tracker lazy loading animation on newly mounted/reappearing cards
-      if (newlyCreatedCards.length > 0) {
+      // 4. Trigger calorie-tracker lazy loading animation on cards and tier headers
+      // as they come into the view area so the animation is clearly visible
+      const viewTop = scrollTop;
+      const viewBottom = scrollTop + viewportHeight;
+      const toAnimate = [];
+
+      for (const [idx, el] of this.mountedElements.entries()) {
+        if (el.classList.contains('visible')) continue;
+
+        const itemTop = this.itemOffsets[idx];
+        const itemBottom = itemTop + this.virtualItems[idx].height;
+
+        // Triggers right as the element reaches the view area boundary so the user watches
+        // it animate into view (pinHeaderIdx is pinned at top: 0 so it's always in view)
+        const isEnteringView = (idx === pinHeaderIdx) || (
+          itemBottom >= viewTop - 10 && itemTop <= viewBottom + 25
+        );
+
+        if (isEnteringView) {
+          toAnimate.push(el);
+        }
+      }
+
+      if (toAnimate.length > 0) {
         requestAnimationFrame(() => {
-          newlyCreatedCards.forEach((card, i) => {
-            void card.offsetWidth; // Force reflow so entrance transition fires reliably
-            const delay = Math.min((i % 6) * 35, 180);
-            card.style.transitionDelay = `${delay}ms`;
-            card.classList.add('visible');
+          toAnimate.forEach((el, i) => {
+            void el.offsetWidth; // Force reflow so entrance transition fires reliably
+            const delay = Math.min((i % 5) * 35, 140);
+            el.style.transitionDelay = `${delay}ms`;
+            el.classList.add('visible');
           });
         });
       }
