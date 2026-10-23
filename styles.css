@@ -4271,9 +4271,21 @@ input:checked + .switch-slider:before {
   gap: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  contain: content;
   max-height: 380px;
   padding: 0.15rem 0.25rem;
   -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.history-spacer-top,
+.history-spacer-bottom {
+  width: 100%;
+  flex-shrink: 0;
+  pointer-events: none;
+  margin: 0;
+  padding: 0;
 }
 
 /* Sticky Date Group Header (Equivalent to RPG Tier Headers, Green Theme) */
@@ -4281,7 +4293,7 @@ input:checked + .switch-slider:before {
   position: sticky;
   top: 0;
   z-index: 10;
-  min-height: 42px;
+  height: 44px;
   background: rgba(8, 18, 12, 0.98);
   border: 1px solid rgba(16, 224, 104, 0.24);
   border-radius: 10px;
@@ -4350,6 +4362,7 @@ input:checked + .switch-slider:before {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: 56px;
   padding: 0.55rem 0.85rem 0.55rem 0.7rem;
   background: #07150e;
   border: 1px solid rgba(16, 224, 104, 0.16);
