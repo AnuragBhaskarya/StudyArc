@@ -2932,26 +2932,38 @@ input:checked + .switch-slider:before {
   margin-bottom: 0.55rem;
   box-sizing: border-box;
 
-  /* The signature smooth delayed 0.8s Calorie Tracker animation */
+  /* Base level-card styles */
+}
+
+/* ALL LEVELS (Catalog Mode): The signature smooth delayed 0.8s Calorie Tracker animation */
+.levels-dialog-shell.is-catalog-mode .level-card {
   opacity: 0;
   transform: translateX(80px) translateY(100px) scale(0.1);
   transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
               opacity 0.7s linear;
   will-change: transform, opacity;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 60px;
 }
 
-.level-card.visible {
+.levels-dialog-shell.is-catalog-mode .level-card.visible {
   opacity: 1;
   transform: none;
-  will-change: auto;
 }
 
-.level-card.is-locked.visible {
+.levels-dialog-shell.is-catalog-mode .level-card.is-locked.visible {
   opacity: 0.52;
   transform: none;
-  will-change: auto;
+}
+
+/* MY JOURNEY MODE: Instant, solid, permanent rendering — zero lag, zero delay */
+.levels-dialog-shell:not(.is-catalog-mode) .level-card {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+.levels-dialog-shell:not(.is-catalog-mode) .level-card.is-locked {
+  opacity: 0.52;
+  transform: none;
 }
 
 .level-card.is-current {
@@ -3101,7 +3113,11 @@ input:checked + .switch-slider:before {
   justify-content: space-between;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 0 8px rgba(251, 191, 36, 0.08);
 
-  /* The signature smooth delayed 0.8s animation */
+  /* Base sticky tier header */
+}
+
+/* ALL LEVELS (Catalog Mode): The signature smooth delayed 0.8s animation */
+.levels-dialog-shell.is-catalog-mode .level-tier-sticky-header {
   opacity: 0;
   transform: translateX(80px) translateY(100px) scale(0.1);
   transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -3109,10 +3125,16 @@ input:checked + .switch-slider:before {
   will-change: transform, opacity;
 }
 
-.level-tier-sticky-header.visible {
+.levels-dialog-shell.is-catalog-mode .level-tier-sticky-header.visible {
   opacity: 1;
   transform: none;
-  will-change: auto;
+}
+
+/* MY JOURNEY MODE: Instant, solid, permanent rendering — zero lag, zero delay */
+.levels-dialog-shell:not(.is-catalog-mode) .level-tier-sticky-header {
+  opacity: 1;
+  transform: none;
+  transition: none;
 }
 
 .level-tier-sticky-left {
