@@ -3981,15 +3981,15 @@
   // SESSIONS HISTORY & ARCHIVE CHRONICLE MODAL DIALOG
   // =========================================================================
   let historyLenis = null;
-  let activeHistoryScroller = null;
+  let activeHistoryCleanup = null;
 
   function resetHistoryContainer(cleanDOM = false) {
     const feedList = document.getElementById('history-feed-list');
 
-    // 1. Destroy and clean up any active scrollers, RAF loops, or scroll listeners
-    if (activeHistoryScroller) {
-      try { activeHistoryScroller.destroy(); } catch (e) {}
-      activeHistoryScroller = null;
+    // 1. Destroy and clean up any active RAF loops or scroll listeners
+    if (activeHistoryCleanup) {
+      try { activeHistoryCleanup(); } catch (e) {}
+      activeHistoryCleanup = null;
     }
 
     // 2. Halt and reset smooth scrolling (Lenis) momentum immediately
@@ -4103,232 +4103,6 @@
     return card;
   }
 
-  class VirtualHistoryScroller {
-    constructor({
-      container,
-      virtualItems,
-      dateHeaderIndices,
-      renderSessionCard,
-      renderDateHeader
-    }) {
-      this.container = container;
-      this.virtualItems = virtualItems;
-      this.dateHeaderIndices = dateHeaderIndices;
-      this.renderSessionCard = renderSessionCard;
-      this.renderDateHeader = renderDateHeader;
-
-      this.mountedElements = new Map();
-      this.totalHeight = 0;
-      this.itemOffsets = new Float64Array(virtualItems.length);
-      for (let i = 0; i < virtualItems.length; i++) {
-        this.itemOffsets[i] = this.totalHeight;
-        this.totalHeight += virtualItems[i].height;
-      }
-
-      this.container.innerHTML = '';
-
-      this.topSpacer = document.createElement('div');
-      this.topSpacer.className = 'history-spacer-top';
-      this.topSpacer.style.height = '0px';
-      this.topSpacer.style.display = 'none';
-
-      this.bottomSpacer = document.createElement('div');
-      this.bottomSpacer.className = 'history-spacer-bottom';
-      this.bottomSpacer.style.height = `${this.totalHeight}px`;
-
-      this.container.appendChild(this.topSpacer);
-      this.container.appendChild(this.bottomSpacer);
-
-      this.rafId = null;
-      this.lastScrollTop = 0;
-      this.onScroll = this.onScroll.bind(this);
-      this.container.addEventListener('scroll', this.onScroll, { passive: true });
-
-      if (typeof historyLenis !== 'undefined' && historyLenis) {
-        this.lenisHandler = () => {
-          this.updateWindow(false);
-        };
-        historyLenis.on('scroll', this.lenisHandler);
-      }
-
-      this.updateWindow(true);
-    }
-
-    destroy() {
-      this.container.removeEventListener('scroll', this.onScroll);
-      if (typeof historyLenis !== 'undefined' && historyLenis && this.lenisHandler) {
-        try { historyLenis.off('scroll', this.lenisHandler); } catch (e) {}
-      }
-      if (this.rafId) {
-        cancelAnimationFrame(this.rafId);
-        this.rafId = null;
-      }
-      this.mountedElements.clear();
-    }
-
-    onScroll() {
-      if (this.rafId) return;
-      this.rafId = requestAnimationFrame(() => {
-        this.rafId = null;
-        this.updateWindow(false);
-      });
-    }
-
-    getVisibleRange(scrollTop, viewportHeight) {
-      // 140px focused buffer (exact match with All Levels):
-      // pre-loads ~2 items outside view so they are mounted in State A (invisible),
-      // and when scrolling they trigger the signature Calorie Tracker swoop right as they cross into view,
-      // and unmount when 140px outside view so scrolling back triggers the re-appearing animation!
-      const buffer = 140;
-      const minY = Math.max(0, scrollTop - buffer);
-      const maxY = scrollTop + viewportHeight + buffer;
-
-      let startIndex = 0;
-      let endIndex = this.virtualItems.length - 1;
-
-      let low = 0, high = this.virtualItems.length - 1;
-      while (low <= high) {
-        const mid = (low + high) >> 1;
-        if (this.itemOffsets[mid] + this.virtualItems[mid].height >= minY) {
-          startIndex = mid;
-          high = mid - 1;
-        } else {
-          low = mid + 1;
-        }
-      }
-
-      low = startIndex; high = this.virtualItems.length - 1;
-      while (low <= high) {
-        const mid = (low + high) >> 1;
-        if (this.itemOffsets[mid] <= maxY) {
-          endIndex = mid;
-          low = mid + 1;
-        } else {
-          high = mid - 1;
-        }
-      }
-
-      return { startIndex, endIndex };
-    }
-
-    updateWindow(isInitial = false) {
-      if (this.virtualItems.length === 0) return;
-
-      const scrollTop = this.container.scrollTop;
-      const viewportHeight = this.container.clientHeight || 380;
-      this.lastScrollTop = scrollTop;
-
-      const { startIndex, endIndex } = this.getVisibleRange(scrollTop, viewportHeight);
-
-      // 1. Identify active date based on the first item in the visible/buffer window (exact match with All Levels tier pinning)
-      const firstItem = this.virtualItems[startIndex];
-      const activeDateStr = firstItem.date;
-
-      // 2. Pin the active date header if it has scrolled above the virtual window
-      const activeDateHeaderIdx = this.dateHeaderIndices[activeDateStr];
-      let pinHeaderIdx = null;
-      if (activeDateHeaderIdx !== undefined && activeDateHeaderIdx < startIndex) {
-        pinHeaderIdx = activeDateHeaderIdx;
-      }
-
-      const neededIndices = new Set();
-      if (pinHeaderIdx !== null) neededIndices.add(pinHeaderIdx);
-      for (let i = startIndex; i <= endIndex; i++) {
-        neededIndices.add(i);
-      }
-
-      // 3. Remove elements that leave view range (so they will re-appear when scrolled back!)
-      for (const [idx, el] of this.mountedElements.entries()) {
-        if (!neededIndices.has(idx)) {
-          el.remove();
-          this.mountedElements.delete(idx);
-        }
-      }
-
-      // 4. Mount newly needed elements into DOM in exact document order
-      const sortedIndices = Array.from(neededIndices).sort((a, b) => a - b);
-
-      for (let i = 0; i < sortedIndices.length; i++) {
-        const idx = sortedIndices[i];
-        if (this.mountedElements.has(idx)) continue;
-
-        const item = this.virtualItems[idx];
-        let el;
-        if (item.type === 'date') {
-          el = this.renderDateHeader(item);
-        } else {
-          el = this.renderSessionCard(item.session);
-        }
-
-        // Find anchor
-        let anchor = this.bottomSpacer;
-        for (let j = i + 1; j < sortedIndices.length; j++) {
-          if (this.mountedElements.has(sortedIndices[j])) {
-            anchor = this.mountedElements.get(sortedIndices[j]);
-            break;
-          }
-        }
-
-        this.container.insertBefore(el, anchor);
-        this.mountedElements.set(idx, el);
-      }
-
-      // 5. Update top and bottom spacers to maintain exact scroll height
-      let topSpacerHeight = this.itemOffsets[startIndex];
-      if (pinHeaderIdx !== null) {
-        topSpacerHeight = Math.max(0, topSpacerHeight - this.virtualItems[pinHeaderIdx].height);
-      }
-      const bottomSpacerHeight = Math.max(0, this.totalHeight - (this.itemOffsets[endIndex] + this.virtualItems[endIndex].height));
-
-      if (topSpacerHeight > 0) {
-        this.topSpacer.style.display = 'block';
-        this.topSpacer.style.height = `${topSpacerHeight}px`;
-      } else {
-        this.topSpacer.style.display = 'none';
-        this.topSpacer.style.height = '0px';
-      }
-
-      if (bottomSpacerHeight > 0) {
-        this.bottomSpacer.style.display = 'block';
-        this.bottomSpacer.style.height = `${bottomSpacerHeight}px`;
-      } else {
-        this.bottomSpacer.style.display = 'none';
-        this.bottomSpacer.style.height = '0px';
-      }
-
-      // 6. Trigger signature Calorie Tracker swooping entrance / reappearing animation
-      const viewTop = scrollTop;
-      const viewBottom = scrollTop + viewportHeight;
-      const toAnimate = [];
-
-      for (const [idx, el] of this.mountedElements.entries()) {
-        if (el.classList.contains('visible')) continue;
-
-        const itemTop = this.itemOffsets[idx];
-        const itemBottom = itemTop + this.virtualItems[idx].height;
-
-        const isEnteringView = (idx === pinHeaderIdx) || (
-          itemBottom >= viewTop - 10 && itemTop <= viewBottom + 25
-        );
-
-        if (isEnteringView) {
-          toAnimate.push({ el, isPinned: idx === pinHeaderIdx });
-        }
-      }
-
-      if (toAnimate.length > 0) {
-        requestAnimationFrame(() => {
-          toAnimate.forEach(({ el, isPinned }, i) => {
-            void el.offsetWidth; // Force reflow for the signature delayed Calorie Tracker transition
-            const delay = isPinned ? 0 : Math.min((i % 5) * 35, 140);
-            el.style.transitionDelay = `${delay}ms`;
-            el.classList.add('visible');
-          });
-        });
-      }
-    }
-  }
-
   async function openHistoryDialog() {
     const dialog = document.getElementById('sessions-history-dialog');
     if (!dialog) return;
@@ -4391,7 +4165,7 @@
           const differs = incoming.length !== prevLength || JSON.stringify(incoming) !== JSON.stringify(state.sessions);
           state.sessions = incoming;
           saveState();
-          if (dialog.open && (differs || !activeHistoryScroller)) {
+          if (dialog.open && (differs || !activeHistoryCleanup)) {
             renderHistoryDialogDOM();
             if (typeof historyLenis !== 'undefined' && historyLenis) {
               historyLenis.resize();
@@ -4401,7 +4175,7 @@
       }
     } catch (e) {
       console.warn('StudyArc: Could not fetch sessions history:', e);
-      if (dialog.open && !activeHistoryScroller) {
+      if (dialog.open && !activeHistoryCleanup) {
         renderHistoryDialogDOM();
       }
     }
@@ -4424,9 +4198,9 @@
     const feedList = document.getElementById('history-feed-list');
     if (!feedList) return;
 
-    if (activeHistoryScroller) {
-      activeHistoryScroller.destroy();
-      activeHistoryScroller = null;
+    if (activeHistoryCleanup) {
+      try { activeHistoryCleanup(); } catch (e) {}
+      activeHistoryCleanup = null;
     }
 
     // 1. Gather all historical sessions and sort in descending date/time order
@@ -4485,60 +4259,145 @@
       return;
     }
 
-    // 5. Build virtual items list with precise slot heights
-    // Date Header: 44px + 9px margin-bottom = 53px
-    // Session Card: 56px + 9px margin-bottom = 65px
-    const virtualItems = [];
-    const dateHeaderIndices = {};
+    // 5. Build and mount permanent solid DOM elements via DocumentFragment (exact match with My Journey)
+    feedList.innerHTML = '';
+    feedList.scrollTop = 0;
+    feedList.scrollLeft = 0;
+
+    const fragment = document.createDocumentFragment();
+    const historyElements = [];
 
     for (const [dateStr, daySessions] of dateMap.entries()) {
       const fullDateStr = formatDayDateHeader(dateStr);
       const dayTotalMins = daySessions.reduce((acc, it) => acc + (it.durationMinutes || it.duration_minutes || 0), 0);
       const badgeText = getShortDateBadge(dateStr);
 
-      const headerIdx = virtualItems.length;
-      dateHeaderIndices[dateStr] = headerIdx;
-
-      virtualItems.push({
-        type: 'date',
+      const dateHdr = createHistoryDateHeader({
         date: dateStr,
         fullDate: fullDateStr,
         badge: badgeText,
         sessionsCount: daySessions.length,
-        totalMins: dayTotalMins,
-        height: 53
+        totalMins: dayTotalMins
       });
+      fragment.appendChild(dateHdr);
+      historyElements.push(dateHdr);
 
       daySessions.forEach((s) => {
         s.fullDate = fullDateStr;
-        virtualItems.push({
-          type: 'session',
-          session: s,
-          date: dateStr,
-          height: 65
-        });
+        const card = createHistorySessionCard(s);
+        fragment.appendChild(card);
+        historyElements.push(card);
       });
     }
 
-    // 6. Initialize VirtualHistoryScroller with 0.8s Calorie Tracker Animation and Sticky Date Cards
-    activeHistoryScroller = new VirtualHistoryScroller({
-      container: feedList,
-      virtualItems,
-      dateHeaderIndices,
-      renderSessionCard: createHistorySessionCard,
-      renderDateHeader: createHistoryDateHeader
-    });
+    feedList.appendChild(fragment);
 
+    // 6. Bidirectional Re-appearing Calorie Tracker Animation Engine (Identical to My Journey)
+    let lastScrollTop = 0;
+    let scrollDirection = 'down';
+    const HYSTERESIS = 160;
+    let historyRaf = null;
+
+    const updateReappearingHistoryCards = (isInitial = false) => {
+      const scrollTop = feedList.scrollTop;
+      const viewportHeight = feedList.clientHeight || 380;
+
+      if (!isInitial) {
+        if (scrollTop > lastScrollTop + 1) {
+          scrollDirection = 'down';
+        } else if (scrollTop < lastScrollTop - 1) {
+          scrollDirection = 'up';
+        }
+      }
+      lastScrollTop = scrollTop;
+
+      const viewTop = scrollTop;
+      const viewBottom = scrollTop + viewportHeight;
+
+      const newlyRevealed = [];
+
+      for (let i = 0; i < historyElements.length; i++) {
+        const el = historyElements[i];
+        const elTop = el.offsetTop;
+        const elHeight = el.offsetHeight || 56;
+        const elBottom = elTop + elHeight;
+
+        const isInsideView = (elBottom >= viewTop - 25) && (elTop <= viewBottom + 25);
+        const isFarAbove = elBottom < (viewTop - HYSTERESIS);
+        const isFarBelow = elTop > (viewBottom + HYSTERESIS);
+
+        if (isInsideView) {
+          if (!el.classList.contains('visible')) {
+            el.classList.remove('enter-top', 'enter-bottom');
+            el.classList.add(scrollDirection === 'up' ? 'enter-top' : 'enter-bottom');
+            newlyRevealed.push(el);
+          }
+        } else if (isFarAbove) {
+          if (el.classList.contains('visible') || !el.classList.contains('enter-top')) {
+            el.classList.remove('visible', 'enter-bottom');
+            el.classList.add('enter-top');
+            el.style.transitionDelay = '0ms';
+          }
+        } else if (isFarBelow) {
+          if (el.classList.contains('visible') || !el.classList.contains('enter-bottom')) {
+            el.classList.remove('visible', 'enter-top');
+            el.classList.add('enter-bottom');
+            el.style.transitionDelay = '0ms';
+          }
+        }
+      }
+
+      if (newlyRevealed.length > 0) {
+        if (scrollDirection === 'up') {
+          newlyRevealed.reverse();
+        }
+        newlyRevealed.forEach((el, index) => {
+          void el.offsetWidth;
+          const delay = Math.min(index * 35, 140);
+          el.style.transitionDelay = `${delay}ms`;
+          el.classList.add('visible');
+        });
+      }
+    };
+
+    const onHistoryScroll = () => {
+      if (historyRaf) return;
+      historyRaf = requestAnimationFrame(() => {
+        historyRaf = null;
+        updateReappearingHistoryCards(false);
+      });
+    };
+
+    feedList.addEventListener('scroll', onHistoryScroll, { passive: true });
     initShellLenis();
     if (typeof historyLenis !== 'undefined' && historyLenis) {
+      historyLenis.on('scroll', onHistoryScroll);
       historyLenis.scrollTo(0, { immediate: true, force: true });
       historyLenis.resize();
       historyLenis.start();
     }
+
+    // Initial entrance animation pass: Force layout of State A, then transition via RAF
+    void feedList.offsetHeight;
+    requestAnimationFrame(() => {
+      updateReappearingHistoryCards(true);
+    });
+
     setTimeout(() => {
       historyLenis?.resize();
-      activeHistoryScroller?.updateWindow(false);
+      updateReappearingHistoryCards(false);
     }, 50);
+
+    activeHistoryCleanup = () => {
+      if (historyRaf) {
+        cancelAnimationFrame(historyRaf);
+        historyRaf = null;
+      }
+      feedList.removeEventListener('scroll', onHistoryScroll);
+      if (typeof historyLenis !== 'undefined' && historyLenis) {
+        try { historyLenis.off('scroll', onHistoryScroll); } catch (e) {}
+      }
+    };
   }
 
   function deleteSession(sessionId, dateStr) {
