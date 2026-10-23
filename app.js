@@ -4109,15 +4109,13 @@
       virtualItems,
       dateHeaderIndices,
       renderSessionCard,
-      renderDateHeader,
-      headingEl
+      renderDateHeader
     }) {
       this.container = container;
       this.virtualItems = virtualItems;
       this.dateHeaderIndices = dateHeaderIndices;
       this.renderSessionCard = renderSessionCard;
       this.renderDateHeader = renderDateHeader;
-      this.headingEl = headingEl;
 
       this.mountedElements = new Map();
       this.totalHeight = 0;
@@ -4132,7 +4130,6 @@
       this.topSpacer = document.createElement('div');
       this.topSpacer.className = 'history-spacer-top';
       this.topSpacer.style.height = '0px';
-      this.topSpacer.style.display = 'none';
 
       this.bottomSpacer = document.createElement('div');
       this.bottomSpacer.className = 'history-spacer-bottom';
@@ -4237,11 +4234,6 @@
       }
       const activeTopItem = this.virtualItems[activeTopIdx];
       const activeDateStr = activeTopItem.date;
-      const activeDateTitle = activeTopItem.type === 'date' ? activeTopItem.fullDate : (activeTopItem.session ? activeTopItem.session.fullDate : '');
-
-      if (this.headingEl && activeDateTitle) {
-        this.headingEl.textContent = scrollTop < 15 ? 'Latest Sessions' : activeDateTitle;
-      }
 
       // 2. Pin the active date header if it has scrolled above the virtual window
       const activeDateHeaderIdx = this.dateHeaderIndices[activeDateStr];
@@ -4299,21 +4291,8 @@
       }
       const bottomSpacerHeight = Math.max(0, this.totalHeight - (this.itemOffsets[endIndex] + this.virtualItems[endIndex].height));
 
-      if (topSpacerHeight > 0) {
-        this.topSpacer.style.display = 'block';
-        this.topSpacer.style.height = `${topSpacerHeight}px`;
-      } else {
-        this.topSpacer.style.display = 'none';
-        this.topSpacer.style.height = '0px';
-      }
-
-      if (bottomSpacerHeight > 0) {
-        this.bottomSpacer.style.display = 'block';
-        this.bottomSpacer.style.height = `${bottomSpacerHeight}px`;
-      } else {
-        this.bottomSpacer.style.display = 'none';
-        this.bottomSpacer.style.height = '0px';
-      }
+      this.topSpacer.style.height = `${topSpacerHeight}px`;
+      this.bottomSpacer.style.height = `${bottomSpacerHeight}px`;
 
       // 6. Trigger signature Calorie Tracker swooping entrance / reappearing animation
       const viewTop = scrollTop;
@@ -4484,14 +4463,10 @@
     const pillTotalTime = document.getElementById('history-pill-total-time');
     const pillSessions = document.getElementById('history-pill-sessions-count');
     const pillDays = document.getElementById('history-pill-days-count');
-    const headingEl = document.getElementById('history-feed-heading');
-    const feedCountEl = document.getElementById('history-feed-count');
 
     if (pillTotalTime) pillTotalTime.textContent = formatHoursMinutes(totalFocusSec);
     if (pillSessions) pillSessions.textContent = totalSessions.toLocaleString();
     if (pillDays) pillDays.textContent = activeDaysCount.toLocaleString();
-    if (headingEl) headingEl.textContent = 'Latest Sessions';
-    if (feedCountEl) feedCountEl.textContent = `${totalSessions} ${totalSessions === 1 ? 'session' : 'sessions'} • ${activeDaysCount} active days`;
 
     // 4. Handle Empty State
     if (totalSessions === 0) {
@@ -4511,8 +4486,8 @@
     }
 
     // 5. Build virtual items list with precise slot heights
-    // Date Header: 44px + 14px margin = 58px
-    // Session Card: 56px + 9px margin = 65px
+    // Date Header: 44px + 9px margin-bottom = 53px
+    // Session Card: 56px + 9px margin-bottom = 65px
     const virtualItems = [];
     const dateHeaderIndices = {};
 
@@ -4531,7 +4506,7 @@
         badge: badgeText,
         sessionsCount: daySessions.length,
         totalMins: dayTotalMins,
-        height: 58
+        height: 53
       });
 
       daySessions.forEach((s) => {
@@ -4551,8 +4526,7 @@
       virtualItems,
       dateHeaderIndices,
       renderSessionCard: createHistorySessionCard,
-      renderDateHeader: createHistoryDateHeader,
-      headingEl
+      renderDateHeader: createHistoryDateHeader
     });
 
     initShellLenis();
