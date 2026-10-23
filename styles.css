@@ -4252,6 +4252,7 @@ input:checked + .switch-slider:before {
   gap: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  contain: content;
   max-height: 380px;
   padding: 0.15rem 0.25rem 0.55rem 0.25rem;
   -webkit-overflow-scrolling: touch;
@@ -4266,6 +4267,16 @@ input:checked + .switch-slider:before {
 .history-feed-list::-webkit-scrollbar-thumb {
   background: rgba(16, 224, 104, 0.22);
   border-radius: 4px;
+}
+
+/* History Feed Spacers for VirtualHistoryScroller */
+.history-spacer-top,
+.history-spacer-bottom {
+  width: 100%;
+  flex-shrink: 0;
+  pointer-events: none;
+  margin: 0;
+  padding: 0;
 }
 
 /* Sticky Date Group Header (Equivalent to RPG Tier Headers, Green Theme) */
@@ -4285,27 +4296,12 @@ input:checked + .switch-slider:before {
   justify-content: space-between;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65), 0 0 10px rgba(16, 224, 104, 0.08);
 
-  /* Bidirectional Re-appearing Calorie Tracker animation (Exact match with My Journey) */
+  /* The signature smooth delayed 0.8s Calorie Tracker animation (Exact match with All Levels) */
   opacity: 0;
-  transform: translateX(80px) translateY(80px) scale(0.1);
-  transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1),
-              opacity 0.55s linear;
+  transform: translateX(80px) translateY(100px) scale(0.1);
+  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+              opacity 0.7s linear;
   will-change: transform, opacity;
-}
-
-.history-date-sticky-header.enter-top {
-  opacity: 0;
-  transform: translateX(80px) translateY(-70px) scale(0.1);
-}
-
-.history-date-sticky-header.enter-bottom {
-  opacity: 0;
-  transform: translateX(80px) translateY(80px) scale(0.1);
-}
-
-.history-date-sticky-header.enter-top:not(.visible),
-.history-date-sticky-header.enter-bottom:not(.visible) {
-  transition: none !important;
 }
 
 .history-date-sticky-header.visible {
@@ -4366,27 +4362,12 @@ input:checked + .switch-slider:before {
   margin-bottom: 0.55rem;
   box-sizing: border-box;
 
-  /* Bidirectional Re-appearing Calorie Tracker animation (Exact match with My Journey) */
+  /* The signature smooth delayed 0.8s Calorie Tracker animation (Exact match with All Levels) */
   opacity: 0;
-  transform: translateX(80px) translateY(80px) scale(0.1);
-  transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1),
-              opacity 0.55s linear;
+  transform: translateX(80px) translateY(100px) scale(0.1);
+  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+              opacity 0.7s linear;
   will-change: transform, opacity;
-}
-
-.history-session-card.enter-top {
-  opacity: 0;
-  transform: translateX(80px) translateY(-70px) scale(0.1);
-}
-
-.history-session-card.enter-bottom {
-  opacity: 0;
-  transform: translateX(80px) translateY(80px) scale(0.1);
-}
-
-.history-session-card.enter-top:not(.visible),
-.history-session-card.enter-bottom:not(.visible) {
-  transition: none !important;
 }
 
 .history-session-card.visible {

@@ -3982,11 +3982,16 @@
   // =========================================================================
   let historyLenis = null;
   let activeHistoryCleanup = null;
+  let activeHistoryScroller = null;
 
   function resetHistoryContainer(cleanDOM = false) {
     const feedList = document.getElementById('history-feed-list');
 
-    // 1. Destroy and clean up any active RAF loops or scroll listeners
+    // 1. Destroy active virtual scroller, RAF loops, and scroll listeners
+    if (activeHistoryScroller) {
+      try { activeHistoryScroller.destroy(); } catch (e) {}
+      activeHistoryScroller = null;
+    }
     if (activeHistoryCleanup) {
       try { activeHistoryCleanup(); } catch (e) {}
       activeHistoryCleanup = null;
@@ -4103,6 +4108,225 @@
     return card;
   }
 
+  class VirtualHistoryScroller {
+    constructor({
+      container,
+      virtualItems,
+      dateHeaderIndices,
+      renderSessionCard,
+      renderDateHeader
+    }) {
+      this.container = container;
+      this.virtualItems = virtualItems;
+      this.dateHeaderIndices = dateHeaderIndices;
+      this.renderSessionCard = renderSessionCard;
+      this.renderDateHeader = renderDateHeader;
+
+      this.mountedElements = new Map();
+      this.totalHeight = 0;
+      this.itemOffsets = new Float64Array(virtualItems.length);
+      for (let i = 0; i < virtualItems.length; i++) {
+        this.itemOffsets[i] = this.totalHeight;
+        this.totalHeight += virtualItems[i].height;
+      }
+
+      this.container.innerHTML = '';
+
+      this.topSpacer = document.createElement('div');
+      this.topSpacer.className = 'history-spacer-top';
+      this.topSpacer.style.height = '0px';
+      this.topSpacer.style.display = 'none';
+
+      this.bottomSpacer = document.createElement('div');
+      this.bottomSpacer.className = 'history-spacer-bottom';
+      this.bottomSpacer.style.height = `${this.totalHeight}px`;
+
+      this.container.appendChild(this.topSpacer);
+      this.container.appendChild(this.bottomSpacer);
+
+      this.rafId = null;
+      this.onScroll = this.onScroll.bind(this);
+      this.container.addEventListener('scroll', this.onScroll, { passive: true });
+
+      if (typeof historyLenis !== 'undefined' && historyLenis) {
+        this.lenisHandler = () => {
+          this.updateWindow(false);
+        };
+        historyLenis.on('scroll', this.lenisHandler);
+      }
+
+      this.updateWindow(true);
+    }
+
+    destroy() {
+      this.container.removeEventListener('scroll', this.onScroll);
+      if (typeof historyLenis !== 'undefined' && historyLenis && this.lenisHandler) {
+        try { historyLenis.off('scroll', this.lenisHandler); } catch (e) {}
+      }
+      if (this.rafId) {
+        cancelAnimationFrame(this.rafId);
+        this.rafId = null;
+      }
+      this.mountedElements.clear();
+    }
+
+    onScroll() {
+      if (this.rafId) return;
+      this.rafId = requestAnimationFrame(() => {
+        this.rafId = null;
+        this.updateWindow(false);
+      });
+    }
+
+    getVisibleRange(scrollTop, viewportHeight) {
+      // 140px focused buffer matching All Levels tab so items animate right as they enter view area
+      const buffer = 140;
+      const minY = Math.max(0, scrollTop - buffer);
+      const maxY = scrollTop + viewportHeight + buffer;
+
+      let startIndex = 0;
+      let endIndex = this.virtualItems.length - 1;
+
+      let low = 0, high = this.virtualItems.length - 1;
+      while (low <= high) {
+        const mid = (low + high) >> 1;
+        if (this.itemOffsets[mid] + this.virtualItems[mid].height >= minY) {
+          startIndex = mid;
+          high = mid - 1;
+        } else {
+          low = mid + 1;
+        }
+      }
+
+      low = startIndex; high = this.virtualItems.length - 1;
+      while (low <= high) {
+        const mid = (low + high) >> 1;
+        if (this.itemOffsets[mid] <= maxY) {
+          endIndex = mid;
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
+      }
+
+      return { startIndex, endIndex };
+    }
+
+    updateWindow(isInitial = false) {
+      if (this.virtualItems.length === 0) return;
+
+      const scrollTop = this.container.scrollTop;
+      const viewportHeight = this.container.clientHeight || 380;
+      const { startIndex, endIndex } = this.getVisibleRange(scrollTop, viewportHeight);
+
+      // Identify active date group for sticky header pinning
+      const firstItem = this.virtualItems[startIndex];
+      const activeDate = firstItem ? firstItem.date : null;
+      const activeDateHeaderIdx = activeDate ? this.dateHeaderIndices[activeDate] : undefined;
+      let pinHeaderIdx = null;
+      if (activeDateHeaderIdx !== undefined && activeDateHeaderIdx < startIndex) {
+        pinHeaderIdx = activeDateHeaderIdx;
+      }
+
+      const neededIndices = new Set();
+      if (pinHeaderIdx !== null) neededIndices.add(pinHeaderIdx);
+      for (let i = startIndex; i <= endIndex; i++) {
+        neededIndices.add(i);
+      }
+
+      // 1. Remove elements that leave the view range on both sides (scrolling down and scrolling up)
+      for (const [idx, el] of this.mountedElements.entries()) {
+        if (!neededIndices.has(idx)) {
+          el.remove();
+          this.mountedElements.delete(idx);
+        }
+      }
+
+      // 2. Mount new or reappearing items into correct DOM position
+      const sortedIndices = Array.from(neededIndices).sort((a, b) => a - b);
+
+      for (let i = 0; i < sortedIndices.length; i++) {
+        const idx = sortedIndices[i];
+        if (this.mountedElements.has(idx)) continue;
+
+        const item = this.virtualItems[idx];
+        let el;
+        if (item.type === 'header') {
+          el = this.renderDateHeader(item);
+        } else {
+          el = this.renderSessionCard(item.session);
+        }
+
+        // Find correct anchor in DOM
+        let anchor = this.bottomSpacer;
+        for (let j = i + 1; j < sortedIndices.length; j++) {
+          if (this.mountedElements.has(sortedIndices[j])) {
+            anchor = this.mountedElements.get(sortedIndices[j]);
+            break;
+          }
+        }
+
+        this.container.insertBefore(el, anchor);
+        this.mountedElements.set(idx, el);
+      }
+
+      // 3. Update top and bottom spacers to maintain exact scroll height
+      let topSpacerHeight = this.itemOffsets[startIndex];
+      if (pinHeaderIdx !== null) {
+        topSpacerHeight = Math.max(0, topSpacerHeight - this.virtualItems[pinHeaderIdx].height);
+      }
+      const bottomSpacerHeight = Math.max(0, this.totalHeight - (this.itemOffsets[endIndex] + this.virtualItems[endIndex].height));
+
+      if (topSpacerHeight > 0) {
+        this.topSpacer.style.display = 'block';
+        this.topSpacer.style.height = `${topSpacerHeight}px`;
+      } else {
+        this.topSpacer.style.display = 'none';
+        this.topSpacer.style.height = '0px';
+      }
+
+      if (bottomSpacerHeight > 0) {
+        this.bottomSpacer.style.display = 'block';
+        this.bottomSpacer.style.height = `${bottomSpacerHeight}px`;
+      } else {
+        this.bottomSpacer.style.display = 'none';
+        this.bottomSpacer.style.height = '0px';
+      }
+
+      // 4. Trigger animations:
+      // The beloved original delayed entrance with cascade as cards reach view threshold (exact match with All Levels)
+      const viewTop = scrollTop;
+      const viewBottom = scrollTop + viewportHeight;
+      const toAnimate = [];
+
+      for (const [idx, el] of this.mountedElements.entries()) {
+        if (el.classList.contains('visible')) continue;
+
+        const itemTop = this.itemOffsets[idx];
+        const itemBottom = itemTop + this.virtualItems[idx].height;
+
+        const isEnteringView = (idx === pinHeaderIdx) || (
+          itemBottom >= viewTop - 10 && itemTop <= viewBottom + 25
+        );
+
+        if (isEnteringView) {
+          toAnimate.push(el);
+        }
+      }
+
+      if (toAnimate.length > 0) {
+        requestAnimationFrame(() => {
+          toAnimate.forEach((el, i) => {
+            void el.offsetWidth; // Force reflow for the signature delayed multi-effect transition
+            const delay = Math.min((i % 5) * 35, 140);
+            el.style.transitionDelay = `${delay}ms`;
+            el.classList.add('visible');
+          });
+        });
+      }
+    }
+  }
+
   async function openHistoryDialog() {
     const dialog = document.getElementById('sessions-history-dialog');
     if (!dialog) return;
@@ -4162,10 +4386,15 @@
         const incoming = Array.isArray(data) ? data : (data.sessions || []);
         if (incoming && incoming.length >= 0) {
           const prevLength = state.sessions ? state.sessions.length : -1;
-          const differs = incoming.length !== prevLength || JSON.stringify(incoming) !== JSON.stringify(state.sessions);
+          let differs = incoming.length !== prevLength;
+          if (!differs && incoming.length > 0 && state.sessions && state.sessions.length > 0) {
+            differs = (incoming[0].id !== state.sessions[0].id ||
+                       incoming[0].timestamp !== state.sessions[0].timestamp ||
+                       incoming[incoming.length - 1].id !== state.sessions[state.sessions.length - 1].id);
+          }
           state.sessions = incoming;
           saveState();
-          if (dialog.open && (differs || !activeHistoryCleanup)) {
+          if (dialog.open && (differs || !activeHistoryScroller)) {
             renderHistoryDialogDOM();
             if (typeof historyLenis !== 'undefined' && historyLenis) {
               historyLenis.resize();
@@ -4175,7 +4404,7 @@
       }
     } catch (e) {
       console.warn('StudyArc: Could not fetch sessions history:', e);
-      if (dialog.open && !activeHistoryCleanup) {
+      if (dialog.open && !activeHistoryScroller) {
         renderHistoryDialogDOM();
       }
     }
@@ -4198,6 +4427,10 @@
     const feedList = document.getElementById('history-feed-list');
     if (!feedList) return;
 
+    if (activeHistoryScroller) {
+      try { activeHistoryScroller.destroy(); } catch (e) {}
+      activeHistoryScroller = null;
+    }
     if (activeHistoryCleanup) {
       try { activeHistoryCleanup(); } catch (e) {}
       activeHistoryCleanup = null;
@@ -4259,177 +4492,54 @@
       return;
     }
 
-    // 5. Build and mount permanent solid DOM elements via DocumentFragment (exact match with My Journey)
-    feedList.innerHTML = '';
-    feedList.scrollTop = 0;
-    feedList.scrollLeft = 0;
-
-    const fragment = document.createDocumentFragment();
-    const historyElements = [];
+    // 5. Build virtual items structure for VirtualHistoryScroller
+    const virtualItems = [];
+    const dateHeaderIndices = {};
 
     for (const [dateStr, daySessions] of dateMap.entries()) {
       const fullDateStr = formatDayDateHeader(dateStr);
       const dayTotalMins = daySessions.reduce((acc, it) => acc + (it.durationMinutes || it.duration_minutes || 0), 0);
       const badgeText = getShortDateBadge(dateStr);
 
-      const dateHdr = createHistoryDateHeader({
+      dateHeaderIndices[dateStr] = virtualItems.length;
+      virtualItems.push({
+        type: 'header',
         date: dateStr,
         fullDate: fullDateStr,
         badge: badgeText,
         sessionsCount: daySessions.length,
-        totalMins: dayTotalMins
+        totalMins: dayTotalMins,
+        height: 58
       });
-      fragment.appendChild(dateHdr);
-      historyElements.push(dateHdr);
 
       daySessions.forEach((s) => {
         s.fullDate = fullDateStr;
-        const card = createHistorySessionCard(s);
-        fragment.appendChild(card);
-        historyElements.push(card);
+        virtualItems.push({
+          type: 'session',
+          session: s,
+          date: dateStr,
+          height: 65
+        });
       });
     }
 
-    feedList.appendChild(fragment);
+    // 6. Instantiate VirtualHistoryScroller with full virtualization & All Levels animation
+    activeHistoryScroller = new VirtualHistoryScroller({
+      container: feedList,
+      virtualItems,
+      dateHeaderIndices,
+      renderSessionCard: createHistorySessionCard,
+      renderDateHeader: createHistoryDateHeader
+    });
 
-    // Measure element bounds once in a single batch pass so scroll frames do ZERO layout reads
-    const elementMetrics = [];
-    for (let i = 0; i < historyElements.length; i++) {
-      const el = historyElements[i];
-      const elTop = el.offsetTop;
-      const elHeight = el.offsetHeight || 56;
-      elementMetrics.push({
-        el,
-        top: elTop,
-        height: elHeight,
-        bottom: elTop + elHeight
-      });
-    }
-
-    // 6. Reactive Bidirectional Calorie Tracker Animation Engine (Velocity-Adaptive & Pre-Triggered)
-    let lastScrollTop = 0;
-    let scrollDirection = 'down';
-    let historyRaf = null;
-
-    const updateReappearingHistoryCards = (isInitial = false) => {
-      const scrollTop = feedList.scrollTop;
-      const viewportHeight = feedList.clientHeight || 380;
-
-      let scrollSpeed = 0;
-      if (!isInitial) {
-        scrollSpeed = Math.abs(scrollTop - lastScrollTop);
-        if (scrollTop > lastScrollTop + 1) {
-          scrollDirection = 'down';
-        } else if (scrollTop < lastScrollTop - 1) {
-          scrollDirection = 'up';
-        }
-      }
-      lastScrollTop = scrollTop;
-
-      const isFastScrolling = scrollSpeed > 8;
-      // Generous forward lookahead buffer (360px up to 600px when scrolling fast, matching My Journey's broad pre-trigger)
-      const leadBuffer = isFastScrolling ? Math.min(600, 360 + scrollSpeed * 8) : 360;
-      const trailBuffer = 120;
-      const HYSTERESIS = leadBuffer + 250;
-
-      const viewTop = scrollTop;
-      const viewBottom = scrollTop + viewportHeight;
-
-      // Expand detection range ahead in the direction of movement so cards are ready BEFORE they hit the screen
-      const minThreshold = scrollDirection === 'up' ? (viewTop - leadBuffer) : (viewTop - trailBuffer);
-      const maxThreshold = scrollDirection === 'down' ? (viewBottom + leadBuffer) : (viewBottom + trailBuffer);
-
-      const newlyRevealed = [];
-
-      for (let i = 0; i < elementMetrics.length; i++) {
-        const m = elementMetrics[i];
-        const el = m.el;
-
-        const isInsideView = (m.bottom >= minThreshold) && (m.top <= maxThreshold);
-        const isFarAbove = m.bottom < (viewTop - HYSTERESIS);
-        const isFarBelow = m.top > (viewBottom + HYSTERESIS);
-
-        if (isInsideView) {
-          if (!el.classList.contains('visible')) {
-            el.classList.remove('enter-top', 'enter-bottom');
-            el.classList.add(scrollDirection === 'up' ? 'enter-top' : 'enter-bottom');
-            newlyRevealed.push(el);
-          }
-        } else if (isFarAbove) {
-          if (el.classList.contains('visible') || !el.classList.contains('enter-top')) {
-            el.classList.remove('visible', 'enter-bottom');
-            el.classList.add('enter-top');
-            el.style.transitionDelay = '0ms';
-            el.style.transitionDuration = '';
-          }
-        } else if (isFarBelow) {
-          if (el.classList.contains('visible') || !el.classList.contains('enter-bottom')) {
-            el.classList.remove('visible', 'enter-top');
-            el.classList.add('enter-bottom');
-            el.style.transitionDelay = '0ms';
-            el.style.transitionDuration = '';
-          }
-        }
-      }
-
-      if (newlyRevealed.length > 0) {
-        if (scrollDirection === 'up') {
-          newlyRevealed.reverse();
-        }
-        for (let i = 0; i < newlyRevealed.length; i++) {
-          const el = newlyRevealed[i];
-          if (isFastScrolling) {
-            // Immediate zero-delay load for lightning-fast responsiveness when fast scrolling
-            el.style.transitionDelay = '0ms';
-            el.style.transitionDuration = '0.32s';
-          } else {
-            const delay = isInitial ? Math.min(i * 35, 140) : Math.min(i * 20, 60);
-            el.style.transitionDelay = `${delay}ms`;
-            el.style.transitionDuration = '';
-          }
-          el.classList.add('visible');
-        }
-      }
-    };
-
-    const onHistoryScroll = () => {
-      if (historyRaf) return;
-      historyRaf = requestAnimationFrame(() => {
-        historyRaf = null;
-        updateReappearingHistoryCards(false);
-      });
-    };
-
-    feedList.addEventListener('scroll', onHistoryScroll, { passive: true });
     initShellLenis();
     if (typeof historyLenis !== 'undefined' && historyLenis) {
-      historyLenis.on('scroll', onHistoryScroll);
-      historyLenis.scrollTo(0, { immediate: true, force: true });
       historyLenis.resize();
       historyLenis.start();
     }
-
-    // Initial entrance animation pass: Force layout of State A, then transition via RAF
-    void feedList.offsetHeight;
-    requestAnimationFrame(() => {
-      updateReappearingHistoryCards(true);
-    });
-
     setTimeout(() => {
       historyLenis?.resize();
-      updateReappearingHistoryCards(false);
-    }, 50);
-
-    activeHistoryCleanup = () => {
-      if (historyRaf) {
-        cancelAnimationFrame(historyRaf);
-        historyRaf = null;
-      }
-      feedList.removeEventListener('scroll', onHistoryScroll);
-      if (typeof historyLenis !== 'undefined' && historyLenis) {
-        try { historyLenis.off('scroll', onHistoryScroll); } catch (e) {}
-      }
-    };
+    }, 40);
   }
 
   function deleteSession(sessionId, dateStr) {
