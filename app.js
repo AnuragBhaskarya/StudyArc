@@ -3355,7 +3355,9 @@
     }
 
     getVisibleRange(scrollTop, viewportHeight) {
-      const buffer = 360; // Generous buffer (~6-7 cards) prevents empty gaps during rapid scrolls
+      // In Catalog mode (All Levels), use focused buffer (140px) so items animate right as they enter view area
+      // In My Journey mode, use generous buffer (360px) so items are pre-loaded immediately without delay
+      const buffer = this.isCatalogMode ? 140 : 360;
       const minY = Math.max(0, scrollTop - buffer);
       const maxY = scrollTop + viewportHeight + buffer;
 
@@ -3475,8 +3477,9 @@
         this.bottomSpacer.style.height = '0px';
       }
 
-      // 4. Trigger calorie-tracker lazy loading animation on cards and tier headers
-      // as they come into the view area so the animation is clearly visible
+      // 4. Trigger animations:
+      // - ALL LEVELS: The beloved original delayed entrance with cascade as cards reach view threshold
+      // - MY JOURNEY: Immediate, zero-delay load for lightning-fast responsiveness
       const viewTop = scrollTop;
       const viewBottom = scrollTop + viewportHeight;
       const toAnimate = [];
@@ -3487,11 +3490,18 @@
         const itemTop = this.itemOffsets[idx];
         const itemBottom = itemTop + this.virtualItems[idx].height;
 
-        // Pre-triggers 160px before entering viewport so items are in active, smooth motion
-        // as they cross the visible boundary, completely preventing empty delay on hard scrolls
-        const isEnteringView = (idx === pinHeaderIdx) || (
-          itemBottom >= viewTop - 60 && itemTop <= viewBottom + 160
-        );
+        let isEnteringView = false;
+        if (this.isCatalogMode) {
+          // All Levels: The original view-boundary trigger
+          isEnteringView = (idx === pinHeaderIdx) || (
+            itemBottom >= viewTop - 10 && itemTop <= viewBottom + 25
+          );
+        } else {
+          // My Journey: Broad pre-trigger for instantaneous, zero-delay load
+          isEnteringView = (idx === pinHeaderIdx) || (
+            itemBottom >= viewTop - 100 && itemTop <= viewBottom + 300
+          );
+        }
 
         if (isEnteringView) {
           toAnimate.push(el);
@@ -3501,8 +3511,13 @@
       if (toAnimate.length > 0) {
         requestAnimationFrame(() => {
           toAnimate.forEach((el, i) => {
-            const delay = Math.min((i % 4) * 16, 48);
-            el.style.transitionDelay = `${delay}ms`;
+            if (this.isCatalogMode) {
+              void el.offsetWidth; // Force reflow for the signature delayed multi-effect transition
+              const delay = Math.min((i % 5) * 35, 140);
+              el.style.transitionDelay = `${delay}ms`;
+            } else {
+              el.style.transitionDelay = '0ms';
+            }
             el.classList.add('visible');
           });
         });
