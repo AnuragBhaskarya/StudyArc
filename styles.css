@@ -2837,7 +2837,7 @@ input:checked + .switch-slider:before {
   flex-direction: column;
   gap: 0.55rem;
   overflow-y: auto;
-  max-height: 270px;
+  max-height: 310px;
   padding: 0.15rem 0.2rem;
 }
 
@@ -3959,4 +3959,23 @@ input:checked + .switch-slider:before {
 
 .hidden {
   display: none !important;
+}
+
+/* ==========================================================================
+   LENIS SMOOTH SCROLLING STYLES
+   ========================================================================== */
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
 }

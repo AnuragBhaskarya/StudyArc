@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=7.6">
+  <link rel="stylesheet" href="styles.css?v=7.7">
   <script>
     (function () {
       try {
@@ -409,7 +409,7 @@
               <span>Timeline & Sessions</span>
               <span class="day-timeline-count" id="day-timeline-count">0 sessions</span>
             </div>
-            <div class="day-sessions-list" id="day-sessions-list">
+            <div class="day-sessions-list" id="day-sessions-list" data-lenis-prevent>
               <!-- Dynamically populated -->
             </div>
           </div>
@@ -501,11 +501,7 @@
 
             <!-- Milestone Feed / All Levels List -->
             <div class="day-timeline-wrapper levels-timeline-wrapper">
-              <div class="day-timeline-heading levels-timeline-heading">
-                <span id="levels-feed-heading">Tier 1: Novice</span>
-                <span class="day-timeline-count levels-timeline-count" id="levels-feed-count">1 Cleared</span>
-              </div>
-              <div class="day-sessions-list levels-feed-list" id="levels-feed-list">
+              <div class="day-sessions-list levels-feed-list" id="levels-feed-list" data-lenis-prevent>
                <!-- Dynamically populated level item cards -->
              </div>
            </div>
@@ -741,8 +737,9 @@
 
   <!-- JAVASCRIPT LOGIC (Local zero-latency assets, resilient against CDN outages and content blockers) -->
   <script src="assets/socket.io.min.js"></script>
+  <script src="assets/lenis.min.js"></script>
   <script src="aura-particles.js?v=5.3"></script>
-  <script src="app.js?v=7.1"></script>
+  <script src="app.js?v=7.2"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

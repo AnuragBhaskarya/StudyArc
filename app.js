@@ -3085,6 +3085,8 @@
         `).join('');
       }
     }
+    initShellLenis();
+    setTimeout(() => { dayLenis?.resize(); }, 30);
   }
 
   function renderDayDialogSkeleton(dateStr) {
@@ -3133,6 +3135,9 @@
       if (typeof dialog.showModal === 'function' && !dialog.open) {
         dialog.showModal();
       }
+      globalLenis?.stop();
+      initShellLenis();
+      setTimeout(() => { dayLenis?.resize(); }, 40);
       return;
     }
 
@@ -3142,6 +3147,9 @@
     if (typeof dialog.showModal === 'function' && !dialog.open) {
       dialog.showModal();
     }
+    globalLenis?.stop();
+    initShellLenis();
+    setTimeout(() => { dayLenis?.resize(); }, 40);
 
     // 3. Fetch full session details from SQLite/Postgres backend
     try {
@@ -3182,6 +3190,7 @@
     if (dialog && dialog.open) {
       dialog.close();
     }
+    globalLenis?.start();
   }
 
   // =========================================================================
@@ -3235,6 +3244,9 @@
     if (typeof dialog.showModal === 'function' && !dialog.open) {
       dialog.showModal();
     }
+    globalLenis?.stop();
+    initShellLenis();
+    setTimeout(() => { levelsLenis?.resize(); }, 40);
   }
 
   function closeLevelsDialog() {
@@ -3242,6 +3254,7 @@
     if (dialog && dialog.open) {
       dialog.close();
     }
+    globalLenis?.start();
   }
 
   function renderLevelsDialogDOM() {
@@ -3433,13 +3446,20 @@
       }
     };
 
+    initShellLenis();
+    setTimeout(() => { levelsLenis?.resize(); }, 30);
+
     if (showAllLevelsView) {
       setTimeout(() => {
         const currentCard = feedList.querySelector('[data-current-level="true"]');
         if (currentCard) {
-          currentCard.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          if (levelsLenis) {
+            levelsLenis.scrollTo(currentCard, { offset: -120 });
+          } else {
+            currentCard.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          }
         }
-      }, 50);
+      }, 60);
     }
   }
 
@@ -3987,6 +4007,7 @@
         const centerPad = document.getElementById('timer-center-pad');
         centerPad?.blur?.();
         document.activeElement?.blur?.();
+        globalLenis?.start();
         setTimeout(() => {
           if (window.getSelection) {
             try {
@@ -4136,6 +4157,71 @@
   }
 
   // =========================================================================
+  // LENIS SMOOTH SCROLLING (Global Page & Dialog Shells)
+  // =========================================================================
+  let globalLenis = null;
+  let levelsLenis = null;
+  let dayLenis = null;
+
+  function initLenis() {
+    if (typeof Lenis === 'undefined') return;
+
+    try {
+      globalLenis = new Lenis({
+        autoRaf: true,
+        smoothWheel: true,
+        duration: 1.1,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      });
+      window.lenis = globalLenis;
+    } catch (e) {
+      console.warn('StudyArc: Could not initialize window Lenis:', e);
+    }
+
+    initShellLenis();
+  }
+
+  function initShellLenis() {
+    if (typeof Lenis === 'undefined') return;
+
+    const levelsFeed = document.getElementById('levels-feed-list');
+    if (levelsFeed && !levelsLenis) {
+      try {
+        levelsLenis = new Lenis({
+          wrapper: levelsFeed,
+          content: levelsFeed,
+          eventsTarget: levelsFeed,
+          autoRaf: true,
+          smoothWheel: true,
+          duration: 0.85,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        });
+        window.levelsLenis = levelsLenis;
+      } catch (e) {
+        console.warn('StudyArc: Error initializing levelsLenis:', e);
+      }
+    }
+
+    const dayFeed = document.getElementById('day-sessions-list');
+    if (dayFeed && !dayLenis) {
+      try {
+        dayLenis = new Lenis({
+          wrapper: dayFeed,
+          content: dayFeed,
+          eventsTarget: dayFeed,
+          autoRaf: true,
+          smoothWheel: true,
+          duration: 0.85,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        });
+        window.dayLenis = dayLenis;
+      } catch (e) {
+        console.warn('StudyArc: Error initializing dayLenis:', e);
+      }
+    }
+  }
+
+  // =========================================================================
   // BOOTSTRAP (Safe for both pre-parsed and async/cached script execution)
   // =========================================================================
   let appBootstrapped = false;
@@ -4143,6 +4229,7 @@
     if (appBootstrapped) return;
     appBootstrapped = true;
 
+    initLenis();
     initEvents();
     renderAll();
 
