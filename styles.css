@@ -909,9 +909,10 @@ body.is-dragging .timer-bead-rim {
    ========================================================================== */
 .stats-strip {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   width: 100%;
   max-width: 680px;
   margin: 0 auto;
@@ -920,6 +921,34 @@ body.is-dragging .timer-bead-rim {
   overflow: visible;
   position: relative;
   z-index: 15;
+}
+
+.stats-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.55rem;
+}
+
+.stats-row-top {
+  width: 100%;
+}
+
+.stats-row-top .stat-item-xp {
+  width: 100%;
+  flex: 1 1 100%;
+  justify-content: flex-start;
+  padding: 0.5rem 0.95rem;
+  gap: 0.75rem;
+}
+
+.stats-row-bottom {
+  width: 100%;
+}
+
+.stats-row-bottom .stat-item {
+  flex: 1 1 0%;
+  min-width: 0;
 }
 
 .stat-item {
@@ -938,6 +967,25 @@ body.is-dragging .timer-bead-rim {
   transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
   overflow: visible;
   position: relative;
+}
+
+.stat-item-total {
+  border-color: rgba(16, 224, 104, 0.12);
+}
+
+.stat-item-total:hover {
+  border-color: rgba(16, 224, 104, 0.3);
+  background: rgba(12, 24, 17, 0.82);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.75), 0 0 16px rgba(16, 224, 104, 0.14);
+}
+
+.history-svg {
+  color: var(--accent-primary);
+  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.stat-item-total:hover .history-svg {
+  transform: rotate(-35deg) scale(1.08);
 }
 
 .stat-icon-box {
@@ -4150,3 +4198,406 @@ input:checked + .switch-slider:before {
 .lenis.lenis-smooth iframe {
   pointer-events: none;
 }
+
+/* ==========================================================================
+   SESSIONS HISTORY & ARCHIVE CHRONICLE MODAL (GREEN THEME)
+   ========================================================================== */
+.sessions-history-dialog {
+  border: 1px solid rgba(16, 224, 104, 0.22);
+  border-radius: 20px;
+  background: #080f0b;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.9), 0 0 35px rgba(16, 224, 104, 0.08);
+}
+
+.history-dialog-shell {
+  padding: 1.15rem 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-height: 86vh;
+  max-height: 86dvh;
+  box-sizing: border-box;
+}
+
+.history-dialog-badge {
+  color: #4EFA8F;
+  background: rgba(16, 224, 104, 0.1);
+  border: 1px solid rgba(16, 224, 104, 0.28);
+  box-shadow: 0 0 10px rgba(16, 224, 104, 0.15);
+}
+
+.history-dialog-title {
+  color: #ffffff;
+}
+
+.history-summary-strip {
+  margin-bottom: 0.1rem;
+}
+
+.history-pill {
+  border-color: rgba(16, 224, 104, 0.18);
+  background: #06130b;
+}
+
+.history-feed-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.2rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.history-feed-count {
+  font-size: 0.65rem;
+  color: #4efa8f;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-timeline-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.history-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  overflow-y: auto;
+  max-height: 380px;
+  padding: 0.15rem 0.25rem;
+}
+
+.history-feed-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.history-feed-list::-webkit-scrollbar-thumb {
+  background: rgba(16, 224, 104, 0.24);
+  border-radius: 4px;
+}
+
+/* Sticky Date Group Header (Equivalent to RPG Tier Headers, Green Theme) */
+.history-date-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(8, 18, 12, 0.96);
+  border: 1px solid rgba(16, 224, 104, 0.24);
+  border-radius: 10px;
+  padding: 0.42rem 0.75rem;
+  margin: 0.45rem 0 0.45rem 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65), 0 0 10px rgba(16, 224, 104, 0.09);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.history-date-sticky-left {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.history-date-badge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #070D09;
+  background: linear-gradient(135deg, #4EFA8F 0%, #10E068 100%);
+  padding: 0.12rem 0.45rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 8px rgba(16, 224, 104, 0.35);
+  flex-shrink: 0;
+}
+
+.history-date-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #F0FDF4;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-date-meta {
+  font-size: 0.64rem;
+  color: #8ae3aa;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* Individual Session Card inside History Feed */
+.history-session-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.85rem 0.55rem 0.7rem;
+  background: #07150e;
+  border: 1px solid rgba(16, 224, 104, 0.16);
+  border-radius: 12px;
+  gap: 0.65rem;
+  box-sizing: border-box;
+}
+
+.history-session-card:hover {
+  border-color: rgba(16, 224, 104, 0.32);
+  background: #091a11;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45), 0 0 12px rgba(16, 224, 104, 0.08);
+}
+
+.history-session-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.history-session-timeline {
+  position: relative;
+  width: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  flex-shrink: 0;
+}
+
+.history-session-track-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(16, 224, 104, 0.18);
+  border-radius: 1px;
+}
+
+.history-session-track-node {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10E068;
+  box-shadow: 0 0 6px rgba(16, 224, 104, 0.6);
+  z-index: 1;
+}
+
+.history-session-orb-wrapper {
+  width: 12px;
+  height: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.history-session-orb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.history-session-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.history-session-subject {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-session-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  font-size: 0.65rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-session-task {
+  color: #cbd5e1;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-session-timerange {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.history-session-right {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-shrink: 0;
+}
+
+.history-session-duration {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.history-session-duration svg {
+  width: 12px;
+  height: 12px;
+  color: #10E068;
+}
+
+.history-session-xp {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #4EFA8F;
+  letter-spacing: 0.01em;
+  background: rgba(16, 224, 104, 0.08);
+  border: 1px solid rgba(16, 224, 104, 0.18);
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.history-session-delete-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  background: rgba(239, 68, 68, 0.06);
+  color: #f87171;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 140ms ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.history-session-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+  transform: scale(1.05);
+}
+
+.history-session-delete-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Empty State in History Feed */
+.history-empty-card {
+  padding: 2.2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.65rem;
+  background: rgba(7, 21, 14, 0.4);
+  border: 1px dashed rgba(16, 224, 104, 0.2);
+  border-radius: 14px;
+  margin: 1rem 0;
+}
+
+.history-empty-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(16, 224, 104, 0.08);
+  border: 1px solid rgba(16, 224, 104, 0.24);
+  display: grid;
+  place-items: center;
+  color: #10E068;
+}
+
+.history-empty-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.history-empty-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.history-empty-sub {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  max-width: 280px;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   SESSIONS HISTORY: Bidirectional Re-appearing Calorie Tracker Animation
+   ========================================================================== */
+.history-session-card,
+.history-date-sticky-header {
+  opacity: 0;
+  transform: translateX(80px) translateY(80px) scale(0.1);
+  transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1),
+              opacity 0.55s linear;
+  will-change: transform, opacity;
+}
+
+.history-session-card.enter-top,
+.history-date-sticky-header.enter-top {
+  opacity: 0;
+  transform: translateX(80px) translateY(-70px) scale(0.1);
+}
+
+.history-session-card.enter-bottom,
+.history-date-sticky-header.enter-bottom {
+  opacity: 0;
+  transform: translateX(80px) translateY(80px) scale(0.1);
+}
+
+.history-session-card.enter-top:not(.visible),
+.history-session-card.enter-bottom:not(.visible),
+.history-date-sticky-header.enter-top:not(.visible),
+.history-date-sticky-header.enter-bottom:not(.visible) {
+  transition: none !important;
+}
+
+.history-session-card.visible,
+.history-date-sticky-header.visible {
+  opacity: 1;
+  transform: none;
+}
+

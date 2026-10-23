@@ -601,7 +601,8 @@ def handle_subjects(user_id):
 @auth_required
 def handle_sessions(user_id):
     if request.method == 'GET':
-        return jsonify(database.get_sessions(user_id))
+        limit = int(request.args.get('limit', 5000))
+        return jsonify(database.get_sessions(user_id, limit=limit))
 
     if request.method == 'DELETE':
         data = request.get_json(force=True, silent=True) or {}

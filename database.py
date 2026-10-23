@@ -691,7 +691,7 @@ def delete_session(user_id, session_id):
         ctx.execute("DELETE FROM sessions WHERE id = ? AND user_id = ?", (session_id, user_id))
         return deleted
 
-def get_sessions(user_id, limit=100):
+def get_sessions(user_id, limit=5000):
     with get_connection() as ctx:
         cur = ctx.execute("""
             SELECT sess.id, sess.subject_id, sess.subject_name, s.color, 
@@ -882,7 +882,7 @@ def get_full_state(user_id):
                             LEFT JOIN subjects s ON sess.subject_id = s.id
                             WHERE sess.user_id = %s
                             ORDER BY sess.timestamp DESC
-                            LIMIT 100
+                            LIMIT 5000
                         ) sess_row
                     ),
                     'activity', (
@@ -908,7 +908,7 @@ def get_full_state(user_id):
             cur_sess = ctx.execute("""
                 SELECT sess.id, sess.subject_id, sess.subject_name, s.color, sess.duration_minutes, sess.date, sess.timestamp, sess.start_time, sess.end_time
                 FROM sessions sess LEFT JOIN subjects s ON sess.subject_id = s.id
-                WHERE sess.user_id = ? ORDER BY sess.timestamp DESC LIMIT 100
+                WHERE sess.user_id = ? ORDER BY sess.timestamp DESC LIMIT 5000
             """, (user_id,))
             sess_rows = [dict(r) for r in cur_sess.fetchall()]
             cur_act = ctx.execute("SELECT date, SUM(duration_minutes) as total_minutes FROM sessions WHERE user_id = ? GROUP BY date ORDER BY date ASC", (user_id,))

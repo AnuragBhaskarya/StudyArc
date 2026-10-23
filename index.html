@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=9.0">
+  <link rel="stylesheet" href="styles.css?v=9.1">
   <script>
     (function () {
       try {
@@ -201,56 +201,76 @@
           </div>
         </div>
 
-        <!-- COMPACT GAMIFICATION STATISTICS STRIP -->
+        <!-- COMPACT GAMIFICATION STATISTICS STRIP (2-Row Balanced Layout) -->
         <div class="stats-strip" aria-label="Study Progress Statistics">
-          <!-- Day Streak -->
-          <div class="stat-item">
-            <div class="stat-icon-box">
-              <svg class="flame-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
-              </svg>
-            </div>
-            <div class="stat-data">
-              <span class="stat-number" id="stat-streak">0</span>
-              <span class="stat-title">Day Streak</span>
+          <!-- Row 1: Single Top XP & RPG Level Progression Pill -->
+          <div class="stats-row stats-row-top">
+            <div class="stat-item stat-item-xp stat-item-clickable" id="stat-item-xp" title="Level 1: Novice Seeker • Click for RPG Level Stats & All Levels" role="button" tabindex="0" aria-haspopup="dialog">
+              <div class="stat-icon-box">
+                <svg class="star-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"></path>
+                </svg>
+              </div>
+              <div class="stat-data stat-data-xp">
+                <div class="stat-xp-top-row">
+                  <span class="stat-number stat-xp-number" id="stat-xp">0</span>
+                  <span class="stat-level-badge" id="stat-level-num">Lv. 1</span>
+                </div>
+                <div class="stat-xp-sub-row">
+                  <span class="stat-level-name" id="stat-level-name">Novice Seeker</span>
+                  <span class="stat-xp-sep" aria-hidden="true">•</span>
+                  <span class="stat-xp-fraction" id="stat-xp-fraction">0 / 25 XP</span>
+                </div>
+              </div>
+              <!-- Ultra-thin yellow progress bar clipped at the bottom curve of the pill -->
+              <div class="xp-stat-bar-track" aria-hidden="true">
+                <div class="xp-stat-bar-fill" id="stat-xp-bar-fill" style="width: 0%;"></div>
+              </div>
             </div>
           </div>
 
-          <!-- Total XP & RPG Level Progression -->
-          <div class="stat-item stat-item-xp stat-item-clickable" id="stat-item-xp" title="Level 1: Novice Seeker • Click for RPG Level Stats & All Levels" role="button" tabindex="0" aria-haspopup="dialog">
-            <div class="stat-icon-box">
-              <svg class="star-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"></path>
-              </svg>
-            </div>
-            <div class="stat-data stat-data-xp">
-              <div class="stat-xp-top-row">
-                <span class="stat-number stat-xp-number" id="stat-xp">0</span>
-                <span class="stat-level-badge" id="stat-level-num">Lv. 1</span>
+          <!-- Row 2: Streak, Today's Focus, and Total Focus Time Pills -->
+          <div class="stats-row stats-row-bottom">
+            <!-- Day Streak -->
+            <div class="stat-item">
+              <div class="stat-icon-box">
+                <svg class="flame-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+                </svg>
               </div>
-              <div class="stat-xp-sub-row">
-                <span class="stat-level-name" id="stat-level-name">Novice Seeker</span>
-                <span class="stat-xp-sep" aria-hidden="true">•</span>
-                <span class="stat-xp-fraction" id="stat-xp-fraction">0 / 25 XP</span>
+              <div class="stat-data">
+                <span class="stat-number" id="stat-streak">0</span>
+                <span class="stat-title">Day Streak</span>
               </div>
             </div>
-            <!-- Ultra-thin yellow progress bar clipped at the bottom curve of the pill -->
-            <div class="xp-stat-bar-track" aria-hidden="true">
-              <div class="xp-stat-bar-fill" id="stat-xp-bar-fill" style="width: 0%;"></div>
-            </div>
-          </div>
 
-          <!-- Today's Focus (Live Ticking) -->
-          <div class="stat-item stat-item-clickable" id="stat-item-today" title="Today's Focus • Click to view Day Record" role="button" tabindex="0">
-            <div class="stat-icon-box">
-              <svg class="clock-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
+            <!-- Today's Focus (Live Ticking) -->
+            <div class="stat-item stat-item-clickable" id="stat-item-today" title="Today's Focus • Click to view Day Record" role="button" tabindex="0">
+              <div class="stat-icon-box">
+                <svg class="clock-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+              <div class="stat-data">
+                <span class="stat-number stat-today-live" id="stat-today-focus">0m 00s</span>
+                <span class="stat-title">Today's Focus</span>
+              </div>
             </div>
-            <div class="stat-data">
-              <span class="stat-number stat-today-live" id="stat-today-focus">0m 00s</span>
-              <span class="stat-title">Today's Focus</span>
+
+            <!-- Total Focus Time (Session History Trigger) -->
+            <div class="stat-item stat-item-clickable stat-item-total" id="stat-item-total" title="Total Focus Time • Click to view All Sessions History" role="button" tabindex="0" aria-haspopup="dialog">
+              <div class="stat-icon-box">
+                <svg class="history-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 3v5h5"></path>
+                  <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"></path>
+                  <path d="M12 7v5l4 2"></path>
+                </svg>
+              </div>
+              <div class="stat-data">
+                <span class="stat-number stat-total-number" id="stat-total-focus">0h 0m</span>
+                <span class="stat-title">Total Focus</span>
+              </div>
             </div>
           </div>
         </div>
@@ -508,6 +528,56 @@
          </div>
        </dialog>
 
+      <!-- SESSIONS HISTORY & ARCHIVE CHRONICLE MODAL DIALOG (Opened via clicking Total Focus Stats pill) -->
+      <dialog id="sessions-history-dialog" class="sessions-history-dialog day-detail-dialog" closedby="any" aria-labelledby="history-dialog-title">
+        <div class="history-dialog-shell day-dialog-shell" id="history-dialog-shell" tabindex="-1">
+          <!-- Header -->
+          <div class="day-dialog-header history-dialog-header">
+            <div class="day-dialog-header-info history-dialog-header-info">
+              <div class="history-dialog-badge-row">
+                <span class="day-dialog-badge history-dialog-badge" id="history-dialog-badge">Archive Chronicle</span>
+              </div>
+              <h2 class="day-dialog-title history-dialog-title" id="history-dialog-title">Sessions History</h2>
+            </div>
+            <button class="day-dialog-close-btn" id="btn-close-history-dialog" aria-label="Close Sessions History">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <!-- 3 Highlight Metric Cards Strip (Emerald Green Theme) -->
+          <div class="day-summary-strip history-summary-strip" aria-label="Sessions History Summary Metrics">
+            <div class="day-pill history-pill">
+              <span class="day-pill-label">Total Focus</span>
+              <span class="day-pill-value" id="history-pill-total-time">0h 0m</span>
+            </div>
+            <div class="day-pill history-pill">
+              <span class="day-pill-label">Total Sessions</span>
+              <span class="day-pill-value" id="history-pill-sessions-count">0</span>
+            </div>
+            <div class="day-pill history-pill day-pill-xp">
+              <span class="day-pill-label">Active Days</span>
+              <span class="day-pill-value" id="history-pill-days-count">0</span>
+            </div>
+          </div>
+
+          <!-- Heading Row for Feed -->
+          <div class="history-feed-header-row">
+            <span class="history-feed-heading" id="history-feed-heading">Latest Sessions</span>
+            <span class="history-feed-count" id="history-feed-count">0 sessions</span>
+          </div>
+
+          <!-- Milestone Feed / All Sessions List -->
+          <div class="day-timeline-wrapper history-timeline-wrapper">
+            <div class="day-sessions-list history-feed-list" id="history-feed-list" data-lenis-prevent>
+              <!-- Dynamically populated sticky date cards & session cards -->
+            </div>
+          </div>
+        </div>
+      </dialog>
+
       <!-- TASK PROMPT MODAL (Minimal, Ultra-Compact Floating Card) -->
       <div id="task-prompt-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Start Focus Session">
         <div class="modal-backdrop" id="task-prompt-backdrop"></div>
@@ -739,7 +809,7 @@
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
   <script src="aura-particles.js?v=5.3"></script>
-  <script src="app.js?v=8.5"></script>
+  <script src="app.js?v=8.6"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

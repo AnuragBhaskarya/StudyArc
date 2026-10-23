@@ -922,7 +922,8 @@
     const items = [
       { id: 'stat-streak', maxLen: 4, shrinkLen: 6 },
       { id: 'stat-xp', maxLen: 4, shrinkLen: 6 },
-      { id: 'stat-today-focus', maxLen: 8, shrinkLen: 10 }
+      { id: 'stat-today-focus', maxLen: 8, shrinkLen: 10 },
+      { id: 'stat-total-focus', maxLen: 8, shrinkLen: 10 }
     ];
 
     for (const item of items) {
@@ -930,9 +931,9 @@
       if (!el) continue;
       const len = (el.textContent || '').trim().length;
       if (len > item.shrinkLen) {
-        el.style.fontSize = item.id === 'stat-today-focus' ? '0.62rem' : '0.72rem';
+        el.style.fontSize = (item.id === 'stat-today-focus' || item.id === 'stat-total-focus') ? '0.62rem' : '0.72rem';
       } else if (len > item.maxLen) {
-        el.style.fontSize = item.id === 'stat-today-focus' ? '0.68rem' : '0.80rem';
+        el.style.fontSize = (item.id === 'stat-today-focus' || item.id === 'stat-total-focus') ? '0.68rem' : '0.80rem';
       } else {
         el.style.fontSize = '';
       }
@@ -2911,12 +2912,22 @@
       settingTotalFocusEl.textContent = formatHoursMinutes(state.totalFocusSeconds);
     }
 
+    const totalFocusStatEl = document.getElementById('stat-total-focus');
+    if (totalFocusStatEl) {
+      totalFocusStatEl.textContent = formatHoursMinutes(state.totalFocusSeconds);
+    }
+
     updateTodayLiveStat();
     adjustStatFontFit();
 
     const levelsDlg = document.getElementById('levels-dialog');
     if (levelsDlg && levelsDlg.open) {
       renderLevelsDialogDOM();
+    }
+
+    const historyDlg = document.getElementById('sessions-history-dialog');
+    if (historyDlg && historyDlg.open) {
+      renderHistoryDialogDOM();
     }
   }
 
@@ -3959,10 +3970,374 @@
     }
   }
 
+  // =========================================================================
+  // SESSIONS HISTORY & ARCHIVE CHRONICLE MODAL DIALOG
+  // =========================================================================
+  let historyLenis = null;
+  let activeHistoryCleanup = null;
+
+  function resetHistoryContainer(cleanDOM = false) {
+    const feedList = document.getElementById('history-feed-list');
+
+    // 1. Destroy and clean up any active scrollers, RAF loops, or scroll listeners
+    if (activeHistoryCleanup) {
+      try { activeHistoryCleanup(); } catch (e) {}
+      activeHistoryCleanup = null;
+    }
+
+    // 2. Halt and reset smooth scrolling (Lenis) momentum immediately
+    if (typeof historyLenis !== 'undefined' && historyLenis) {
+      try {
+        historyLenis.stop();
+        historyLenis.scrollTo(0, { immediate: true, force: true });
+        historyLenis.scroll = 0;
+        historyLenis.targetScroll = 0;
+        historyLenis.velocity = 0;
+      } catch (e) {}
+    }
+
+    // 3. Reset DOM container scroll positions
+    if (feedList) {
+      feedList.scrollTop = 0;
+      feedList.scrollLeft = 0;
+      if (cleanDOM) {
+        feedList.innerHTML = '';
+      }
+    }
+  }
+
+  function openHistoryDialog() {
+    const dialog = document.getElementById('sessions-history-dialog');
+    if (!dialog) return;
+
+    // Clear any text selection that may have occurred
+    if (window.getSelection) {
+      window.getSelection().removeAllRanges();
+    }
+
+    // 1. Open modal first so container has active layout in the render tree
+    if (typeof dialog.showModal === 'function' && !dialog.open) {
+      dialog.showModal();
+    }
+
+    // Direct focus to the close button so browser never text-selects anything
+    const closeBtn = document.getElementById('btn-close-history-dialog');
+    if (closeBtn) {
+      try { closeBtn.focus({ preventScroll: true }); } catch (e) {}
+    } else if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur();
+    }
+
+    globalLenis?.stop();
+    initShellLenis();
+
+    // 2. Reset container and render fresh while dialog is open and visible
+    resetHistoryContainer(true);
+    renderHistoryDialogDOM();
+
+    if (typeof historyLenis !== 'undefined' && historyLenis) {
+      historyLenis.scrollTo(0, { immediate: true, force: true });
+      historyLenis.resize();
+      historyLenis.start();
+    }
+    setTimeout(() => { historyLenis?.resize(); }, 40);
+  }
+
+  function closeHistoryDialog() {
+    const dialog = document.getElementById('sessions-history-dialog');
+    if (dialog && dialog.open) {
+      dialog.close();
+    }
+    // Reset container as soon as we leave, as if starting from beginning
+    resetHistoryContainer(true);
+    globalLenis?.start();
+  }
+
+  function getShortDateBadge(dateStr) {
+    if (!dateStr) return 'DATE';
+    const todayStr = getLocalDateString();
+    if (dateStr === todayStr) return 'TODAY';
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+    if (dateStr === yStr) return 'YESTERDAY';
+
+    try {
+      const parts = dateStr.split('-');
+      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }).toUpperCase();
+    } catch (_) {
+      return dateStr;
+    }
+  }
+
+  function renderHistoryDialogDOM() {
+    const dialog = document.getElementById('sessions-history-dialog');
+    if (!dialog) return;
+
+    const feedList = document.getElementById('history-feed-list');
+    if (!feedList) return;
+
+    if (activeHistoryCleanup) {
+      activeHistoryCleanup();
+      activeHistoryCleanup = null;
+    }
+
+    // 1. Gather all historical sessions and sort in descending date order (latest one on top)
+    const allSessions = (state.sessions || []).slice();
+    allSessions.sort((a, b) => {
+      const tA = a.timestamp || (a.date ? new Date(a.date).getTime() : 0);
+      const tB = b.timestamp || (b.date ? new Date(b.date).getTime() : 0);
+      return tB - tA;
+    });
+
+    // 2. Calculate summary metrics
+    const totalSessions = allSessions.length;
+    const totalFocusSec = state.totalFocusSeconds || allSessions.reduce((acc, s) => acc + (s.durationMinutes || s.duration_minutes || 0) * 60, 0);
+    const uniqueDates = new Set(allSessions.map(s => s.date).filter(Boolean));
+    const activeDaysCount = uniqueDates.size || Object.keys(state.dayActivity || {}).filter(d => state.dayActivity[d] > 0).length;
+
+    const pillTotalTime = document.getElementById('history-pill-total-time');
+    const pillSessions = document.getElementById('history-pill-sessions-count');
+    const pillDays = document.getElementById('history-pill-days-count');
+    const feedCountEl = document.getElementById('history-feed-count');
+
+    if (pillTotalTime) pillTotalTime.textContent = formatHoursMinutes(totalFocusSec);
+    if (pillSessions) pillSessions.textContent = totalSessions.toLocaleString();
+    if (pillDays) pillDays.textContent = activeDaysCount.toLocaleString();
+    if (feedCountEl) feedCountEl.textContent = `${totalSessions} ${totalSessions === 1 ? 'session' : 'sessions'} • ${activeDaysCount} active days`;
+
+    // 3. Handle Empty State
+    if (totalSessions === 0) {
+      feedList.innerHTML = `
+        <div class="history-empty-card">
+          <div class="history-empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div class="history-empty-title">No sessions recorded yet</div>
+          <div class="history-empty-sub">Start a focus timer on the homescreen to begin your chronicle.</div>
+        </div>
+      `;
+      return;
+    }
+
+    // 4. Group sessions by date (descending order preserved)
+    const dateGroups = [];
+    const dateMap = new Map();
+
+    allSessions.forEach(s => {
+      const d = s.date || 'Unknown';
+      if (!dateMap.has(d)) {
+        const group = { date: d, sessions: [] };
+        dateMap.set(d, group);
+        dateGroups.push(group);
+      }
+      dateMap.get(d).sessions.push(s);
+    });
+
+    feedList.innerHTML = '';
+    feedList.scrollTop = 0;
+    feedList.scrollLeft = 0;
+
+    const fragment = document.createDocumentFragment();
+    const historyElements = [];
+
+    dateGroups.forEach(group => {
+      // Calculate day totals
+      const dayTotalMins = group.sessions.reduce((acc, s) => acc + (s.durationMinutes || s.duration_minutes || 0), 0);
+      const fullDateStr = formatDayDateHeader(group.date);
+      const badgeText = getShortDateBadge(group.date);
+
+      // Sticky Date Card (equivalent to Tiers, Green Theme)
+      const dateHdr = document.createElement('div');
+      dateHdr.className = 'history-date-sticky-header enter-bottom';
+      dateHdr.setAttribute('data-date', group.date);
+      dateHdr.innerHTML = `
+        <div class="history-date-sticky-left">
+          <span class="history-date-badge">${escapeHtml(badgeText)}</span>
+          <span class="history-date-title">${escapeHtml(fullDateStr)}</span>
+        </div>
+        <span class="history-date-meta">${group.sessions.length} ${group.sessions.length === 1 ? 'session' : 'sessions'} • ${formatHoursMinutes(dayTotalMins * 60)}</span>
+      `;
+      fragment.appendChild(dateHdr);
+      historyElements.push(dateHdr);
+
+      // Session Cards under this date (equivalent to Levels)
+      group.sessions.forEach(s => {
+        const dur = s.durationMinutes || s.duration_minutes || 0;
+        const xp = s.xp || dur;
+        const taskName = s.taskName || s.task_name || '';
+        const taskNote = taskName ? `<span class="history-session-task">"${escapeHtml(taskName)}"</span>` : '';
+        const timeRangeStr = s.timeRange ? `<span class="history-session-timerange">${escapeHtml(s.timeRange)}</span>` : '';
+        const sep = (taskNote && timeRangeStr) ? '<span class="stat-xp-sep" aria-hidden="true">•</span>' : '';
+
+        const card = document.createElement('div');
+        card.className = 'history-session-card enter-bottom';
+        card.setAttribute('data-session-id', s.id);
+        card.setAttribute('data-date', s.date || '');
+        card.setAttribute('data-duration', dur);
+
+        card.innerHTML = `
+          <div class="history-session-left">
+            <div class="history-session-timeline">
+              <span class="history-session-track-line"></span>
+              <span class="history-session-track-node"></span>
+            </div>
+            <div class="history-session-orb-wrapper">
+              <span class="history-session-orb" style="background-color: ${s.color || '#10E068'}; color: ${s.color || '#10E068'};"></span>
+            </div>
+            <div class="history-session-info">
+              <span class="history-session-subject">${escapeHtml(s.subject || 'Focus Session')}</span>
+              <div class="history-session-sub-row">
+                ${taskNote}
+                ${sep}
+                ${timeRangeStr}
+              </div>
+            </div>
+          </div>
+          <div class="history-session-right">
+            <div class="history-session-duration">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>${dur} mins</span>
+            </div>
+            <span class="history-session-xp">+${formatCompactNumber(xp)} XP</span>
+            <button class="history-session-delete-btn" data-session-id="${escapeHtml(s.id)}" data-date="${escapeHtml(s.date || '')}" title="Delete session" aria-label="Delete session">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+            </button>
+          </div>
+        `;
+        fragment.appendChild(card);
+        historyElements.push(card);
+      });
+    });
+
+    feedList.appendChild(fragment);
+
+    // 5. Bidirectional Re-appearing Calorie Tracker Animation Engine:
+    // Identical swooping entrance & exit physics to My Journey, optimized for high performance.
+    let lastScrollTop = 0;
+    let scrollDirection = 'down';
+    const HYSTERESIS = 160;
+    let historyRaf = null;
+
+    const updateReappearingHistoryCards = (isInitial = false) => {
+      const scrollTop = feedList.scrollTop;
+      const viewportHeight = feedList.clientHeight || 380;
+
+      if (!isInitial) {
+        if (scrollTop > lastScrollTop + 1) {
+          scrollDirection = 'down';
+        } else if (scrollTop < lastScrollTop - 1) {
+          scrollDirection = 'up';
+        }
+      }
+      lastScrollTop = scrollTop;
+
+      const viewTop = scrollTop;
+      const viewBottom = scrollTop + viewportHeight;
+      const newlyRevealed = [];
+
+      for (let i = 0; i < historyElements.length; i++) {
+        const el = historyElements[i];
+        const elTop = el.offsetTop;
+        const elHeight = el.offsetHeight || 55;
+        const elBottom = elTop + elHeight;
+
+        const isInsideView = (elBottom >= viewTop - 25) && (elTop <= viewBottom + 25);
+        const isFarAbove = elBottom < (viewTop - HYSTERESIS);
+        const isFarBelow = elTop > (viewBottom + HYSTERESIS);
+
+        if (isInsideView) {
+          if (!el.classList.contains('visible')) {
+            el.classList.remove('enter-top', 'enter-bottom');
+            el.classList.add(scrollDirection === 'up' ? 'enter-top' : 'enter-bottom');
+            newlyRevealed.push(el);
+          }
+        } else if (isFarAbove) {
+          if (el.classList.contains('visible') || !el.classList.contains('enter-top')) {
+            el.classList.remove('visible', 'enter-bottom');
+            el.classList.add('enter-top');
+            el.style.transitionDelay = '0ms';
+          }
+        } else if (isFarBelow) {
+          if (el.classList.contains('visible') || !el.classList.contains('enter-bottom')) {
+            el.classList.remove('visible', 'enter-top');
+            el.classList.add('enter-bottom');
+            el.style.transitionDelay = '0ms';
+          }
+        }
+      }
+
+      if (newlyRevealed.length > 0) {
+        if (scrollDirection === 'up') {
+          newlyRevealed.reverse();
+        }
+        newlyRevealed.forEach((el, index) => {
+          void el.offsetWidth;
+          const delay = Math.min(index * 35, 140);
+          el.style.transitionDelay = `${delay}ms`;
+          el.classList.add('visible');
+        });
+      }
+    };
+
+    const onHistoryScroll = () => {
+      if (historyRaf) return;
+      historyRaf = requestAnimationFrame(() => {
+        historyRaf = null;
+        updateReappearingHistoryCards(false);
+      });
+    };
+
+    feedList.addEventListener('scroll', onHistoryScroll, { passive: true });
+    initShellLenis();
+    if (typeof historyLenis !== 'undefined' && historyLenis) {
+      historyLenis.on('scroll', onHistoryScroll);
+      historyLenis.scrollTo(0, { immediate: true, force: true });
+      historyLenis.resize();
+      historyLenis.start();
+    }
+
+    // Initial entrance animation pass: Force layout of State A, then transition via RAF
+    void feedList.offsetHeight;
+    requestAnimationFrame(() => {
+      updateReappearingHistoryCards(true);
+    });
+
+    setTimeout(() => {
+      historyLenis?.resize();
+      updateReappearingHistoryCards(false);
+    }, 50);
+
+    activeHistoryCleanup = () => {
+      if (historyRaf) {
+        cancelAnimationFrame(historyRaf);
+        historyRaf = null;
+      }
+      feedList.removeEventListener('scroll', onHistoryScroll);
+      if (typeof historyLenis !== 'undefined' && historyLenis) {
+        try { historyLenis.off('scroll', onHistoryScroll); } catch (e) {}
+      }
+    };
+  }
+
   function deleteSession(sessionId, dateStr) {
     if (!sessionId) return;
 
-    const cardEl = document.querySelector(`.day-session-card[data-session-id="${sessionId}"]`);
+    const targetCards = Array.from(document.querySelectorAll(`[data-session-id="${sessionId}"]`));
+    const cardEl = targetCards[0] || null;
 
     // 1. Identify session duration from client state or card dataset
     const idx = (state.sessions || []).findIndex(s =>
@@ -4055,81 +4430,87 @@
     // 5. Exact dismiss animation from Taski:
     // Lock measured natural height, then double-rAF to transition height to 0, margin-bottom to -0.65rem,
     // transform translateX(-50%) scale(0.85), opacity to 0, and red tint
-    if (cardEl) {
-      cardEl.style.pointerEvents = 'none';
-      cardEl.style.overflow = 'hidden';
+    if (targetCards.length > 0) {
+      targetCards.forEach((cEl) => {
+        cEl.style.pointerEvents = 'none';
+        cEl.style.overflow = 'hidden';
 
-      const h = cardEl.offsetHeight;
-      cardEl.style.height = h + 'px';
+        const h = cEl.offsetHeight;
+        cEl.style.height = h + 'px';
 
-      const dot = cardEl.querySelector('.day-session-orb') || cardEl.querySelector('.day-session-dot');
-      if (dot) {
-        dot.style.transition = 'background-color 0.2s, box-shadow 0.2s';
-        dot.style.backgroundColor = '#ef4444';
-        dot.style.boxShadow = '0 0 8px #ef4444';
-      }
-      const trackNode = cardEl.querySelector('.day-session-track-node');
-      if (trackNode) {
-        trackNode.style.transition = 'background-color 0.2s, box-shadow 0.2s';
-        trackNode.style.backgroundColor = '#ef4444';
-        trackNode.style.boxShadow = '0 0 8px #ef4444';
-      }
-      const subj = cardEl.querySelector('.day-session-subject');
-      if (subj) {
-        subj.style.transition = 'color 0.2s';
-        subj.style.color = '#fca5a5';
-      }
+        const dot = cEl.querySelector('.day-session-orb') || cEl.querySelector('.history-session-orb') || cEl.querySelector('.day-session-dot');
+        if (dot) {
+          dot.style.transition = 'background-color 0.2s, box-shadow 0.2s';
+          dot.style.backgroundColor = '#ef4444';
+          dot.style.boxShadow = '0 0 8px #ef4444';
+        }
+        const trackNode = cEl.querySelector('.day-session-track-node') || cEl.querySelector('.history-session-track-node');
+        if (trackNode) {
+          trackNode.style.transition = 'background-color 0.2s, box-shadow 0.2s';
+          trackNode.style.backgroundColor = '#ef4444';
+          trackNode.style.boxShadow = '0 0 8px #ef4444';
+        }
+        const subj = cEl.querySelector('.day-session-subject') || cEl.querySelector('.history-session-subject');
+        if (subj) {
+          subj.style.transition = 'color 0.2s';
+          subj.style.color = '#fca5a5';
+        }
 
-      // Double-rAF batching: set transition in frame 1, animate in frame 2
-      requestAnimationFrame(() => {
-        cardEl.style.transition = 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease-out, height 0.28s cubic-bezier(0.22, 1, 0.36, 1), margin-bottom 0.28s cubic-bezier(0.22, 1, 0.36, 1), padding 0.28s cubic-bezier(0.22, 1, 0.36, 1), border-width 0.22s ease-out, background 0.2s, border-color 0.2s';
-
+        // Double-rAF batching: set transition in frame 1, animate in frame 2
         requestAnimationFrame(() => {
-          cardEl.style.transform = 'translateX(-50%) scale(0.85)';
-          cardEl.style.opacity = '0';
-          cardEl.style.height = '0px';
-          cardEl.style.marginBottom = '-0.55rem';
-          cardEl.style.paddingTop = '0px';
-          cardEl.style.paddingBottom = '0px';
-          cardEl.style.borderTopWidth = '0px';
-          cardEl.style.borderBottomWidth = '0px';
-          cardEl.style.background = 'rgba(239, 68, 68, 0.18)';
-          cardEl.style.borderColor = 'rgba(239, 68, 68, 0.45)';
+          cEl.style.transition = 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease-out, height 0.28s cubic-bezier(0.22, 1, 0.36, 1), margin-bottom 0.28s cubic-bezier(0.22, 1, 0.36, 1), padding 0.28s cubic-bezier(0.22, 1, 0.36, 1), border-width 0.22s ease-out, background 0.2s, border-color 0.2s';
+
+          requestAnimationFrame(() => {
+            cEl.style.transform = 'translateX(-50%) scale(0.85)';
+            cEl.style.opacity = '0';
+            cEl.style.height = '0px';
+            cEl.style.marginBottom = '-0.55rem';
+            cEl.style.paddingTop = '0px';
+            cEl.style.paddingBottom = '0px';
+            cEl.style.borderTopWidth = '0px';
+            cEl.style.borderBottomWidth = '0px';
+            cEl.style.background = 'rgba(239, 68, 68, 0.18)';
+            cEl.style.borderColor = 'rgba(239, 68, 68, 0.45)';
+          });
         });
-      });
 
-      let cleanedUp = false;
-      const finishDismiss = () => {
-        if (cleanedUp) return;
-        cleanedUp = true;
-        if (cardEl && cardEl.parentNode) {
-          cardEl.remove();
-        }
-        if (dayTotalSess === 0 && listEl) {
-          const isToday = (dateStr === getLocalDateString());
-          listEl.innerHTML = `
-            <div class="day-empty-state" style="animation: dialog-pop-in 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;">
-              <div class="day-empty-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
+        let cleanedUp = false;
+        const finishDismiss = () => {
+          if (cleanedUp) return;
+          cleanedUp = true;
+          if (cEl && cEl.parentNode) {
+            cEl.remove();
+          }
+          if (dayTotalSess === 0 && listEl) {
+            const isToday = (dateStr === getLocalDateString());
+            listEl.innerHTML = `
+              <div class="day-empty-state" style="animation: dialog-pop-in 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+                <div class="day-empty-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </div>
+                <div class="day-empty-title">No sessions on this day</div>
+                <div class="day-empty-sub">${isToday ? 'Start the timer to record your first focus block today!' : 'Rest day recorded. Zero minutes studied.'}</div>
               </div>
-              <div class="day-empty-title">No sessions on this day</div>
-              <div class="day-empty-sub">${isToday ? 'Start the timer to record your first focus block today!' : 'Rest day recorded. Zero minutes studied.'}</div>
-            </div>
-          `;
-        }
-      };
+            `;
+          }
+          const histDlg = document.getElementById('sessions-history-dialog');
+          if (histDlg && histDlg.open) {
+            renderHistoryDialogDOM();
+          }
+        };
 
-      cardEl.addEventListener('transitionend', function handler(e) {
-        if (e.propertyName !== 'height') return;
-        cardEl.removeEventListener('transitionend', handler);
-        finishDismiss();
+        cEl.addEventListener('transitionend', function handler(e) {
+          if (e.propertyName !== 'height') return;
+          cEl.removeEventListener('transitionend', handler);
+          finishDismiss();
+        });
+        setTimeout(finishDismiss, 350);
       });
-      setTimeout(finishDismiss, 350);
     }
 
     // 6. Fire backend deletion in the background (non-blocking)
@@ -4417,6 +4798,66 @@
       });
       levelsDialog.addEventListener('cancel', () => {
         closeLevelsDialog();
+      });
+    }
+
+    // Sessions History Dialog: Open via clicking or Enter on Total Focus pill
+    const statItemTotal = document.getElementById('stat-item-total');
+    if (statItemTotal) {
+      statItemTotal.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openHistoryDialog();
+      });
+      statItemTotal.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openHistoryDialog();
+        }
+      });
+    }
+
+    // Sessions History Dialog: Close button
+    const btnCloseHistory = document.getElementById('btn-close-history-dialog');
+    if (btnCloseHistory) {
+      btnCloseHistory.addEventListener('click', closeHistoryDialog);
+    }
+
+    // Sessions History Feed: Delete session action via event delegation
+    const historyFeedList = document.getElementById('history-feed-list');
+    if (historyFeedList) {
+      historyFeedList.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.history-session-delete-btn');
+        if (!btn || btn.disabled) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        const sessionId = btn.getAttribute('data-session-id');
+        const dateStr = btn.getAttribute('data-date');
+        if (!sessionId) return;
+
+        btn.disabled = true;
+        if (typeof btn.blur === 'function') {
+          btn.blur();
+        }
+        await deleteSession(sessionId, dateStr);
+      });
+    }
+
+    // Sessions History Dialog: backdrop click & native cancel/close light-dismiss fallback
+    const historyDialog = document.getElementById('sessions-history-dialog');
+    if (historyDialog) {
+      historyDialog.addEventListener('click', (e) => {
+        const rect = historyDialog.getBoundingClientRect();
+        const isInDialog = (
+          rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+          rect.left <= e.clientX && e.clientX <= rect.left + rect.width
+        );
+        if (!isInDialog) {
+          closeHistoryDialog();
+        }
+      });
+      historyDialog.addEventListener('cancel', () => {
+        closeHistoryDialog();
       });
     }
 
@@ -4721,6 +5162,24 @@
         window.dayLenis = dayLenis;
       } catch (e) {
         console.warn('StudyArc: Error initializing dayLenis:', e);
+      }
+    }
+
+    const historyFeed = document.getElementById('history-feed-list');
+    if (historyFeed && !historyLenis) {
+      try {
+        historyLenis = new Lenis({
+          wrapper: historyFeed,
+          content: historyFeed,
+          eventsTarget: historyFeed,
+          autoRaf: true,
+          smoothWheel: true,
+          duration: 0.85,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        });
+        window.historyLenis = historyLenis;
+      } catch (e) {
+        console.warn('StudyArc: Error initializing historyLenis:', e);
       }
     }
   }
