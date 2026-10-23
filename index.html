@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=9.9">
+  <link rel="stylesheet" href="styles.css?v=10.0">
   <script>
     (function () {
       try {
@@ -592,10 +592,10 @@
       </dialog>
 
       <!-- SESSIONS HISTORY CALENDAR JUMP MODAL -->
-      <dialog id="history-calendar-dialog" class="history-calendar-dialog" closedby="any" aria-labelledby="history-calendar-title-btn">
-        <div class="history-calendar-shell" id="history-calendar-shell" tabindex="-1">
-          <!-- Calendar Header -->
-          <div class="history-calendar-header">
+      <dialog id="history-calendar-dialog" class="history-calendar-dialog" closedby="any" aria-labelledby="history-calendar-title-btn" data-lenis-prevent>
+        <div class="history-calendar-shell" id="history-calendar-shell" tabindex="-1" data-lenis-prevent>
+          <!-- Calendar Header (Hidden when dial view is open) -->
+          <div class="history-calendar-header" id="history-calendar-header">
             <div class="history-calendar-nav" id="history-calendar-nav">
               <button type="button" class="history-cal-nav-btn" id="history-cal-prev-month" aria-label="Previous Month">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -623,7 +623,7 @@
           </div>
 
           <!-- Main Calendar View (Month Swiping & Grid) -->
-          <div class="history-cal-main-view" id="history-cal-main-view">
+          <div class="history-cal-main-view" id="history-cal-main-view" data-lenis-prevent>
             <!-- Quick Jump Shortcuts Strip -->
             <div class="history-cal-shortcuts">
               <button type="button" class="history-cal-pill-btn" data-jump="today">Today</button>
@@ -643,17 +643,11 @@
               <span>Sa</span>
             </div>
 
-            <!-- Swipeable Month Carousel with strict Snapping -->
-            <div class="history-cal-carousel-wrapper" id="history-cal-carousel-wrapper">
-              <div class="history-cal-carousel" id="history-cal-carousel">
-                <div class="history-cal-slide" id="history-cal-slide-prev" aria-hidden="true">
-                  <div class="history-cal-grid" id="history-cal-grid-prev"></div>
-                </div>
-                <div class="history-cal-slide active-slide" id="history-cal-slide-curr">
-                  <div class="history-cal-grid" id="history-cal-grid"></div>
-                </div>
-                <div class="history-cal-slide" id="history-cal-slide-next" aria-hidden="true">
-                  <div class="history-cal-grid" id="history-cal-grid-next"></div>
+            <!-- Month Viewport with Locked Height (Strict 42-day cells, zero layout shifts) -->
+            <div class="history-cal-viewport" id="history-cal-viewport" data-lenis-prevent>
+              <div class="history-cal-slider-stage" id="history-cal-slider-stage">
+                <div class="history-cal-grid" id="history-cal-grid">
+                  <!-- Dynamically populated 42 cells (6 rows x 7 cols) -->
                 </div>
               </div>
             </div>
@@ -666,25 +660,20 @@
             </div>
           </div>
 
-          <!-- Dial Picker Overlay / View (Month & Year Dials) -->
-          <div class="history-cal-dial-view" id="history-cal-dial-view" style="display: none;">
-            <div class="history-cal-dial-header">
-              <div class="history-cal-dial-title-group">
-                <span class="history-cal-dial-title">Month & Year Dial</span>
-                <span class="history-cal-dial-hint">Scroll or tap to select</span>
-              </div>
-              <button type="button" class="history-cal-dial-done-btn" id="history-cal-dial-done-btn">Done</button>
-            </div>
-            
-            <div class="history-cal-dial-frame">
+          <!-- Minimal Dial Picker View (Dual Cylindrical Drums + Full-Width Done Button) -->
+          <div class="history-cal-dial-view" id="history-cal-dial-view" data-lenis-prevent style="display: none;">
+            <div class="history-cal-dial-frame" id="history-cal-dial-frame">
               <div class="history-cal-dial-gradient top" aria-hidden="true"></div>
               <div class="history-cal-dial-gradient bottom" aria-hidden="true"></div>
               <div class="history-cal-dial-lens" aria-hidden="true"></div>
               
-              <div class="history-cal-drum" id="history-cal-drum-month" role="listbox" aria-label="Select Month"></div>
+              <div class="history-cal-drum" id="history-cal-drum-month" data-lenis-prevent role="listbox" aria-label="Select Month"></div>
               <div class="history-cal-drum-divider" aria-hidden="true"></div>
-              <div class="history-cal-drum" id="history-cal-drum-year" role="listbox" aria-label="Select Year"></div>
+              <div class="history-cal-drum" id="history-cal-drum-year" data-lenis-prevent role="listbox" aria-label="Select Year"></div>
             </div>
+
+            <!-- Full-width Done button (Container max-width, no X icon) -->
+            <button type="button" class="history-cal-dial-done-btn-full" id="history-cal-dial-done-btn">Done</button>
           </div>
         </div>
       </dialog>
@@ -920,7 +909,7 @@
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
   <script src="aura-particles.js?v=5.3"></script>
-  <script src="app.js?v=9.5"></script>
+  <script src="app.js?v=9.6"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

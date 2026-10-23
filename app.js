@@ -4392,7 +4392,7 @@
   let pendingDialMonth = 9;
   let pendingDialYear = 2026;
   let isDialViewOpen = false;
-  let isCarouselSnapping = false;
+  let isMonthSliding = false;
 
   function renderMonthDaysInto(year, month, containerEl, isCurrent) {
     if (!containerEl) return { totalMins: 0, sessionCount: 0 };
@@ -4424,14 +4424,15 @@
       }
     }
 
-    // Render leading empty spacer days
+    // 1. Leading spacer empty days
     for (let i = 0; i < firstDayIndex; i++) {
       const emptyCell = document.createElement('div');
       emptyCell.className = 'history-cal-day empty';
+      emptyCell.setAttribute('aria-hidden', 'true');
       containerEl.appendChild(emptyCell);
     }
 
-    // Render day cells
+    // 2. Actual active day cells
     for (let day = 1; day <= daysInMonth; day++) {
       const cellDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const daySessions = sessionsByDate[cellDateStr] || [];
@@ -4465,52 +4466,104 @@
       containerEl.appendChild(cell);
     }
 
+    // 3. Trailing spacer empty days to strictly lock to 42 cells (6 rows x 7 cols)
+    const totalRendered = firstDayIndex + daysInMonth;
+    const remainingSpacers = Math.max(0, 42 - totalRendered);
+    for (let i = 0; i < remainingSpacers; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'history-cal-day empty';
+      emptyCell.setAttribute('aria-hidden', 'true');
+      containerEl.appendChild(emptyCell);
+    }
+
     return { totalMins: monthTotalMins, sessionCount: monthSessionCount };
   }
 
-  function renderHistoryCalendarGrid() {
+  function updateCalendarHeaderAndStats(stats) {
     const titleEl = document.getElementById('history-calendar-title');
     const monthSessionsEl = document.getElementById('history-cal-month-sessions');
     const monthTimeEl = document.getElementById('history-cal-month-time');
-    const carousel = document.getElementById('history-cal-carousel');
 
     if (titleEl) {
       titleEl.textContent = `${CAL_MONTH_NAMES_SHORT[currentCalMonth]} ${currentCalYear}`;
     }
-
-    // Compute previous and next month
-    let prevY = currentCalYear, prevM = currentCalMonth - 1;
-    if (prevM < 0) { prevM = 11; prevY--; }
-
-    let nextY = currentCalYear, nextM = currentCalMonth + 1;
-    if (nextM > 11) { nextM = 0; nextY++; }
-
-    const gridPrev = document.getElementById('history-cal-grid-prev');
-    const gridCurr = document.getElementById('history-cal-grid');
-    const gridNext = document.getElementById('history-cal-grid-next');
-
-    renderMonthDaysInto(prevY, prevM, gridPrev, false);
-    const currStats = renderMonthDaysInto(currentCalYear, currentCalMonth, gridCurr, true);
-    renderMonthDaysInto(nextY, nextM, gridNext, false);
-
     if (monthSessionsEl) {
-      monthSessionsEl.textContent = `${currStats.sessionCount} ${currStats.sessionCount === 1 ? 'session' : 'sessions'}`;
+      monthSessionsEl.textContent = `${stats.sessionCount} ${stats.sessionCount === 1 ? 'session' : 'sessions'}`;
     }
     if (monthTimeEl) {
-      monthTimeEl.textContent = `${formatHoursMinutes(currStats.totalMins * 60)} focus`;
+      monthTimeEl.textContent = `${formatHoursMinutes(stats.totalMins * 60)} focus`;
+    }
+  }
+
+  function renderHistoryCalendarGrid() {
+    const gridCurr = document.getElementById('history-cal-grid');
+    if (!gridCurr) return;
+    const stats = renderMonthDaysInto(currentCalYear, currentCalMonth, gridCurr, true);
+    updateCalendarHeaderAndStats(stats);
+  }
+
+  function slideToMonth(direction, targetYear, targetMonth) {
+    if (isMonthSliding) return;
+    const stage = document.getElementById('history-cal-slider-stage');
+    const currentGrid = document.getElementById('history-cal-grid');
+    if (!stage || !currentGrid) {
+      currentCalYear = targetYear;
+      currentCalMonth = targetMonth;
+      renderHistoryCalendarGrid();
+      return;
     }
 
-    // Center carousel on current month slide
-    if (carousel && carousel.clientWidth) {
-      isCarouselSnapping = true;
-      carousel.scrollLeft = carousel.clientWidth;
-      requestAnimationFrame(() => {
-        if (carousel && carousel.clientWidth) {
-          carousel.scrollLeft = carousel.clientWidth;
-        }
-        setTimeout(() => { isCarouselSnapping = false; }, 60);
-      });
+    isMonthSliding = true;
+
+    // 1. Create incoming grid populated with locked 42 cells
+    const incomingGrid = document.createElement('div');
+    incomingGrid.className = 'history-cal-grid animating';
+    const stats = renderMonthDaysInto(targetYear, targetMonth, incomingGrid, true);
+
+    // Direction: +1 = Next Month (slides left), -1 = Prev Month (slides right)
+    const initialX = direction > 0 ? '100%' : '-100%';
+    const exitX = direction > 0 ? '-100%' : '100%';
+    incomingGrid.style.transform = `translate3d(${initialX}, 0, 0)`;
+    stage.appendChild(incomingGrid);
+
+    // Update title and footer stats immediately for responsive feel
+    currentCalYear = targetYear;
+    currentCalMonth = targetMonth;
+    updateCalendarHeaderAndStats(stats);
+
+    // Force reflow
+    void incomingGrid.offsetWidth;
+
+    // Animate both grids smoothly with hardware accelerated cubic-bezier curve
+    const trans = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+    currentGrid.classList.add('animating');
+    currentGrid.style.transition = trans;
+    incomingGrid.style.transition = trans;
+
+    currentGrid.style.transform = `translate3d(${exitX}, 0, 0)`;
+    incomingGrid.style.transform = 'translate3d(0, 0, 0)';
+
+    setTimeout(() => {
+      currentGrid.remove();
+      incomingGrid.id = 'history-cal-grid';
+      incomingGrid.className = 'history-cal-grid';
+      incomingGrid.style.transition = '';
+      incomingGrid.style.transform = '';
+      isMonthSliding = false;
+    }, 230);
+  }
+
+  function navigateCalendarMonth(delta) {
+    let nextM = currentCalMonth + delta;
+    let nextY = currentCalYear;
+    if (nextM > 11) {
+      nextM = 0;
+      nextY++;
+    } else if (nextM < 0) {
+      nextM = 11;
+      nextY--;
     }
+    slideToMonth(delta, nextY, nextM);
   }
 
   function buildDialDrums() {
@@ -4526,23 +4579,10 @@
     mHtml += '<div class="history-cal-drum-spacer"></div>';
     monthDrum.innerHTML = mHtml;
 
-    // 2. Year drum items (from minYear to maxYear based on user sessions)
-    const currentY = new Date().getFullYear();
-    let minYear = Math.min(2023, currentY);
-    let maxYear = Math.max(currentY + 1, 2026);
-
-    if (state.sessions && state.sessions.length > 0) {
-      state.sessions.forEach(s => {
-        const y = s.date ? parseInt(s.date.split('-')[0], 10) : 0;
-        if (y > 2000) {
-          if (y < minYear) minYear = y;
-          if (y > maxYear) maxYear = y;
-        }
-      });
-    }
-
+    // 2. Year drum items: from 2000 to currentYear
+    const currentYearMax = new Date().getFullYear();
     dialYearsList = [];
-    for (let y = minYear; y <= maxYear; y++) {
+    for (let y = 2000; y <= currentYearMax; y++) {
       dialYearsList.push(y);
     }
 
@@ -4555,7 +4595,8 @@
 
     // Click handlers for month items
     monthDrum.querySelectorAll('.history-cal-drum-item').forEach((item) => {
-      item.addEventListener('click', () => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
         const m = parseInt(item.getAttribute('data-month'), 10);
         pendingDialMonth = m;
         monthDrum.scrollTo({ top: m * DIAL_ITEM_HEIGHT, behavior: 'smooth' });
@@ -4565,7 +4606,8 @@
 
     // Click handlers for year items
     yearDrum.querySelectorAll('.history-cal-drum-item').forEach((item) => {
-      item.addEventListener('click', () => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
         const idx = parseInt(item.getAttribute('data-idx'), 10);
         pendingDialYear = dialYearsList[idx];
         yearDrum.scrollTo({ top: idx * DIAL_ITEM_HEIGHT, behavior: 'smooth' });
@@ -4573,26 +4615,9 @@
       });
     });
 
-    // Scroll snapping listeners with selection updates
-    let monthDebounce = null;
-    monthDrum.addEventListener('scroll', () => {
-      clearTimeout(monthDebounce);
-      monthDebounce = setTimeout(() => {
-        const idx = Math.max(0, Math.min(11, Math.round(monthDrum.scrollTop / DIAL_ITEM_HEIGHT)));
-        pendingDialMonth = idx;
-        updateDrumSelectedState(monthDrum, idx);
-      }, 35);
-    }, { passive: true });
-
-    let yearDebounce = null;
-    yearDrum.addEventListener('scroll', () => {
-      clearTimeout(yearDebounce);
-      yearDebounce = setTimeout(() => {
-        const idx = Math.max(0, Math.min(dialYearsList.length - 1, Math.round(yearDrum.scrollTop / DIAL_ITEM_HEIGHT)));
-        pendingDialYear = dialYearsList[idx];
-        updateDrumSelectedState(yearDrum, idx);
-      }, 35);
-    }, { passive: true });
+    // Attach full pointer drag and wheel interaction handlers
+    attachDrumScrollAndDrag(monthDrum, false);
+    attachDrumScrollAndDrag(yearDrum, true);
   }
 
   function updateDrumSelectedState(drumEl, selectedIdx) {
@@ -4607,10 +4632,103 @@
     });
   }
 
+  function attachDrumScrollAndDrag(drumEl, isYearDrum) {
+    let isPointerDown = false;
+    let startY = 0;
+    let startScrollTop = 0;
+
+    // Pointer Drag (Works for desktop mouse click-and-drag and touch)
+    drumEl.addEventListener('pointerdown', (e) => {
+      isPointerDown = true;
+      startY = e.clientY;
+      startScrollTop = drumEl.scrollTop;
+      drumEl.style.scrollSnapType = 'none';
+      drumEl.setPointerCapture(e.pointerId);
+    });
+
+    drumEl.addEventListener('pointermove', (e) => {
+      if (!isPointerDown) return;
+      const dy = e.clientY - startY;
+      drumEl.scrollTop = startScrollTop - dy;
+
+      const idx = Math.round(drumEl.scrollTop / DIAL_ITEM_HEIGHT);
+      updateDrumSelectedState(drumEl, idx);
+      if (isYearDrum) {
+        if (dialYearsList[idx] !== undefined) pendingDialYear = dialYearsList[idx];
+      } else {
+        pendingDialMonth = Math.max(0, Math.min(11, idx));
+      }
+    });
+
+    const onPointerUp = (e) => {
+      if (!isPointerDown) return;
+      isPointerDown = false;
+      try { drumEl.releasePointerCapture(e.pointerId); } catch (_) {}
+      drumEl.style.scrollSnapType = 'y mandatory';
+
+      const snapIdx = Math.round(drumEl.scrollTop / DIAL_ITEM_HEIGHT);
+      const maxIdx = isYearDrum ? dialYearsList.length - 1 : 11;
+      const clampedIdx = Math.max(0, Math.min(maxIdx, snapIdx));
+
+      drumEl.scrollTo({ top: clampedIdx * DIAL_ITEM_HEIGHT, behavior: 'smooth' });
+      updateDrumSelectedState(drumEl, clampedIdx);
+      if (isYearDrum) {
+        pendingDialYear = dialYearsList[clampedIdx];
+      } else {
+        pendingDialMonth = clampedIdx;
+      }
+    };
+
+    drumEl.addEventListener('pointerup', onPointerUp);
+    drumEl.addEventListener('pointercancel', onPointerUp);
+
+    // Direct Mouse Wheel Listener (Prevents window Lenis scroll capture)
+    let wheelDebounce = null;
+    drumEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      drumEl.scrollTop += e.deltaY;
+
+      const curIdx = Math.round(drumEl.scrollTop / DIAL_ITEM_HEIGHT);
+      updateDrumSelectedState(drumEl, curIdx);
+
+      clearTimeout(wheelDebounce);
+      wheelDebounce = setTimeout(() => {
+        const snapIdx = Math.round(drumEl.scrollTop / DIAL_ITEM_HEIGHT);
+        const maxIdx = isYearDrum ? dialYearsList.length - 1 : 11;
+        const clampedIdx = Math.max(0, Math.min(maxIdx, snapIdx));
+        drumEl.scrollTo({ top: clampedIdx * DIAL_ITEM_HEIGHT, behavior: 'smooth' });
+        updateDrumSelectedState(drumEl, clampedIdx);
+        if (isYearDrum) {
+          pendingDialYear = dialYearsList[clampedIdx];
+        } else {
+          pendingDialMonth = clampedIdx;
+        }
+      }, 60);
+    }, { passive: false });
+
+    // Scroll event listener (for native momentum scroll on mobile)
+    let scrollDebounce = null;
+    drumEl.addEventListener('scroll', () => {
+      if (isPointerDown) return;
+      clearTimeout(scrollDebounce);
+      scrollDebounce = setTimeout(() => {
+        const snapIdx = Math.round(drumEl.scrollTop / DIAL_ITEM_HEIGHT);
+        const maxIdx = isYearDrum ? dialYearsList.length - 1 : 11;
+        const clampedIdx = Math.max(0, Math.min(maxIdx, snapIdx));
+        updateDrumSelectedState(drumEl, clampedIdx);
+        if (isYearDrum) {
+          pendingDialYear = dialYearsList[clampedIdx];
+        } else {
+          pendingDialMonth = clampedIdx;
+        }
+      }, 40);
+    }, { passive: true });
+  }
+
   function openCalendarDialView() {
     const mainView = document.getElementById('history-cal-main-view');
     const dialView = document.getElementById('history-cal-dial-view');
-    const titleBtn = document.getElementById('history-calendar-title-btn');
     const shell = document.getElementById('history-calendar-shell');
     if (!dialView) return;
 
@@ -4622,10 +4740,6 @@
 
     if (mainView) mainView.style.display = 'none';
     dialView.style.display = 'flex';
-    if (titleBtn) {
-      titleBtn.classList.add('is-open');
-      titleBtn.setAttribute('aria-expanded', 'true');
-    }
     if (shell) shell.classList.add('is-dial-open');
 
     const monthDrum = document.getElementById('history-cal-drum-month');
@@ -4638,17 +4752,16 @@
       }
       if (yearDrum) {
         const yIdx = dialYearsList.indexOf(currentCalYear);
-        const targetIdx = yIdx >= 0 ? yIdx : 0;
+        const targetIdx = yIdx >= 0 ? yIdx : dialYearsList.length - 1;
         yearDrum.scrollTop = targetIdx * DIAL_ITEM_HEIGHT;
         updateDrumSelectedState(yearDrum, targetIdx);
       }
-    }, 25);
+    }, 20);
   }
 
   function closeCalendarDialView(applyChanges = true) {
     const mainView = document.getElementById('history-cal-main-view');
     const dialView = document.getElementById('history-cal-dial-view');
-    const titleBtn = document.getElementById('history-calendar-title-btn');
     const shell = document.getElementById('history-calendar-shell');
     if (!dialView) return;
 
@@ -4661,10 +4774,6 @@
 
     dialView.style.display = 'none';
     if (mainView) mainView.style.display = 'flex';
-    if (titleBtn) {
-      titleBtn.classList.remove('is-open');
-      titleBtn.setAttribute('aria-expanded', 'false');
-    }
     if (shell) shell.classList.remove('is-dial-open');
 
     renderHistoryCalendarGrid();
@@ -4704,15 +4813,6 @@
     dialog.classList.remove('is-closing');
     if (typeof dialog.showModal === 'function' && !dialog.open) {
       dialog.showModal();
-    }
-
-    const carousel = document.getElementById('history-cal-carousel');
-    if (carousel) {
-      setTimeout(() => {
-        if (carousel && carousel.clientWidth) {
-          carousel.scrollLeft = carousel.clientWidth;
-        }
-      }, 35);
     }
   }
 
@@ -4822,6 +4922,54 @@
     }
   }
 
+  function setupCalendarViewportGestures() {
+    const viewport = document.getElementById('history-cal-viewport');
+    if (!viewport) return;
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isTracking = false;
+
+    viewport.addEventListener('touchstart', (e) => {
+      if (isMonthSliding || e.touches.length !== 1) return;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      isTracking = true;
+    }, { passive: true });
+
+    viewport.addEventListener('touchend', (e) => {
+      if (!isTracking || isMonthSliding || e.changedTouches.length !== 1) return;
+      isTracking = false;
+      const diffX = e.changedTouches[0].clientX - touchStartX;
+      const diffY = e.changedTouches[0].clientY - touchStartY;
+
+      if (Math.abs(diffX) > 38 && Math.abs(diffX) > Math.abs(diffY)) {
+        if (diffX < 0) {
+          navigateCalendarMonth(1);
+        } else {
+          navigateCalendarMonth(-1);
+        }
+      }
+    }, { passive: true });
+
+    let wheelTimer = null;
+    viewport.addEventListener('wheel', (e) => {
+      if (isMonthSliding) return;
+      if (Math.abs(e.deltaX) > 28 && Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        e.preventDefault();
+        e.stopPropagation();
+        clearTimeout(wheelTimer);
+        wheelTimer = setTimeout(() => {
+          if (e.deltaX > 0) {
+            navigateCalendarMonth(1);
+          } else {
+            navigateCalendarMonth(-1);
+          }
+        }, 40);
+      }
+    }, { passive: false });
+  }
+
   function initHistoryCalendarEvents() {
     const dialog = document.getElementById('history-calendar-dialog');
     const closeBtn = document.getElementById('btn-close-calendar-dialog');
@@ -4829,7 +4977,6 @@
     const nextBtn = document.getElementById('history-cal-next-month');
     const titleBtn = document.getElementById('history-calendar-title-btn');
     const dialDoneBtn = document.getElementById('history-cal-dial-done-btn');
-    const carousel = document.getElementById('history-cal-carousel');
 
     if (closeBtn) {
       closeBtn.addEventListener('click', closeHistoryCalendarModal);
@@ -4855,103 +5002,15 @@
       });
     }
 
-    function onCarouselSnap() {
-      if (!carousel || isCarouselSnapping) return;
-      const width = carousel.clientWidth;
-      if (!width) return;
-      const left = carousel.scrollLeft;
-
-      if (left < width * 0.35) {
-        // Snapped to Prev Month
-        isCarouselSnapping = true;
-        currentCalMonth--;
-        if (currentCalMonth < 0) {
-          currentCalMonth = 11;
-          currentCalYear--;
-        }
-        renderHistoryCalendarGrid();
-      } else if (left > width * 1.65) {
-        // Snapped to Next Month
-        isCarouselSnapping = true;
-        currentCalMonth++;
-        if (currentCalMonth > 11) {
-          currentCalMonth = 0;
-          currentCalYear++;
-        }
-        renderHistoryCalendarGrid();
-      }
-    }
-
-    if (carousel) {
-      let snapTimeout = null;
-      carousel.addEventListener('scroll', () => {
-        if (isCarouselSnapping) return;
-        clearTimeout(snapTimeout);
-        snapTimeout = setTimeout(onCarouselSnap, 90);
-      }, { passive: true });
-
-      carousel.addEventListener('scrollend', onCarouselSnap);
-
-      // Touch swipe tracking with strict snapping
-      let touchStartX = 0;
-      let touchStartY = 0;
-      carousel.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 1) {
-          touchStartX = e.touches[0].clientX;
-          touchStartY = e.touches[0].clientY;
-        }
-      }, { passive: true });
-
-      carousel.addEventListener('touchend', (e) => {
-        if (e.changedTouches.length === 1) {
-          const diffX = e.changedTouches[0].clientX - touchStartX;
-          const diffY = e.changedTouches[0].clientY - touchStartY;
-          if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
-            if (diffX < 0) {
-              // Swipe left -> Next Month
-              carousel.scrollTo({ left: carousel.clientWidth * 2, behavior: 'smooth' });
-              setTimeout(onCarouselSnap, 240);
-            } else {
-              // Swipe right -> Prev Month
-              carousel.scrollTo({ left: 0, behavior: 'smooth' });
-              setTimeout(onCarouselSnap, 240);
-            }
-          }
-        }
-      }, { passive: true });
-    }
-
     if (prevBtn) {
-      prevBtn.addEventListener('click', () => {
-        if (carousel && carousel.clientWidth) {
-          carousel.scrollTo({ left: 0, behavior: 'smooth' });
-          setTimeout(onCarouselSnap, 240);
-        } else {
-          currentCalMonth--;
-          if (currentCalMonth < 0) {
-            currentCalMonth = 11;
-            currentCalYear--;
-          }
-          renderHistoryCalendarGrid();
-        }
-      });
+      prevBtn.addEventListener('click', () => navigateCalendarMonth(-1));
     }
 
     if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
-        if (carousel && carousel.clientWidth) {
-          carousel.scrollTo({ left: carousel.clientWidth * 2, behavior: 'smooth' });
-          setTimeout(onCarouselSnap, 240);
-        } else {
-          currentCalMonth++;
-          if (currentCalMonth > 11) {
-            currentCalMonth = 0;
-            currentCalYear++;
-          }
-          renderHistoryCalendarGrid();
-        }
-      });
+      nextBtn.addEventListener('click', () => navigateCalendarMonth(1));
     }
+
+    setupCalendarViewportGestures();
 
     // Shortcut pills: Today, Yesterday, Latest, Oldest
     const shortcuts = document.querySelectorAll('.history-cal-pill-btn');

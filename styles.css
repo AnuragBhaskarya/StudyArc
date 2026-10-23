@@ -4831,10 +4831,8 @@ input:checked + .switch-slider:before {
   box-shadow: 0 0 12px rgba(16, 224, 104, 0.28);
 }
 
-.history-calendar-shell.is-dial-open .history-cal-nav-btn {
-  opacity: 0;
-  pointer-events: none;
-  transform: scale(0.85);
+.history-calendar-shell.is-dial-open #history-calendar-header {
+  display: none !important;
 }
 
 .history-cal-main-view {
@@ -4843,37 +4841,25 @@ input:checked + .switch-slider:before {
   gap: 0.75rem;
 }
 
-.history-cal-carousel-wrapper {
-  overflow: hidden;
-  width: 100%;
+/* Month Viewport & Locked Stage */
+.history-cal-viewport {
   position: relative;
-  border-radius: 10px;
-  touch-action: pan-x;
-}
-
-.history-cal-carousel {
-  display: flex;
-  overflow-x: scroll;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.history-cal-carousel::-webkit-scrollbar {
-  display: none;
-}
-
-.history-cal-slide {
-  flex: 0 0 100%;
-  min-width: 100%;
   width: 100%;
-  scroll-snap-align: center;
-  scroll-snap-stop: always;
-  box-sizing: border-box;
+  height: 232px;
+  overflow: hidden;
+  border-radius: 10px;
+  touch-action: pan-y;
   user-select: none;
 }
 
-/* Dial Picker Container & Controls */
+.history-cal-slider-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Minimal Dial Picker Container & Controls */
 .history-cal-dial-view {
   display: flex;
   flex-direction: column;
@@ -4892,49 +4878,33 @@ input:checked + .switch-slider:before {
   }
 }
 
-.history-cal-dial-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.1rem 0.2rem 0.5rem;
-  border-bottom: 1px solid rgba(16, 224, 104, 0.12);
-}
-
-.history-cal-dial-title-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.history-cal-dial-title {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #F0FDF4;
-  letter-spacing: 0.02em;
-}
-
-.history-cal-dial-hint {
-  font-size: 0.65rem;
-  color: #527961;
-}
-
-.history-cal-dial-done-btn {
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 0.25rem 0.85rem;
-  border-radius: 9999px;
+.history-cal-dial-done-btn-full {
+  width: 100%;
+  height: 42px;
+  border-radius: 12px;
   background: #10E068;
   color: #041209;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   border: none;
   cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: 0 0 10px rgba(16, 224, 104, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.16s ease;
+  box-shadow: 0 4px 18px rgba(16, 224, 104, 0.35);
+  margin-top: 0.25rem;
 }
 
-.history-cal-dial-done-btn:hover {
+.history-cal-dial-done-btn-full:hover {
   background: #4EFA8F;
   transform: translateY(-1px);
-  box-shadow: 0 0 14px rgba(16, 224, 104, 0.55);
+  box-shadow: 0 6px 24px rgba(16, 224, 104, 0.55);
+}
+
+.history-cal-dial-done-btn-full:active {
+  transform: scale(0.985);
 }
 
 .history-cal-dial-frame {
@@ -4948,6 +4918,7 @@ input:checked + .switch-slider:before {
   border: 1px solid rgba(16, 224, 104, 0.18);
   overflow: hidden;
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+  touch-action: pan-y;
 }
 
 .history-cal-dial-lens {
@@ -4991,8 +4962,15 @@ input:checked + .switch-slider:before {
   scroll-snap-type: y mandatory;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  user-select: none;
   z-index: 1;
   text-align: center;
+  cursor: grab;
+}
+
+.history-cal-drum:active {
+  cursor: grabbing;
 }
 
 .history-cal-drum::-webkit-scrollbar {
@@ -5002,6 +4980,7 @@ input:checked + .switch-slider:before {
 .history-cal-drum-spacer {
   height: 80px;
   flex-shrink: 0;
+  pointer-events: none;
 }
 
 .history-cal-drum-divider {
@@ -5106,14 +5085,28 @@ input:checked + .switch-slider:before {
   padding: 0.2rem 0;
 }
 
-/* Days Grid */
+/* Days Grid (Strict 6 Rows x 7 Columns = 42 Cells, Zero Layout Shifts) */
 .history-cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
   gap: 5px;
+  width: 100%;
+  height: 232px;
+  box-sizing: border-box;
+}
+
+.history-cal-grid.animating {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
 }
 
 .history-cal-day {
+  height: 34px;
   aspect-ratio: 1 / 1;
   border-radius: 8px;
   border: 1px solid transparent;
@@ -5129,11 +5122,15 @@ input:checked + .switch-slider:before {
   cursor: default;
   user-select: none;
   transition: all 0.15s ease;
+  box-sizing: border-box;
 }
 
 .history-cal-day.empty {
-  opacity: 0.2;
+  visibility: hidden;
   pointer-events: none;
+  background: transparent;
+  border-color: transparent;
+  opacity: 0;
 }
 
 .history-cal-day.has-sessions {
