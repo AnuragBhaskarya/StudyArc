@@ -4179,8 +4179,8 @@
     }
 
     getVisibleRange(scrollTop, viewportHeight) {
-      // 400px generous lookahead & lookbehind buffer so items are smoothly pre-rendered ahead of viewport
-      const buffer = 400;
+      // 140px focused buffer matching All Levels tab so items animate right as they enter view area
+      const buffer = 140;
       const minY = Math.max(0, scrollTop - buffer);
       const maxY = scrollTop + viewportHeight + buffer;
 
@@ -4278,9 +4278,9 @@
       }
 
       // 4. Trigger animations:
-      // Broad pre-trigger (matching My Journey's lookahead approach):
-      // Triggers animation when card approaches view (within 260px below viewport)
-      // so cards are smoothly swooping in and NEVER appear as blank empty space!
+      // View-boundary entrance trigger (exact match with All Levels tab):
+      // Swoops in smoothly as cards reach the viewport boundary (+45px lookahead)
+      // so cards are visibly animating even when scrolling slowly!
       const viewTop = scrollTop;
       const viewBottom = scrollTop + viewportHeight;
       const toAnimate = [];
@@ -4292,7 +4292,7 @@
         const itemBottom = itemTop + this.virtualItems[idx].height;
 
         const isEnteringView = (
-          itemBottom >= viewTop - 60 && itemTop <= viewBottom + 260
+          itemBottom >= viewTop - 10 && itemTop <= viewBottom + 45
         );
 
         if (isEnteringView) {

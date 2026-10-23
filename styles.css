@@ -4249,14 +4249,14 @@ input:checked + .switch-slider:before {
 .history-feed-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 0 !important;
   overflow-y: auto;
   overflow-x: hidden;
   overflow-anchor: none;
   contain: content;
   flex: 1;
   max-height: 520px;
-  padding: 0.15rem 0.25rem 0.55rem 0.25rem;
+  padding: 4px 4px 8px 4px !important;
   -webkit-overflow-scrolling: touch;
   transform: translateZ(0);
   will-change: transform;
@@ -4281,18 +4281,20 @@ input:checked + .switch-slider:before {
   padding: 0;
 }
 
-/* Sticky Date Group Header (Equivalent to RPG Tier Headers, Green Theme) */
+/* Date Group Header (Equivalent to RPG Tier Headers, Green Theme) */
 .history-date-sticky-header {
-  position: sticky;
-  top: 0;
-  z-index: 8;
-  height: 44px;
+  position: relative !important;
+  flex-shrink: 0 !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  overflow: hidden !important;
   background: #08120c;
   border: 1px solid rgba(16, 224, 104, 0.24);
   border-radius: 10px;
-  padding: 0.42rem 0.75rem;
-  margin: 0 0 8px 0;
-  box-sizing: border-box;
+  padding: 6px 12px !important;
+  margin: 0 0 8px 0 !important;
+  box-sizing: border-box !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4351,18 +4353,22 @@ input:checked + .switch-slider:before {
 
 /* Individual Session Card inside History Feed */
 .history-session-card {
-  position: relative;
+  position: relative !important;
+  flex-shrink: 0 !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
-  padding: 0.55rem 0.85rem 0.55rem 0.7rem;
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+  overflow: hidden !important;
+  padding: 8px 12px !important;
   background: #07150e;
   border: 1px solid rgba(16, 224, 104, 0.16);
   border-radius: 12px;
   gap: 0.65rem;
-  margin: 0 0 8px 0;
-  box-sizing: border-box;
+  margin: 0 0 8px 0 !important;
+  box-sizing: border-box !important;
 
   /* The signature smooth delayed 0.8s Calorie Tracker animation (Exact match with All Levels) */
   opacity: 0;
