@@ -3282,11 +3282,7 @@
       window.getSelection().removeAllRanges();
     }
 
-    // Reset container as soon as we leave or start, starting fresh from beginning
-    resetLevelsContainer(true);
-    showAllLevelsView = false;
-    renderLevelsDialogDOM();
-
+    // 1. Open modal first so container has active layout in the render tree
     if (typeof dialog.showModal === 'function' && !dialog.open) {
       dialog.showModal();
     }
@@ -3301,6 +3297,12 @@
 
     globalLenis?.stop();
     initShellLenis();
+
+    // 2. Reset container and render fresh while dialog is open and visible
+    resetLevelsContainer(true);
+    showAllLevelsView = false;
+    renderLevelsDialogDOM();
+
     if (typeof levelsLenis !== 'undefined' && levelsLenis) {
       levelsLenis.scrollTo(0, { immediate: true, force: true });
       levelsLenis.resize();
@@ -3556,12 +3558,7 @@
       }
 
       if (toAnimate.length > 0) {
-        if (this.animRafId) {
-          cancelAnimationFrame(this.animRafId);
-          this.animRafId = null;
-        }
-        this.animRafId = requestAnimationFrame(() => {
-          this.animRafId = null;
+        requestAnimationFrame(() => {
           toAnimate.forEach((el, i) => {
             if (this.isCatalogMode) {
               void el.offsetWidth; // Force reflow for the signature delayed multi-effect transition
@@ -3801,7 +3798,10 @@
         levelsLenis.resize();
         levelsLenis.start();
       }
-      setTimeout(() => { levelsLenis?.resize(); }, 40);
+      setTimeout(() => {
+        levelsLenis?.resize();
+        activeLevelsScroller?.scrollToLevel(lvlInfo.level, false);
+      }, 50);
     } else {
       // My Journey: Permanent solid DOM rendering with smooth Calorie Tracker entrance animation
       feedList.innerHTML = '';
@@ -3935,16 +3935,16 @@
         levelsLenis.start();
       }
 
-      // Initial synchronous trigger + RAF + resize pass
-      updateReappearingCards(true);
+      // Initial entrance animation pass: Force layout of State A, then transition via RAF
+      void feedList.offsetHeight;
       requestAnimationFrame(() => {
-        updateReappearingCards(false);
+        updateReappearingCards(true);
       });
 
       setTimeout(() => {
         levelsLenis?.resize();
         updateReappearingCards(false);
-      }, 40);
+      }, 50);
 
       activeJourneyCleanup = () => {
         if (journeyRaf) {
