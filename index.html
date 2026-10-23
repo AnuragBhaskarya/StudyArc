@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=10.0">
+  <link rel="stylesheet" href="styles.css?v=10.1">
   <script>
     (function () {
       try {
@@ -643,11 +643,17 @@
               <span>Sa</span>
             </div>
 
-            <!-- Month Viewport with Locked Height (Strict 42-day cells, zero layout shifts) -->
+            <!-- Month Viewport with 1:1 Interactive Finger Drag & Locked 42-Cell Layout -->
             <div class="history-cal-viewport" id="history-cal-viewport" data-lenis-prevent>
-              <div class="history-cal-slider-stage" id="history-cal-slider-stage">
-                <div class="history-cal-grid" id="history-cal-grid">
-                  <!-- Dynamically populated 42 cells (6 rows x 7 cols) -->
+              <div class="history-cal-track" id="history-cal-track">
+                <div class="history-cal-slide" id="history-cal-slide-prev" aria-hidden="true">
+                  <div class="history-cal-grid" id="history-cal-grid-prev"></div>
+                </div>
+                <div class="history-cal-slide active-slide" id="history-cal-slide-curr">
+                  <div class="history-cal-grid" id="history-cal-grid"></div>
+                </div>
+                <div class="history-cal-slide" id="history-cal-slide-next" aria-hidden="true">
+                  <div class="history-cal-grid" id="history-cal-grid-next"></div>
                 </div>
               </div>
             </div>
@@ -909,7 +915,7 @@
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
   <script src="aura-particles.js?v=5.3"></script>
-  <script src="app.js?v=9.6"></script>
+  <script src="app.js?v=9.7"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

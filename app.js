@@ -4392,7 +4392,9 @@
   let pendingDialMonth = 9;
   let pendingDialYear = 2026;
   let isDialViewOpen = false;
-  let isMonthSliding = false;
+  let isMonthTransitioning = false;
+  let isMonthDragging = false;
+  let wasDraggingMonth = false;
 
   function renderMonthDaysInto(year, month, containerEl, isCurrent) {
     if (!containerEl) return { totalMins: 0, sessionCount: 0 };
@@ -4458,7 +4460,11 @@
       cell.innerHTML = inner;
 
       if (isCurrent) {
-        cell.addEventListener('click', () => {
+        cell.addEventListener('click', (e) => {
+          if (wasDraggingMonth) {
+            e.stopPropagation();
+            return;
+          }
           handleCalendarDateSelect(cellDateStr, hasSessions);
         });
       }
@@ -4497,73 +4503,94 @@
 
   function renderHistoryCalendarGrid() {
     const gridCurr = document.getElementById('history-cal-grid');
-    if (!gridCurr) return;
-    const stats = renderMonthDaysInto(currentCalYear, currentCalMonth, gridCurr, true);
-    updateCalendarHeaderAndStats(stats);
-  }
+    const gridPrev = document.getElementById('history-cal-grid-prev');
+    const gridNext = document.getElementById('history-cal-grid-next');
+    const track = document.getElementById('history-cal-track');
 
-  function slideToMonth(direction, targetYear, targetMonth) {
-    if (isMonthSliding) return;
-    const stage = document.getElementById('history-cal-slider-stage');
-    const currentGrid = document.getElementById('history-cal-grid');
-    if (!stage || !currentGrid) {
-      currentCalYear = targetYear;
-      currentCalMonth = targetMonth;
-      renderHistoryCalendarGrid();
-      return;
+    if (track) {
+      track.classList.remove('animating');
+      track.style.transform = 'translate3d(-33.333333%, 0, 0)';
     }
 
-    isMonthSliding = true;
+    if (gridCurr) {
+      const stats = renderMonthDaysInto(currentCalYear, currentCalMonth, gridCurr, true);
+      updateCalendarHeaderAndStats(stats);
+    }
 
-    // 1. Create incoming grid populated with locked 42 cells
-    const incomingGrid = document.createElement('div');
-    incomingGrid.className = 'history-cal-grid animating';
-    const stats = renderMonthDaysInto(targetYear, targetMonth, incomingGrid, true);
+    // Render adjacent months for real-time 1:1 finger swipe
+    if (gridPrev) {
+      let pMonth = currentCalMonth - 1;
+      let pYear = currentCalYear;
+      if (pMonth < 0) {
+        pMonth = 11;
+        pYear--;
+      }
+      renderMonthDaysInto(pYear, pMonth, gridPrev, false);
+    }
 
-    // Direction: +1 = Next Month (slides left), -1 = Prev Month (slides right)
-    const initialX = direction > 0 ? '100%' : '-100%';
-    const exitX = direction > 0 ? '-100%' : '100%';
-    incomingGrid.style.transform = `translate3d(${initialX}, 0, 0)`;
-    stage.appendChild(incomingGrid);
+    if (gridNext) {
+      let nMonth = currentCalMonth + 1;
+      let nYear = currentCalYear;
+      if (nMonth > 11) {
+        nMonth = 0;
+        nYear++;
+      }
+      renderMonthDaysInto(nYear, nMonth, gridNext, false);
+    }
+  }
 
-    // Update title and footer stats immediately for responsive feel
-    currentCalYear = targetYear;
-    currentCalMonth = targetMonth;
-    updateCalendarHeaderAndStats(stats);
+  function finishCalendarMonthSwipe(direction) {
+    const track = document.getElementById('history-cal-track');
+    if (!track) return;
 
-    // Force reflow
-    void incomingGrid.offsetWidth;
+    isMonthTransitioning = true;
+    track.classList.add('animating');
 
-    // Animate both grids smoothly with hardware accelerated cubic-bezier curve
-    const trans = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
-    currentGrid.classList.add('animating');
-    currentGrid.style.transition = trans;
-    incomingGrid.style.transition = trans;
+    if (direction === 1) {
+      // Next Month: slide left to show the next month slide
+      track.style.transform = 'translate3d(-66.666667%, 0, 0)';
+    } else if (direction === -1) {
+      // Prev Month: slide right to show the prev month slide
+      track.style.transform = 'translate3d(0%, 0, 0)';
+    } else {
+      // Snap back to center current month
+      track.style.transform = 'translate3d(-33.333333%, 0, 0)';
+    }
 
-    currentGrid.style.transform = `translate3d(${exitX}, 0, 0)`;
-    incomingGrid.style.transform = 'translate3d(0, 0, 0)';
+    let hasHandledEnd = false;
+    const onEnd = () => {
+      if (hasHandledEnd) return;
+      hasHandledEnd = true;
+      track.removeEventListener('transitionend', onEnd);
+      track.classList.remove('animating');
 
+      if (direction === 1) {
+        currentCalMonth++;
+        if (currentCalMonth > 11) {
+          currentCalMonth = 0;
+          currentCalYear++;
+        }
+      } else if (direction === -1) {
+        currentCalMonth--;
+        if (currentCalMonth < 0) {
+          currentCalMonth = 11;
+          currentCalYear--;
+        }
+      }
+
+      renderHistoryCalendarGrid();
+      isMonthTransitioning = false;
+    };
+
+    track.addEventListener('transitionend', onEnd, { once: true });
     setTimeout(() => {
-      currentGrid.remove();
-      incomingGrid.id = 'history-cal-grid';
-      incomingGrid.className = 'history-cal-grid';
-      incomingGrid.style.transition = '';
-      incomingGrid.style.transform = '';
-      isMonthSliding = false;
-    }, 230);
+      if (isMonthTransitioning) onEnd();
+    }, 280);
   }
 
   function navigateCalendarMonth(delta) {
-    let nextM = currentCalMonth + delta;
-    let nextY = currentCalYear;
-    if (nextM > 11) {
-      nextM = 0;
-      nextY++;
-    } else if (nextM < 0) {
-      nextM = 11;
-      nextY--;
-    }
-    slideToMonth(delta, nextY, nextM);
+    if (isMonthTransitioning || isMonthDragging) return;
+    finishCalendarMonthSwipe(delta);
   }
 
   function buildDialDrums() {
@@ -4830,6 +4857,7 @@
   }
 
   function handleCalendarDateSelect(dateStr, hasSessions) {
+    if (wasDraggingMonth) return;
     closeHistoryCalendarModal();
 
     if (!activeHistoryScroller) return;
@@ -4924,47 +4952,117 @@
 
   function setupCalendarViewportGestures() {
     const viewport = document.getElementById('history-cal-viewport');
-    if (!viewport) return;
+    const track = document.getElementById('history-cal-track');
+    if (!viewport || !track) return;
 
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let isTracking = false;
+    let startX = 0;
+    let startY = 0;
+    let diffX = 0;
+    let diffY = 0;
+    let startTime = 0;
+    let isLockedHorizontal = false;
+    let viewportWidth = 0;
+    let activePointerId = null;
 
-    viewport.addEventListener('touchstart', (e) => {
-      if (isMonthSliding || e.touches.length !== 1) return;
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      isTracking = true;
-    }, { passive: true });
+    const onPointerDown = (e) => {
+      if (isMonthTransitioning) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
 
-    viewport.addEventListener('touchend', (e) => {
-      if (!isTracking || isMonthSliding || e.changedTouches.length !== 1) return;
-      isTracking = false;
-      const diffX = e.changedTouches[0].clientX - touchStartX;
-      const diffY = e.changedTouches[0].clientY - touchStartY;
+      isMonthDragging = true;
+      wasDraggingMonth = false;
+      isLockedHorizontal = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      diffX = 0;
+      diffY = 0;
+      startTime = Date.now();
+      viewportWidth = viewport.clientWidth || 320;
+      activePointerId = e.pointerId;
 
-      if (Math.abs(diffX) > 38 && Math.abs(diffX) > Math.abs(diffY)) {
-        if (diffX < 0) {
-          navigateCalendarMonth(1);
-        } else {
-          navigateCalendarMonth(-1);
+      track.classList.remove('animating');
+    };
+
+    const onPointerMove = (e) => {
+      if (!isMonthDragging || e.pointerId !== activePointerId) return;
+
+      diffX = e.clientX - startX;
+      diffY = e.clientY - startY;
+
+      if (!isLockedHorizontal) {
+        if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 8) {
+          isMonthDragging = false;
+          try { viewport.releasePointerCapture(e.pointerId); } catch (_) {}
+          return;
+        }
+        if (Math.abs(diffX) > 6) {
+          isLockedHorizontal = true;
+          wasDraggingMonth = true;
+          try { viewport.setPointerCapture(e.pointerId); } catch (_) {}
         }
       }
-    }, { passive: true });
 
+      if (isLockedHorizontal) {
+        if (e.cancelable) e.preventDefault();
+
+        // 1:1 real-time finger tracking with soft rubber-banding beyond 1 screen width
+        let dampedDiffX = diffX;
+        if (diffX > viewportWidth) {
+          dampedDiffX = viewportWidth + (diffX - viewportWidth) * 0.35;
+        } else if (diffX < -viewportWidth) {
+          dampedDiffX = -viewportWidth + (diffX + viewportWidth) * 0.35;
+        }
+
+        const currentOffsetPx = -viewportWidth + dampedDiffX;
+        track.style.transform = `translate3d(${currentOffsetPx}px, 0, 0)`;
+      }
+    };
+
+    const onPointerUp = (e) => {
+      if (!isMonthDragging || e.pointerId !== activePointerId) return;
+      isMonthDragging = false;
+      try { viewport.releasePointerCapture(e.pointerId); } catch (_) {}
+
+      if (!isLockedHorizontal) {
+        track.style.transform = 'translate3d(-33.333333%, 0, 0)';
+        setTimeout(() => { wasDraggingMonth = false; }, 60);
+        return;
+      }
+
+      const elapsed = Math.max(1, Date.now() - startTime);
+      const velocity = diffX / elapsed; // px/ms
+      const threshold = viewportWidth * 0.22;
+
+      if (diffX < -threshold || velocity < -0.38) {
+        // Swipe left -> Next Month
+        finishCalendarMonthSwipe(1);
+      } else if (diffX > threshold || velocity > 0.38) {
+        // Swipe right -> Prev Month
+        finishCalendarMonthSwipe(-1);
+      } else {
+        // Snap back to current month
+        finishCalendarMonthSwipe(0);
+      }
+
+      setTimeout(() => {
+        wasDraggingMonth = false;
+      }, 80);
+    };
+
+    viewport.addEventListener('pointerdown', onPointerDown);
+    viewport.addEventListener('pointermove', onPointerMove);
+    viewport.addEventListener('pointerup', onPointerUp);
+    viewport.addEventListener('pointercancel', onPointerUp);
+
+    // Trackpad horizontal wheel support
     let wheelTimer = null;
     viewport.addEventListener('wheel', (e) => {
-      if (isMonthSliding) return;
+      if (isMonthTransitioning || isMonthDragging) return;
       if (Math.abs(e.deltaX) > 28 && Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
         e.preventDefault();
         e.stopPropagation();
         clearTimeout(wheelTimer);
         wheelTimer = setTimeout(() => {
-          if (e.deltaX > 0) {
-            navigateCalendarMonth(1);
-          } else {
-            navigateCalendarMonth(-1);
-          }
+          navigateCalendarMonth(e.deltaX > 0 ? 1 : -1);
         }, 40);
       }
     }, { passive: false });

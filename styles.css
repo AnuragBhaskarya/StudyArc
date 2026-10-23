@@ -4841,7 +4841,7 @@ input:checked + .switch-slider:before {
   gap: 0.75rem;
 }
 
-/* Month Viewport & Locked Stage */
+/* Month Viewport & Locked 3-Slide Interactive Track */
 .history-cal-viewport {
   position: relative;
   width: 100%;
@@ -4850,13 +4850,30 @@ input:checked + .switch-slider:before {
   border-radius: 10px;
   touch-action: pan-y;
   user-select: none;
+  cursor: grab;
 }
 
-.history-cal-slider-stage {
-  position: relative;
-  width: 100%;
+.history-cal-viewport:active {
+  cursor: grabbing;
+}
+
+.history-cal-track {
+  display: flex;
+  width: 300%;
   height: 100%;
-  overflow: hidden;
+  transform: translate3d(-33.333333%, 0, 0);
+  will-change: transform;
+}
+
+.history-cal-track.animating {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.history-cal-slide {
+  width: 33.333333%;
+  flex: 0 0 33.333333%;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 /* Minimal Dial Picker Container & Controls */
@@ -5094,15 +5111,6 @@ input:checked + .switch-slider:before {
   width: 100%;
   height: 232px;
   box-sizing: border-box;
-}
-
-.history-cal-grid.animating {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  will-change: transform;
 }
 
 .history-cal-day {
