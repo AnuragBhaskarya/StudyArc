@@ -127,47 +127,12 @@ input, textarea, [contenteditable="true"], .selectable-text {
   overflow: hidden;
   background: var(--bg-main);
 }
-
-/* Ambient Green Subtle Background (Pure CSS Radial Gradients - Zero Blur Overhead) */
-.aura-blob {
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0.55;
-  pointer-events: none;
-  transform: translate3d(0, 0, 0);
-  transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.aura-blob-primary {
-  top: 12%;
-  left: 16%;
-  width: clamp(320px, 45vw, 620px);
-  height: clamp(320px, 45vw, 620px);
-  background: radial-gradient(circle, rgba(16, 224, 104, 0.12) 0%, rgba(16, 224, 104, 0.03) 50%, transparent 72%);
-}
-
-.aura-blob-secondary {
-  bottom: 8%;
-  right: 15%;
-  width: clamp(280px, 40vw, 540px);
-  height: clamp(280px, 40vw, 540px);
-  background: radial-gradient(circle, rgba(78, 250, 143, 0.09) 0%, rgba(16, 224, 104, 0.02) 55%, transparent 75%);
-}
-
-.aura-blob-center {
-  top: 35%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: clamp(260px, 35vw, 460px);
-  height: clamp(260px, 35vw, 460px);
-  background: radial-gradient(circle, rgba(16, 224, 104, 0.10) 0%, rgba(14, 41, 23, 0.12) 48%, transparent 72%);
-}
-
 /* ==========================================================================
    FLOATING HEATMAP MATRIX STREAM CANVAS (ZERO-OVERHEAD GPU ACCELERATED)
    - Smaller GitHub contribution boxes continuously drifting upward
    - True velocity-integrated rocket acceleration without snap-back
    - DPR 1.0 native rasterization for cool running thermals
+   - Smooth vertical alpha fade: masked from absolute middle down to bottom
    ========================================================================== */
 .bg-matrix-canvas {
   position: absolute;
@@ -178,8 +143,30 @@ input, textarea, [contenteditable="true"], .selectable-text {
   z-index: 1;
   display: block;
   transform: translateZ(0);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 80px, black calc(100% - 100px), transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, black 80px, black calc(100% - 100px), transparent 100%);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 60px,
+    black 45%,
+    rgba(0, 0, 0, 0.85) 54%,
+    rgba(0, 0, 0, 0.60) 64%,
+    rgba(0, 0, 0, 0.35) 75%,
+    rgba(0, 0, 0, 0.12) 85%,
+    transparent 94%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 60px,
+    black 45%,
+    rgba(0, 0, 0, 0.85) 54%,
+    rgba(0, 0, 0, 0.60) 64%,
+    rgba(0, 0, 0, 0.35) 75%,
+    rgba(0, 0, 0, 0.12) 85%,
+    transparent 94%,
+    transparent 100%
+  );
 }
 
 /* Hold-to-reset: Clean acceleration without GPU-melting drop-shadow convolution filters */
@@ -188,22 +175,9 @@ body.is-holding .bg-matrix-canvas {
 }
 
 html.aura-disabled .ambient-aura-container,
-html.aura-disabled .aura-blob,
 html.aura-disabled .bg-matrix-canvas {
   display: none !important;
   animation: none !important;
-}
-
-/* Hold-to-reset: Subtle aura charge without blur or scale distortion */
-body.is-holding .aura-blob {
-  opacity: 0.65;
-}
-
-/* Paused & Stopped Amber State: Center Aura blob smoothly shifts to warm amber halo */
-body.is-timer-amber .aura-blob-center,
-body.is-timer-paused .aura-blob-center {
-  background: radial-gradient(circle, rgba(229, 169, 88, 0.14) 0%, rgba(61, 41, 20, 0.15) 50%, transparent 75%);
-  transition: background 600ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ==========================================================================
@@ -5383,13 +5357,6 @@ input:checked + .switch-slider:before {
    ========================================================================== */
 html.aura-disabled .ambient-aura-container {
   display: none !important;
-}
-
-/* Freeze the CSS aura blobs while a modal is in the top layer. The backdrop
-   already covers them, and their blurred compositing competes with the
-   dialog's first paint on mobile GPUs. */
-html.modal-open .aura-blob {
-  animation-play-state: paused;
 }
 
 /* ==========================================================================

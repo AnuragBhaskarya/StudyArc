@@ -1427,15 +1427,16 @@
       this.isHolding = false;
       this.holdProgress = 0;
 
-      // Lightweight particle density limits (tuned for minimal draw calls)
+      // Lightweight particle density limits (tuned for minimal draw calls & zero lag)
       const isMobile = window.innerWidth < 680;
-      this.baseCount = isMobile ? 22 : 34;
-      this.maxHoldCount = isMobile ? 46 : 68;
+      this.baseCount = isMobile ? 18 : 26;
+      this.maxHoldCount = isMobile ? 26 : 38;
       this.activeCount = this.baseCount;
 
       // Pre-allocated particle pool for 100% zero-GC memory allocation
-      this.particles = new Array(this.maxHoldCount);
-      for (let i = 0; i < this.maxHoldCount; i++) {
+      this.poolSize = 40;
+      this.particles = new Array(this.poolSize);
+      for (let i = 0; i < this.poolSize; i++) {
         this.particles[i] = {
           x: 0,
           y: 0,
@@ -1512,8 +1513,8 @@
       this.height = newHeight;
       this.dpr = 1.0;
       const isMobile = this.width < 680;
-      this.baseCount = isMobile ? 22 : 34;
-      this.maxHoldCount = isMobile ? 46 : 68;
+      this.baseCount = isMobile ? 18 : 26;
+      this.maxHoldCount = isMobile ? 26 : 38;
       if (!this.isHolding) {
         this.activeCount = Math.min(this.activeCount, this.baseCount);
       }
@@ -1540,14 +1541,15 @@
       p.x = xMin + Math.random() * (xMax - xMin);
 
       // Initial load: distributed across entire screen so flanks are immediately filled
-      // Hold burst: spawns from bottom flank (68% to 96% height) to create an upward rush
-      // Regular respawn: spawns just below viewport so CSS hardware mask fades it in naturally
+      // Hold burst: spawns in lower fade zone (78% to 90% height) to create an upward rush
+      // Regular respawn: lifted spawn area (85% to 95% height) in deep CSS alpha mask zone
+      // (Particles are completely invisible when spawned, softly fading in up to absolute middle of page)
       if (initial) {
         p.y = Math.random() * this.height;
       } else if (isHoldBurst) {
-        p.y = this.height * (0.75 + Math.random() * 0.22);
+        p.y = this.height * (0.78 + Math.random() * 0.12);
       } else {
-        p.y = this.height + Math.random() * 25;
+        p.y = this.height * (0.85 + Math.random() * 0.10);
       }
 
       // Smaller authentic GitHub tile proportions (~1:1.35)
@@ -1557,7 +1559,7 @@
       p.h = 10.5 + sizeIndex * 1.1;
 
       // Upward drift base speed (extra velocity diversity during hold burst)
-      p.speed = (isHoldBurst ? 0.95 : 0.65) + Math.random() * 0.85;
+      p.speed = (isHoldBurst ? 1.15 : 0.65) + Math.random() * 0.85;
 
       // Level (0 to 3)
       p.level = Math.floor(Math.random() * 4);
@@ -1575,8 +1577,8 @@
       this.isHolding = isHolding;
       this.holdProgress = progress;
       if (isHolding) {
-        // High-velocity rocket speed matching stretch (ramping up to 12.0x!)
-        this.targetSpeed = 1.0 + progress * 11.0;
+        // Rocket speed up to 18x velocity with accelerated response curve
+        this.targetSpeed = 1.0 + Math.pow(progress, 1.05) * 17.0;
       } else {
         // Decelerate smoothly forward to current timer state speed
         this.targetSpeed = this.targetAmber === 0.0 ? 1.0 : 0.45;
@@ -1619,22 +1621,21 @@
       const dt = Math.min((now - this.lastTime) / 16.667, 2.0) || 1.0;
       this.lastTime = now;
 
-      // Rapid acceleration when holding, gentle forward coasting on release
-      const speedLerp = this.isHolding ? 0.16 : 0.035;
+      // Punchy acceleration rate when holding (0.25), gentle forward coasting on release (0.035)
+      const speedLerp = this.isHolding ? 0.25 : 0.035;
       this.currentSpeed += (this.targetSpeed - this.currentSpeed) * speedLerp * dt;
 
       // Smooth color metamorphosis between green and amber (1.4s)
       this.currentAmber += (this.targetAmber - this.currentAmber) * 0.032 * dt;
 
-      // Speed ratio for stretch & thinning (matched 1:1 with 12x top speed!)
-      const speedRatio = Math.max(0, (this.currentSpeed - 1.0) / 11.0);
-      const stretchY = 1.0 + speedRatio * 7.5; // Stretches upwards up to 8.5x height!
-      const stretchX = Math.max(0.42, 1.0 / Math.sqrt(stretchY)); // Thins out sleekly!
+      // Speed ratio for stretch & thinning (matched 1:1 with 18x top speed!)
+      const speedRatio = Math.max(0, (this.currentSpeed - 1.0) / 17.0);
+      const stretchY = 1.0 + speedRatio * 9.5; // Stretches upwards up to 10.5x height!
+      const stretchX = Math.max(0.36, 1.0 / Math.sqrt(stretchY)); // Thins out sleekly!
 
-      // DYNAMIC HOLD SPAWN BURST: Stream extra pre-allocated particles from below while holding!
+      // DYNAMIC HOLD SPAWN BURST: Paced, controlled extra particles while holding (reduced count)
       if (this.isHolding && this.activeCount < this.maxHoldCount) {
-        const burst = Math.min(2, this.maxHoldCount - this.activeCount);
-        for (let b = 0; b < burst; b++) {
+        if (Math.random() < 0.60) {
           this.resetParticle(this.particles[this.activeCount++], false, true);
         }
       }
