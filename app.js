@@ -2872,8 +2872,7 @@
     const totalSlots = firstDayOfWeek + daysInMonth;
     const numCols = Math.ceil(totalSlots / 7);
 
-    // Exact intrinsic width for CSS content-visibility: auto (prevents any scroll jumps or layout shift)
-    monthBlock.style.containIntrinsicSize = `${numCols * 17}px 140px`;
+    // If month starts mid-week (Tue-Sun), offset spacer column so gap is measured purely between valid cells
 
     // If month starts mid-week (Tue-Sun), offset spacer column so gap is measured purely between valid cells
     if (!isFirstInGroup && firstDayOfWeek > 0) {
@@ -3019,8 +3018,21 @@
       return yearGroup;
     }
 
-    // 1. Build previous year's 12 months (Jan to Dec) as past history
-    trackEl.appendChild(createYearGroup(currentYear - 1, 0, 11));
+    // Determine the earliest year from user data (dayActivity keys are 'YYYY-MM-DD')
+    let earliestYear = currentYear - 1;
+    if (state.dayActivity) {
+      for (const dStr of Object.keys(state.dayActivity)) {
+        const y = parseInt(dStr.slice(0, 4), 10);
+        if (!isNaN(y) && y < earliestYear) {
+          earliestYear = y;
+        }
+      }
+    }
+
+    // 1. Build all historical years (Jan to Dec) from earliestYear up to previous year
+    for (let yr = earliestYear; yr < currentYear; yr++) {
+      trackEl.appendChild(createYearGroup(yr, 0, 11));
+    }
 
     // 2. Build current year's months up to current month (so current month is in last place!)
     trackEl.appendChild(createYearGroup(currentYear, 0, currentMonth));

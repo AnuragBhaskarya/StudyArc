@@ -1365,6 +1365,7 @@ body.is-dragging .timer-bead-rim {
   display: flex;
   align-items: flex-start;
   gap: var(--hm-month-gap, 12px);
+  overflow: visible;
 }
 
 /* Each Month as an accurate, self-contained calendar grouping snapped to the end */
@@ -1379,9 +1380,6 @@ body.is-dragging .timer-bead-rim {
   position: relative;
   pointer-events: none; /* Allows click events to pass through seamlessly to underlying cells */
   overflow: visible;
-  /* Native W3C viewport containment: skips layout, styling & painting for off-screen months */
-  content-visibility: auto;
-  contain-intrinsic-size: 85px 140px;
 }
 
 /* Interlocking puzzle transition: offsets spacer column so gap is measured uniformly between valid cells */
