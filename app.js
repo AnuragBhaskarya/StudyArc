@@ -27,7 +27,6 @@
     streak: 0,
     xp: 0,
     totalFocusSeconds: 0,
-    levelClearHistory: {},
 
     // Activity Records & Sessions (Loaded from SQLite database)
     dayActivity: {},
@@ -90,6 +89,11 @@
       if (data) {
         const parsed = JSON.parse(data);
         const merged = Object.assign({}, defaultState, parsed);
+
+        // Cleared level dates are always derived from the surviving sessions.
+        // Drop the legacy local-only level-up ledger so stale dates can never
+        // be shown after old sessions are deleted.
+        delete merged.levelClearHistory;
         if (!merged.timer || !merged.timer.targetSeconds || merged.timer.targetSeconds === 3600 || merged.timer.targetSeconds > 3 * 3600) {
           merged.timer = merged.timer || {};
           merged.timer.targetSeconds = DEFAULT_TIMER_SECONDS;
@@ -891,7 +895,6 @@
     state.streak = 0;
     state.xp = 0;
     state.totalFocusSeconds = 0;
-    state.levelClearHistory = {};
     state.timer.status = 'idle';
     state.timer.remainingSeconds = state.timer.targetSeconds;
     if (timerInterval) {
@@ -1661,12 +1664,6 @@
     spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
 
     if (newLevelInfo.level > prevLevel) {
-      state.levelClearHistory = state.levelClearHistory || {};
-      state.levelClearHistory[newLevelInfo.level] = {
-        date: todayStr,
-        timestamp: Date.now()
-      };
-      saveState();
       setTimeout(() => {
         spawnFlyingPill(`🎉 Lv. ${newLevelInfo.level}!`, { extraClass: 'pill-xp', lane: 'center' });
         showToast(`Level Up! Reached Level ${newLevelInfo.level}: ${newLevelInfo.title}! ✨`);
@@ -3332,7 +3329,11 @@
       return sessionDataIndex.levelClearDates;
     }
 
-    const dates = Object.assign({}, state.levelClearHistory || {});
+    // Cleared dates are derived data: replay the sessions that still exist in
+    // chronological order and record the day each XP threshold was crossed.
+    // Deleting old sessions therefore recalculates the timeline consistently
+    // on every device, with no stale local-only level-up ledger.
+    const dates = {};
 
     if (!sessionDataIndex.sortedAsc) {
       const sessions = (state.sessions || []).slice();
