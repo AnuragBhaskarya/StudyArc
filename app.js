@@ -1415,7 +1415,7 @@
 
       this.width = 0;
       this.height = 0;
-      this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+      this.dpr = 1.0; // Native 1:1 CSS pixel rasterization for ultra-low GPU thermals
       this.particles = [];
       this.isRunning = false;
       this.rafId = null;
@@ -1427,10 +1427,10 @@
       this.isHolding = false;
       this.holdProgress = 0;
 
-      // Particle density limits
+      // Lightweight particle density limits (tuned for minimal draw calls)
       const isMobile = window.innerWidth < 680;
-      this.baseCount = isMobile ? 38 : 58;
-      this.maxHoldCount = isMobile ? 80 : 125;
+      this.baseCount = isMobile ? 22 : 34;
+      this.maxHoldCount = isMobile ? 46 : 68;
 
       // Color transition factor: 0.0 = Green (running), 1.0 = Amber (paused/stopped)
       this.currentAmber = 1.0;
@@ -1456,28 +1456,37 @@
 
       window.addEventListener('resize', () => this.resize(), { passive: true });
       document.addEventListener('visibilitychange', () => {
-        if (document.hidden) this.stop();
-        else if (state.auraEnabled !== false) this.start();
+        if (document.hidden) {
+          this.stop();
+        } else if (typeof state === 'undefined' || state.auraEnabled !== false) {
+          if (!document.documentElement.classList.contains('aura-disabled')) {
+            this.start();
+          }
+        }
       });
 
-      this.start();
+      if (typeof state === 'undefined' || state.auraEnabled !== false) {
+        if (!document.documentElement.classList.contains('aura-disabled')) {
+          this.start();
+        }
+      }
     }
 
     resize() {
       this.width = window.innerWidth;
       this.height = window.innerHeight;
-      this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+      this.dpr = 1.0;
       const isMobile = this.width < 680;
-      this.baseCount = isMobile ? 38 : 58;
-      this.maxHoldCount = isMobile ? 80 : 125;
+      this.baseCount = isMobile ? 22 : 34;
+      this.maxHoldCount = isMobile ? 46 : 68;
 
       if (!this.canvas) return;
-      this.canvas.width = Math.round(this.width * this.dpr);
-      this.canvas.height = Math.round(this.height * this.dpr);
+      this.canvas.width = Math.round(this.width);
+      this.canvas.height = Math.round(this.height);
       this.canvas.style.width = `${this.width}px`;
       this.canvas.style.height = `${this.height}px`;
       if (this.ctx) {
-        this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
       }
     }
 
@@ -1551,9 +1560,12 @@
 
     start() {
       if (this.isRunning) return;
+      if (typeof state !== 'undefined' && state.auraEnabled === false) return;
+      if (document.documentElement.classList.contains('aura-disabled')) return;
       this.isRunning = true;
       this.lastTime = performance.now();
       this.tick = (now) => {
+        if (!this.isRunning) return;
         this.update(now);
         this.draw();
         if (this.isRunning) {
@@ -1568,6 +1580,9 @@
       if (this.rafId) {
         cancelAnimationFrame(this.rafId);
         this.rafId = null;
+      }
+      if (this.ctx && this.canvas) {
+        this.ctx.clearRect(0, 0, this.width, this.height);
       }
     }
 
@@ -1632,6 +1647,28 @@
       const topFadeZone = 110; // Fade out over top 110px
       const botFadeZone = 80;  // Fade in over first 80px from spawn
 
+      // Zero-allocation frame styles: precalculate 4 levels once to completely eliminate GC garbage strings
+      const frameStyles = new Array(4);
+      for (let lvl = 0; lvl < 4; lvl++) {
+        const gColor = this.colorsGreen[lvl];
+        const aColor = this.colorsAmber[lvl];
+
+        const r = Math.round(gColor.bg[0] * greenT + aColor.bg[0] * amberT);
+        const g = Math.round(gColor.bg[1] * greenT + aColor.bg[1] * amberT);
+        const b = Math.round(gColor.bg[2] * greenT + aColor.bg[2] * amberT);
+        const a = (gColor.bg[3] * greenT + aColor.bg[3] * amberT);
+
+        const br = Math.round(gColor.border[0] * greenT + aColor.border[0] * amberT);
+        const bg = Math.round(gColor.border[1] * greenT + aColor.border[1] * amberT);
+        const bb = Math.round(gColor.border[2] * greenT + aColor.border[2] * amberT);
+        const ba = (gColor.border[3] * greenT + aColor.border[3] * amberT);
+
+        frameStyles[lvl] = {
+          fill: `rgba(${r},${g},${b},${a})`,
+          stroke: `rgba(${br},${bg},${bb},${ba})`
+        };
+      }
+
       for (let i = 0; i < this.particles.length; i++) {
         const p = this.particles[i];
 
@@ -1643,44 +1680,30 @@
           opacity = Math.max(0, (p.spawnY - p.y) / botFadeZone);
         }
 
-        if (opacity <= 0.01) continue;
-
-        // Color interpolation: Green <-> Amber
-        const gColor = this.colorsGreen[p.level];
-        const aColor = this.colorsAmber[p.level];
-
-        const r = Math.round(gColor.bg[0] * greenT + aColor.bg[0] * amberT);
-        const g = Math.round(gColor.bg[1] * greenT + aColor.bg[1] * amberT);
-        const b = Math.round(gColor.bg[2] * greenT + aColor.bg[2] * amberT);
-        const a = (gColor.bg[3] * greenT + aColor.bg[3] * amberT) * opacity;
-
-        const br = Math.round(gColor.border[0] * greenT + aColor.border[0] * amberT);
-        const bg = Math.round(gColor.border[1] * greenT + aColor.border[1] * amberT);
-        const bb = Math.round(gColor.border[2] * greenT + aColor.border[2] * amberT);
-        const ba = (gColor.border[3] * greenT + aColor.border[3] * amberT) * opacity;
+        if (opacity <= 0.02) continue;
 
         const drawW = p.w * stretchX;
         const drawH = p.h * stretchY;
         const drawX = p.x - (drawW - p.w) * 0.5;
-        const drawY = p.y; // stretches upwards as height expands
-
+        const drawY = p.y;
         const radius = Math.min(drawW * 0.45, p.r * stretchX);
 
-        // Draw rounded rectangle with zero CPU overhead
+        ctx.globalAlpha = opacity;
+        ctx.fillStyle = frameStyles[p.level].fill;
+        ctx.strokeStyle = frameStyles[p.level].stroke;
+        ctx.lineWidth = 1;
+
         ctx.beginPath();
         if (ctx.roundRect) {
           ctx.roundRect(drawX, drawY, drawW, drawH, radius);
         } else {
           ctx.rect(drawX, drawY, drawW, drawH);
         }
-
-        ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
         ctx.fill();
-
-        ctx.strokeStyle = `rgba(${br},${bg},${bb},${ba})`;
-        ctx.lineWidth = 1;
         ctx.stroke();
       }
+
+      ctx.globalAlpha = 1.0;
     }
   }
 

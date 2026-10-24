@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=12.2">
+  <link rel="stylesheet" href="styles.css?v=12.3">
   <script>
     (function () {
       try {
@@ -391,20 +391,21 @@
               </label>
             </div>
 
-            <!-- Row 3: Aura Particles -->
+            <!-- Row 3: Particles -->
             <div class="settings-row">
               <div class="settings-row-left">
                 <div class="settings-row-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"></path>
-                    <path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"></path>
-                    <path d="M5 15l.6 1.4L7 17l-1.4.6L5 19l-.6-1.4L3 17l1.4-.6z"></path>
+                    <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                    <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                    <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                    <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
                   </svg>
                 </div>
-                <span class="settings-row-label">Aura Particles</span>
+                <span class="settings-row-label">Particles</span>
               </div>
               <label class="switch">
-                <input type="checkbox" id="setting-aura-enabled" aria-label="Aura Particles" checked>
+                <input type="checkbox" id="setting-aura-enabled" aria-label="Particles" checked>
                 <span class="switch-slider"></span>
               </label>
             </div>
@@ -958,7 +959,7 @@
   <!-- JAVASCRIPT LOGIC (Local zero-latency assets, resilient against CDN outages and content blockers) -->
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
-  <script src="app.js?v=12.2"></script>
+  <script src="app.js?v=12.3"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>
