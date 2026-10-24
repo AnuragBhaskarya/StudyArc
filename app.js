@@ -6146,6 +6146,139 @@
     }, 40);
   }
 
+  // =========================================================================
+  // THEMED CONFIRMATION DIALOG (DESTRUCTIVE ACTIONS)
+  // =========================================================================
+  let confirmDialogResolve = null;
+
+  function confirmAction({ title = 'Are you sure?', message = '', confirmLabel = 'Confirm', variant = 'delete' } = {}) {
+    const dialog = document.getElementById('confirm-dialog');
+    if (!dialog || typeof dialog.showModal !== 'function') {
+      console.warn('StudyArc: Confirmation dialog is unavailable.');
+      return Promise.resolve(false);
+    }
+
+    // A modal confirmation is already open (for example, a rapid double-click).
+    if (confirmDialogResolve || dialog.open) {
+      return Promise.resolve(false);
+    }
+
+    const titleEl = document.getElementById('confirm-dialog-title');
+    const messageEl = document.getElementById('confirm-dialog-message');
+    const confirmBtn = document.getElementById('confirm-dialog-confirm');
+    const cancelBtn = document.getElementById('confirm-dialog-cancel');
+    const trashIcon = document.getElementById('confirm-dialog-icon-trash');
+    const warningIcon = document.getElementById('confirm-dialog-icon-warning');
+
+    const isReset = variant === 'reset';
+
+    if (titleEl) titleEl.textContent = title;
+    if (messageEl) messageEl.textContent = message;
+    if (confirmBtn) confirmBtn.textContent = confirmLabel;
+    if (trashIcon) trashIcon.classList.toggle('hidden', isReset);
+    if (warningIcon) warningIcon.classList.toggle('hidden', !isReset);
+
+    pauseAmbientCanvas();
+
+    try {
+      dialog.showModal();
+    } catch (err) {
+      console.warn('StudyArc: Could not open confirmation dialog:', err);
+      resumeAmbientCanvas();
+      return Promise.resolve(false);
+    }
+
+    // Safe default: focus stays on Cancel so Enter/Escape never destroys data.
+    requestAnimationFrame(() => {
+      try {
+        cancelBtn?.focus({ preventScroll: true });
+      } catch (_) {
+        cancelBtn?.focus();
+      }
+    });
+
+    return new Promise((resolve) => {
+      confirmDialogResolve = resolve;
+    });
+  }
+
+  function closeConfirmDialog(result) {
+    const dialog = document.getElementById('confirm-dialog');
+    const resolve = confirmDialogResolve;
+    confirmDialogResolve = null;
+
+    if (resolve) resolve(!!result);
+    if (dialog && dialog.open) {
+      dialog.close();
+    }
+    resumeAmbientCanvas();
+  }
+
+  function initConfirmDialog() {
+    const dialog = document.getElementById('confirm-dialog');
+    if (!dialog) return;
+
+    const confirmBtn = document.getElementById('confirm-dialog-confirm');
+    const cancelBtn = document.getElementById('confirm-dialog-cancel');
+
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', () => closeConfirmDialog(true));
+    }
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => closeConfirmDialog(false));
+    }
+
+    dialog.addEventListener('click', (e) => {
+      if (e.target !== dialog) return;
+      const rect = dialog.getBoundingClientRect();
+      const isInDialog = (
+        rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+        rect.left <= e.clientX && e.clientX <= rect.left + rect.width
+      );
+      if (!isInDialog) {
+        closeConfirmDialog(false);
+      }
+    });
+
+    dialog.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      closeConfirmDialog(false);
+    });
+
+    dialog.addEventListener('close', () => {
+      // Ignore a stale close event if the dialog was reopened immediately.
+      if (dialog.open) return;
+      if (confirmDialogResolve) {
+        const resolve = confirmDialogResolve;
+        confirmDialogResolve = null;
+        resolve(false);
+      }
+      resumeAmbientCanvas();
+    });
+  }
+
+  function getSessionDeleteConfirmOptions(btn, dateStr) {
+    const card = btn.closest('.day-session-card, .history-session-card');
+    const duration = parseInt(card?.getAttribute('data-duration') || '', 10) || 0;
+    const subject = card?.querySelector('.day-session-subject, .history-session-subject')?.textContent?.trim() || '';
+    const dateLabel = dateStr ? formatDayDateHeader(dateStr) : '';
+
+    let descriptor = 'This session';
+    if (duration > 0 && subject) {
+      descriptor = `This ${duration}-minute "${subject}" session`;
+    } else if (duration > 0) {
+      descriptor = `This ${duration}-minute session`;
+    } else if (subject) {
+      descriptor = `This "${subject}" session`;
+    }
+
+    return {
+      title: 'Delete session?',
+      message: `${descriptor}${dateLabel ? ` from ${dateLabel}` : ''} will be permanently deleted. Your XP and streak will be recalculated.`,
+      confirmLabel: 'Delete'
+    };
+  }
+
   function deleteSession(sessionId, dateStr) {
     if (!sessionId) return;
 
@@ -6386,6 +6519,8 @@
   // EVENT LISTENERS & SETUP
   // =========================================================================
   function initEvents() {
+    initConfirmDialog();
+
     // Disable accidental mobile long-press text selection across the website (excluding text inputs)
     document.addEventListener('selectstart', (e) => {
       if (e.target && e.target.closest && e.target.closest('input, textarea, [contenteditable="true"], .selectable-text')) {
@@ -6519,6 +6654,9 @@
         const sessionId = btn.getAttribute('data-session-id');
         const dateStr = btn.getAttribute('data-date');
         if (!sessionId) return;
+
+        const confirmed = await confirmAction(getSessionDeleteConfirmOptions(btn, dateStr));
+        if (!confirmed) return;
 
         btn.disabled = true;
         if (typeof btn.blur === 'function') {
@@ -6658,6 +6796,9 @@
         const dateStr = btn.getAttribute('data-date');
         if (!sessionId) return;
 
+        const confirmed = await confirmAction(getSessionDeleteConfirmOptions(btn, dateStr));
+        if (!confirmed) return;
+
         btn.disabled = true;
         if (typeof btn.blur === 'function') {
           btn.blur();
@@ -6742,32 +6883,40 @@
     const btnWipeData = document.getElementById('btn-wipe-data');
     if (btnWipeData) {
       btnWipeData.addEventListener('click', async () => {
-        if (confirm('Permanently wipe all session logs, streaks, and XP back to zero in the SQL database?')) {
-          try {
-            const res = await fetch('/api/reset', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ reseed: false })
-            });
-            if (res.ok) {
-              state.xp = 0;
-              state.streak = 0;
-              state.totalFocusSeconds = 0;
-              state.dayActivity = {};
-              state.sessions = [];
-              state.subjects = [];
-              dayDetailsCache.clear();
-              invalidateSessionIndex();
-              state.timer.targetSeconds = 60 * 60;
-              state.timer.remainingSeconds = 60 * 60;
-              state.timer.status = 'idle';
-              saveState();
-              renderAll();
-              switchView('focus');
-            }
-          } catch (e) {
-            console.error('Failed to wipe data:', e);
-          }
+        const confirmed = await confirmAction({
+          title: 'Reset all progress?',
+          message: 'This permanently deletes every session log, streak, and XP point from the database. This cannot be undone.',
+          confirmLabel: 'Reset everything',
+          variant: 'reset'
+        });
+        if (!confirmed) return;
+
+        try {
+          const res = await fetch('/api/reset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reseed: false })
+          });
+          if (!res.ok) throw new Error(`Reset failed (${res.status})`);
+
+          state.xp = 0;
+          state.streak = 0;
+          state.totalFocusSeconds = 0;
+          state.dayActivity = {};
+          state.sessions = [];
+          state.subjects = [];
+          dayDetailsCache.clear();
+          invalidateSessionIndex();
+          state.timer.targetSeconds = 60 * 60;
+          state.timer.remainingSeconds = 60 * 60;
+          state.timer.status = 'idle';
+          saveState();
+          renderAll();
+          switchView('focus');
+          showToast('All progress has been reset.');
+        } catch (e) {
+          console.error('Failed to wipe data:', e);
+          showToast('Could not reset progress. Please try again.');
         }
       });
     }
