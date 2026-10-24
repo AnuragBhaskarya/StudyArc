@@ -1553,20 +1553,61 @@ body.is-dragging .timer-bead-rim {
   box-shadow: 0 0 6px rgba(78, 250, 143, 0.45);
 }
 
-/* Cells that are clipped by the viewport edge shrink away instead of
-   lingering as half tiles. JS removes this state and plays the ribbon pull-in
-   animation once the whole column is visible. */
-.cell.hm-cell-hidden {
-  opacity: 0;
-  transform: translate3d(0, 0, 0) scale3d(0.58, 0.8, 1);
-  transition: opacity 150ms ease-out,
-              transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
-  pointer-events: none;
+/* ==========================================================================
+   PURE CSS HARDWARE-ACCELERATED HEATMAP CELL REVEAL
+   Unfolds each column's cells from the middle row using pure CSS math & keyframes.
+   Runs 100% on the GPU compositor thread with 0 JavaScript overhead.
+   ========================================================================== */
+@keyframes hmCellReveal {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, var(--row-offset, 0px), 0) scale3d(0.68, 0.68, 1);
+  }
+  60% {
+    opacity: 1;
+    transform: translate3d(0, var(--row-overshoot, 0px), 0) scale3d(1.035, 1.035, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
 }
 
+.cell:not(.cell-spacer) {
+  animation: hmCellReveal 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--col-idx, 0) * 20ms + var(--center-dist, 0) * 12ms);
+}
+
+/* Pre-calculated row mathematical indices and accordion offsets:
+   Row 0 (Mon): distance 3, offset +35px towards center, overshoot -2.8px
+   Row 1 (Tue): distance 2, offset +23px towards center, overshoot -1.8px
+   Row 2 (Wed): distance 1, offset +12px towards center, overshoot -1.0px
+   Row 3 (Thu): distance 0, offset 0px (center), overshoot 0px
+   Row 4 (Fri): distance 1, offset -12px towards center, overshoot +1.0px
+   Row 5 (Sat): distance 2, offset -23px towards center, overshoot +1.8px
+   Row 6 (Sun): distance 3, offset -35px towards center, overshoot +2.8px
+*/
+.week-col > .cell:nth-child(1) { --row-offset: 35px;  --row-overshoot: -2.8px; --center-dist: 3; }
+.week-col > .cell:nth-child(2) { --row-offset: 23px;  --row-overshoot: -1.8px; --center-dist: 2; }
+.week-col > .cell:nth-child(3) { --row-offset: 12px;  --row-overshoot: -1.0px; --center-dist: 1; }
+.week-col > .cell:nth-child(4) { --row-offset: 0px;   --row-overshoot: 0px;    --center-dist: 0; }
+.week-col > .cell:nth-child(5) { --row-offset: -12px; --row-overshoot: 1.0px;  --center-dist: 1; }
+.week-col > .cell:nth-child(6) { --row-offset: -23px; --row-overshoot: 1.8px;  --center-dist: 2; }
+.week-col > .cell:nth-child(7) { --row-offset: -35px; --row-overshoot: 2.8px;  --center-dist: 3; }
+
+/* Pure CSS week column cascade */
+.month-weeks > .week-col:nth-child(1) { --col-idx: 0; }
+.month-weeks > .week-col:nth-child(2) { --col-idx: 1; }
+.month-weeks > .week-col:nth-child(3) { --col-idx: 2; }
+.month-weeks > .week-col:nth-child(4) { --col-idx: 3; }
+.month-weeks > .week-col:nth-child(5) { --col-idx: 4; }
+.month-weeks > .week-col:nth-child(6) { --col-idx: 5; }
+
 @media (prefers-reduced-motion: reduce) {
-  .cell.hm-cell-hidden {
-    transition: none;
+  .cell:not(.cell-spacer) {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 

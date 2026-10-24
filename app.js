@@ -2417,295 +2417,9 @@
   }
 
   // =========================================================================
-  // HEATMAP CELL REVEAL ENGINE
-  // Only fully visible columns are painted. Columns fly in from outside the
-  // viewport while their rows unfold from the middle of the column, and they
-  // re-animate whenever they leave and re-enter the visible window. Geometry
-  // is cached once per layout so scrolling never measures individual cells.
+  // HEATMAP ANIMATION: HANDLED 100% VIA PURE CSS (@keyframes hmCellReveal)
+  // See styles.css. Zero JavaScript overhead, 0% CPU usage, 100% GPU compositor.
   // =========================================================================
-  const HM_REVEAL_TOLERANCE = 0.75;
-  const HM_REVEAL_DURATION = 500;
-  const HM_REVEAL_STAGGER = 13;
-  const HM_ACTIVE_ANIMATION_LIMIT = 210;
-  const heatmapMotionQuery = (typeof window !== 'undefined' && window.matchMedia)
-    ? window.matchMedia('(prefers-reduced-motion: reduce)')
-    : null;
-
-  let heatmapMotion = null;
-
-  function prefersReducedHeatmapMotion() {
-    return !!(heatmapMotionQuery && heatmapMotionQuery.matches);
-  }
-
-  function createHeatmapMotion(scrollArea, trackEl) {
-    let alive = true;
-    let columns = [];
-    let scrollRaf = 0;
-    let resizeRaf = 0;
-    let resizeObserver = null;
-    let activeAnimations = 0;
-
-    const activeCells = Array.from(trackEl.querySelectorAll('.cell:not(.cell-spacer)'));
-    if (!activeCells.length) {
-      return { refresh() {}, destroy() {} };
-    }
-
-    // Start hidden so a freshly rendered timeline never flashes before the
-    // first visible window has been measured.
-    activeCells.forEach((cell) => {
-      cell.classList.add('hm-cell-hidden');
-      cell.__hmAnimation = null;
-    });
-
-    function measure() {
-      if (!alive) return;
-      const trackRect = trackEl.getBoundingClientRect();
-      const nextColumns = [];
-
-      trackEl.querySelectorAll('.week-col').forEach((colEl) => {
-        const cells = Array.from(colEl.children).filter(
-          (cell) => !cell.classList.contains('cell-spacer')
-        );
-        if (!cells.length) return;
-
-        const rect = colEl.getBoundingClientRect();
-        nextColumns.push({
-          el: colEl,
-          left: rect.left - trackRect.left,
-          right: rect.right - trackRect.left,
-          width: rect.width,
-          height: rect.height,
-          cells,
-          hidden: colEl.__hmHidden !== false
-        });
-      });
-
-      columns = nextColumns;
-    }
-
-    function revealColumn(col, baseDelay, viewportCenter, maxPull, trackLeft) {
-      col.el.__hmHidden = false;
-      col.hidden = false;
-
-      // In viewport coords, column center is trackLeft + col.left + col.width / 2.
-      // This calculates the exact same coordinate without forcing a layout reflow.
-      const colWidth = col.width || 13.5;
-      const colCenter = (trackLeft != null)
-        ? trackLeft + col.left + colWidth / 2
-        : (col.el.getBoundingClientRect().left + colWidth / 2);
-
-      const resolvedMaxPull = (maxPull != null)
-        ? maxPull
-        : Math.min(120, Math.max(48, scrollArea.clientWidth * 0.24));
-
-      const resolvedViewportCenter = (viewportCenter != null)
-        ? viewportCenter
-        : (scrollArea.getBoundingClientRect().left + scrollArea.clientWidth / 2);
-
-      // Columns on the left start farther left and columns on the right start
-      // farther right, so every column converges inward as it lands.
-      const pull = Math.max(
-        -resolvedMaxPull,
-        Math.min(resolvedMaxPull, (colCenter - resolvedViewportCenter) * 0.6)
-      );
-
-      // Cells begin compressed toward the middle of their visible rows and
-      // open outward into their day slots. Partial weeks use their own middle
-      // so short columns still unfold symmetrically.
-      let minRow = 6;
-      let maxRow = 0;
-      col.cells.forEach((cell) => {
-        const row = Number(cell.dataset.hmRow);
-        if (Number.isFinite(row)) {
-          minRow = Math.min(minRow, row);
-          maxRow = Math.max(maxRow, row);
-        }
-      });
-      const rowPitch = (col.height || 119) / 7;
-      const openCenterY = rowPitch * ((minRow + maxRow + 1) / 2);
-      const canAnimate =
-        !document.hidden &&
-        !prefersReducedHeatmapMotion() &&
-        typeof col.cells[0].animate === 'function' &&
-        activeAnimations + col.cells.length <= HM_ACTIVE_ANIMATION_LIMIT;
-
-      col.cells.forEach((cell, index) => {
-        if (cell.__hmAnimation) {
-          cell.__hmAnimation.cancel();
-          cell.__hmAnimation = null;
-          activeAnimations = Math.max(0, activeAnimations - 1);
-        }
-
-        // Removing the hidden state must not start the CSS exit transition;
-        // the Web Animation below owns the whole entrance.
-        cell.style.transition = 'none';
-        cell.classList.remove('hm-cell-hidden');
-
-        if (!canAnimate) {
-          cell.style.transition = '';
-          return;
-        }
-
-        const row = Number(cell.dataset.hmRow || index);
-        const delay = baseDelay + row * 5;
-        const rowCenterY = rowPitch * (row + 0.5);
-        const startY = (openCenterY - rowCenterY) * 0.62;
-        const overshootY = startY * -0.08;
-
-        const animation = cell.animate(
-          [
-            {
-              opacity: 0,
-              transform: `translate3d(${pull.toFixed(2)}px, ${startY.toFixed(2)}px, 0) scale3d(0.36, 0.8, 1)`
-            },
-            {
-              opacity: 1,
-              offset: 0.55,
-              transform: `translate3d(${(-pull * 0.1).toFixed(2)}px, ${overshootY.toFixed(2)}px, 0) scale3d(1.045, 1.015, 1)`
-            },
-            {
-              opacity: 1,
-              transform: 'translate3d(0, 0, 0) scale3d(1, 1, 1)'
-            }
-          ],
-          {
-            duration: HM_REVEAL_DURATION,
-            delay,
-            easing: 'cubic-bezier(0.25, 0.5, 0.25, 1)',
-            fill: 'both'
-          }
-        );
-
-        activeAnimations += 1;
-        cell.__hmAnimation = animation;
-        animation.onfinish = () => {
-          if (cell.__hmAnimation !== animation) return;
-          cell.__hmAnimation = null;
-          activeAnimations = Math.max(0, activeAnimations - 1);
-          cell.style.transition = '';
-          animation.cancel();
-        };
-      });
-    }
-
-    function hideColumn(col) {
-      col.el.__hmHidden = true;
-      col.hidden = true;
-
-      col.cells.forEach((cell) => {
-        if (cell.__hmAnimation) {
-          cell.__hmAnimation.cancel();
-          cell.__hmAnimation = null;
-          activeAnimations = Math.max(0, activeAnimations - 1);
-        }
-        cell.style.transition = '';
-        cell.classList.add('hm-cell-hidden');
-      });
-    }
-
-    function sync(initial = false) {
-      if (!alive || columns.length === 0) return;
-
-      const scrollLeft = scrollArea.scrollLeft;
-      // The left edge fade already softens clipped tiles, so the boundary
-      // matches the physical viewport there. The right edge is strict: a
-      // column must be fully inside before its cells are allowed to appear.
-      const viewLeft = scrollLeft;
-      const viewRight = scrollLeft + scrollArea.clientWidth;
-      const toReveal = [];
-
-      for (const col of columns) {
-        const fullyVisible =
-          col.left >= viewLeft - HM_REVEAL_TOLERANCE &&
-          col.right <= viewRight + HM_REVEAL_TOLERANCE;
-
-        if (fullyVisible) {
-          if (col.hidden) toReveal.push(col);
-        } else if (!col.hidden) {
-          hideColumn(col);
-        }
-      }
-
-      if (!toReveal.length) return;
-
-      if (initial) {
-        // Unroll from the middle of the viewport outwards instead of a plain
-        // left-to-right cascade.
-        const viewCenter = (viewLeft + viewRight) / 2;
-        toReveal.sort((a, b) => {
-          const aDistance = Math.abs((a.left + a.right) / 2 - viewCenter);
-          const bDistance = Math.abs((b.left + b.right) / 2 - viewCenter);
-          return aDistance - bDistance;
-        });
-      }
-
-      // Read geometry once per sync pass to completely eliminate forced synchronous reflows!
-      const scrollRect = scrollArea.getBoundingClientRect();
-      const viewportCenter = scrollRect.left + scrollRect.width / 2;
-      const maxPull = Math.min(120, Math.max(48, scrollRect.width * 0.24));
-      const trackLeft = trackEl.getBoundingClientRect().left;
-
-      toReveal.forEach((col, index) => {
-        const delay = initial ? Math.min(150, index * HM_REVEAL_STAGGER) : 0;
-        revealColumn(col, delay, viewportCenter, maxPull, trackLeft);
-      });
-    }
-
-    function scheduleSync() {
-      if (!alive || scrollRaf) return;
-      scrollRaf = requestAnimationFrame(() => {
-        scrollRaf = 0;
-        sync(false);
-      });
-    }
-
-    function refresh(initial = false) {
-      if (!alive) return;
-      measure();
-      sync(initial);
-    }
-
-    scrollArea.addEventListener('scroll', scheduleSync, { passive: true });
-
-    if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => {
-        if (!alive || resizeRaf) return;
-        resizeRaf = requestAnimationFrame(() => {
-          resizeRaf = 0;
-          refresh(false);
-        });
-      });
-      resizeObserver.observe(trackEl);
-      resizeObserver.observe(scrollArea);
-    }
-
-    return {
-      refresh,
-      destroy() {
-        alive = false;
-        scrollArea.removeEventListener('scroll', scheduleSync);
-        if (scrollRaf) cancelAnimationFrame(scrollRaf);
-        if (resizeRaf) cancelAnimationFrame(resizeRaf);
-        if (resizeObserver) resizeObserver.disconnect();
-        activeCells.forEach((cell) => {
-          if (cell.__hmAnimation) {
-            cell.__hmAnimation.cancel();
-            cell.__hmAnimation = null;
-          }
-        });
-        columns = [];
-      }
-    };
-  }
-
-  function setupHeatmapMotion(scrollArea, trackEl) {
-    if (heatmapMotion) {
-      heatmapMotion.destroy();
-      heatmapMotion = null;
-    }
-    heatmapMotion = createHeatmapMotion(scrollArea, trackEl);
-    return heatmapMotion;
-  }
 
   function createMonthBlock(year, monthIndex, isFirstInGroup = false) {
     const monthBlock = document.createElement('div');
@@ -2741,6 +2455,7 @@
     for (let c = 0; c < numCols; c++) {
       const col = document.createElement('div');
       col.className = 'week-col';
+      col.style.setProperty('--col-idx', c);
       if (c === numCols - 1) {
         col.classList.add('last-month-col');
       }
@@ -2801,11 +2516,6 @@
     const scrollArea = document.getElementById('heatmap-scroll-area');
     if (!trackEl || !scrollArea) return;
 
-    if (heatmapMotion) {
-      heatmapMotion.destroy();
-      heatmapMotion = null;
-    }
-
     trackEl.innerHTML = '';
 
     const now = new Date();
@@ -2850,16 +2560,9 @@
     // 2. Build current year's months up to current month (so current month is in last place!)
     trackEl.appendChild(createYearGroup(currentYear, 0, currentMonth));
 
-    const motion = setupHeatmapMotion(scrollArea, trackEl);
-
     // By default: scroll to the end so the current month is in the last place and history shows to the left
     requestAnimationFrame(() => {
       scrollHeatmapToEnd(false);
-      motion.refresh(true);
-      setTimeout(() => {
-        scrollHeatmapToEnd(false);
-        motion.refresh(false);
-      }, 60);
     });
 
     scrollArea.onscroll = () => {
@@ -3008,7 +2711,6 @@
       window.AmbientAura?.updateTimerCenter?.();
       requestAnimationFrame(() => {
         scrollHeatmapToEnd(false);
-        heatmapMotion?.refresh(false);
       });
     }
   }
