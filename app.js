@@ -2473,6 +2473,8 @@
           el: colEl,
           left: rect.left - trackRect.left,
           right: rect.right - trackRect.left,
+          width: rect.width,
+          height: rect.height,
           cells,
           hidden: colEl.__hmHidden !== false
         });
@@ -2481,20 +2483,30 @@
       columns = nextColumns;
     }
 
-    function revealColumn(col, baseDelay) {
+    function revealColumn(col, baseDelay, viewportCenter, maxPull, trackLeft) {
       col.el.__hmHidden = false;
       col.hidden = false;
 
-      const scrollRect = scrollArea.getBoundingClientRect();
-      const viewportCenter = scrollRect.left + scrollRect.width / 2;
-      const colRect = col.el.getBoundingClientRect();
-      const colCenter = colRect.left + colRect.width / 2;
+      // In viewport coords, column center is trackLeft + col.left + col.width / 2.
+      // This calculates the exact same coordinate without forcing a layout reflow.
+      const colWidth = col.width || 13.5;
+      const colCenter = (trackLeft != null)
+        ? trackLeft + col.left + colWidth / 2
+        : (col.el.getBoundingClientRect().left + colWidth / 2);
+
+      const resolvedMaxPull = (maxPull != null)
+        ? maxPull
+        : Math.min(120, Math.max(48, scrollArea.clientWidth * 0.24));
+
+      const resolvedViewportCenter = (viewportCenter != null)
+        ? viewportCenter
+        : (scrollArea.getBoundingClientRect().left + scrollArea.clientWidth / 2);
+
       // Columns on the left start farther left and columns on the right start
       // farther right, so every column converges inward as it lands.
-      const maxPull = Math.min(120, Math.max(48, scrollRect.width * 0.24));
       const pull = Math.max(
-        -maxPull,
-        Math.min(maxPull, (colCenter - viewportCenter) * 0.6)
+        -resolvedMaxPull,
+        Math.min(resolvedMaxPull, (colCenter - resolvedViewportCenter) * 0.6)
       );
 
       // Cells begin compressed toward the middle of their visible rows and
@@ -2509,7 +2521,7 @@
           maxRow = Math.max(maxRow, row);
         }
       });
-      const rowPitch = colRect.height / 7;
+      const rowPitch = (col.height || 119) / 7;
       const openCenterY = rowPitch * ((minRow + maxRow + 1) / 2);
       const canAnimate =
         !document.hidden &&
@@ -2627,9 +2639,15 @@
         });
       }
 
+      // Read geometry once per sync pass to completely eliminate forced synchronous reflows!
+      const scrollRect = scrollArea.getBoundingClientRect();
+      const viewportCenter = scrollRect.left + scrollRect.width / 2;
+      const maxPull = Math.min(120, Math.max(48, scrollRect.width * 0.24));
+      const trackLeft = trackEl.getBoundingClientRect().left;
+
       toReveal.forEach((col, index) => {
         const delay = initial ? Math.min(150, index * HM_REVEAL_STAGGER) : 0;
-        revealColumn(col, delay);
+        revealColumn(col, delay, viewportCenter, maxPull, trackLeft);
       });
     }
 
