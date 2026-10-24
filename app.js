@@ -1416,10 +1416,10 @@
       this.width = 0;
       this.height = 0;
       this.dpr = 1.0; // Native 1:1 CSS pixel rasterization for ultra-low GPU thermals
-      this.particles = [];
       this.isRunning = false;
       this.rafId = null;
       this.lastTime = 0;
+      this.lastRenderTime = 0;
 
       // Speeds & Physics
       this.currentSpeed = 0.45; // starts in idle/paused slower speed
@@ -1431,6 +1431,22 @@
       const isMobile = window.innerWidth < 680;
       this.baseCount = isMobile ? 22 : 34;
       this.maxHoldCount = isMobile ? 46 : 68;
+      this.activeCount = this.baseCount;
+
+      // Pre-allocated particle pool for 100% zero-GC memory allocation
+      this.particles = new Array(this.maxHoldCount);
+      for (let i = 0; i < this.maxHoldCount; i++) {
+        this.particles[i] = {
+          x: 0,
+          y: 0,
+          w: 8,
+          h: 11,
+          speed: 1,
+          level: 0,
+          spawnY: 0,
+          r: 2.2
+        };
+      }
 
       // Color transition factor: 0.0 = Green (running), 1.0 = Amber (paused/stopped)
       this.currentAmber = 1.0;
@@ -1465,6 +1481,17 @@
         }
       });
 
+      // Accessibility / Battery saver: respect system prefers-reduced-motion
+      try {
+        const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+        motionQuery.addEventListener('change', () => {
+          if (motionQuery.matches) this.stop();
+          else if (typeof state === 'undefined' || state.auraEnabled !== false) {
+            if (!document.documentElement.classList.contains('aura-disabled')) this.start();
+          }
+        });
+      } catch (e) {}
+
       if (typeof state === 'undefined' || state.auraEnabled !== false) {
         if (!document.documentElement.classList.contains('aura-disabled')) {
           this.start();
@@ -1479,6 +1506,9 @@
       const isMobile = this.width < 680;
       this.baseCount = isMobile ? 22 : 34;
       this.maxHoldCount = isMobile ? 46 : 68;
+      if (!this.isHolding) {
+        this.activeCount = Math.min(this.activeCount, this.baseCount);
+      }
 
       if (!this.canvas) return;
       this.canvas.width = Math.round(this.width);
@@ -1491,53 +1521,44 @@
     }
 
     initParticles() {
-      this.particles = new Array(this.baseCount);
-      for (let i = 0; i < this.baseCount; i++) {
-        this.particles[i] = this.createParticle(true);
+      this.activeCount = this.baseCount;
+      for (let i = 0; i < this.activeCount; i++) {
+        this.resetParticle(this.particles[i], true, false);
       }
     }
 
-    createParticle(initial = false, isHoldBurst = false) {
+    resetParticle(p, initial = false, isHoldBurst = false) {
       // 50% left flank (2.5% to 26.5%), 50% right flank (73.5% to 97.5%)
       const isLeft = Math.random() < 0.5;
       const xMin = isLeft ? this.width * 0.025 : this.width * 0.735;
       const xMax = isLeft ? this.width * 0.265 : this.width * 0.975;
-      const x = xMin + Math.random() * (xMax - xMin);
+      p.x = xMin + Math.random() * (xMax - xMin);
 
       // Initial load: distributed across entire screen so flanks are immediately filled
       // Hold burst: spawns from bottom flank (68% to 96% height) to create an upward rush
       // Regular respawn: spawns in lower-mid section (58% to 88% height)
-      let y;
       if (initial) {
-        y = Math.random() * this.height;
+        p.y = Math.random() * this.height;
       } else if (isHoldBurst) {
-        y = this.height * (0.68 + Math.random() * 0.28);
+        p.y = this.height * (0.68 + Math.random() * 0.28);
       } else {
-        y = this.height * (0.58 + Math.random() * 0.30);
+        p.y = this.height * (0.58 + Math.random() * 0.30);
       }
 
       // Smaller authentic GitHub tile proportions (~1:1.35)
       // Width: 7.5px to 10px, Height: 10.5px to 14px
       const sizeIndex = Math.floor(Math.random() * 4);
-      const w = 7.5 + sizeIndex * 0.8;
-      const h = 10.5 + sizeIndex * 1.1;
+      p.w = 7.5 + sizeIndex * 0.8;
+      p.h = 10.5 + sizeIndex * 1.1;
 
       // Upward drift base speed (extra velocity diversity during hold burst)
-      const speed = (isHoldBurst ? 0.95 : 0.65) + Math.random() * 0.85;
+      p.speed = (isHoldBurst ? 0.95 : 0.65) + Math.random() * 0.85;
 
       // Level (0 to 3)
-      const level = Math.floor(Math.random() * 4);
-
-      return {
-        x,
-        y,
-        w,
-        h,
-        speed,
-        level,
-        spawnY: y,
-        r: 2.2
-      };
+      p.level = Math.floor(Math.random() * 4);
+      p.spawnY = p.y;
+      p.r = 2.2;
+      return p;
     }
 
     setTimerStatus(status) {
@@ -1560,14 +1581,29 @@
 
     start() {
       if (this.isRunning) return;
+      try {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      } catch (e) {}
       if (typeof state !== 'undefined' && state.auraEnabled === false) return;
       if (document.documentElement.classList.contains('aura-disabled')) return;
       this.isRunning = true;
       this.lastTime = performance.now();
+      this.lastRenderTime = this.lastTime;
+
       this.tick = (now) => {
         if (!this.isRunning) return;
-        this.update(now);
-        this.draw();
+
+        // Adaptive frame rate: 30 FPS cap during ambient drift saves 75% GPU/CPU on 120Hz screens;
+        // switches instantly to unthrottled 60/120 FPS while holding for maximum responsiveness
+        const minInterval = this.isHolding ? 0 : 32;
+        const elapsed = now - this.lastRenderTime;
+
+        if (elapsed >= minInterval) {
+          this.lastRenderTime = now - (elapsed % (minInterval || 1));
+          this.update(now);
+          this.draw();
+        }
+
         if (this.isRunning) {
           this.rafId = requestAnimationFrame(this.tick);
         }
@@ -1587,7 +1623,7 @@
     }
 
     update(now) {
-      const dt = Math.min((now - this.lastTime) / 16.667, 2.0) || 1.0;
+      const dt = Math.min((now - this.lastTime) / 16.667, 3.0) || 1.0;
       this.lastTime = now;
 
       // Rapid acceleration when holding, gentle forward coasting on release
@@ -1602,15 +1638,15 @@
       const stretchY = 1.0 + speedRatio * 7.5; // Stretches upwards up to 8.5x height!
       const stretchX = Math.max(0.42, 1.0 / Math.sqrt(stretchY)); // Thins out sleekly!
 
-      // DYNAMIC HOLD SPAWN BURST: Stream extra particles from below while holding!
-      if (this.isHolding && this.particles.length < this.maxHoldCount) {
-        const burst = Math.min(2, this.maxHoldCount - this.particles.length);
+      // DYNAMIC HOLD SPAWN BURST: Stream extra pre-allocated particles from below while holding!
+      if (this.isHolding && this.activeCount < this.maxHoldCount) {
+        const burst = Math.min(2, this.maxHoldCount - this.activeCount);
         for (let b = 0; b < burst; b++) {
-          this.particles.push(this.createParticle(false, true));
+          this.resetParticle(this.particles[this.activeCount++], false, true);
         }
       }
 
-      for (let i = 0; i < this.particles.length; i++) {
+      for (let i = 0; i < this.activeCount; i++) {
         const p = this.particles[i];
 
         // Physics integration: ALWAYS moves upward! Never decreases speed backwards!
@@ -1618,13 +1654,18 @@
 
         // When leaving off the top (-50px)
         if (p.y < -50) {
-          if (this.particles.length > this.baseCount && !this.isHolding) {
-            // Natural drain: extra hold burst particles exit off the top without respawning
-            this.particles.splice(i, 1);
-            i--;
+          if (this.activeCount > this.baseCount && !this.isHolding) {
+            // O(1) in-place swap drain: extra hold burst particles exit off top without respawning
+            this.activeCount--;
+            if (i < this.activeCount) {
+              const temp = this.particles[i];
+              this.particles[i] = this.particles[this.activeCount];
+              this.particles[this.activeCount] = temp;
+              i--; // Re-evaluate swapped particle
+            }
             continue;
           } else {
-            this.particles[i] = this.createParticle(false);
+            this.resetParticle(p, false, false);
           }
         }
       }
@@ -1637,7 +1678,12 @@
       const ctx = this.ctx;
       if (!ctx) return;
 
-      ctx.clearRect(0, 0, this.width, this.height);
+      // Dual Flank clearRect: Clears ONLY the active particle corridors, leaving the middle 44% of the screen untouched
+      const leftClearW = Math.ceil(this.width * 0.29);
+      const rightClearX = Math.floor(this.width * 0.71);
+      const rightClearW = this.width - rightClearX;
+      ctx.clearRect(0, 0, leftClearW, this.height);
+      ctx.clearRect(rightClearX, 0, rightClearW, this.height);
 
       const amberT = this.currentAmber;
       const greenT = 1.0 - amberT;
@@ -1669,7 +1715,9 @@
         };
       }
 
-      for (let i = 0; i < this.particles.length; i++) {
+      ctx.lineWidth = 1;
+
+      for (let i = 0; i < this.activeCount; i++) {
         const p = this.particles[i];
 
         // Opacity calculation: fade in at spawn, fade out at top
@@ -1691,7 +1739,6 @@
         ctx.globalAlpha = opacity;
         ctx.fillStyle = frameStyles[p.level].fill;
         ctx.strokeStyle = frameStyles[p.level].stroke;
-        ctx.lineWidth = 1;
 
         ctx.beginPath();
         if (ctx.roundRect) {
