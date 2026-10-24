@@ -2435,15 +2435,12 @@
 
     heatmapObserver = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-revealed');
-          heatmapObserver?.unobserve(entry.target);
-        }
+        entry.target.classList.toggle('is-revealed', entry.isIntersecting);
       });
     }, {
       root: scrollArea,
-      rootMargin: '0px 60px 0px 60px',
-      threshold: 0.01
+      rootMargin: '0px 30px 0px 30px',
+      threshold: 0.05
     });
 
     trackEl.querySelectorAll('.week-col').forEach((col) => {

@@ -1603,13 +1603,13 @@ body.is-dragging .timer-bead-rim {
   opacity: 0;
   transform: translate3d(0, var(--row-offset, 0px), 0) scale3d(0.68, 0.68, 1);
   pointer-events: none;
-  transition: none;
+  transition: opacity 140ms ease-out, transform 140ms ease-out;
 }
 
 /* Revealed state: triggers hardware-accelerated CSS keyframes on GPU */
 .week-col.is-revealed > .cell:not(.cell-spacer) {
   animation: hmCellReveal 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
-  animation-delay: calc(var(--col-idx, 0) * 18ms + var(--center-dist, 0) * 12ms);
+  animation-delay: calc(var(--center-dist, 0) * 12ms);
   opacity: 1;
   transform: translate3d(0, 0, 0);
   pointer-events: auto;
