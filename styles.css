@@ -178,6 +178,8 @@ input, textarea, [contenteditable="true"], .selectable-text {
   z-index: 1;
   display: block;
   transform: translateZ(0);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 80px, black calc(100% - 100px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 80px, black calc(100% - 100px), transparent 100%);
 }
 
 /* Hold-to-reset: Clean acceleration without GPU-melting drop-shadow convolution filters */

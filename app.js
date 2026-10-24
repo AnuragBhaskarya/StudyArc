@@ -1500,8 +1500,16 @@
     }
 
     resize() {
-      this.width = window.innerWidth;
-      this.height = window.innerHeight;
+      const newWidth = window.innerWidth;
+      const newHeight = window.innerHeight;
+
+      // Ignore mobile browser URL bar height micro-resizes during scrolling
+      if (this.canvas && this.width === newWidth && Math.abs(this.height - newHeight) < 70) {
+        return;
+      }
+
+      this.width = newWidth;
+      this.height = newHeight;
       this.dpr = 1.0;
       const isMobile = this.width < 680;
       this.baseCount = isMobile ? 22 : 34;
@@ -1515,9 +1523,6 @@
       this.canvas.height = Math.round(this.height);
       this.canvas.style.width = `${this.width}px`;
       this.canvas.style.height = `${this.height}px`;
-      if (this.ctx) {
-        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-      }
     }
 
     initParticles() {
@@ -1536,13 +1541,13 @@
 
       // Initial load: distributed across entire screen so flanks are immediately filled
       // Hold burst: spawns from bottom flank (68% to 96% height) to create an upward rush
-      // Regular respawn: spawns in lower-mid section (58% to 88% height)
+      // Regular respawn: spawns just below viewport so CSS hardware mask fades it in naturally
       if (initial) {
         p.y = Math.random() * this.height;
       } else if (isHoldBurst) {
-        p.y = this.height * (0.68 + Math.random() * 0.28);
+        p.y = this.height * (0.75 + Math.random() * 0.22);
       } else {
-        p.y = this.height * (0.58 + Math.random() * 0.30);
+        p.y = this.height + Math.random() * 25;
       }
 
       // Smaller authentic GitHub tile proportions (~1:1.35)
@@ -1556,7 +1561,6 @@
 
       // Level (0 to 3)
       p.level = Math.floor(Math.random() * 4);
-      p.spawnY = p.y;
       p.r = 2.2;
       return p;
     }
@@ -1588,22 +1592,11 @@
       if (document.documentElement.classList.contains('aura-disabled')) return;
       this.isRunning = true;
       this.lastTime = performance.now();
-      this.lastRenderTime = this.lastTime;
 
       this.tick = (now) => {
         if (!this.isRunning) return;
-
-        // Adaptive frame rate: 30 FPS cap during ambient drift saves 75% GPU/CPU on 120Hz screens;
-        // switches instantly to unthrottled 60/120 FPS while holding for maximum responsiveness
-        const minInterval = this.isHolding ? 0 : 32;
-        const elapsed = now - this.lastRenderTime;
-
-        if (elapsed >= minInterval) {
-          this.lastRenderTime = now - (elapsed % (minInterval || 1));
-          this.update(now);
-          this.draw();
-        }
-
+        this.update(now);
+        this.draw();
         if (this.isRunning) {
           this.rafId = requestAnimationFrame(this.tick);
         }
@@ -1623,7 +1616,7 @@
     }
 
     update(now) {
-      const dt = Math.min((now - this.lastTime) / 16.667, 3.0) || 1.0;
+      const dt = Math.min((now - this.lastTime) / 16.667, 2.0) || 1.0;
       this.lastTime = now;
 
       // Rapid acceleration when holding, gentle forward coasting on release
@@ -1678,67 +1671,57 @@
       const ctx = this.ctx;
       if (!ctx) return;
 
-      // Dual Flank clearRect: Clears ONLY the active particle corridors, leaving the middle 44% of the screen untouched
-      const leftClearW = Math.ceil(this.width * 0.29);
-      const rightClearX = Math.floor(this.width * 0.71);
-      const rightClearW = this.width - rightClearX;
-      ctx.clearRect(0, 0, leftClearW, this.height);
-      ctx.clearRect(rightClearX, 0, rightClearW, this.height);
+      // Single hardware glClearColor clear across framebuffer (GPU fast-path)
+      ctx.clearRect(0, 0, this.width, this.height);
 
       const amberT = this.currentAmber;
       const greenT = 1.0 - amberT;
       const stretchY = this.currentStretchY || 1.0;
       const stretchX = this.currentStretchX || 1.0;
 
-      const topFadeZone = 110; // Fade out over top 110px
-      const botFadeZone = 80;  // Fade in over first 80px from spawn
-
-      // Zero-allocation frame styles: precalculate 4 borderless level fills once
+      // Precalculate 4 level fills once per frame (only 4 strings total)
       const frameFills = new Array(4);
       for (let lvl = 0; lvl < 4; lvl++) {
         const gColor = this.colorsGreen[lvl];
         const aColor = this.colorsAmber[lvl];
 
-        const r = Math.round(gColor.bg[0] * greenT + aColor.bg[0] * amberT);
-        const g = Math.round(gColor.bg[1] * greenT + aColor.bg[1] * amberT);
-        const b = Math.round(gColor.bg[2] * greenT + aColor.bg[2] * amberT);
-        const a = (gColor.bg[3] * greenT + aColor.bg[3] * amberT);
+        const r = (gColor.bg[0] * greenT + aColor.bg[0] * amberT) | 0;
+        const g = (gColor.bg[1] * greenT + aColor.bg[1] * amberT) | 0;
+        const b = (gColor.bg[2] * greenT + aColor.bg[2] * amberT) | 0;
+        const a = gColor.bg[3] * greenT + aColor.bg[3] * amberT;
 
         frameFills[lvl] = `rgba(${r},${g},${b},${a})`;
       }
 
-      for (let i = 0; i < this.activeCount; i++) {
-        const p = this.particles[i];
-
-        // Opacity calculation: fade in at spawn, fade out at top
-        let opacity = 1.0;
-        if (p.y < topFadeZone) {
-          opacity = Math.max(0, p.y / topFadeZone);
-        } else if (p.y > p.spawnY - botFadeZone) {
-          opacity = Math.max(0, (p.spawnY - p.y) / botFadeZone);
-        }
-
-        if (opacity <= 0.02) continue;
-
-        const drawW = p.w * stretchX;
-        const drawH = p.h * stretchY;
-        const drawX = p.x - (drawW - p.w) * 0.5;
-        const drawY = p.y;
-        const radius = Math.min(drawW * 0.45, p.r * stretchX);
-
-        ctx.globalAlpha = opacity;
-        ctx.fillStyle = frameFills[p.level];
-
+      // 4-Pass Level Batching: Reduces draw calls from 34+ down to exactly 4 GPU fills!
+      // Top and bottom fades are rendered by GPU hardware compositor via CSS mask-image
+      for (let lvl = 0; lvl < 4; lvl++) {
+        let hasLevel = false;
         ctx.beginPath();
-        if (ctx.roundRect) {
-          ctx.roundRect(drawX, drawY, drawW, drawH, radius);
-        } else {
-          ctx.rect(drawX, drawY, drawW, drawH);
-        }
-        ctx.fill();
-      }
 
-      ctx.globalAlpha = 1.0;
+        for (let i = 0; i < this.activeCount; i++) {
+          const p = this.particles[i];
+          if (p.level !== lvl) continue;
+
+          hasLevel = true;
+          const drawW = (p.w * stretchX) | 0;
+          const drawH = (p.h * stretchY) | 0;
+          const drawX = (p.x - (drawW - p.w) * 0.5) | 0;
+          const drawY = p.y | 0;
+          const radius = Math.min(drawW * 0.45, 2.2);
+
+          if (ctx.roundRect) {
+            ctx.roundRect(drawX, drawY, drawW, drawH, radius);
+          } else {
+            ctx.rect(drawX, drawY, drawW, drawH);
+          }
+        }
+
+        if (hasLevel) {
+          ctx.fillStyle = frameFills[lvl];
+          ctx.fill();
+        }
+      }
     }
   }
 
