@@ -1557,30 +1557,20 @@ body.is-dragging .timer-bead-rim {
   box-shadow: 0 0 6px rgba(78, 250, 143, 0.45);
 }
 
-/* Cells that are outside the visible window start compressed towards the center
-   of their column. When pulled into view, JS removes this state and animates
-   them expanding outwards into their row slots with a snappy finish. */
+/* Cells that are clipped by the viewport edge shrink away instead of
+   lingering as half tiles. JS removes this state and plays the ribbon pull-in
+   animation once the whole column is visible. */
 .cell.hm-cell-hidden {
   opacity: 0;
-  transform: translate3d(0, 0, 0) scale(0.68);
-  transition: opacity 160ms ease-out,
-              transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform: scale(0.65);
+  transition: opacity 120ms ease-out,
+              transform 120ms ease-out;
   pointer-events: none;
 }
-
-/* Row-specific pre-reveal positions: compressed towards the middle row (row 3) */
-.cell.hm-cell-hidden[data-hm-row="0"], .week-col > .cell.hm-cell-hidden:nth-child(1) { transform: translate3d(0, 35px, 0) scale(0.68); }
-.cell.hm-cell-hidden[data-hm-row="1"], .week-col > .cell.hm-cell-hidden:nth-child(2) { transform: translate3d(0, 23px, 0) scale(0.68); }
-.cell.hm-cell-hidden[data-hm-row="2"], .week-col > .cell.hm-cell-hidden:nth-child(3) { transform: translate3d(0, 12px, 0) scale(0.68); }
-.cell.hm-cell-hidden[data-hm-row="3"], .week-col > .cell.hm-cell-hidden:nth-child(4) { transform: translate3d(0, 0px, 0) scale(0.68); }
-.cell.hm-cell-hidden[data-hm-row="4"], .week-col > .cell.hm-cell-hidden:nth-child(5) { transform: translate3d(0, -12px, 0) scale(0.68); }
-.cell.hm-cell-hidden[data-hm-row="5"], .week-col > .cell.hm-cell-hidden:nth-child(6) { transform: translate3d(0, -23px, 0) scale(0.68); }
-.cell.hm-cell-hidden[data-hm-row="6"], .week-col > .cell.hm-cell-hidden:nth-child(7) { transform: translate3d(0, -35px, 0) scale(0.68); }
 
 @media (prefers-reduced-motion: reduce) {
   .cell.hm-cell-hidden {
     transition: none;
-    transform: none !important;
   }
 }
 
