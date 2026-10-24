@@ -2538,10 +2538,39 @@
     return monthBlock;
   }
 
-  function renderHeatmap() {
+  function updateHeatmapCells(forceAll = false) {
+    const trackEl = document.getElementById('heatmap-track');
+    if (!trackEl) return;
+    const peakMins = state.heatmapPeakMinutes || DEFAULT_PEAK_MINUTES;
+    const cells = trackEl.querySelectorAll('.cell[data-date]');
+    for (let i = 0; i < cells.length; i++) {
+      const cell = cells[i];
+      const dStr = cell.dataset.date;
+      const mins = state.dayActivity[dStr] || 0;
+      const prevMins = Number(cell.dataset.minutes || 0);
+      if (forceAll || prevMins !== mins) {
+        cell.dataset.minutes = String(mins);
+        const colorInfo = getHeatmapCellColor(mins, peakMins);
+        cell.style.backgroundColor = colorInfo.color;
+        for (let l = 0; l <= 9; l++) {
+          cell.classList.toggle(`cell-lvl-${l}`, l === colorInfo.level);
+        }
+        cell.classList.toggle('cell-peak', colorInfo.isPeak);
+      }
+    }
+  }
+
+  function renderHeatmap(forceRebuild = false) {
     const trackEl = document.getElementById('heatmap-track');
     const scrollArea = document.getElementById('heatmap-scroll-area');
     if (!trackEl || !scrollArea) return;
+
+    // Zero-cost in-place update if calendar structure is already built.
+    // Never tears down DOM or re-runs initial reveal animation on session save/delete or timer reset!
+    if (!forceRebuild && trackEl.children.length > 0) {
+      updateHeatmapCells();
+      return;
+    }
 
     trackEl.innerHTML = '';
 
