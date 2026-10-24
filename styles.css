@@ -1380,6 +1380,9 @@ body.is-dragging .timer-bead-rim {
   position: relative;
   pointer-events: none; /* Allows click events to pass through seamlessly to underlying cells */
   overflow: visible;
+  width: calc(var(--month-cols, 5) * (var(--hm-cell-size, 13.5px) + var(--hm-col-gap, 3.5px)) - var(--hm-col-gap, 3.5px));
+  min-width: calc(var(--month-cols, 5) * (var(--hm-cell-size, 13.5px) + var(--hm-col-gap, 3.5px)) - var(--hm-col-gap, 3.5px));
+  min-height: 138px;
 }
 
 /* Interlocking puzzle transition: offsets spacer column so gap is measured uniformly between valid cells */
@@ -1528,7 +1531,7 @@ body.is-dragging .timer-bead-rim {
 /* Revealed state: triggers hardware-accelerated CSS keyframes on GPU */
 .week-col.is-revealed > .cell:not(.cell-spacer) {
   animation: hmCellReveal 400ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
-  animation-delay: calc(var(--center-dist, 0) * 14ms);
+  animation-delay: calc(var(--col-idx, 0) * 16ms + var(--center-dist, 0) * 12ms);
   opacity: 1;
   transform: translate3d(0, 0, 0);
   pointer-events: auto;
