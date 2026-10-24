@@ -2841,7 +2841,7 @@
       });
     }, {
       root: scrollArea,
-      rootMargin: '0px 30px 0px 30px',
+      rootMargin: '0px 80px 0px 80px',
       threshold: 0.05
     });
 
@@ -2871,6 +2871,9 @@
     const firstDayOfWeek = (new Date(year, monthIndex, 1).getDay() + 6) % 7;
     const totalSlots = firstDayOfWeek + daysInMonth;
     const numCols = Math.ceil(totalSlots / 7);
+
+    // Exact intrinsic width for CSS content-visibility: auto (prevents any scroll jumps or layout shift)
+    monthBlock.style.containIntrinsicSize = `${numCols * 17}px 140px`;
 
     // If month starts mid-week (Tue-Sun), offset spacer column so gap is measured purely between valid cells
     if (!isFirstInGroup && firstDayOfWeek > 0) {
@@ -2932,24 +2935,36 @@
     return monthBlock;
   }
 
-  function updateHeatmapCells(forceAll = false) {
+  function updateHeatmapCells(targetDate = null) {
     const trackEl = document.getElementById('heatmap-track');
     if (!trackEl) return;
     const peakMins = state.heatmapPeakMinutes || DEFAULT_PEAK_MINUTES;
+    const todayStr = getLocalDateString();
+
+    // Fast O(1) single-cell update path when a specific date is updated
+    if (typeof targetDate === 'string' && targetDate) {
+      const cell = trackEl.querySelector(`.cell[data-date="${targetDate}"]`);
+      if (cell) {
+        const mins = state.dayActivity[targetDate] || 0;
+        cell.dataset.minutes = String(mins);
+        const colorInfo = getHeatmapCellColor(mins, peakMins);
+        cell.style.backgroundColor = colorInfo.color;
+        cell.className = `cell cell-lvl-${colorInfo.level}${colorInfo.isPeak ? ' cell-peak' : ''}${targetDate === todayStr ? ' is-today' : ''}`;
+      }
+      return;
+    }
+
     const cells = trackEl.querySelectorAll('.cell[data-date]');
     for (let i = 0; i < cells.length; i++) {
       const cell = cells[i];
       const dStr = cell.dataset.date;
       const mins = state.dayActivity[dStr] || 0;
       const prevMins = Number(cell.dataset.minutes || 0);
-      if (forceAll || prevMins !== mins) {
+      if (prevMins !== mins || targetDate === true) {
         cell.dataset.minutes = String(mins);
         const colorInfo = getHeatmapCellColor(mins, peakMins);
         cell.style.backgroundColor = colorInfo.color;
-        for (let l = 0; l <= 9; l++) {
-          cell.classList.toggle(`cell-lvl-${l}`, l === colorInfo.level);
-        }
-        cell.classList.toggle('cell-peak', colorInfo.isPeak);
+        cell.className = `cell cell-lvl-${colorInfo.level}${colorInfo.isPeak ? ' cell-peak' : ''}${dStr === todayStr ? ' is-today' : ''}`;
       }
     }
   }
@@ -3018,10 +3033,6 @@
       });
     });
 
-    scrollArea.onscroll = () => {
-      updateYearBadgeFromScroll();
-    };
-
     setupHeatmapInteraction();
   }
 
@@ -3034,7 +3045,6 @@
     } else {
       scrollArea.scrollLeft = maxScroll;
     }
-    updateYearBadgeFromScroll();
   }
 
   let heatmapInteractionInitialized = false;
@@ -3105,28 +3115,11 @@
       scrollArea.style.scrollSnapType = 'x mandatory';
       scrollArea.style.cursor = '';
       document.body.style.userSelect = '';
-      updateYearBadgeFromScroll();
     });
   }
 
   function updateYearBadgeFromScroll() {
-    const scrollArea = document.getElementById('heatmap-scroll-area');
-    const trackEl = document.getElementById('heatmap-track');
-    if (!scrollArea || !trackEl) return;
-
-    const yearGroups = trackEl.querySelectorAll('.year-group');
-    const sampleX = scrollArea.scrollLeft + Math.min(scrollArea.clientWidth - 40, scrollArea.clientWidth * 0.75);
-
-    for (let i = yearGroups.length - 1; i >= 0; i--) {
-      const g = yearGroups[i];
-      if (g.offsetLeft <= sampleX) {
-        const yr = g.dataset.year;
-        if (yr) {
-          state.viewedYear = parseInt(yr, 10);
-        }
-        break;
-      }
-    }
+    // Native CSS position: sticky handles year header alignment with 0 CPU/GPU overhead
   }
 
   const tooltipEl = document.getElementById('heatmap-tooltip');

@@ -1379,6 +1379,9 @@ body.is-dragging .timer-bead-rim {
   position: relative;
   pointer-events: none; /* Allows click events to pass through seamlessly to underlying cells */
   overflow: visible;
+  /* Native W3C viewport containment: skips layout, styling & painting for off-screen months */
+  content-visibility: auto;
+  contain-intrinsic-size: 85px 140px;
 }
 
 /* Interlocking puzzle transition: offsets spacer column so gap is measured uniformly between valid cells */
@@ -1516,12 +1519,12 @@ body.is-dragging .timer-bead-rim {
 .month-weeks > .week-col:nth-child(5) { --col-idx: 4; }
 .month-weeks > .week-col:nth-child(6) { --col-idx: 5; }
 
-/* Unrevealed pre-scroll state: cells start compressed toward column center */
+/* Unrevealed pre-scroll state: cells reset instantly with ZERO off-screen transition */
 .week-col:not(.is-revealed) > .cell:not(.cell-spacer) {
   opacity: 0;
   transform: translate3d(0, var(--row-offset, 0px), 0) scale3d(0.68, 0.68, 1);
   pointer-events: none;
-  transition: opacity 140ms ease-out, transform 140ms ease-out;
+  transition: none !important;
 }
 
 /* Revealed state: triggers hardware-accelerated CSS keyframes on GPU */
@@ -1531,6 +1534,7 @@ body.is-dragging .timer-bead-rim {
   opacity: 1;
   transform: translate3d(0, 0, 0);
   pointer-events: auto;
+  will-change: transform, opacity;
 }
 
 @media (prefers-reduced-motion: reduce) {
