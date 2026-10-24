@@ -1306,8 +1306,8 @@ body.is-dragging .timer-bead-rim {
   justify-content: center;
 }
 
-/* Native free scroll: no snap work during momentum, no scroll listeners doing
-   layout, just one rAF-coalesced window update. */
+/* Horizontal track with snappy month-to-month scrolling. Drag frees the
+   snap temporarily (see setupHeatmapInteraction) and releases into it. */
 .heatmap-scroll-area {
   flex: 1;
   overflow-x: auto;
@@ -1316,6 +1316,8 @@ body.is-dragging .timer-bead-rim {
   -ms-overflow-style: none; /* IE and Edge */
   padding: 36px 0 72px 0;
   margin: -36px 0 -72px 0;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline-end: var(--hm-pad-right, 16px);
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
 }
@@ -1365,6 +1367,18 @@ body.is-dragging .timer-bead-rim {
   pointer-events: none; /* Allows click events to pass through seamlessly to underlying cells */
   overflow: visible;
   width: calc(var(--month-cols, 5) * (var(--hm-cell-size, 13.5px) + var(--hm-col-gap, 3.5px)) - var(--hm-col-gap, 3.5px));
+}
+
+/* Static month-end snap anchors. These stay at their calendar positions while
+   the 18-month render ring recycles around the viewport, so mandatory snapping
+   never chases a block that just moved. */
+.heatmap-snap-point {
+  position: absolute;
+  top: 0;
+  height: 138px;
+  pointer-events: none;
+  scroll-snap-align: end;
+  scroll-snap-stop: normal;
 }
 
 .month-label {
@@ -1460,8 +1474,77 @@ body.is-dragging .timer-bead-rim {
   box-shadow: 0 0 6px rgba(78, 250, 143, 0.45);
 }
 
-/* Month reveal is a single compositor animation per visible month, triggered
-   only after scrolling settles (see revealVisibleHeatmapMonths in app.js). */
+/* ==========================================================================
+   PURE CSS HARDWARE-ACCELERATED HEATMAP CELL REVEAL
+   Unfolds each column's cells from the middle row using pure CSS math & keyframes.
+   Runs on the GPU compositor while the fixed ring stays O(viewport).
+   ========================================================================== */
+@keyframes hmCellReveal {
+  0% {
+    opacity: 0;
+    transform: translate3d(16px, var(--row-offset, 0px), 0) scale3d(0.68, 0.68, 1);
+  }
+  60% {
+    opacity: 1;
+    transform: translate3d(-1px, var(--row-overshoot, 0px), 0) scale3d(1.035, 1.035, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+/* Pre-calculated row mathematical indices and accordion offsets:
+   Row 0 (Mon): distance 3, offset +35px towards center, overshoot -2.8px
+   Row 1 (Tue): distance 2, offset +23px towards center, overshoot -1.8px
+   Row 2 (Wed): distance 1, offset +12px towards center, overshoot -1.0px
+   Row 3 (Thu): distance 0, offset 0px (center), overshoot 0px
+   Row 4 (Fri): distance 1, offset -12px towards center, overshoot +1.0px
+   Row 5 (Sat): distance 2, offset -23px towards center, overshoot +1.8px
+   Row 6 (Sun): distance 3, offset -35px towards center, overshoot +2.8px
+*/
+.week-col > .cell:nth-child(1) { --row-offset: 35px;  --row-overshoot: -2.8px; --center-dist: 3; }
+.week-col > .cell:nth-child(2) { --row-offset: 23px;  --row-overshoot: -1.8px; --center-dist: 2; }
+.week-col > .cell:nth-child(3) { --row-offset: 12px;  --row-overshoot: -1.0px; --center-dist: 1; }
+.week-col > .cell:nth-child(4) { --row-offset: 0px;   --row-overshoot: 0px;    --center-dist: 0; }
+.week-col > .cell:nth-child(5) { --row-offset: -12px; --row-overshoot: 1.0px;  --center-dist: 1; }
+.week-col > .cell:nth-child(6) { --row-offset: -23px; --row-overshoot: 1.8px;  --center-dist: 2; }
+.week-col > .cell:nth-child(7) { --row-offset: -35px; --row-overshoot: 2.8px;  --center-dist: 3; }
+
+/* Pure CSS week column cascade */
+.month-weeks > .week-col:nth-child(1) { --col-idx: 0; }
+.month-weeks > .week-col:nth-child(2) { --col-idx: 1; }
+.month-weeks > .week-col:nth-child(3) { --col-idx: 2; }
+.month-weeks > .week-col:nth-child(4) { --col-idx: 3; }
+.month-weeks > .week-col:nth-child(5) { --col-idx: 4; }
+.month-weeks > .week-col:nth-child(6) { --col-idx: 5; }
+
+/* Unrevealed pre-scroll state: cells reset instantly with ZERO off-screen transition */
+.week-col:not(.is-revealed) > .cell:not(.cell-spacer) {
+  opacity: 0;
+  transform: translate3d(16px, var(--row-offset, 0px), 0) scale3d(0.68, 0.68, 1);
+  pointer-events: none;
+  transition: none !important;
+}
+
+/* Revealed state: triggers hardware-accelerated CSS keyframes on GPU */
+.week-col.is-revealed > .cell:not(.cell-spacer) {
+  animation: hmCellReveal 400ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--col-idx, 0) * 16ms + var(--center-dist, 0) * 12ms);
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .week-col:not(.is-revealed) > .cell:not(.cell-spacer),
+  .week-col.is-revealed > .cell:not(.cell-spacer) {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+  }
+}
 
 
 /* Tooltip */

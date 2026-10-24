@@ -2842,11 +2842,11 @@
   // =========================================================================
   // HEATMAP VIRTUALIZER — O(VIEWPORT) DOM, O(1) WITH HISTORY LENGTH
   // One fixed ring of month blocks is positioned by a prefix-sum month index.
-  // There are no per-month observers, no skeleton fleet, and no cell animations.
+  // Months unroll their cells with the original CSS cascade as they enter the
+  // viewport, while the DOM stays bounded to the ring.
   // =========================================================================
   const HEATMAP_RING_SIZE = 18;
-  const HEATMAP_REVEAL_IDLE_MS = 110;
-  const HEATMAP_REVEAL_MIN_DISTANCE = 18;
+  const HEATMAP_REVEAL_MARGIN = 30;
 
   const heatmapState = {
     months: [],
@@ -2858,11 +2858,7 @@
     firstVisible: 0,
     start: -1,
     padLeft: 48,
-    scrollRaf: 0,
-    settleTimer: 0,
-    isScrolling: false,
-    revealAnimations: [],
-    lastRevealScrollLeft: -1e9
+    scrollRaf: 0
   };
 
   function getHeatmapMetrics() {
@@ -2993,12 +2989,25 @@
     }
 
     el.appendChild(weeks);
-    return { el, label, weeks, cells, index: -1 };
+    return { el, label, weeks, cells, index: -1, revealed: false };
+  }
+
+  function setHeatmapBlockRevealed(block, revealed) {
+    if (!block || block.revealed === revealed) return;
+    block.revealed = revealed;
+    const cols = block.weeks.children;
+    for (let i = 0; i < cols.length; i++) {
+      cols[i].classList.toggle('is-revealed', revealed);
+    }
   }
 
   function populateHeatmapBlock(block, index) {
     const descriptor = heatmapState.months[index];
     if (!descriptor) return;
+
+    // Reused blocks go back to their pre-reveal state before new cells are
+    // painted, so the CSS cascade replays as the month enters the viewport.
+    setHeatmapBlockRevealed(block, false);
 
     const peakMins = state.heatmapPeakMinutes || DEFAULT_PEAK_MINUTES;
     const todayStr = getLocalDateString();
@@ -3107,6 +3116,7 @@
     }
 
     heatmapState.activeBlocks = nextActive;
+    updateHeatmapRevealState();
   }
 
   function updateHeatmapCells(targetDate = null) {
@@ -3137,89 +3147,30 @@
     });
   }
 
-  function cancelHeatmapReveal() {
-    const animations = heatmapState.revealAnimations;
-    for (let i = 0; i < animations.length; i++) {
-      try { animations[i].cancel(); } catch (_) {}
-    }
-    heatmapState.revealAnimations = [];
-  }
-
-  function revealVisibleHeatmapMonths() {
-    try {
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    } catch (_) {}
-
+  function updateHeatmapRevealState() {
     const scrollArea = document.getElementById('heatmap-scroll-area');
     if (!scrollArea || heatmapState.months.length === 0) return;
 
     const relativeScroll = Math.max(0, scrollArea.scrollLeft - heatmapState.padLeft);
-    const viewEnd = relativeScroll + scrollArea.clientWidth;
-    const visible = [];
+    const viewStart = relativeScroll - HEATMAP_REVEAL_MARGIN;
+    const viewEnd = relativeScroll + scrollArea.clientWidth + HEATMAP_REVEAL_MARGIN;
 
     heatmapState.activeBlocks.forEach((block, index) => {
       const descriptor = heatmapState.months[index];
       if (!descriptor) return;
-      if (descriptor.x + descriptor.width > relativeScroll && descriptor.x < viewEnd) {
-        visible.push({ block, x: descriptor.x });
-      }
+      const isVisible = descriptor.x + descriptor.width > viewStart && descriptor.x < viewEnd;
+      setHeatmapBlockRevealed(block, isVisible);
     });
-
-    visible.sort((a, b) => a.x - b.x);
-    const animations = heatmapState.revealAnimations;
-    for (let i = 0; i < visible.length; i++) {
-      const block = visible[i].block;
-      const animation = block.el.animate(
-        [
-          { opacity: 0.45, transform: 'translate3d(10px, 0, 0) scale(0.985)' },
-          { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' }
-        ],
-        {
-          duration: 180,
-          delay: Math.min(i * 12, 60),
-          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-          fill: 'backwards'
-        }
-      );
-      const cleanup = () => {
-        const at = animations.indexOf(animation);
-        if (at !== -1) animations.splice(at, 1);
-      };
-      animation.onfinish = cleanup;
-      animation.oncancel = cleanup;
-      animations.push(animation);
-    }
-  }
-
-  function settleHeatmapScroll() {
-    heatmapState.settleTimer = 0;
-    heatmapState.isScrolling = false;
-    updateHeatmapWindow();
-
-    const scrollArea = document.getElementById('heatmap-scroll-area');
-    if (!scrollArea) return;
-    const scrollLeft = scrollArea.scrollLeft;
-    if (Math.abs(scrollLeft - heatmapState.lastRevealScrollLeft) < HEATMAP_REVEAL_MIN_DISTANCE) return;
-
-    heatmapState.lastRevealScrollLeft = scrollLeft;
-    revealVisibleHeatmapMonths();
   }
 
   function handleHeatmapScroll() {
-    if (!heatmapState.isScrolling) {
-      heatmapState.isScrolling = true;
-      cancelHeatmapReveal();
-    }
-
     if (!heatmapState.scrollRaf) {
       heatmapState.scrollRaf = requestAnimationFrame(() => {
         heatmapState.scrollRaf = 0;
         updateHeatmapWindow();
+        updateHeatmapRevealState();
       });
     }
-
-    clearTimeout(heatmapState.settleTimer);
-    heatmapState.settleTimer = setTimeout(settleHeatmapScroll, HEATMAP_REVEAL_IDLE_MS);
   }
 
   function renderHeatmap(forceRebuild = false) {
@@ -3239,17 +3190,16 @@
       // Data changed but the calendar range did not: repaint only the visible ring.
       updateHeatmapCells();
       updateHeatmapWindow();
+      updateHeatmapRevealState();
       return;
     }
 
-    cancelHeatmapReveal();
-    clearTimeout(heatmapState.settleTimer);
-    heatmapState.settleTimer = 0;
-    heatmapState.isScrolling = false;
-    heatmapState.scrollRaf = 0;
+    if (heatmapState.scrollRaf) {
+      cancelAnimationFrame(heatmapState.scrollRaf);
+      heatmapState.scrollRaf = 0;
+    }
     heatmapState.rangeKey = rangeKey;
     heatmapState.metricsKey = metricsKey;
-    heatmapState.lastRevealScrollLeft = -1e9;
 
     const built = buildHeatmapMonths(metrics, range);
     heatmapState.months = built.months;
@@ -3263,6 +3213,19 @@
     const contentEl = document.createElement('div');
     contentEl.className = 'heatmap-virtual-content';
     trackEl.appendChild(contentEl);
+
+    // Static snap anchors for every month. They remain at fixed calendar
+    // positions while the render ring recycles, keeping mandatory snap stable.
+    const snapFragment = document.createDocumentFragment();
+    for (let i = 0; i < built.months.length; i++) {
+      const descriptor = built.months[i];
+      const snapPoint = document.createElement('div');
+      snapPoint.className = 'heatmap-snap-point';
+      snapPoint.style.left = `${descriptor.x}px`;
+      snapPoint.style.width = `${descriptor.width}px`;
+      snapFragment.appendChild(snapPoint);
+    }
+    contentEl.appendChild(snapFragment);
 
     // A fixed ring: 18 months is roughly twice the visible width. The pool
     // never grows with history, and cells are reused in place.
@@ -3280,6 +3243,7 @@
     // Place the window at the newest month immediately; no async observer wait.
     scrollHeatmapToEnd(false);
     updateHeatmapWindow(true);
+    updateHeatmapRevealState();
     setupHeatmapInteraction();
   }
 
@@ -3303,11 +3267,8 @@
 
     scrollArea.scrollLeft = maxScroll;
     updateHeatmapWindow();
-
     // If scrollLeft was already at the end, no scroll event is dispatched.
-    // Schedule the normal settle/reveal path explicitly.
-    clearTimeout(heatmapState.settleTimer);
-    heatmapState.settleTimer = setTimeout(settleHeatmapScroll, HEATMAP_REVEAL_IDLE_MS);
+    updateHeatmapRevealState();
   }
 
   let heatmapInteractionInitialized = false;
@@ -3376,6 +3337,8 @@
       startX = e.pageX;
       startScroll = scrollArea.scrollLeft;
       dragTarget = startScroll;
+      // Free the drag from mandatory snapping; it snaps on release.
+      scrollArea.style.scrollSnapType = 'none';
       scrollArea.style.cursor = 'grabbing';
       document.body.style.userSelect = 'none';
     });
@@ -3400,6 +3363,7 @@
         dragRaf = 0;
         scrollArea.scrollLeft = dragTarget;
       }
+      scrollArea.style.scrollSnapType = 'x mandatory';
       scrollArea.style.cursor = '';
       document.body.style.userSelect = '';
     });
