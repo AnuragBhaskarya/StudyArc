@@ -6151,7 +6151,19 @@
   // =========================================================================
   let confirmDialogResolve = null;
 
-  function confirmAction({ title = 'Are you sure?', message = '', confirmLabel = 'Confirm', variant = 'delete' } = {}) {
+  function setConfirmPill(pillEl, value) {
+    if (!pillEl) return false;
+    const text = value ? String(value).trim() : '';
+    pillEl.textContent = text;
+    pillEl.classList.toggle('hidden', !text);
+    return !!text;
+  }
+
+  function setConfirmPillRow(rowEl, visible) {
+    if (rowEl) rowEl.classList.toggle('hidden', !visible);
+  }
+
+  function confirmAction({ title = 'Are you sure?', message = '', confirmLabel = 'Confirm', variant = 'delete', pills = null } = {}) {
     const dialog = document.getElementById('confirm-dialog');
     if (!dialog || typeof dialog.showModal !== 'function') {
       console.warn('StudyArc: Confirmation dialog is unavailable.');
@@ -6169,11 +6181,35 @@
     const cancelBtn = document.getElementById('confirm-dialog-cancel');
     const trashIcon = document.getElementById('confirm-dialog-icon-trash');
     const warningIcon = document.getElementById('confirm-dialog-icon-warning');
+    const pillsEl = document.getElementById('confirm-dialog-pills');
+    const pillTask = document.getElementById('confirm-pill-task');
+    const pillDate = document.getElementById('confirm-pill-date');
+    const pillTime = document.getElementById('confirm-pill-time');
+    const pillDuration = document.getElementById('confirm-pill-duration');
+    const pillXp = document.getElementById('confirm-pill-xp');
+    const pillRowTask = document.getElementById('confirm-pill-row-task');
+    const pillRowDate = document.getElementById('confirm-pill-row-date');
+    const pillRowStats = document.getElementById('confirm-pill-row-stats');
 
     const isReset = variant === 'reset';
+    const hasPills = !!(pills && (pills.task || pills.date || pills.time || pills.duration || pills.xp));
 
     if (titleEl) titleEl.textContent = title;
-    if (messageEl) messageEl.textContent = message;
+    if (messageEl) {
+      messageEl.textContent = message;
+      messageEl.classList.toggle('hidden', hasPills);
+    }
+    if (pillsEl) pillsEl.classList.toggle('hidden', !hasPills);
+    if (hasPills) {
+      const hasTask = setConfirmPill(pillTask, pills.task);
+      const hasDate = setConfirmPill(pillDate, pills.date);
+      const hasTime = setConfirmPill(pillTime, pills.time);
+      const hasDuration = setConfirmPill(pillDuration, pills.duration);
+      const hasXp = setConfirmPill(pillXp, pills.xp);
+      setConfirmPillRow(pillRowTask, hasTask);
+      setConfirmPillRow(pillRowDate, hasDate || hasTime);
+      setConfirmPillRow(pillRowStats, hasDuration || hasXp);
+    }
     if (confirmBtn) confirmBtn.textContent = confirmLabel;
     if (trashIcon) trashIcon.classList.toggle('hidden', isReset);
     if (warningIcon) warningIcon.classList.toggle('hidden', !isReset);
@@ -6261,21 +6297,21 @@
     const card = btn.closest('.day-session-card, .history-session-card');
     const duration = parseInt(card?.getAttribute('data-duration') || '', 10) || 0;
     const subject = card?.querySelector('.day-session-subject, .history-session-subject')?.textContent?.trim() || '';
+    const taskNote = card?.querySelector('.history-session-task')?.textContent?.trim() || '';
+    const timeRange = card?.querySelector('.day-session-timerange, .history-session-timerange')?.textContent?.trim() || '';
+    const xpText = card?.querySelector('.day-session-xp, .history-session-xp')?.textContent?.trim() || '';
     const dateLabel = dateStr ? formatDayDateHeader(dateStr) : '';
 
-    let descriptor = 'This session';
-    if (duration > 0 && subject) {
-      descriptor = `This ${duration}-minute "${subject}" session`;
-    } else if (duration > 0) {
-      descriptor = `This ${duration}-minute session`;
-    } else if (subject) {
-      descriptor = `This "${subject}" session`;
-    }
-
     return {
-      title: 'Delete session?',
-      message: `${descriptor}${dateLabel ? ` from ${dateLabel}` : ''} will be permanently deleted. Your XP and streak will be recalculated.`,
-      confirmLabel: 'Delete'
+      title: 'Delete Session Permanently?',
+      confirmLabel: 'Delete',
+      pills: {
+        task: subject && subject !== 'Focus Session' ? subject : (taskNote || subject || 'Focus Session'),
+        date: dateLabel,
+        time: timeRange,
+        duration: duration > 0 ? `${duration} min` : '',
+        xp: xpText || (duration > 0 ? `+${duration} XP` : '')
+      }
     };
   }
 

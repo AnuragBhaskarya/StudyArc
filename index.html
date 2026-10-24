@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=12.17">
+  <link rel="stylesheet" href="styles.css?v=12.18">
   <script>
     (function () {
       try {
@@ -969,8 +969,21 @@
           </svg>
         </span>
         <div class="confirm-dialog-copy">
-          <h2 class="confirm-dialog-title" id="confirm-dialog-title">Delete session?</h2>
+          <h2 class="confirm-dialog-title" id="confirm-dialog-title">Delete Session Permanently?</h2>
           <p class="confirm-dialog-message" id="confirm-dialog-message"></p>
+        </div>
+      </div>
+      <div class="confirm-dialog-pills hidden" id="confirm-dialog-pills">
+        <div class="confirm-dialog-pill-row" id="confirm-pill-row-task">
+          <span class="confirm-dialog-pill confirm-pill-task" id="confirm-pill-task"></span>
+        </div>
+        <div class="confirm-dialog-pill-row" id="confirm-pill-row-date">
+          <span class="confirm-dialog-pill confirm-pill-date" id="confirm-pill-date"></span>
+          <span class="confirm-dialog-pill confirm-pill-time" id="confirm-pill-time"></span>
+        </div>
+        <div class="confirm-dialog-pill-row" id="confirm-pill-row-stats">
+          <span class="confirm-dialog-pill confirm-pill-duration" id="confirm-pill-duration"></span>
+          <span class="confirm-dialog-pill confirm-pill-xp" id="confirm-pill-xp"></span>
         </div>
       </div>
       <div class="confirm-dialog-actions">
@@ -989,7 +1002,7 @@
   <!-- JAVASCRIPT LOGIC (Local zero-latency assets, resilient against CDN outages and content blockers) -->
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
-  <script src="app.js?v=12.17"></script>
+  <script src="app.js?v=12.18"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

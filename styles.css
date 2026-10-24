@@ -2147,6 +2147,66 @@ input:checked + .switch-slider:before {
   color: #94a3b8;
 }
 
+.confirm-dialog-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.confirm-dialog-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.confirm-dialog-pill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 0.28rem 0.62rem;
+  border-radius: 9999px;
+  border: 1px solid;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.confirm-pill-task {
+  color: #6ee7a5;
+  background: rgba(16, 224, 104, 0.08);
+  border-color: rgba(16, 224, 104, 0.24);
+  border-radius: 9px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.confirm-pill-date {
+  color: #7dd3fc;
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.24);
+}
+
+.confirm-pill-time {
+  color: #c4b5fd;
+  background: rgba(167, 139, 250, 0.09);
+  border-color: rgba(167, 139, 250, 0.26);
+}
+
+.confirm-pill-duration {
+  color: #fcd34d;
+  background: rgba(245, 158, 11, 0.09);
+  border-color: rgba(245, 158, 11, 0.26);
+}
+
+.confirm-pill-xp {
+  color: #f9a8d4;
+  background: rgba(244, 114, 182, 0.08);
+  border-color: rgba(244, 114, 182, 0.24);
+}
+
 .confirm-dialog-actions {
   display: flex;
   justify-content: flex-end;
