@@ -2269,11 +2269,14 @@
       // Accelerate background matrix stream and elongate boxes as hold progresses!
       matrixStreamEngine?.setHolding(true, progress);
 
-      // 1. The green timer arc visibly drains to empty over DRAIN_MS!
-      const visualSeconds = Math.max(0, holdStartRemaining * (1 - progress));
-      updateTimerRing(visualSeconds);
+      // 1. The circular ring timer drains with an accelerating ease-in curve:
+      // Starts gently and crawls, then accelerates faster and faster into 0!
+      const ringDrainRatio = Math.pow(progress, 2.3);
+      const ringVisualSeconds = Math.max(0, holdStartRemaining * (1 - ringDrainRatio));
+      updateTimerRing(ringVisualSeconds);
 
       // 2. The countdown numbers visibly decrease with smooth rolling animation in real-time!
+      const visualSeconds = Math.max(0, holdStartRemaining * (1 - progress));
       updateDigitalDisplay(visualSeconds);
 
       if (progress >= 1) {
