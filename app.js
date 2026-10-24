@@ -1399,9 +1399,10 @@
   /* ==========================================================================
      ULTRA-OPTIMIZED FLOATING HEATMAP MATRIX STREAM ENGINE
      - 0.0% CPU overhead, zero allocations in RAF loop
-     - 56 smaller GitHub contribution cells continuously drifting upward
-     - Dynamic momentum physics: rockets upward during hold, decelerates forward on release
-     - True velocity-stretch & thinning (never snaps or moves backward)
+     - 58 smaller GitHub contribution cells continuously drifting upward
+     - Dynamic momentum physics: rockets upward during hold (up to 12x), decelerates forward on release
+     - Velocity-matched stretch (up to 8.5x) & sleek thinning (never snaps or moves backward)
+     - Dynamic spawn storm: streams extra burst boxes during hold, draining naturally on release
      - 1.4s smooth chromatic shift between vibrant greens (running) & warm ambers (paused)
      - Flank clustering: left (2.5%-26.5%) & right (73.5%-97.5%), leaving timer dial 100% clean
      ========================================================================== */
@@ -1425,6 +1426,11 @@
       this.targetSpeed = 0.45;
       this.isHolding = false;
       this.holdProgress = 0;
+
+      // Particle density limits
+      const isMobile = window.innerWidth < 680;
+      this.baseCount = isMobile ? 38 : 58;
+      this.maxHoldCount = isMobile ? 80 : 125;
 
       // Color transition factor: 0.0 = Green (running), 1.0 = Amber (paused/stopped)
       this.currentAmber = 1.0;
@@ -1461,6 +1467,10 @@
       this.width = window.innerWidth;
       this.height = window.innerHeight;
       this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const isMobile = this.width < 680;
+      this.baseCount = isMobile ? 38 : 58;
+      this.maxHoldCount = isMobile ? 80 : 125;
+
       if (!this.canvas) return;
       this.canvas.width = Math.round(this.width * this.dpr);
       this.canvas.height = Math.round(this.height * this.dpr);
@@ -1472,16 +1482,13 @@
     }
 
     initParticles() {
-      const isMobile = this.width < 680;
-      const count = isMobile ? 36 : 56; // Denser filling of spaces
-      this.particles = new Array(count);
-
-      for (let i = 0; i < count; i++) {
+      this.particles = new Array(this.baseCount);
+      for (let i = 0; i < this.baseCount; i++) {
         this.particles[i] = this.createParticle(true);
       }
     }
 
-    createParticle(initial = false) {
+    createParticle(initial = false, isHoldBurst = false) {
       // 50% left flank (2.5% to 26.5%), 50% right flank (73.5% to 97.5%)
       const isLeft = Math.random() < 0.5;
       const xMin = isLeft ? this.width * 0.025 : this.width * 0.735;
@@ -1489,19 +1496,25 @@
       const x = xMin + Math.random() * (xMax - xMin);
 
       // Initial load: distributed across entire screen so flanks are immediately filled
-      // Respawn: spawns in lower-mid section (58% to 88% height)
-      const y = initial
-        ? Math.random() * this.height
-        : this.height * (0.58 + Math.random() * 0.30);
+      // Hold burst: spawns from bottom flank (68% to 96% height) to create an upward rush
+      // Regular respawn: spawns in lower-mid section (58% to 88% height)
+      let y;
+      if (initial) {
+        y = Math.random() * this.height;
+      } else if (isHoldBurst) {
+        y = this.height * (0.68 + Math.random() * 0.28);
+      } else {
+        y = this.height * (0.58 + Math.random() * 0.30);
+      }
 
-      // Smaller GitHub tile proportions (~1:1.35)
+      // Smaller authentic GitHub tile proportions (~1:1.35)
       // Width: 7.5px to 10px, Height: 10.5px to 14px
       const sizeIndex = Math.floor(Math.random() * 4);
       const w = 7.5 + sizeIndex * 0.8;
       const h = 10.5 + sizeIndex * 1.1;
 
-      // Upward drift base speed
-      const speed = 0.65 + Math.random() * 0.75; // px per frame at 60fps
+      // Upward drift base speed (extra velocity diversity during hold burst)
+      const speed = (isHoldBurst ? 0.95 : 0.65) + Math.random() * 0.85;
 
       // Level (0 to 3)
       const level = Math.floor(Math.random() * 4);
@@ -1514,7 +1527,7 @@
         speed,
         level,
         spawnY: y,
-        r: 2.2 // corner radius
+        r: 2.2
       };
     }
 
@@ -1528,8 +1541,8 @@
       this.isHolding = isHolding;
       this.holdProgress = progress;
       if (isHolding) {
-        // Rocket speed during hold (accelerating up to 4.5x!)
-        this.targetSpeed = 1.0 + progress * 3.5;
+        // High-velocity rocket speed matching stretch (ramping up to 12.0x!)
+        this.targetSpeed = 1.0 + progress * 11.0;
       } else {
         // Decelerate smoothly forward to current timer state speed
         this.targetSpeed = this.targetAmber === 0.0 ? 1.0 : 0.45;
@@ -1562,28 +1575,42 @@
       const dt = Math.min((now - this.lastTime) / 16.667, 2.0) || 1.0;
       this.lastTime = now;
 
-      // Smooth speed inertia: fast acceleration when holding, gentle forward coasting on release
-      const speedLerp = this.isHolding ? 0.14 : 0.038;
+      // Rapid acceleration when holding, gentle forward coasting on release
+      const speedLerp = this.isHolding ? 0.16 : 0.035;
       this.currentSpeed += (this.targetSpeed - this.currentSpeed) * speedLerp * dt;
 
       // Smooth color metamorphosis between green and amber (1.4s)
       this.currentAmber += (this.targetAmber - this.currentAmber) * 0.032 * dt;
 
-      // Speed ratio for stretch & thinning
-      const speedRatio = Math.max(0, (this.currentSpeed - 1.0) / 3.5);
-      const stretchY = 1.0 + speedRatio * 3.4; // Stretches upwards up to 4.4x!
-      const stretchX = 1.0 / Math.sqrt(stretchY); // Thins out horizontally!
+      // Speed ratio for stretch & thinning (matched 1:1 with 12x top speed!)
+      const speedRatio = Math.max(0, (this.currentSpeed - 1.0) / 11.0);
+      const stretchY = 1.0 + speedRatio * 7.5; // Stretches upwards up to 8.5x height!
+      const stretchX = Math.max(0.42, 1.0 / Math.sqrt(stretchY)); // Thins out sleekly!
 
-      const count = this.particles.length;
-      for (let i = 0; i < count; i++) {
+      // DYNAMIC HOLD SPAWN BURST: Stream extra particles from below while holding!
+      if (this.isHolding && this.particles.length < this.maxHoldCount) {
+        const burst = Math.min(2, this.maxHoldCount - this.particles.length);
+        for (let b = 0; b < burst; b++) {
+          this.particles.push(this.createParticle(false, true));
+        }
+      }
+
+      for (let i = 0; i < this.particles.length; i++) {
         const p = this.particles[i];
 
         // Physics integration: ALWAYS moves upward! Never decreases speed backwards!
         p.y -= p.speed * this.currentSpeed * dt;
 
-        // When leaving off the top (-40px), respawn cleanly in the lower-mid section
-        if (p.y < -40) {
-          this.particles[i] = this.createParticle(false);
+        // When leaving off the top (-50px)
+        if (p.y < -50) {
+          if (this.particles.length > this.baseCount && !this.isHolding) {
+            // Natural drain: extra hold burst particles exit off the top without respawning
+            this.particles.splice(i, 1);
+            i--;
+            continue;
+          } else {
+            this.particles[i] = this.createParticle(false);
+          }
         }
       }
 
@@ -1639,7 +1666,7 @@
 
         const radius = Math.min(drawW * 0.45, p.r * stretchX);
 
-        // Draw rounded rectangle
+        // Draw rounded rectangle with zero CPU overhead
         ctx.beginPath();
         if (ctx.roundRect) {
           ctx.roundRect(drawX, drawY, drawW, drawH, radius);
