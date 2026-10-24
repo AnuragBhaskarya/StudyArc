@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=10.5">
+  <link rel="stylesheet" href="styles.css?v=10.6">
   <script>
     (function () {
       try {
@@ -297,9 +297,17 @@
 
         <!-- COMPACT MONTHLY ACTIVITY HEATMAP CARD -->
         <div class="heatmap-card" aria-label="Activity Consistency Heatmap">
-          <!-- Heatmap Viewport (Weekdays column + multi-month grid) -->
+          <!-- Heatmap Viewport (multi-month grid with weekday overlay) -->
           <div class="heatmap-body-wrap">
-            <div class="heatmap-weekdays" aria-hidden="true">
+            <div class="heatmap-scroll-area" id="heatmap-scroll-area">
+              <div class="heatmap-track" id="heatmap-track">
+                <!-- Dynamically populated accurate monthly calendar blocks with sticky year by app.js -->
+              </div>
+            </div>
+
+            <!-- Weekday labels float above the track at the left edge; the
+                 gradient fades the timeline into the page background. -->
+            <div class="heatmap-weekday-overlay" aria-hidden="true">
               <span class="weekday-label">M</span>
               <span class="weekday-label">T</span>
               <span class="weekday-label">W</span>
@@ -307,12 +315,6 @@
               <span class="weekday-label">F</span>
               <span class="weekday-label">S</span>
               <span class="weekday-label">S</span>
-            </div>
-
-            <div class="heatmap-scroll-area" id="heatmap-scroll-area">
-              <div class="heatmap-track" id="heatmap-track">
-                <!-- Dynamically populated accurate monthly calendar blocks with sticky year by app.js -->
-              </div>
             </div>
           </div>
         </div>
