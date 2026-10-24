@@ -1235,12 +1235,39 @@ body.is-dragging .timer-bead-rim {
 
 /* Heatmap Body Wrap */
 .heatmap-body-wrap {
+  --hm-pad-left: 48px;
+  --hm-pad-right: 16px;
   display: flex;
   align-items: flex-start;
   gap: 0;
   overflow: visible;
   width: 100%;
   position: relative;
+}
+
+/* Fixed year label above the month labels. It is updated from the first
+   visible month during scroll, so it costs no per-year DOM or observers. */
+.heatmap-year-float {
+  position: absolute;
+  top: 4px;
+  left: var(--hm-pad-left, 48px);
+  z-index: 13;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.heatmap-year-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  height: 16px;
+  line-height: 16px;
+  padding: 0 2px;
+  user-select: none;
 }
 
 /* Weekday labels overlay the track at the extreme left. The gradient is an
@@ -1279,7 +1306,8 @@ body.is-dragging .timer-bead-rim {
   justify-content: center;
 }
 
-/* Scroll area without scrollbar and with snappy month snapping to end */
+/* Native free scroll: no snap work during momentum, no scroll listeners doing
+   layout, just one rAF-coalesced window update. */
 .heatmap-scroll-area {
   flex: 1;
   overflow-x: auto;
@@ -1288,8 +1316,6 @@ body.is-dragging .timer-bead-rim {
   -ms-overflow-style: none; /* IE and Edge */
   padding: 36px 0 72px 0;
   margin: -36px 0 -72px 0;
-  scroll-snap-type: x mandatory;
-  scroll-padding-inline-end: 16px;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
 }
@@ -1300,16 +1326,16 @@ body.is-dragging .timer-bead-rim {
   height: 0;
 }
 
-/* Heatmap Track: Open layout without container background */
+/* The track is sized to the full history width by JS. It stays a single
+   element; only a fixed 18-month ring of blocks lives inside the content. */
 .heatmap-track {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--hm-year-gap, 32px);
-  width: max-content;
-  /* 48px left keeps the first column clear of the 40px fade overlay.
-     16px right provides comfortable breathing room matching the month gap so
-     the last month doesn't stick directly against the screen edge. */
-  padding: 4px 16px 48px 48px;
+  position: relative;
+  box-sizing: content-box;
+  height: 138px;
+  width: 0;
+  /* Top 26px is the year + month label strip. 48px left keeps the first
+     column clear of the weekday fade overlay; 16px right gives breathing room. */
+  padding: 26px var(--hm-pad-right, 16px) 48px var(--hm-pad-left, 48px);
   background: transparent;
   border: none;
   border-radius: 0;
@@ -1318,76 +1344,27 @@ body.is-dragging .timer-bead-rim {
   overflow: visible;
 }
 
-/* Year Grouping & Sticky Horizontal Year Text at Jan */
-.year-group {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  flex-shrink: 0;
-  gap: 6px;
-  overflow: visible;
-}
-
-.year-sticky-header {
-  position: sticky;
-  /* Keep the year clear of the 40px left fade. It sits in the empty header
-     strip above the month labels, so it never covers any cells. */
-  left: 48px;
-  z-index: 4;
-  height: 16px;
-  display: flex;
-  align-items: center;
+.heatmap-virtual-content {
+  position: absolute;
+  top: 26px;
+  left: var(--hm-pad-left, 48px);
+  height: 138px;
   pointer-events: none;
-  width: max-content;
 }
 
-.year-sticky-badge {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  height: 16px;
-  line-height: 16px;
-  text-align: center;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 0 2px;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  pointer-events: auto;
-  user-select: none;
-}
-
-.year-months-wrap {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--hm-month-gap, 12px);
-  overflow: visible;
-}
-
-/* Each Month as an accurate, self-contained calendar grouping snapped to the end */
+/* Blocks are absolutely positioned from the precomputed month index. No flex
+   reflow and no interlocking margins; x already includes the tuck-in gap. */
 .month-block {
+  position: absolute;
+  top: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex-shrink: 0;
-  scroll-snap-align: end;
-  scroll-snap-stop: normal;
   align-items: center;
-  position: relative;
+  flex-shrink: 0;
   pointer-events: none; /* Allows click events to pass through seamlessly to underlying cells */
   overflow: visible;
   width: calc(var(--month-cols, 5) * (var(--hm-cell-size, 13.5px) + var(--hm-col-gap, 3.5px)) - var(--hm-col-gap, 3.5px));
-  min-width: calc(var(--month-cols, 5) * (var(--hm-cell-size, 13.5px) + var(--hm-col-gap, 3.5px)) - var(--hm-col-gap, 3.5px));
-  min-height: 138px;
-}
-
-/* Interlocking puzzle transition: offsets spacer column so gap is measured uniformly between valid cells */
-.month-block.month-interlocked {
-  margin-left: calc(-1 * (var(--hm-cell-size, 13.5px) + var(--hm-col-gap, 3.5px)));
 }
 
 .month-label {
@@ -1427,13 +1404,21 @@ body.is-dragging .timer-bead-rim {
   overflow: visible;
 }
 
+/* Unused columns are layout-free. The fixed block builds 6 columns once and
+   hides extras instead of adding/removing children while scrolling. */
+.week-col.is-hidden {
+  display: none;
+}
+
 /* Cells */
 .cell {
   width: var(--hm-cell-size, 13.5px);
   height: var(--hm-cell-size, 13.5px);
   border-radius: 3.5px;
   background-color: var(--lvl-0);
-  transition: transform 120ms ease, background-color 140ms ease;
+  /* Only hover transforms animate. Backgrounds update instantly when a ring
+     block is reused, avoiding hundreds of concurrent color transitions. */
+  transition: transform 120ms ease;
   cursor: pointer;
   flex-shrink: 0;
   position: relative;
@@ -1475,77 +1460,8 @@ body.is-dragging .timer-bead-rim {
   box-shadow: 0 0 6px rgba(78, 250, 143, 0.45);
 }
 
-/* ==========================================================================
-   PURE CSS HARDWARE-ACCELERATED HEATMAP CELL REVEAL
-   Unfolds each column's cells from the middle row using pure CSS math & keyframes.
-   Runs 100% on the GPU compositor thread with 0 JavaScript overhead.
-   ========================================================================== */
-@keyframes hmCellReveal {
-  0% {
-    opacity: 0;
-    transform: translate3d(16px, var(--row-offset, 0px), 0) scale3d(0.68, 0.68, 1);
-  }
-  60% {
-    opacity: 1;
-    transform: translate3d(-1px, var(--row-overshoot, 0px), 0) scale3d(1.035, 1.035, 1);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
-  }
-}
-
-/* Pre-calculated row mathematical indices and accordion offsets:
-   Row 0 (Mon): distance 3, offset +35px towards center, overshoot -2.8px
-   Row 1 (Tue): distance 2, offset +23px towards center, overshoot -1.8px
-   Row 2 (Wed): distance 1, offset +12px towards center, overshoot -1.0px
-   Row 3 (Thu): distance 0, offset 0px (center), overshoot 0px
-   Row 4 (Fri): distance 1, offset -12px towards center, overshoot +1.0px
-   Row 5 (Sat): distance 2, offset -23px towards center, overshoot +1.8px
-   Row 6 (Sun): distance 3, offset -35px towards center, overshoot +2.8px
-*/
-.week-col > .cell:nth-child(1) { --row-offset: 35px;  --row-overshoot: -2.8px; --center-dist: 3; }
-.week-col > .cell:nth-child(2) { --row-offset: 23px;  --row-overshoot: -1.8px; --center-dist: 2; }
-.week-col > .cell:nth-child(3) { --row-offset: 12px;  --row-overshoot: -1.0px; --center-dist: 1; }
-.week-col > .cell:nth-child(4) { --row-offset: 0px;   --row-overshoot: 0px;    --center-dist: 0; }
-.week-col > .cell:nth-child(5) { --row-offset: -12px; --row-overshoot: 1.0px;  --center-dist: 1; }
-.week-col > .cell:nth-child(6) { --row-offset: -23px; --row-overshoot: 1.8px;  --center-dist: 2; }
-.week-col > .cell:nth-child(7) { --row-offset: -35px; --row-overshoot: 2.8px;  --center-dist: 3; }
-
-/* Pure CSS week column cascade */
-.month-weeks > .week-col:nth-child(1) { --col-idx: 0; }
-.month-weeks > .week-col:nth-child(2) { --col-idx: 1; }
-.month-weeks > .week-col:nth-child(3) { --col-idx: 2; }
-.month-weeks > .week-col:nth-child(4) { --col-idx: 3; }
-.month-weeks > .week-col:nth-child(5) { --col-idx: 4; }
-.month-weeks > .week-col:nth-child(6) { --col-idx: 5; }
-
-/* Unrevealed pre-scroll state: cells reset instantly with ZERO off-screen transition */
-.week-col:not(.is-revealed) > .cell:not(.cell-spacer) {
-  opacity: 0;
-  transform: translate3d(16px, var(--row-offset, 0px), 0) scale3d(0.68, 0.68, 1);
-  pointer-events: none;
-  transition: none !important;
-}
-
-/* Revealed state: triggers hardware-accelerated CSS keyframes on GPU */
-.week-col.is-revealed > .cell:not(.cell-spacer) {
-  animation: hmCellReveal 400ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
-  animation-delay: calc(var(--col-idx, 0) * 16ms + var(--center-dist, 0) * 12ms);
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
-  pointer-events: auto;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .week-col:not(.is-revealed) > .cell:not(.cell-spacer),
-  .week-col.is-revealed > .cell:not(.cell-spacer) {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-    pointer-events: auto !important;
-  }
-}
+/* Month reveal is a single compositor animation per visible month, triggered
+   only after scrolling settles (see revealVisibleHeatmapMonths in app.js). */
 
 
 /* Tooltip */
@@ -2109,17 +2025,9 @@ input:checked + .switch-slider:before {
     margin-right: calc(-1rem - env(safe-area-inset-right, 0px));
   }
 
-  .heatmap-track {
-    padding-left: calc(48px + env(safe-area-inset-left, 0px));
-    padding-right: calc(16px + env(safe-area-inset-right, 0px));
-  }
-
-  .heatmap-scroll-area {
-    scroll-padding-inline-end: calc(16px + env(safe-area-inset-right, 0px));
-  }
-
-  .year-sticky-header {
-    left: calc(48px + env(safe-area-inset-left, 0px));
+  .heatmap-body-wrap {
+    --hm-pad-left: calc(48px + env(safe-area-inset-left, 0px));
+    --hm-pad-right: calc(16px + env(safe-area-inset-right, 0px));
   }
 
   .heatmap-weekday-overlay {

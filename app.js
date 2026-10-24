@@ -193,11 +193,8 @@
             renderHeatmap();
           }
 
-          if (window.requestIdleCallback) {
-            window.requestIdleCallback(() => warmUpSessionCaches());
-          } else {
-            setTimeout(warmUpSessionCaches, 60);
-          }
+          // History indexes are built lazily when a history view first asks
+          // for them. Eager warmup created a long task after every sync.
 
           // Start multi-device real-time SSE stream
           initRealtimeTimerSync();
@@ -658,6 +655,10 @@
     const dialog = document.getElementById('auth-dialog');
     if (!dialog) return;
 
+    // The blurred backdrop over a live full-screen canvas is expensive to
+    // recomposite. Stop ambient rendering while the auth gate is open.
+    pauseAmbientCanvas();
+
     // Clear error messages
     const loginError = document.getElementById('login-error-msg');
     const registerError = document.getElementById('register-error-msg');
@@ -698,6 +699,9 @@
         window.AuthModalDots.stop();
       }
     }
+
+    // Resume the ambient canvas only when no other modal is still open.
+    resumeAmbientCanvas();
   }
 
   function switchAuthTab(tab) {
@@ -1500,20 +1504,10 @@
 
       this.baseAlphas = [0.70, 0.82, 0.90, 0.98];
 
-      // Pre-computed string prefixes for 0-math fast paths
-      this.greenPrefixes = [
-        'rgba(13,46,24,',
-        'rgba(19,79,42,',
-        'rgba(31,152,81,',
-        'rgba(16,224,104,'
-      ];
-
-      this.amberPrefixes = [
-        'rgba(46,31,9,',
-        'rgba(77,51,13,',
-        'rgba(140,92,21,',
-        'rgba(229,169,88,'
-      ];
+      // Opaque palette strings used with ctx.globalAlpha. This avoids
+      // building a fresh rgba()/toFixed() string for every particle.
+      this.greenSolid = this.greenRgb.map(c => `rgb(${c[0]},${c[1]},${c[2]})`);
+      this.amberSolid = this.amberRgb.map(c => `rgb(${c[0]},${c[1]},${c[2]})`);
 
       this.resize();
       this.initParticles();
@@ -1641,11 +1635,19 @@
       if (document.documentElement.classList.contains('aura-disabled')) return;
       this.isRunning = true;
       this.lastTime = performance.now();
+      this.lastRenderTime = this.lastTime;
 
       this.tick = (now) => {
         if (!this.isRunning) return;
-        this.update(now);
-        this.draw();
+
+        // Ambient rendering is decorative: 30 FPS is visually identical for
+        // slow drifting tiles and halves canvas/paint work on every device.
+        if (now - this.lastRenderTime >= 32) {
+          this.lastRenderTime = now;
+          this.update(now);
+          this.draw();
+        }
+
         if (this.isRunning) {
           this.rafId = requestAnimationFrame(this.tick);
         }
@@ -1754,16 +1756,16 @@
         if (fadeAlpha <= 0.015) continue;
 
         const lvl = p.level;
-        const alphaStr = (this.baseAlphas[lvl] * fadeAlpha).toFixed(2);
+        ctx.globalAlpha = this.baseAlphas[lvl] * fadeAlpha;
 
         // COLOR SHIFT LOGIC (Ultra-low compute power):
         // 1. Play state OR bottom 20% (p.y >= shiftStart): ALWAYS pure green!
         if (isPlayState || p.y >= shiftStart) {
-          ctx.fillStyle = this.greenPrefixes[lvl] + alphaStr + ')';
+          ctx.fillStyle = this.greenSolid[lvl];
         }
         // 2. Full amber paused state AND above transition zone (p.y <= shiftEnd): direct pure amber!
         else if (isFullAmber && p.y <= shiftEnd) {
-          ctx.fillStyle = this.amberPrefixes[lvl] + alphaStr + ')';
+          ctx.fillStyle = this.amberSolid[lvl];
         }
         // 3. Shifting between green and amber (moving upward through transition zone or during state change)
         else {
@@ -1774,7 +1776,7 @@
           const r = (g[0] + d[0] * t) | 0;
           const greenVal = (g[1] + d[1] * t) | 0;
           const b = (g[2] + d[2] * t) | 0;
-          ctx.fillStyle = `rgba(${r},${greenVal},${b},${alphaStr})`;
+          ctx.fillStyle = `rgb(${r},${greenVal},${b})`;
         }
 
         const drawW = (p.w * stretchX) | 0;
@@ -1784,6 +1786,8 @@
 
         ctx.fillRect(drawX, drawY, drawW, drawH);
       }
+
+      ctx.globalAlpha = 1;
     }
   }
 
@@ -1956,7 +1960,6 @@
     });
   }
 
-  let tickCounter = 0;
   function handleTimerTick() {
     if (state.timer.status !== 'running') return;
     if (isCenterPadHolding) return;
@@ -1969,10 +1972,9 @@
       renderTimer();
     }
 
-    tickCounter++;
-    if (tickCounter % 20 === 0 && !document.hidden) {
-      saveState();
-    }
+    // The persisted timer is intentionally stored as idle, so the old
+    // 5-second full-state localStorage rewrite saved identical data while the
+    // timer ran. Every real state change already calls saveState().
   }
 
   async function logSession(minutesCompleted, subjectName = null) {
@@ -2777,23 +2779,37 @@
     { mins: 240, r: 78,  g: 250, b: 143 }  // #4EFA8F (4.0h+ peak highest focus: radiant neon green)
   ];
 
+  // Color results are immutable and reused across ring-buffer repaints.
+  const HEATMAP_COLOR_CACHE_LIMIT = 2048;
+  const heatmapColorCache = new Map();
+
   // Mathematical smooth-step interpolation yielding a distinct, flexible shade per minute
   function getHeatmapCellColor(minutes, customPeak = 240) {
-    if (!minutes || minutes <= 0) {
-      return { color: 'rgb(18, 24, 21)', level: 0, isPeak: false };
+    const peakMins = Math.max(60, customPeak || DEFAULT_PEAK_MINUTES);
+    const safeMinutes = Math.max(0, Math.floor(Number(minutes) || 0));
+    const cacheKey = `${peakMins}:${safeMinutes}`;
+    const cached = heatmapColorCache.get(cacheKey);
+    if (cached) return cached;
+
+    if (safeMinutes <= 0) {
+      const empty = { color: 'rgb(18, 24, 21)', level: 0, isPeak: false };
+      heatmapColorCache.set(cacheKey, empty);
+      return empty;
     }
 
-    const peakMins = Math.max(60, customPeak || DEFAULT_PEAK_MINUTES);
     // Scale minutes proportionally to the 240-minute reference stops
-    const scaledMins = Math.min(240, (minutes / peakMins) * 240);
+    const scaledMins = Math.min(240, (safeMinutes / peakMins) * 240);
 
-    if (scaledMins >= 240 || minutes >= peakMins) {
+    if (scaledMins >= 240 || safeMinutes >= peakMins) {
       const peak = HEATMAP_COLOR_STOPS[HEATMAP_COLOR_STOPS.length - 1];
-      return {
+      const result = {
         color: `rgb(${peak.r}, ${peak.g}, ${peak.b})`,
         level: 9,
         isPeak: true
       };
+      if (heatmapColorCache.size >= HEATMAP_COLOR_CACHE_LIMIT) heatmapColorCache.clear();
+      heatmapColorCache.set(cacheKey, result);
+      return result;
     }
 
     for (let i = 0; i < HEATMAP_COLOR_STOPS.length - 1; i++) {
@@ -2807,268 +2823,403 @@
         const g = Math.round(s1.g + easeT * (s2.g - s1.g));
         const b = Math.round(s1.b + easeT * (s2.b - s1.b));
         const level = Math.min(9, Math.max(1, i + (t > 0.5 ? 1 : 0)));
-        return {
+        const result = {
           color: `rgb(${r}, ${g}, ${b})`,
           level: level,
           isPeak: scaledMins >= 225
         };
+        if (heatmapColorCache.size >= HEATMAP_COLOR_CACHE_LIMIT) heatmapColorCache.clear();
+        heatmapColorCache.set(cacheKey, result);
+        return result;
       }
     }
 
-    return { color: 'rgb(18, 24, 21)', level: 0, isPeak: false };
+    const fallback = { color: 'rgb(18, 24, 21)', level: 0, isPeak: false };
+    heatmapColorCache.set(cacheKey, fallback);
+    return fallback;
   }
 
   // =========================================================================
-  // VIRTUALIZED HEATMAP DOM POOL & SMART INFINITE SCROLL
-  // Recycled element pooling + 2-tier IntersectionObserver (Mount Buffer & Reveal Viewport)
-  // Ensures <350 cells in DOM regardless of 10+ years history. 0% GC thrashing, 60 FPS smooth.
+  // HEATMAP VIRTUALIZER — O(VIEWPORT) DOM, O(1) WITH HISTORY LENGTH
+  // One fixed ring of month blocks is positioned by a prefix-sum month index.
+  // There are no per-month observers, no skeleton fleet, and no cell animations.
   // =========================================================================
-  const monthWeeksPool = {
-    4: [],
-    5: [],
-    6: []
+  const HEATMAP_RING_SIZE = 18;
+  const HEATMAP_REVEAL_IDLE_MS = 110;
+  const HEATMAP_REVEAL_MIN_DISTANCE = 18;
+
+  const heatmapState = {
+    months: [],
+    contentWidth: 0,
+    rangeKey: '',
+    metricsKey: '',
+    blockPool: [],
+    activeBlocks: new Map(),
+    firstVisible: 0,
+    start: -1,
+    padLeft: 48,
+    scrollRaf: 0,
+    settleTimer: 0,
+    isScrolling: false,
+    revealAnimations: [],
+    lastRevealScrollLeft: -1e9
   };
 
-  let heatmapMountObserver = null;
-  let heatmapRevealObserver = null;
-
-  function cleanupHeatmapObservers() {
-    if (heatmapMountObserver) {
-      heatmapMountObserver.disconnect();
-      heatmapMountObserver = null;
-    }
-    if (heatmapRevealObserver) {
-      heatmapRevealObserver.disconnect();
-      heatmapRevealObserver = null;
-    }
+  function getHeatmapMetrics() {
+    const styles = getComputedStyle(document.documentElement);
+    const cellSize = parseFloat(styles.getPropertyValue('--hm-cell-size')) || 13.5;
+    const colGap = parseFloat(styles.getPropertyValue('--hm-col-gap')) || 3.5;
+    const monthGap = parseFloat(styles.getPropertyValue('--hm-month-gap')) || 12;
+    const yearGap = parseFloat(styles.getPropertyValue('--hm-year-gap')) || 32;
+    return {
+      cellSize,
+      colGap,
+      monthGap,
+      yearGap,
+      step: cellSize + colGap
+    };
   }
 
-  function acquireMonthWeeks(numCols) {
-    const pool = monthWeeksPool[numCols] || (monthWeeksPool[numCols] = []);
-    if (pool.length > 0) {
-      return pool.pop();
+  function computeHeatmapRange() {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    // Show the current year plus at least the previous year, even for a new account.
+    let earliestYear = currentYear - 1;
+    const activity = state.dayActivity;
+    if (activity) {
+      const keys = Object.keys(activity);
+      for (let i = 0; i < keys.length; i++) {
+        const y = parseInt(keys[i].slice(0, 4), 10);
+        if (!isNaN(y) && y < earliestYear) earliestYear = y;
+      }
     }
-    const weeksWrap = document.createElement('div');
-    weeksWrap.className = 'month-weeks';
-    for (let c = 0; c < numCols; c++) {
+
+    return { currentYear, currentMonth, earliestYear };
+  }
+
+  function buildHeatmapMonths(metrics, range) {
+    const months = [];
+    let x = 0;
+    let previousYear = null;
+
+    for (let year = range.earliestYear; year <= range.currentYear; year++) {
+      const endMonth = (year === range.currentYear) ? range.currentMonth : 11;
+      for (let month = 0; month <= endMonth; month++) {
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
+        const cols = Math.ceil((firstDay + daysInMonth) / 7);
+        const width = cols * metrics.step - metrics.colGap;
+
+        if (months.length > 0) {
+          x += (year !== previousYear) ? metrics.yearGap : metrics.monthGap;
+          // The first month of each year is never interlocked. Later months
+          // tuck their leading empty week into the previous month, exactly
+          // like the original flex layout did with a negative margin.
+          if (month !== 0 && firstDay > 0) x -= metrics.step;
+        }
+
+        months.push({ year, month, firstDay, daysInMonth, cols, width, x });
+        x += width;
+        previousYear = year;
+      }
+    }
+
+    const last = months[months.length - 1];
+    return {
+      months,
+      contentWidth: last ? last.x + last.width : 0
+    };
+  }
+
+  function updateHeatmapYearLabel(year) {
+    const badge = document.getElementById('heatmap-year-badge');
+    if (badge && badge.textContent !== String(year)) {
+      badge.textContent = String(year);
+    }
+    if (state.viewedYear !== year) state.viewedYear = year;
+  }
+
+  function resetHeatmapCell(cell) {
+    if (cell.dataset.date) cell.removeAttribute('data-date');
+    if (cell.dataset.minutes) cell.removeAttribute('data-minutes');
+    if (cell.className !== 'cell cell-spacer') cell.className = 'cell cell-spacer';
+    if (cell.style.backgroundColor) cell.style.backgroundColor = '';
+    cell._heatColor = '';
+  }
+
+  function paintHeatmapCell(cell, dateStr, minutes, peakMins, todayStr) {
+    const colorInfo = getHeatmapCellColor(minutes, peakMins);
+    let cls = `cell cell-lvl-${colorInfo.level}`;
+    if (colorInfo.isPeak) cls += ' cell-peak';
+    if (dateStr === todayStr) cls += ' is-today';
+
+    if (cell.className !== cls) cell.className = cls;
+    if (cell._heatColor !== colorInfo.color) {
+      cell.style.backgroundColor = colorInfo.color;
+      cell._heatColor = colorInfo.color;
+    }
+    if (cell.dataset.date !== dateStr) cell.dataset.date = dateStr;
+    const minutesStr = String(minutes);
+    if (cell.dataset.minutes !== minutesStr) cell.dataset.minutes = minutesStr;
+  }
+
+  function createHeatmapBlock() {
+    const el = document.createElement('div');
+    el.className = 'month-block';
+    el.style.display = 'none';
+
+    const label = document.createElement('div');
+    label.className = 'month-label';
+    el.appendChild(label);
+
+    const weeks = document.createElement('div');
+    weeks.className = 'month-weeks';
+    const cells = [];
+
+    for (let c = 0; c < 6; c++) {
       const col = document.createElement('div');
       col.className = 'week-col';
-      col.style.setProperty('--col-idx', c);
-      if (c === numCols - 1) {
-        col.classList.add('last-month-col');
-      }
+      col.dataset.col = String(c);
       for (let r = 0; r < 7; r++) {
         const cell = document.createElement('div');
-        cell.className = 'cell';
+        cell.className = 'cell cell-spacer';
         cell.dataset.hmRow = String(r);
         col.appendChild(cell);
+        cells.push(cell);
       }
-      weeksWrap.appendChild(col);
+      weeks.appendChild(col);
     }
-    return weeksWrap;
+
+    el.appendChild(weeks);
+    return { el, label, weeks, cells, index: -1 };
   }
 
-  function releaseMonthWeeks(weeksWrap, numCols) {
-    const pool = monthWeeksPool[numCols] || (monthWeeksPool[numCols] = []);
-    if (pool.length < 24) {
-      const cols = weeksWrap.children;
-      for (let i = 0; i < cols.length; i++) {
-        cols[i].classList.remove('is-revealed');
-      }
-      pool.push(weeksWrap);
-    }
-  }
+  function populateHeatmapBlock(block, index) {
+    const descriptor = heatmapState.months[index];
+    if (!descriptor) return;
 
-  function populateMonthWeeks(weeksWrap, year, monthIndex, numCols) {
-    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-    const firstDayOfWeek = (new Date(year, monthIndex, 1).getDay() + 6) % 7;
     const peakMins = state.heatmapPeakMinutes || DEFAULT_PEAK_MINUTES;
     const todayStr = getLocalDateString();
 
-    let slotIndex = 0;
-    const cols = weeksWrap.children;
+    block.index = index;
+    block.el.dataset.index = String(index);
+    block.el.dataset.year = String(descriptor.year);
+    block.el.dataset.month = String(descriptor.month);
+    block.el.dataset.cols = String(descriptor.cols);
+    block.el.style.left = `${descriptor.x}px`;
+    block.el.style.setProperty('--month-cols', String(descriptor.cols));
+    block.el.style.display = '';
+    block.label.textContent = SHORT_MONTHS[descriptor.month];
 
-    for (let c = 0; c < numCols; c++) {
+    const cols = block.weeks.children;
+    for (let c = 0; c < 6; c++) {
       const col = cols[c];
-      col.classList.remove('is-revealed');
-      const cells = col.children;
+      const isVisible = c < descriptor.cols;
+      col.classList.toggle('is-hidden', !isVisible);
 
       for (let r = 0; r < 7; r++) {
-        const cell = cells[r];
-        const dayNum = slotIndex - firstDayOfWeek + 1;
-
-        if (slotIndex < firstDayOfWeek || dayNum > daysInMonth) {
-          cell.className = 'cell cell-spacer';
-          cell.removeAttribute('data-date');
-          cell.removeAttribute('data-minutes');
-          cell.style.backgroundColor = '';
-        } else {
-          const dStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-          const mins = (state.dayActivity && state.dayActivity[dStr]) || 0;
-          const colorInfo = getHeatmapCellColor(mins, peakMins);
-          const isToday = (dStr === todayStr);
-
-          let cls = `cell cell-lvl-${colorInfo.level}`;
-          if (colorInfo.isPeak) cls += ' cell-peak';
-          if (isToday) cls += ' is-today';
-
-          cell.className = cls;
-          cell.style.backgroundColor = colorInfo.color;
-          cell.dataset.date = dStr;
-          cell.dataset.minutes = String(mins);
+        const cell = block.cells[c * 7 + r];
+        if (!isVisible) {
+          resetHeatmapCell(cell);
+          continue;
         }
-        slotIndex++;
+
+        const slot = c * 7 + r;
+        const dayNum = slot - descriptor.firstDay + 1;
+        if (slot < descriptor.firstDay || dayNum > descriptor.daysInMonth) {
+          resetHeatmapCell(cell);
+          continue;
+        }
+
+        const monthStr = String(descriptor.month + 1).padStart(2, '0');
+        const dateStr = `${descriptor.year}-${monthStr}-${String(dayNum).padStart(2, '0')}`;
+        const minutes = (state.dayActivity && state.dayActivity[dateStr]) || 0;
+        paintHeatmapCell(cell, dateStr, minutes, peakMins, todayStr);
       }
     }
   }
 
-  function mountMonth(monthBlock) {
-    if (!monthBlock || monthBlock.dataset.mounted === 'true') return;
-    const year = parseInt(monthBlock.dataset.year, 10);
-    const monthIndex = parseInt(monthBlock.dataset.month, 10);
-    const numCols = parseInt(monthBlock.dataset.cols, 10);
+  function updateHeatmapWindow(force = false) {
+    const scrollArea = document.getElementById('heatmap-scroll-area');
+    if (!scrollArea || heatmapState.months.length === 0) return;
 
-    const weeksWrap = acquireMonthWeeks(numCols);
-    populateMonthWeeks(weeksWrap, year, monthIndex, numCols);
-    monthBlock.appendChild(weeksWrap);
-    monthBlock.dataset.mounted = 'true';
-  }
+    const months = heatmapState.months;
+    const relativeScroll = Math.max(0, scrollArea.scrollLeft - heatmapState.padLeft);
 
-  function unmountMonth(monthBlock) {
-    if (!monthBlock || monthBlock.dataset.mounted !== 'true') return;
-    const numCols = parseInt(monthBlock.dataset.cols, 10);
-    const weeksWrap = monthBlock.querySelector('.month-weeks');
-    if (weeksWrap) {
-      monthBlock.removeChild(weeksWrap);
-      releaseMonthWeeks(weeksWrap, numCols);
-    }
-    monthBlock.dataset.mounted = 'false';
-  }
-
-  function setMonthRevealed(monthBlock, isRevealed) {
-    if (!monthBlock) return;
-    if (isRevealed && monthBlock.dataset.mounted !== 'true') {
-      mountMonth(monthBlock);
-    }
-    const weeksWrap = monthBlock.querySelector('.month-weeks');
-    if (!weeksWrap) return;
-    const cols = weeksWrap.children;
-    for (let i = 0; i < cols.length; i++) {
-      cols[i].classList.toggle('is-revealed', isRevealed);
-    }
-  }
-
-  function initHeatmapVirtualizer(scrollArea, trackEl) {
-    cleanupHeatmapObservers();
-
-    const monthBlocks = trackEl.querySelectorAll('.month-block');
-    if (monthBlocks.length === 0) return;
-
-    if (typeof IntersectionObserver === 'undefined') {
-      monthBlocks.forEach(mb => {
-        mountMonth(mb);
-        setMonthRevealed(mb, true);
-      });
-      return;
+    // Binary search: last month whose x starts at or before the viewport.
+    let lo = 0;
+    let hi = months.length - 1;
+    let firstVisible = 0;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (months[mid].x <= relativeScroll) {
+        firstVisible = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
     }
 
-    // Tier 1: Mount Observer with 450px lookahead buffer
-    // Mounts months ahead on the fly, and frees them when scrolled away to keep memory constant
-    heatmapMountObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          mountMonth(entry.target);
-        } else {
-          unmountMonth(entry.target);
-        }
-      });
-    }, {
-      root: scrollArea,
-      rootMargin: '0px 450px 0px 450px',
-      threshold: 0
-    });
+    heatmapState.firstVisible = firstVisible;
+    updateHeatmapYearLabel(months[firstVisible].year);
 
-    // Tier 2: Reveal Observer at viewport boundary
-    // Cascades the hardware-accelerated CSS unfolding animation right as elements enter view
-    heatmapRevealObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        setMonthRevealed(entry.target, entry.isIntersecting);
-      });
-    }, {
-      root: scrollArea,
-      rootMargin: '0px 30px 0px 30px',
-      threshold: 0.05
-    });
+    const monthCount = months.length;
+    const ringSize = Math.min(HEATMAP_RING_SIZE, monthCount);
+    const start = Math.max(0, Math.min(monthCount - ringSize, firstVisible - 4));
 
-    monthBlocks.forEach((mb) => {
-      heatmapMountObserver.observe(mb);
-      heatmapRevealObserver.observe(mb);
-    });
-  }
+    if (!force && start === heatmapState.start) return;
 
-  function createMonthBlock(year, monthIndex, isFirstInGroup = false) {
-    const monthBlock = document.createElement('div');
-    monthBlock.className = 'month-block';
-    monthBlock.dataset.year = year;
-    monthBlock.dataset.month = monthIndex;
-    monthBlock.dataset.mounted = 'false';
+    heatmapState.start = start;
+    const end = start + ringSize;
+    const required = new Set();
+    for (let i = start; i < end; i++) required.add(i);
 
-    // Exact days and slots in this month
-    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-    const firstDayOfWeek = (new Date(year, monthIndex, 1).getDay() + 6) % 7;
-    const totalSlots = firstDayOfWeek + daysInMonth;
-    const numCols = Math.ceil(totalSlots / 7);
+    const reusable = new Map();
+    heatmapState.activeBlocks.forEach((block, index) => reusable.set(index, block));
 
-    monthBlock.dataset.cols = numCols;
-    monthBlock.style.setProperty('--month-cols', numCols);
-
-    // If month starts mid-week (Tue-Sun), offset spacer column so gap is measured purely between valid cells
-    if (!isFirstInGroup && firstDayOfWeek > 0) {
-      monthBlock.classList.add('month-interlocked');
+    const free = [];
+    for (let i = 0; i < heatmapState.blockPool.length; i++) {
+      const block = heatmapState.blockPool[i];
+      if (!required.has(block.index)) free.push(block);
     }
 
-    const monthLabel = document.createElement('div');
-    monthLabel.className = 'month-label';
-    monthLabel.textContent = SHORT_MONTHS[monthIndex];
-    monthBlock.appendChild(monthLabel);
+    const nextActive = new Map();
+    for (let i = start; i < end; i++) {
+      let block = reusable.get(i);
+      if (!block) {
+        block = free.pop();
+        if (!block) break;
+        populateHeatmapBlock(block, i);
+      }
+      nextActive.set(i, block);
+    }
 
-    // Month block skeleton is returned without attached cells.
-    // Cells are dynamically mounted/unmounted via the DOM pool on scroll.
-    return monthBlock;
+    const visibleBlocks = new Set(nextActive.values());
+    for (let i = 0; i < heatmapState.blockPool.length; i++) {
+      const block = heatmapState.blockPool[i];
+      if (!visibleBlocks.has(block)) {
+        block.index = -1;
+        block.el.dataset.index = '-1';
+        if (block.el.style.display !== 'none') block.el.style.display = 'none';
+      }
+    }
+
+    heatmapState.activeBlocks = nextActive;
   }
 
   function updateHeatmapCells(targetDate = null) {
     const trackEl = document.getElementById('heatmap-track');
     if (!trackEl) return;
+
     const peakMins = state.heatmapPeakMinutes || DEFAULT_PEAK_MINUTES;
     const todayStr = getLocalDateString();
 
-    // Fast O(1) single-cell update path when a specific date is updated
     if (typeof targetDate === 'string' && targetDate) {
       const cell = trackEl.querySelector(`.cell[data-date="${targetDate}"]`);
       if (cell) {
-        const mins = (state.dayActivity && state.dayActivity[targetDate]) || 0;
-        cell.dataset.minutes = String(mins);
-        const colorInfo = getHeatmapCellColor(mins, peakMins);
-        cell.style.backgroundColor = colorInfo.color;
-        cell.className = `cell cell-lvl-${colorInfo.level}${colorInfo.isPeak ? ' cell-peak' : ''}${targetDate === todayStr ? ' is-today' : ''}`;
+        const minutes = (state.dayActivity && state.dayActivity[targetDate]) || 0;
+        paintHeatmapCell(cell, targetDate, minutes, peakMins, todayStr);
       }
       return;
     }
 
-    const cells = trackEl.querySelectorAll('.cell[data-date]');
-    for (let i = 0; i < cells.length; i++) {
-      const cell = cells[i];
-      const dStr = cell.dataset.date;
-      const mins = (state.dayActivity && state.dayActivity[dStr]) || 0;
-      const prevMins = Number(cell.dataset.minutes || 0);
-      if (prevMins !== mins || targetDate === true) {
-        cell.dataset.minutes = String(mins);
-        const colorInfo = getHeatmapCellColor(mins, peakMins);
-        cell.style.backgroundColor = colorInfo.color;
-        cell.className = `cell cell-lvl-${colorInfo.level}${colorInfo.isPeak ? ' cell-peak' : ''}${dStr === todayStr ? ' is-today' : ''}`;
+    // Only the fixed ring is touched. This is O(viewport), never O(history).
+    heatmapState.activeBlocks.forEach((block) => {
+      for (let i = 0; i < block.cells.length; i++) {
+        const cell = block.cells[i];
+        const dateStr = cell.dataset.date;
+        if (!dateStr) continue;
+        const minutes = (state.dayActivity && state.dayActivity[dateStr]) || 0;
+        paintHeatmapCell(cell, dateStr, minutes, peakMins, todayStr);
       }
+    });
+  }
+
+  function cancelHeatmapReveal() {
+    const animations = heatmapState.revealAnimations;
+    for (let i = 0; i < animations.length; i++) {
+      try { animations[i].cancel(); } catch (_) {}
     }
+    heatmapState.revealAnimations = [];
+  }
+
+  function revealVisibleHeatmapMonths() {
+    try {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    } catch (_) {}
+
+    const scrollArea = document.getElementById('heatmap-scroll-area');
+    if (!scrollArea || heatmapState.months.length === 0) return;
+
+    const relativeScroll = Math.max(0, scrollArea.scrollLeft - heatmapState.padLeft);
+    const viewEnd = relativeScroll + scrollArea.clientWidth;
+    const visible = [];
+
+    heatmapState.activeBlocks.forEach((block, index) => {
+      const descriptor = heatmapState.months[index];
+      if (!descriptor) return;
+      if (descriptor.x + descriptor.width > relativeScroll && descriptor.x < viewEnd) {
+        visible.push({ block, x: descriptor.x });
+      }
+    });
+
+    visible.sort((a, b) => a.x - b.x);
+    const animations = heatmapState.revealAnimations;
+    for (let i = 0; i < visible.length; i++) {
+      const block = visible[i].block;
+      const animation = block.el.animate(
+        [
+          { opacity: 0.45, transform: 'translate3d(10px, 0, 0) scale(0.985)' },
+          { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' }
+        ],
+        {
+          duration: 180,
+          delay: Math.min(i * 12, 60),
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          fill: 'backwards'
+        }
+      );
+      const cleanup = () => {
+        const at = animations.indexOf(animation);
+        if (at !== -1) animations.splice(at, 1);
+      };
+      animation.onfinish = cleanup;
+      animation.oncancel = cleanup;
+      animations.push(animation);
+    }
+  }
+
+  function settleHeatmapScroll() {
+    heatmapState.settleTimer = 0;
+    heatmapState.isScrolling = false;
+    updateHeatmapWindow();
+
+    const scrollArea = document.getElementById('heatmap-scroll-area');
+    if (!scrollArea) return;
+    const scrollLeft = scrollArea.scrollLeft;
+    if (Math.abs(scrollLeft - heatmapState.lastRevealScrollLeft) < HEATMAP_REVEAL_MIN_DISTANCE) return;
+
+    heatmapState.lastRevealScrollLeft = scrollLeft;
+    revealVisibleHeatmapMonths();
+  }
+
+  function handleHeatmapScroll() {
+    if (!heatmapState.isScrolling) {
+      heatmapState.isScrolling = true;
+      cancelHeatmapReveal();
+    }
+
+    if (!heatmapState.scrollRaf) {
+      heatmapState.scrollRaf = requestAnimationFrame(() => {
+        heatmapState.scrollRaf = 0;
+        updateHeatmapWindow();
+      });
+    }
+
+    clearTimeout(heatmapState.settleTimer);
+    heatmapState.settleTimer = setTimeout(settleHeatmapScroll, HEATMAP_REVEAL_IDLE_MS);
   }
 
   function renderHeatmap(forceRebuild = false) {
@@ -3076,91 +3227,87 @@
     const scrollArea = document.getElementById('heatmap-scroll-area');
     if (!trackEl || !scrollArea) return;
 
-    // Zero-cost in-place update if calendar structure is already built.
-    // Never tears down DOM or re-runs initial reveal animation on session save/delete or timer reset!
-    if (!forceRebuild && trackEl.children.length > 0) {
+    const range = computeHeatmapRange();
+    const metrics = getHeatmapMetrics();
+    const rangeKey = `${range.earliestYear}:${range.currentYear}:${range.currentMonth}`;
+    const metricsKey = `${metrics.cellSize}:${metrics.colGap}:${metrics.monthGap}:${metrics.yearGap}`;
+
+    if (!forceRebuild &&
+        trackEl.querySelector('.heatmap-virtual-content') &&
+        rangeKey === heatmapState.rangeKey &&
+        metricsKey === heatmapState.metricsKey) {
+      // Data changed but the calendar range did not: repaint only the visible ring.
       updateHeatmapCells();
+      updateHeatmapWindow();
       return;
     }
 
-    cleanupHeatmapObservers();
+    cancelHeatmapReveal();
+    clearTimeout(heatmapState.settleTimer);
+    heatmapState.settleTimer = 0;
+    heatmapState.isScrolling = false;
+    heatmapState.scrollRaf = 0;
+    heatmapState.rangeKey = rangeKey;
+    heatmapState.metricsKey = metricsKey;
+    heatmapState.lastRevealScrollLeft = -1e9;
+
+    const built = buildHeatmapMonths(metrics, range);
+    heatmapState.months = built.months;
+    heatmapState.contentWidth = built.contentWidth;
+    heatmapState.activeBlocks.clear();
+    heatmapState.start = -1;
+
     trackEl.innerHTML = '';
+    trackEl.style.width = `${heatmapState.contentWidth}px`;
 
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
+    const contentEl = document.createElement('div');
+    contentEl.className = 'heatmap-virtual-content';
+    trackEl.appendChild(contentEl);
 
-    const yearBadge = document.getElementById('heatmap-year-badge');
-    if (yearBadge) {
-      yearBadge.textContent = currentYear;
-      state.viewedYear = currentYear;
+    // A fixed ring: 18 months is roughly twice the visible width. The pool
+    // never grows with history, and cells are reused in place.
+    heatmapState.blockPool = [];
+    const fragment = document.createDocumentFragment();
+    for (let i = 0; i < HEATMAP_RING_SIZE; i++) {
+      const block = createHeatmapBlock();
+      heatmapState.blockPool.push(block);
+      fragment.appendChild(block.el);
     }
+    contentEl.appendChild(fragment);
 
-    function createYearGroup(year, startMonth, endMonth) {
-      const yearGroup = document.createElement('div');
-      yearGroup.className = 'year-group';
-      yearGroup.dataset.year = year;
+    heatmapState.padLeft = parseFloat(getComputedStyle(trackEl).paddingLeft) || 48;
 
-      const stickyHeader = document.createElement('div');
-      stickyHeader.className = 'year-sticky-header';
-      const badge = document.createElement('span');
-      badge.className = 'year-sticky-badge';
-      badge.textContent = year;
-      stickyHeader.appendChild(badge);
-      yearGroup.appendChild(stickyHeader);
-
-      const monthsWrap = document.createElement('div');
-      monthsWrap.className = 'year-months-wrap';
-
-      for (let m = startMonth; m <= endMonth; m++) {
-        const isFirst = (m === startMonth);
-        const block = createMonthBlock(year, m, isFirst);
-        monthsWrap.appendChild(block);
-      }
-
-      yearGroup.appendChild(monthsWrap);
-      return yearGroup;
-    }
-
-    // Determine the earliest year from user data (dayActivity keys are 'YYYY-MM-DD')
-    let earliestYear = currentYear - 1;
-    if (state.dayActivity) {
-      for (const dStr of Object.keys(state.dayActivity)) {
-        const y = parseInt(dStr.slice(0, 4), 10);
-        if (!isNaN(y) && y < earliestYear) {
-          earliestYear = y;
-        }
-      }
-    }
-
-    // 1. Build all historical years (Jan to Dec) from earliestYear up to previous year
-    for (let yr = earliestYear; yr < currentYear; yr++) {
-      trackEl.appendChild(createYearGroup(yr, 0, 11));
-    }
-
-    // 2. Build current year's months up to current month (so current month is in last place!)
-    trackEl.appendChild(createYearGroup(currentYear, 0, currentMonth));
-
-    // By default: scroll to the end so the current month is in the last place and history shows to the left
-    requestAnimationFrame(() => {
-      scrollHeatmapToEnd(false);
-      requestAnimationFrame(() => {
-        initHeatmapVirtualizer(scrollArea, trackEl);
-      });
-    });
-
+    // Place the window at the newest month immediately; no async observer wait.
+    scrollHeatmapToEnd(false);
+    updateHeatmapWindow(true);
     setupHeatmapInteraction();
   }
 
   function scrollHeatmapToEnd(smooth = false) {
     const scrollArea = document.getElementById('heatmap-scroll-area');
     if (!scrollArea) return;
+
+    // Re-read the resolved safe-area padding after viewport/orientation changes.
+    const trackEl = document.getElementById('heatmap-track');
+    if (trackEl) {
+      const resolvedPadLeft = parseFloat(getComputedStyle(trackEl).paddingLeft);
+      if (!isNaN(resolvedPadLeft)) heatmapState.padLeft = resolvedPadLeft;
+    }
+
     const maxScroll = Math.max(0, scrollArea.scrollWidth - scrollArea.clientWidth);
+
     if (smooth) {
       scrollArea.scrollTo({ left: maxScroll, behavior: 'smooth' });
-    } else {
-      scrollArea.scrollLeft = maxScroll;
+      return;
     }
+
+    scrollArea.scrollLeft = maxScroll;
+    updateHeatmapWindow();
+
+    // If scrollLeft was already at the end, no scroll event is dispatched.
+    // Schedule the normal settle/reveal path explicitly.
+    clearTimeout(heatmapState.settleTimer);
+    heatmapState.settleTimer = setTimeout(settleHeatmapScroll, HEATMAP_REVEAL_IDLE_MS);
   }
 
   let heatmapInteractionInitialized = false;
@@ -3171,7 +3318,6 @@
     const scrollArea = document.getElementById('heatmap-scroll-area');
     if (!scrollArea) return;
 
-    // Delegated event handling for 730 heatmap day cells (eliminates 2,190 listener allocations)
     const trackEl = document.getElementById('heatmap-track');
     if (trackEl) {
       trackEl.addEventListener('click', (e) => {
@@ -3195,25 +3341,41 @@
       });
     }
 
-    // Smooth horizontal mouse wheel scroll with snappy feel
+    scrollArea.addEventListener('scroll', handleHeatmapScroll, { passive: true });
+
+    // Coalesce wheel input into one scroll write per frame. A wheel event can
+    // fire much faster than the display refresh rate; calling scrollBy() for
+    // each one forces unnecessary style/scroll work.
+    let wheelDelta = 0;
+    let wheelRaf = 0;
     scrollArea.addEventListener('wheel', (e) => {
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        e.preventDefault();
-        scrollArea.scrollBy({ left: e.deltaY * 1.5, behavior: 'auto' });
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      e.preventDefault();
+      const unit = e.deltaMode === 1 ? 16 : (e.deltaMode === 2 ? scrollArea.clientHeight : 1);
+      wheelDelta += e.deltaY * unit * 1.5;
+      if (!wheelRaf) {
+        wheelRaf = requestAnimationFrame(() => {
+          wheelRaf = 0;
+          if (!wheelDelta) return;
+          scrollArea.scrollLeft += wheelDelta;
+          wheelDelta = 0;
+        });
       }
     }, { passive: false });
 
-    // Smooth drag-to-scroll on desktop mouse
+    // Drag-to-scroll, also limited to one write per frame.
     let isDragging = false;
     let startX = 0;
     let startScroll = 0;
+    let dragTarget = 0;
+    let dragRaf = 0;
 
     scrollArea.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return;
       isDragging = true;
       startX = e.pageX;
       startScroll = scrollArea.scrollLeft;
-      scrollArea.style.scrollSnapType = 'none';
+      dragTarget = startScroll;
       scrollArea.style.cursor = 'grabbing';
       document.body.style.userSelect = 'none';
     });
@@ -3221,21 +3383,26 @@
     window.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
       e.preventDefault();
-      const dx = (e.pageX - startX) * 1.2;
-      scrollArea.scrollLeft = startScroll - dx;
+      dragTarget = startScroll - (e.pageX - startX) * 1.2;
+      if (!dragRaf) {
+        dragRaf = requestAnimationFrame(() => {
+          dragRaf = 0;
+          scrollArea.scrollLeft = dragTarget;
+        });
+      }
     });
 
     window.addEventListener('mouseup', () => {
       if (!isDragging) return;
       isDragging = false;
-      scrollArea.style.scrollSnapType = 'x mandatory';
+      if (dragRaf) {
+        cancelAnimationFrame(dragRaf);
+        dragRaf = 0;
+        scrollArea.scrollLeft = dragTarget;
+      }
       scrollArea.style.cursor = '';
       document.body.style.userSelect = '';
     });
-  }
-
-  function updateYearBadgeFromScroll() {
-    // Native CSS position: sticky handles year header alignment with 0 CPU/GPU overhead
   }
 
   const tooltipEl = document.getElementById('heatmap-tooltip');
@@ -3616,14 +3783,6 @@
     }
 
     sessionDataIndex.dirty = false;
-  }
-
-  function warmUpSessionCaches() {
-    try {
-      ensureSessionIndex();
-      calculateLevelClearDates();
-      getHistoryScrollerData();
-    } catch (_) {}
   }
 
   function formatDayDateHeader(dateStr) {
@@ -6974,12 +7133,6 @@
 
     // Full authentication and state sync (subjects, history, stats)
     await checkAuthAndSync();
-
-    if (window.requestIdleCallback) {
-      window.requestIdleCallback(() => warmUpSessionCaches());
-    } else {
-      setTimeout(warmUpSessionCaches, 60);
-    }
   }
 
   if (document.readyState === 'loading') {

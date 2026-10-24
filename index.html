@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=12.14">
+  <link rel="stylesheet" href="styles.css?v=12.16">
   <script>
     (function () {
       try {
@@ -297,9 +297,14 @@
         <div class="heatmap-card" aria-label="Activity Consistency Heatmap">
           <!-- Heatmap Viewport (multi-month grid with weekday overlay) -->
           <div class="heatmap-body-wrap">
+            <!-- Fixed year label, updated from the first visible month. -->
+            <div class="heatmap-year-float" aria-hidden="true">
+              <span class="heatmap-year-badge" id="heatmap-year-badge"></span>
+            </div>
+
             <div class="heatmap-scroll-area" id="heatmap-scroll-area">
               <div class="heatmap-track" id="heatmap-track">
-                <!-- Dynamically populated accurate monthly calendar blocks with sticky year by app.js -->
+                <!-- Fixed ring of calendar months, positioned by app.js -->
               </div>
             </div>
 
@@ -955,7 +960,7 @@
   <!-- JAVASCRIPT LOGIC (Local zero-latency assets, resilient against CDN outages and content blockers) -->
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
-  <script src="app.js?v=12.14"></script>
+  <script src="app.js?v=12.16"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>
