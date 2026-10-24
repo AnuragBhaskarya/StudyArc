@@ -1454,17 +1454,17 @@
 
       // Pre-computed color palettes: Level 1..4 (Green & Amber)
       this.colorsGreen = [
-        { bg: [13, 46, 24, 0.65], border: [16, 224, 104, 0.28] },   // lvl 1
-        { bg: [19, 79, 42, 0.78], border: [16, 224, 104, 0.42] },   // lvl 2
-        { bg: [31, 152, 81, 0.88], border: [36, 184, 98, 0.58] },   // lvl 3
-        { bg: [16, 224, 104, 0.98], border: [78, 250, 143, 0.78] }  // lvl 4
+        { bg: [13, 46, 24, 0.70] },   // lvl 1
+        { bg: [19, 79, 42, 0.82] },   // lvl 2
+        { bg: [31, 152, 81, 0.90] },  // lvl 3
+        { bg: [16, 224, 104, 0.98] }  // lvl 4
       ];
 
       this.colorsAmber = [
-        { bg: [46, 31, 9, 0.65], border: [229, 169, 88, 0.28] },    // lvl 1
-        { bg: [77, 51, 13, 0.78], border: [229, 169, 88, 0.42] },   // lvl 2
-        { bg: [140, 92, 21, 0.88], border: [245, 199, 126, 0.58] }, // lvl 3
-        { bg: [229, 169, 88, 0.98], border: [255, 220, 160, 0.78] } // lvl 4
+        { bg: [46, 31, 9, 0.70] },    // lvl 1
+        { bg: [77, 51, 13, 0.82] },   // lvl 2
+        { bg: [140, 92, 21, 0.90] },  // lvl 3
+        { bg: [229, 169, 88, 0.98] }  // lvl 4
       ];
 
       this.resize();
@@ -1693,8 +1693,8 @@
       const topFadeZone = 110; // Fade out over top 110px
       const botFadeZone = 80;  // Fade in over first 80px from spawn
 
-      // Zero-allocation frame styles: precalculate 4 levels once to completely eliminate GC garbage strings
-      const frameStyles = new Array(4);
+      // Zero-allocation frame styles: precalculate 4 borderless level fills once
+      const frameFills = new Array(4);
       for (let lvl = 0; lvl < 4; lvl++) {
         const gColor = this.colorsGreen[lvl];
         const aColor = this.colorsAmber[lvl];
@@ -1704,18 +1704,8 @@
         const b = Math.round(gColor.bg[2] * greenT + aColor.bg[2] * amberT);
         const a = (gColor.bg[3] * greenT + aColor.bg[3] * amberT);
 
-        const br = Math.round(gColor.border[0] * greenT + aColor.border[0] * amberT);
-        const bg = Math.round(gColor.border[1] * greenT + aColor.border[1] * amberT);
-        const bb = Math.round(gColor.border[2] * greenT + aColor.border[2] * amberT);
-        const ba = (gColor.border[3] * greenT + aColor.border[3] * amberT);
-
-        frameStyles[lvl] = {
-          fill: `rgba(${r},${g},${b},${a})`,
-          stroke: `rgba(${br},${bg},${bb},${ba})`
-        };
+        frameFills[lvl] = `rgba(${r},${g},${b},${a})`;
       }
-
-      ctx.lineWidth = 1;
 
       for (let i = 0; i < this.activeCount; i++) {
         const p = this.particles[i];
@@ -1737,8 +1727,7 @@
         const radius = Math.min(drawW * 0.45, p.r * stretchX);
 
         ctx.globalAlpha = opacity;
-        ctx.fillStyle = frameStyles[p.level].fill;
-        ctx.strokeStyle = frameStyles[p.level].stroke;
+        ctx.fillStyle = frameFills[p.level];
 
         ctx.beginPath();
         if (ctx.roundRect) {
@@ -1747,7 +1736,6 @@
           ctx.rect(drawX, drawY, drawW, drawH);
         }
         ctx.fill();
-        ctx.stroke();
       }
 
       ctx.globalAlpha = 1.0;
