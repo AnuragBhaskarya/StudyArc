@@ -47,6 +47,7 @@
 
     // Preferences
     soundEnabled: true,
+    auraEnabled: true,
 
     // User Authentication
     user: null,
@@ -170,6 +171,11 @@
             state.xp = data.stats.xp || 0;
             state.totalFocusSeconds = data.stats.totalFocusSeconds || 0;
           }
+
+          if (data.preferences && typeof data.preferences.auraEnabled !== 'undefined') {
+            state.auraEnabled = !!data.preferences.auraEnabled;
+          }
+          applyAuraPreference();
 
           if (data.timer) {
             reconcileServerTimer(data.timer);
@@ -317,6 +323,15 @@
         applyLiveServerTimer(data.timer, false);
         broadcastLocalTimer(data.timer);
       }
+    });
+
+    // Account-scoped preference updates from another device/tab
+    sioSocket.on('preferences_update', (data) => {
+      const prefs = data && data.preferences;
+      if (!prefs || typeof prefs.auraEnabled === 'undefined') return;
+      state.auraEnabled = !!prefs.auraEnabled;
+      saveState();
+      applyAuraPreference();
     });
 
     // Clock offset measurement response
@@ -5929,6 +5944,49 @@
       });
     }
 
+    const auraToggle = document.getElementById('setting-aura-enabled');
+    if (auraToggle) {
+      let auraSettingsRequestId = 0;
+      auraToggle.checked = state.auraEnabled !== false;
+      auraToggle.addEventListener('change', async () => {
+        const nextValue = auraToggle.checked;
+        const previousValue = state.auraEnabled !== false;
+        const requestId = ++auraSettingsRequestId;
+
+        // Optimistic apply so the change is instant on this device.
+        state.auraEnabled = nextValue;
+        saveState();
+        applyAuraPreference();
+
+        try {
+          const res = await fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ auraEnabled: nextValue })
+          });
+          if (!res.ok) throw new Error(`Settings update failed (${res.status})`);
+          const data = await res.json();
+          if (requestId !== auraSettingsRequestId) return;
+          if (data && typeof data.auraEnabled !== 'undefined') {
+            state.auraEnabled = !!data.auraEnabled;
+          } else if (data && data.preferences && typeof data.preferences.auraEnabled !== 'undefined') {
+            state.auraEnabled = !!data.preferences.auraEnabled;
+          }
+          auraToggle.checked = state.auraEnabled !== false;
+          saveState();
+          applyAuraPreference();
+        } catch (err) {
+          if (requestId !== auraSettingsRequestId) return;
+          console.warn('StudyArc: Could not sync aura preference:', err);
+          state.auraEnabled = previousValue;
+          auraToggle.checked = previousValue;
+          saveState();
+          applyAuraPreference();
+          showToast('Could not save preference. Please try again.');
+        }
+      });
+    }
+
     const btnWipeData = document.getElementById('btn-wipe-data');
     if (btnWipeData) {
       btnWipeData.addEventListener('click', async () => {
@@ -6167,16 +6225,75 @@
   let levelsLenis = null;
   let dayLenis = null;
 
+  // Dialog Lenis instances share a single RAF driver that only runs while a
+  // dialog is actually open. Previously each of the three instances kept its
+  // own autoRaf loop alive forever, even with every dialog closed.
+  let dialogLenisRafId = null;
+
+  function startDialogLenisLoop() {
+    if (dialogLenisRafId !== null) return;
+    [levelsLenis, dayLenis, typeof historyLenis !== 'undefined' ? historyLenis : null]
+      .forEach((lenis) => { if (lenis) lenis.time = 0; });
+
+    const tick = (timestamp) => {
+      if (!document.querySelector('dialog[open]')) {
+        dialogLenisRafId = null;
+        return;
+      }
+      if (levelsLenis) levelsLenis.raf(timestamp);
+      if (dayLenis) dayLenis.raf(timestamp);
+      if (typeof historyLenis !== 'undefined' && historyLenis) historyLenis.raf(timestamp);
+      dialogLenisRafId = requestAnimationFrame(tick);
+    };
+    dialogLenisRafId = requestAnimationFrame(tick);
+  }
+
+  function stopDialogLenisLoop() {
+    if (dialogLenisRafId !== null) {
+      cancelAnimationFrame(dialogLenisRafId);
+      dialogLenisRafId = null;
+    }
+  }
+
   // The ambient canvas is fully covered by the modal backdrop. Keeping its
   // RAF loop running competes with the dialog's first paint, so park it while
   // a modal is open and resume only when the last dialog is gone.
   function pauseAmbientCanvas() {
+    document.documentElement.classList.add('modal-open');
+    startDialogLenisLoop();
     try { window.AmbientAura?.stop(); } catch (e) {}
   }
 
   function resumeAmbientCanvas() {
     if (document.querySelector('dialog[open]')) return;
-    try { window.AmbientAura?.start(); } catch (e) {}
+    document.documentElement.classList.remove('modal-open');
+    stopDialogLenisLoop();
+    if (state.auraEnabled === false) return;
+    // Let the closed dialog leave the compositor before restarting the canvas
+    // loop, otherwise close can stutter on mobile GPUs.
+    requestAnimationFrame(() => {
+      if (state.auraEnabled === false || document.querySelector('dialog[open]')) return;
+      try { window.AmbientAura?.start(); } catch (e) {}
+    });
+  }
+
+  function applyAuraPreference() {
+    const enabled = state.auraEnabled !== false;
+    document.documentElement.classList.toggle('aura-disabled', !enabled);
+    const auraToggle = document.getElementById('setting-aura-enabled');
+    if (auraToggle) auraToggle.checked = enabled;
+
+    if (!enabled) {
+      try { window.AmbientAura?.stop(); } catch (e) {}
+      return;
+    }
+
+    if (!document.querySelector('dialog[open]')) {
+      requestAnimationFrame(() => {
+        if (state.auraEnabled === false || document.querySelector('dialog[open]')) return;
+        try { window.AmbientAura?.start(); } catch (e) {}
+      });
+    }
   }
 
   function initLenis() {
@@ -6207,7 +6324,7 @@
           wrapper: levelsFeed,
           content: levelsFeed,
           eventsTarget: levelsFeed,
-          autoRaf: true,
+          autoRaf: false,
           autoResize: false,
           smoothWheel: true,
           duration: 0.85,
@@ -6226,7 +6343,7 @@
           wrapper: dayFeed,
           content: dayFeed,
           eventsTarget: dayFeed,
-          autoRaf: true,
+          autoRaf: false,
           autoResize: false,
           smoothWheel: true,
           duration: 0.85,
@@ -6245,7 +6362,7 @@
           wrapper: historyFeed,
           content: historyFeed,
           eventsTarget: historyFeed,
-          autoRaf: true,
+          autoRaf: false,
           autoResize: false,
           smoothWheel: true,
           duration: 0.85,
@@ -6269,6 +6386,7 @@
     initLenis();
     initEvents();
     renderAll();
+    applyAuraPreference();
 
     // If user is not authenticated, greet them immediately with the Neon Green Sign-In modal
     if (!state.authenticated || !state.user) {

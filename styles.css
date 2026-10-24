@@ -5293,4 +5293,75 @@ input:checked + .switch-slider:before {
   color: rgba(16, 224, 104, 0.4);
 }
 
+/* ==========================================================================
+   ACCOUNT PREFERENCE: AURA PARTICLES OFF
+   ========================================================================== */
+html.aura-disabled .ambient-aura-container {
+  display: none !important;
+}
+
+/* Freeze the CSS aura blobs while a modal is in the top layer. The backdrop
+   already covers them, and their blurred compositing competes with the
+   dialog's first paint on mobile GPUs. */
+html.modal-open .aura-blob {
+  animation-play-state: paused;
+}
+
+/* ==========================================================================
+   MOBILE DIALOG RENDERING (XP STATS / SESSION HISTORY / DAY / CALENDAR)
+   Painted backdrop blur + permanent will-change layers + scale animations are
+   disproportionately expensive on mobile GPUs. Keep the visual result while
+   switching to compositor-only fades and cheaper shadows.
+   ========================================================================== */
+@media (max-width: 768px), (pointer: coarse) {
+  .day-detail-dialog,
+  .sessions-history-dialog,
+  .levels-dialog {
+    animation: dialog-fade-in-mobile 110ms ease-out forwards;
+    will-change: auto;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.72);
+  }
+
+  .sessions-history-dialog {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.78);
+  }
+
+  .day-detail-dialog::backdrop,
+  .sessions-history-dialog::backdrop,
+  .levels-dialog::backdrop,
+  .history-calendar-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    animation: backdrop-fade-in 100ms ease forwards;
+  }
+
+  /* The paused aura is fully hidden behind the dialog and does not need to
+     stay in the compositor (blurred blobs are expensive to re-rasterize). */
+  html.modal-open .ambient-aura-container {
+    display: none !important;
+  }
+
+  /* Native touch scrolling does not need permanently promoted scroll layers.
+     Dropping them avoids allocating three large GPU layers during modal open. */
+  .history-feed-list,
+  .levels-feed-list {
+    will-change: auto;
+    transform: none;
+  }
+
+  /* The pinned date chip is blurred directly over moving cards, forcing the
+     compositor to re-blur on every scroll frame. A solid chip looks the same. */
+  .history-pinned-date-header {
+    background: rgba(8, 18, 12, 0.98);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@keyframes dialog-fade-in-mobile {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 

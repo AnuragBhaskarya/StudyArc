@@ -52,13 +52,17 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=10.4">
+  <link rel="stylesheet" href="styles.css?v=10.5">
   <script>
     (function () {
       try {
         var s = localStorage.getItem('studyarc_store_v1');
-        if (!s || !JSON.parse(s).authenticated) {
+        var parsed = s ? JSON.parse(s) : null;
+        if (!parsed || !parsed.authenticated) {
           document.documentElement.classList.add('unauthenticated-gate');
+        }
+        if (parsed && parsed.auraEnabled === false) {
+          document.documentElement.classList.add('aura-disabled');
         }
       } catch (e) {
         document.documentElement.classList.add('unauthenticated-gate');
@@ -383,7 +387,25 @@
               </label>
             </div>
 
-            <!-- Row 3: Danger Wipe Progress -->
+            <!-- Row 3: Aura Particles -->
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="settings-row-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"></path>
+                    <path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"></path>
+                    <path d="M5 15l.6 1.4L7 17l-1.4.6L5 19l-.6-1.4L3 17l1.4-.6z"></path>
+                  </svg>
+                </div>
+                <span class="settings-row-label">Aura Particles</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="setting-aura-enabled" aria-label="Aura Particles" checked>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+
+            <!-- Row 4: Danger Wipe Progress -->
             <div class="settings-row settings-row-danger">
               <div class="settings-row-left">
                 <div class="settings-row-icon">
@@ -935,7 +957,7 @@
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
   <script src="aura-particles.js?v=5.3"></script>
-  <script src="app.js?v=10.0"></script>
+  <script src="app.js?v=10.1"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

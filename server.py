@@ -220,6 +220,7 @@ def auth_me():
 
     return jsonify({
         'authenticated': True,
+        'preferences': database.get_user_preferences(user['id']),
         'user': {
             'id': user['id'],
             'username': user['username'],
@@ -438,6 +439,11 @@ def sio_connect():
         'timer': initial_state,
         'serverTime': int(time.time() * 1000)
     })
+    # Preferences are sent as a separate packet so the timer is never delayed
+    # by the extra database lookup.
+    emit('preferences_update', {
+        'preferences': database.get_user_preferences(user_id)
+    })
 
 @socketio.on('ping_server')
 def sio_ping(data):
@@ -455,6 +461,9 @@ def sio_get_state():
     emit('timer_update', {
         'timer': get_hot_timer_state(user_id),
         'serverTime': int(time.time() * 1000)
+    })
+    emit('preferences_update', {
+        'preferences': database.get_user_preferences(user_id)
     })
 
 @socketio.on('timer_action')
@@ -573,6 +582,7 @@ def get_state(user_id):
                 'id': user_id,
                 'username': user_name or 'User'
             },
+            'preferences': data.get('preferences') or {'auraEnabled': True},
             'subjects': data['subjects'],
             'sessions': data['sessions'],
             'dayActivity': data['dayActivity'],
@@ -581,6 +591,37 @@ def get_state(user_id):
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/settings', methods=['POST'])
+@auth_required
+def update_settings(user_id):
+    """
+    Persist account-scoped preferences so they follow the user across devices.
+    """
+    data = request.get_json(force=True, silent=True) or {}
+    updated = False
+
+    if 'auraEnabled' in data or 'aura_enabled' in data:
+        raw_value = data.get('auraEnabled', data.get('aura_enabled'))
+        if isinstance(raw_value, str):
+            aura_enabled = raw_value.strip().lower() in ('1', 'true', 'yes', 'on')
+        else:
+            aura_enabled = bool(raw_value)
+        preferences = database.set_user_aura_enabled(user_id, aura_enabled)
+        updated = True
+    else:
+        preferences = database.get_user_preferences(user_id)
+
+    if updated:
+        socketio.emit('preferences_update', {
+            'preferences': preferences
+        }, room=str(user_id))
+
+    return jsonify({
+        'success': True,
+        'preferences': preferences,
+        'auraEnabled': preferences.get('auraEnabled', True)
+    })
 
 @app.route('/api/subjects', methods=['GET', 'POST'])
 @auth_required

@@ -197,9 +197,11 @@ def init_db():
                     username VARCHAR(64) UNIQUE NOT NULL,
                     password_hash VARCHAR(255) NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    last_login_at TIMESTAMP
+                    last_login_at TIMESTAMP,
+                    aura_enabled BOOLEAN NOT NULL DEFAULT TRUE
                 )
             """)
+            ctx.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS aura_enabled BOOLEAN NOT NULL DEFAULT TRUE")
 
             # 2. Per-User Persistent Timer State Table
             ctx.execute("""
@@ -272,9 +274,15 @@ def init_db():
                     username TEXT UNIQUE NOT NULL COLLATE NOCASE,
                     password_hash TEXT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    last_login_at TIMESTAMP
+                    last_login_at TIMESTAMP,
+                    aura_enabled INTEGER NOT NULL DEFAULT 1
                 )
             """)
+
+            cur = ctx.execute("PRAGMA table_info(users)")
+            user_cols = [r['name'] for r in cur.fetchall()]
+            if 'aura_enabled' not in user_cols:
+                ctx.execute("ALTER TABLE users ADD COLUMN aura_enabled INTEGER NOT NULL DEFAULT 1")
 
             ctx.execute("""
                 CREATE TABLE IF NOT EXISTS user_timer_state (
@@ -371,7 +379,7 @@ def get_user_by_username(username):
     clean_user = username.strip()
     with get_connection() as ctx:
         cur = ctx.execute(
-            "SELECT id, username, password_hash, created_at, last_login_at FROM users WHERE LOWER(username) = LOWER(?)",
+            "SELECT id, username, password_hash, created_at, last_login_at, aura_enabled FROM users WHERE LOWER(username) = LOWER(?)",
             (clean_user,)
         )
         row = cur.fetchone()
@@ -380,11 +388,28 @@ def get_user_by_username(username):
 def get_user_by_id(user_id):
     with get_connection() as ctx:
         cur = ctx.execute(
-            "SELECT id, username, created_at, last_login_at FROM users WHERE id = ?",
+            "SELECT id, username, created_at, last_login_at, aura_enabled FROM users WHERE id = ?",
             (user_id,)
         )
         row = cur.fetchone()
         return dict(row) if row else None
+
+def get_user_preferences(user_id):
+    with get_connection() as ctx:
+        cur = ctx.execute("SELECT aura_enabled FROM users WHERE id = ?", (user_id,))
+        row = cur.fetchone()
+    if not row:
+        return {'auraEnabled': True}
+    value = row['aura_enabled']
+    return {'auraEnabled': bool(value) if value is not None else True}
+
+def set_user_aura_enabled(user_id, enabled):
+    with get_connection() as ctx:
+        ctx.execute(
+            "UPDATE users SET aura_enabled = ? WHERE id = ?",
+            (bool(enabled), user_id)
+        )
+    return {'auraEnabled': bool(enabled)}
 
 def update_user_last_login(user_id):
     with get_connection() as ctx:
@@ -891,9 +916,13 @@ def get_full_state(user_id):
                             FROM sessions WHERE user_id = %s
                             GROUP BY date ORDER BY date ASC
                         ) a
+                    ),
+                    'preferences', (
+                        SELECT json_build_object('auraEnabled', COALESCE(aura_enabled, TRUE))
+                        FROM users WHERE id = %s
                     )
                 ) AS full_state
-            """, (user_id, user_id, user_id, user_id, user_id))
+            """, (user_id, user_id, user_id, user_id, user_id, user_id))
             data = cur.fetchone()['full_state']
         else:
             # SQLite fallback: fetch with single connection
@@ -913,11 +942,17 @@ def get_full_state(user_id):
             sess_rows = [dict(r) for r in cur_sess.fetchall()]
             cur_act = ctx.execute("SELECT date, SUM(duration_minutes) as total_minutes FROM sessions WHERE user_id = ? GROUP BY date ORDER BY date ASC", (user_id,))
             act_dict = {r['date']: int(r['total_minutes']) for r in cur_act.fetchall()}
+            cur_pref = ctx.execute("SELECT aura_enabled FROM users WHERE id = ?", (user_id,))
+            pref_row = cur_pref.fetchone()
+            aura_enabled = True
+            if pref_row is not None and pref_row['aura_enabled'] is not None:
+                aura_enabled = bool(pref_row['aura_enabled'])
             data = {
                 'timer': dict(t_row) if t_row else None,
                 'subjects': sub_rows,
                 'sessions': sess_rows,
-                'activity': act_dict
+                'activity': act_dict,
+                'preferences': {'auraEnabled': aura_enabled}
             }
 
     # 1. Process Timer State
@@ -1021,7 +1056,8 @@ def get_full_state(user_id):
         'sessions': sessions_res,
         'dayActivity': day_act,
         'stats': stats_res,
-        'timer': timer_res
+        'timer': timer_res,
+        'preferences': data.get('preferences') or {'auraEnabled': True}
     }
 
 def reset_database(user_id):
