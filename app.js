@@ -1396,6 +1396,68 @@
     updateTimerRing(seconds);
   }
 
+  /* ==========================================================================
+     PURE CSS FLOATING HEATMAP MATRIX STREAM CONTROLLER
+     - Manages smooth playbackRate transitions between running (1.0x) and paused (0.55x)
+     - Manages hold-to-reset warp acceleration (up to 3.6x)
+     ========================================================================== */
+  let matrixPlaybackRaf = null;
+  let currentMatrixSpeed = 0.55;
+
+  function updateMatrixStreamSpeed(status, durationMs = 800) {
+    const container = document.getElementById('bg-matrix-stream');
+    if (!container) return;
+    const items = container.querySelectorAll('.matrix-item');
+    if (!items.length) return;
+
+    const targetSpeed = status === 'running' ? 1.0 : 0.55;
+    if (durationMs <= 0) {
+      currentMatrixSpeed = targetSpeed;
+      items.forEach(item => {
+        item.getAnimations?.().forEach(anim => {
+          if (anim.updatePlaybackRate) anim.updatePlaybackRate(currentMatrixSpeed);
+          else anim.playbackRate = currentMatrixSpeed;
+        });
+      });
+      return;
+    }
+
+    cancelAnimationFrame(matrixPlaybackRaf);
+    const startSpeed = currentMatrixSpeed;
+    const startTime = performance.now();
+
+    function step(now) {
+      const elapsed = now - startTime;
+      const t = Math.min(1, elapsed / durationMs);
+      const ease = 0.5 - Math.cos(t * Math.PI) / 2;
+      currentMatrixSpeed = startSpeed + (targetSpeed - startSpeed) * ease;
+
+      items.forEach(item => {
+        item.getAnimations?.().forEach(anim => {
+          if (anim.updatePlaybackRate) anim.updatePlaybackRate(currentMatrixSpeed);
+          else anim.playbackRate = currentMatrixSpeed;
+        });
+      });
+
+      if (t < 1) {
+        matrixPlaybackRaf = requestAnimationFrame(step);
+      }
+    }
+    matrixPlaybackRaf = requestAnimationFrame(step);
+  }
+
+  function setMatrixHoldAcceleration(progress) {
+    const container = document.getElementById('bg-matrix-stream');
+    if (!container) return;
+    const items = container.querySelectorAll('.matrix-item');
+    const holdRate = currentMatrixSpeed + progress * 2.6;
+    items.forEach(item => {
+      item.getAnimations?.().forEach(anim => {
+        anim.playbackRate = holdRate;
+      });
+    });
+  }
+
   function renderTimer() {
     renderTimerDisplay(state.timer.remainingSeconds);
 
@@ -1420,11 +1482,12 @@
         headerTopicName.textContent = state.activeTaskName;
       }
 
-      // Keep AmbientAura and body synchronized with timer running/amber state
+      // Synchronize floating matrix stream and body with timer running/amber state
       const isRunning = state.timer.status === 'running';
       document.body.classList.toggle('is-timer-amber', !isRunning);
+      document.body.classList.toggle('timer-running', isRunning);
       document.body.classList.toggle('is-timer-paused', state.timer.status === 'paused');
-      window.AmbientAura?.setTimerStatus(state.timer.status);
+      updateMatrixStreamSpeed(state.timer.status);
 
       if (isRunning) {
         timerSection?.classList.add('is-running');
@@ -1443,8 +1506,9 @@
       }
     } else {
       document.body.classList.add('is-timer-amber');
+      document.body.classList.remove('timer-running');
       document.body.classList.remove('is-timer-paused');
-      window.AmbientAura?.setTimerStatus('idle');
+      updateMatrixStreamSpeed('idle');
       timerSection?.classList.remove('is-session-locked', 'is-running', 'is-paused');
 
       // Top bar topic pill: completely hidden when idle, keeping top bar empty!
@@ -1864,8 +1928,9 @@
       const elapsed = now - drainStartTime;
       const progress = Math.min(1, elapsed / DRAIN_MS);
 
-      // Accelerate background ambient aura and constellation particles as hold progresses!
-      window.AmbientAura?.setHoldProgress(progress);
+      // Accelerate background matrix stream and elongate boxes as hold progresses!
+      document.body.style.setProperty('--hold-progress', progress.toFixed(3));
+      setMatrixHoldAcceleration(progress);
 
       // 1. The green timer arc visibly drains to empty over DRAIN_MS!
       const visualSeconds = Math.max(0, holdStartRemaining * (1 - progress));
@@ -1880,10 +1945,9 @@
         isDraining = false;
         isCenterPadHolding = false;
         document.body.classList.remove('is-holding');
+        document.body.style.setProperty('--hold-progress', '0');
         pad.classList.remove('holding');
-        window.AmbientAura?.onReset?.();
-        window.AmbientAura?.setHolding(false);
-        window.AmbientAura?.setHoldProgress(0);
+        updateMatrixStreamSpeed('idle', 300);
 
         if (navigator.vibrate) navigator.vibrate([40, 50, 40]);
         playChime('reset');
@@ -1933,9 +1997,9 @@
       isDraining = true;
       drainStartTime = performance.now();
       document.body.classList.add('is-holding');
+      document.body.style.setProperty('--hold-progress', '0.08');
       pad.classList.add('holding');
-      window.AmbientAura?.setHolding(true);
-      window.AmbientAura?.setHoldProgress(0.08);
+      setMatrixHoldAcceleration(0.08);
 
       cancelAnimationFrame(holdRaf);
       holdRaf = requestAnimationFrame(stepHold);
@@ -1982,9 +2046,9 @@
       isDraining = false;
       isCenterPadHolding = false;
       document.body.classList.remove('is-holding');
+      document.body.style.setProperty('--hold-progress', '0');
       pad.classList.remove('holding');
-      window.AmbientAura?.setHolding(false);
-      window.AmbientAura?.setHoldProgress(0);
+      updateMatrixStreamSpeed(state.timer.status, 300);
 
       if (holdCompleted) {
         return;
@@ -2767,7 +2831,6 @@
     }
 
     if (viewName === 'focus') {
-      window.AmbientAura?.updateTimerCenter?.();
       requestAnimationFrame(() => {
         scrollHeatmapToEnd(false);
       });
@@ -6322,26 +6385,16 @@
     }
   }
 
-  // The ambient canvas is fully covered by the modal backdrop. Keeping its
-  // RAF loop running competes with the dialog's first paint, so park it while
-  // a modal is open and resume only when the last dialog is gone.
+  // The ambient background is hidden when modal is open to ensure maximum performance
   function pauseAmbientCanvas() {
     document.documentElement.classList.add('modal-open');
     startDialogLenisLoop();
-    try { window.AmbientAura?.stop(); } catch (e) {}
   }
 
   function resumeAmbientCanvas() {
     if (document.querySelector('dialog[open]')) return;
     document.documentElement.classList.remove('modal-open');
     stopDialogLenisLoop();
-    if (state.auraEnabled === false) return;
-    // Let the closed dialog leave the compositor before restarting the canvas
-    // loop, otherwise close can stutter on mobile GPUs.
-    requestAnimationFrame(() => {
-      if (state.auraEnabled === false || document.querySelector('dialog[open]')) return;
-      try { window.AmbientAura?.start(); } catch (e) {}
-    });
   }
 
   function applyAuraPreference() {
@@ -6349,18 +6402,6 @@
     document.documentElement.classList.toggle('aura-disabled', !enabled);
     const auraToggle = document.getElementById('setting-aura-enabled');
     if (auraToggle) auraToggle.checked = enabled;
-
-    if (!enabled) {
-      try { window.AmbientAura?.stop(); } catch (e) {}
-      return;
-    }
-
-    if (!document.querySelector('dialog[open]')) {
-      requestAnimationFrame(() => {
-        if (state.auraEnabled === false || document.querySelector('dialog[open]')) return;
-        try { window.AmbientAura?.start(); } catch (e) {}
-      });
-    }
   }
 
   function initLenis() {
