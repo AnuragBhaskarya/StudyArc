@@ -2418,10 +2418,10 @@
 
   // =========================================================================
   // HEATMAP CELL REVEAL ENGINE
-  // Only fully visible columns are painted. Cells are pulled in from a
-  // compressed ribbon near the viewport center, and re-animate whenever they
-  // leave and re-enter the visible window. Geometry is cached once per layout
-  // so scrolling never measures individual cells.
+  // Only fully visible columns are painted. Columns fly in from outside the
+  // viewport while their rows unfold from the middle of the column, and they
+  // re-animate whenever they leave and re-enter the visible window. Geometry
+  // is cached once per layout so scrolling never measures individual cells.
   // =========================================================================
   const HM_REVEAL_TOLERANCE = 0.75;
   const HM_REVEAL_DURATION = 500;
@@ -2489,11 +2489,28 @@
       const viewportCenter = scrollRect.left + scrollRect.width / 2;
       const colRect = col.el.getBoundingClientRect();
       const colCenter = colRect.left + colRect.width / 2;
-      const maxPull = Math.min(96, Math.max(44, scrollRect.width * 0.2));
+      // Columns on the left start farther left and columns on the right start
+      // farther right, so every column converges inward as it lands.
+      const maxPull = Math.min(120, Math.max(48, scrollRect.width * 0.24));
       const pull = Math.max(
         -maxPull,
-        Math.min(maxPull, (viewportCenter - colCenter) * 0.55)
+        Math.min(maxPull, (colCenter - viewportCenter) * 0.6)
       );
+
+      // Cells begin compressed toward the middle of their visible rows and
+      // open outward into their day slots. Partial weeks use their own middle
+      // so short columns still unfold symmetrically.
+      let minRow = 6;
+      let maxRow = 0;
+      col.cells.forEach((cell) => {
+        const row = Number(cell.dataset.hmRow);
+        if (Number.isFinite(row)) {
+          minRow = Math.min(minRow, row);
+          maxRow = Math.max(maxRow, row);
+        }
+      });
+      const rowPitch = colRect.height / 7;
+      const openCenterY = rowPitch * ((minRow + maxRow + 1) / 2);
       const canAnimate =
         !document.hidden &&
         !prefersReducedHeatmapMotion() &&
@@ -2519,17 +2536,20 @@
 
         const row = Number(cell.dataset.hmRow || index);
         const delay = baseDelay + row * 5;
+        const rowCenterY = rowPitch * (row + 0.5);
+        const startY = (openCenterY - rowCenterY) * 0.62;
+        const overshootY = startY * -0.08;
 
         const animation = cell.animate(
           [
             {
               opacity: 0,
-              transform: `translate3d(${pull.toFixed(2)}px, 0, 0) scale3d(0.34, 0.72, 1)`
+              transform: `translate3d(${pull.toFixed(2)}px, ${startY.toFixed(2)}px, 0) scale3d(0.36, 0.8, 1)`
             },
             {
               opacity: 1,
-              offset: 0.56,
-              transform: `translate3d(${(pull * 0.16).toFixed(2)}px, 0, 0) scale3d(1.055, 1.02, 1)`
+              offset: 0.55,
+              transform: `translate3d(${(-pull * 0.1).toFixed(2)}px, ${overshootY.toFixed(2)}px, 0) scale3d(1.045, 1.015, 1)`
             },
             {
               opacity: 1,
@@ -2539,7 +2559,7 @@
           {
             duration: HM_REVEAL_DURATION,
             delay,
-            easing: 'cubic-bezier(0.22, 0.9, 0.26, 1)',
+            easing: 'cubic-bezier(0.25, 0.5, 0.25, 1)',
             fill: 'both'
           }
         );
