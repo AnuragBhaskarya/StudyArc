@@ -1573,11 +1573,6 @@ body.is-dragging .timer-bead-rim {
   }
 }
 
-.cell:not(.cell-spacer) {
-  animation: hmCellReveal 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
-  animation-delay: calc(var(--col-idx, 0) * 20ms + var(--center-dist, 0) * 12ms);
-}
-
 /* Pre-calculated row mathematical indices and accordion offsets:
    Row 0 (Mon): distance 3, offset +35px towards center, overshoot -2.8px
    Row 1 (Tue): distance 2, offset +23px towards center, overshoot -1.8px
@@ -1603,11 +1598,30 @@ body.is-dragging .timer-bead-rim {
 .month-weeks > .week-col:nth-child(5) { --col-idx: 4; }
 .month-weeks > .week-col:nth-child(6) { --col-idx: 5; }
 
+/* Unrevealed pre-scroll state: cells start compressed toward column center */
+.week-col:not(.is-revealed) > .cell:not(.cell-spacer) {
+  opacity: 0;
+  transform: translate3d(0, var(--row-offset, 0px), 0) scale3d(0.68, 0.68, 1);
+  pointer-events: none;
+  transition: none;
+}
+
+/* Revealed state: triggers hardware-accelerated CSS keyframes on GPU */
+.week-col.is-revealed > .cell:not(.cell-spacer) {
+  animation: hmCellReveal 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--col-idx, 0) * 18ms + var(--center-dist, 0) * 12ms);
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .cell:not(.cell-spacer) {
+  .week-col:not(.is-revealed) > .cell:not(.cell-spacer),
+  .week-col.is-revealed > .cell:not(.cell-spacer) {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+    pointer-events: auto !important;
   }
 }
 

@@ -2417,9 +2417,39 @@
   }
 
   // =========================================================================
-  // HEATMAP ANIMATION: HANDLED 100% VIA PURE CSS (@keyframes hmCellReveal)
-  // See styles.css. Zero JavaScript overhead, 0% CPU usage, 100% GPU compositor.
+  // HEATMAP REVEAL TRIGGER (Native IntersectionObserver + Pure CSS Animation)
+  // Zero scroll listeners, 0% CPU, 100% GPU compositor execution.
   // =========================================================================
+  let heatmapObserver = null;
+
+  function initHeatmapReveal(scrollArea, trackEl) {
+    if (heatmapObserver) {
+      heatmapObserver.disconnect();
+      heatmapObserver = null;
+    }
+
+    if (typeof IntersectionObserver === 'undefined') {
+      trackEl.querySelectorAll('.week-col').forEach(c => c.classList.add('is-revealed'));
+      return;
+    }
+
+    heatmapObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-revealed');
+          heatmapObserver?.unobserve(entry.target);
+        }
+      });
+    }, {
+      root: scrollArea,
+      rootMargin: '0px 60px 0px 60px',
+      threshold: 0.01
+    });
+
+    trackEl.querySelectorAll('.week-col').forEach((col) => {
+      heatmapObserver.observe(col);
+    });
+  }
 
   function createMonthBlock(year, monthIndex, isFirstInGroup = false) {
     const monthBlock = document.createElement('div');
@@ -2563,6 +2593,9 @@
     // By default: scroll to the end so the current month is in the last place and history shows to the left
     requestAnimationFrame(() => {
       scrollHeatmapToEnd(false);
+      requestAnimationFrame(() => {
+        initHeatmapReveal(scrollArea, trackEl);
+      });
     });
 
     scrollArea.onscroll = () => {
