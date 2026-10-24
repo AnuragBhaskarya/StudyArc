@@ -1461,9 +1461,6 @@ body.is-dragging .timer-bead-rim {
   position: relative;
   pointer-events: none; /* Allows click events to pass through seamlessly to underlying cells */
   overflow: visible;
-  /* Let the browser skip layout/paint for months scrolled far offscreen. */
-  content-visibility: auto;
-  contain-intrinsic-size: auto 140px;
 }
 
 /* Interlocking puzzle transition: offsets spacer column so gap is measured uniformly between valid cells */
@@ -1514,18 +1511,17 @@ body.is-dragging .timer-bead-rim {
   height: var(--hm-cell-size, 13.5px);
   border-radius: 3.5px;
   background-color: var(--lvl-0);
-  transition: transform 120ms ease;
+  transition: transform 120ms ease, background-color 140ms ease;
   cursor: pointer;
   flex-shrink: 0;
   position: relative;
   z-index: 2;
   pointer-events: auto; /* All active cells are directly clickable and hoverable */
-  /* Isolate each cell so repaints never propagate beyond the tile boundary. */
-  contain: layout style paint;
 }
 
 .cell:hover {
   transform: scale(1.3);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.95);
   z-index: 30;
 }
 
@@ -1562,9 +1558,9 @@ body.is-dragging .timer-bead-rim {
    animation once the whole column is visible. */
 .cell.hm-cell-hidden {
   opacity: 0;
-  transform: scale(0.65);
-  transition: opacity 120ms ease-out,
-              transform 120ms ease-out;
+  transform: translate3d(0, 0, 0) scale3d(0.58, 0.8, 1);
+  transition: opacity 150ms ease-out,
+              transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
 }
 
