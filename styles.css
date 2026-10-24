@@ -1372,7 +1372,7 @@ body.is-dragging .timer-bead-rim {
   padding: 36px 0 72px 0;
   margin: -36px 0 -72px 0;
   scroll-snap-type: x mandatory;
-  scroll-padding-inline-end: 0;
+  scroll-padding-inline-end: 16px;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
 }
@@ -1389,9 +1389,10 @@ body.is-dragging .timer-bead-rim {
   align-items: flex-start;
   gap: var(--hm-year-gap, 32px);
   width: max-content;
-  /* Breathing room belongs before the first month, not after the current one.
-     48px keeps the first column and the sticky year label clear of the 40px fade. */
-  padding: 4px 0 48px 48px;
+  /* 48px left keeps the first column clear of the 40px fade overlay.
+     16px right provides comfortable breathing room matching the month gap so
+     the last month doesn't stick directly against the screen edge. */
+  padding: 4px 16px 48px 48px;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -2189,11 +2190,11 @@ input:checked + .switch-slider:before {
 
   .heatmap-track {
     padding-left: calc(48px + env(safe-area-inset-left, 0px));
-    padding-right: env(safe-area-inset-right, 0px);
+    padding-right: calc(16px + env(safe-area-inset-right, 0px));
   }
 
   .heatmap-scroll-area {
-    scroll-padding-inline-end: env(safe-area-inset-right, 0px);
+    scroll-padding-inline-end: calc(16px + env(safe-area-inset-right, 0px));
   }
 
   .year-sticky-header {
