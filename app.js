@@ -1476,18 +1476,43 @@
       this.targetAmber = 1.0;
 
       // Pre-computed color palettes: Level 1..4 (Green & Amber)
-      this.colorsGreen = [
-        { bg: [13, 46, 24, 0.70] },   // lvl 1
-        { bg: [19, 79, 42, 0.82] },   // lvl 2
-        { bg: [31, 152, 81, 0.90] },  // lvl 3
-        { bg: [16, 224, 104, 0.98] }  // lvl 4
+      this.greenRgb = [
+        [13, 46, 24],   // lvl 1
+        [19, 79, 42],   // lvl 2
+        [31, 152, 81],  // lvl 3
+        [16, 224, 104]  // lvl 4
       ];
 
-      this.colorsAmber = [
-        { bg: [46, 31, 9, 0.70] },    // lvl 1
-        { bg: [77, 51, 13, 0.82] },   // lvl 2
-        { bg: [140, 92, 21, 0.90] },  // lvl 3
-        { bg: [229, 169, 88, 0.98] }  // lvl 4
+      this.amberRgb = [
+        [46, 31, 9],    // lvl 1
+        [77, 51, 13],   // lvl 2
+        [140, 92, 21],  // lvl 3
+        [229, 169, 88]  // lvl 4
+      ];
+
+      // Pre-computed RGB delta (Amber - Green) for zero-allocation lerping
+      this.deltaRgb = [
+        [33, -15, -15],
+        [58, -28, -29],
+        [109, -60, -60],
+        [213, -55, -16]
+      ];
+
+      this.baseAlphas = [0.70, 0.82, 0.90, 0.98];
+
+      // Pre-computed string prefixes for 0-math fast paths
+      this.greenPrefixes = [
+        'rgba(13,46,24,',
+        'rgba(19,79,42,',
+        'rgba(31,152,81,',
+        'rgba(16,224,104,'
+      ];
+
+      this.amberPrefixes = [
+        'rgba(46,31,9,',
+        'rgba(77,51,13,',
+        'rgba(140,92,21,',
+        'rgba(229,169,88,'
       ];
 
       this.resize();
@@ -1563,15 +1588,15 @@
       p.x = xMin + Math.random() * (xMax - xMin);
 
       // Initial load: distributed across entire screen so flanks are immediately filled
-      // Hold burst: spawns in lower fade zone (78% to 90% height) to create an upward rush
-      // Regular respawn: lifted spawn area (85% to 95% height) in deep CSS alpha mask zone
-      // (Particles are completely invisible when spawned, softly fading in up to absolute middle of page)
+      // Hold burst: spawns in lower rush zone (74% to 82% height) to create an upward rush
+      // Regular respawn: lifted spawn area (80% to 87% height) in bottom 20% zone
+      // (Spawns in green zone, gently fading in and smoothly transitioning to yellow above bottom 20% when paused)
       if (initial) {
         p.y = Math.random() * this.height;
       } else if (isHoldBurst) {
-        p.y = this.height * (0.78 + Math.random() * 0.12);
+        p.y = this.height * (0.74 + Math.random() * 0.08);
       } else {
-        p.y = this.height * (0.85 + Math.random() * 0.10);
+        p.y = this.height * (0.80 + Math.random() * 0.07);
       }
 
       // Smaller authentic GitHub tile proportions (~1:1.35)
@@ -1700,48 +1725,63 @@
       const stretchY = this.currentStretchY || 1.0;
       const stretchX = this.currentStretchX || 1.0;
       const height = this.height;
+
+      // Bottom 20% boundary (height * 0.80): below this is guaranteed 100% green
+      const shiftStart = height * 0.80;
+      // Shift upward completes towards middle of screen (height * 0.52)
+      const shiftEnd = height * 0.52;
+      const invShiftSpan = 1.0 / (shiftStart - shiftEnd);
+
+      // Smooth vertical visibility fade: 45% down to 90% height
       const fadeStart = height * 0.45;
-      const fadeRange = height * 0.49; // 45% down to 94%
+      const fadeEnd = height * 0.90;
+      const invFadeSpan = 1.0 / (fadeEnd - fadeStart);
 
-      const amberT = this.currentAmber;
-      const greenT = 1.0 - amberT;
+      const isPlayState = this.currentAmber < 0.005;
+      const isFullAmber = this.currentAmber > 0.995;
+      const amberFactor = this.currentAmber;
 
-      // Cache color computation - only recalculate when actively shifting colors
-      if (!this.cachedFills || Math.abs(this.lastCachedAmber - amberT) > 0.005) {
-        this.lastCachedAmber = amberT;
-        if (!this.cachedFills) {
-          this.cachedFills = [new Array(4), new Array(4), new Array(4), new Array(4)];
-        }
-        for (let lvl = 0; lvl < 4; lvl++) {
-          const gColor = this.colorsGreen[lvl];
-          const aColor = this.colorsAmber[lvl];
-          this.cachedFills[lvl][0] = (gColor.bg[0] * greenT + aColor.bg[0] * amberT) | 0;
-          this.cachedFills[lvl][1] = (gColor.bg[1] * greenT + aColor.bg[1] * amberT) | 0;
-          this.cachedFills[lvl][2] = (gColor.bg[2] * greenT + aColor.bg[2] * amberT) | 0;
-          this.cachedFills[lvl][3] = gColor.bg[3] * greenT + aColor.bg[3] * amberT;
-        }
-      }
-
-      // Direct in-engine particle alpha rendering (eliminates ~624MB/s GPU CSS mask-image compositing)
+      // Direct in-engine particle rendering (zero CSS mask overhead, minimal CPU instructions)
       for (let i = 0; i < this.activeCount; i++) {
         const p = this.particles[i];
 
-        // Smooth top fade (0 to 60px) and bottom fade (45% down to 94% height)
-        const topFade = p.y < 60 ? Math.max(0, p.y / 60) : 1.0;
-        const bottomFade = p.y < fadeStart ? 1.0 : (p.y >= height * 0.94 ? 0.0 : Math.max(0, 1.0 - (p.y - fadeStart) / fadeRange));
+        // Smooth top fade (0 to 60px) and bottom fade (fadeStart down to fadeEnd)
+        const topFade = p.y < 60 ? (p.y > 0 ? p.y * 0.01667 : 0) : 1.0;
+        const bottomFade = p.y < fadeStart ? 1.0 : (p.y >= fadeEnd ? 0.0 : (fadeEnd - p.y) * invFadeSpan);
         const fadeAlpha = topFade * bottomFade;
 
-        // Skip completely invisible particles: zero draw calls while in deep spawn zone
-        if (fadeAlpha <= 0.01) continue;
+        // Skip completely invisible particles: zero canvas draw call
+        if (fadeAlpha <= 0.015) continue;
+
+        const lvl = p.level;
+        const alphaStr = (this.baseAlphas[lvl] * fadeAlpha).toFixed(2);
+
+        // COLOR SHIFT LOGIC (Ultra-low compute power):
+        // 1. Play state OR bottom 20% (p.y >= shiftStart): ALWAYS pure green!
+        if (isPlayState || p.y >= shiftStart) {
+          ctx.fillStyle = this.greenPrefixes[lvl] + alphaStr + ')';
+        }
+        // 2. Full amber paused state AND above transition zone (p.y <= shiftEnd): direct pure amber!
+        else if (isFullAmber && p.y <= shiftEnd) {
+          ctx.fillStyle = this.amberPrefixes[lvl] + alphaStr + ')';
+        }
+        // 3. Shifting between green and amber (moving upward through transition zone or during state change)
+        else {
+          const posRatio = p.y <= shiftEnd ? 1.0 : (shiftStart - p.y) * invShiftSpan;
+          const t = amberFactor * posRatio;
+          const g = this.greenRgb[lvl];
+          const d = this.deltaRgb[lvl];
+          const r = (g[0] + d[0] * t) | 0;
+          const greenVal = (g[1] + d[1] * t) | 0;
+          const b = (g[2] + d[2] * t) | 0;
+          ctx.fillStyle = `rgba(${r},${greenVal},${b},${alphaStr})`;
+        }
 
         const drawW = (p.w * stretchX) | 0;
         const drawH = (p.h * stretchY) | 0;
         const drawX = (p.x - (drawW - p.w) * 0.5) | 0;
         const drawY = p.y | 0;
 
-        const c = this.cachedFills[p.level];
-        const finalAlpha = (c[3] * fadeAlpha).toFixed(3);
-        ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${finalAlpha})`;
         ctx.fillRect(drawX, drawY, drawW, drawH);
       }
     }
@@ -1790,12 +1830,12 @@
       if (isRunning) {
         timerSection?.classList.add('is-running');
         timerSection?.classList.remove('is-paused');
-        centerPad?.setAttribute('aria-label', `Focusing on ${state.activeTaskName}. Tap to pause, hold 1.2s to save.`);
+        centerPad?.setAttribute('aria-label', `Focusing on ${state.activeTaskName}. Tap to pause, hold 2s to save.`);
         document.title = `(${formatDigitalTime(state.timer.remainingSeconds)}) ${state.activeTaskName} • StudyArc`;
       } else if (state.timer.status === 'paused') {
         timerSection?.classList.remove('is-running');
         timerSection?.classList.add('is-paused');
-        centerPad?.setAttribute('aria-label', `Paused on ${state.activeTaskName}. Tap to resume, hold 1.2s to save.`);
+        centerPad?.setAttribute('aria-label', `Paused on ${state.activeTaskName}. Tap to resume, hold 2s to save.`);
         document.title = `Paused (${formatDigitalTime(state.timer.remainingSeconds)}) • StudyArc`;
       } else {
         timerSection?.classList.remove('is-running', 'is-paused');
@@ -2209,8 +2249,8 @@
 
     // Grace delay: normal clicks last ~80-160ms. Hold drain activates after 220ms
     const HOLD_DELAY_MS = 220;
-    const TOTAL_HOLD_MS = 1200; // 1.2-second hold period
-    const DRAIN_MS = TOTAL_HOLD_MS - HOLD_DELAY_MS; // 980ms drain
+    const TOTAL_HOLD_MS = 2000; // 2.0-second hold period
+    const DRAIN_MS = TOTAL_HOLD_MS - HOLD_DELAY_MS; // 1780ms drain
 
     let holdRaf = null;
     let holdDelayTimer = null;
@@ -2237,7 +2277,7 @@
       updateDigitalDisplay(visualSeconds);
 
       if (progress >= 1) {
-        // Complete 1.2-second hold: Trigger Save Progress & Exit!
+        // Complete 2-second hold: Trigger Save Progress & Exit!
         holdCompleted = true;
         isDraining = false;
         isCenterPadHolding = false;
@@ -2354,7 +2394,7 @@
         // Clean quick click/tap: toggle Play / Pause / New Task!
         handlePlayPauseAction();
       } else if (wasDraining) {
-        // Held partially (>220ms) but released before 1.2s: restore display cleanly
+        // Held partially (>220ms) but released before 2s: restore display cleanly
         renderTimerDisplay(state.timer.remainingSeconds, { duration: 340 });
         if (state.timer.status === 'running') {
           state.timer.lastTickTime = Date.now();
