@@ -192,161 +192,21 @@ input, textarea, [contenteditable="true"], .selectable-text {
 }
 
 /* ==========================================================================
-   PURE CSS FLOATING HEATMAP MATRIX STREAM (GPU ACCELERATED)
-   - Vertical rectangular boxes themed like GitHub heatmap cells
-   - Dynamic 1.4s smooth color shift: Vibrant GitHub Greens (running) vs Warm Honey Ambers (stopped/paused)
-   - Continuous upward drift spawning at mid-height (55vh) and fading out at the top
-   - Clustered on left/right flanks away from central timer ring
-   - Warp elongation and acceleration during hold-to-reset
+   FLOATING HEATMAP MATRIX STREAM CANVAS (ZERO-OVERHEAD GPU ACCELERATED)
+   - 56 smaller GitHub contribution boxes continuously drifting upward
+   - True velocity-integrated rocket acceleration without snap-back
    ========================================================================== */
-.bg-matrix-stream {
+.bg-matrix-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
   z-index: 1;
-  overflow: hidden;
+  display: block;
 }
 
-.matrix-item {
-  position: absolute;
-  left: var(--x);
-  top: 55vh; /* Spawn line at horizontal center / mid-height of page */
-  pointer-events: none;
-  will-change: transform, opacity;
-  animation: matrixItemDrift var(--dur, 16s) linear infinite;
-  animation-delay: var(--delay, 0s);
-}
-
-@keyframes matrixItemDrift {
-  0% {
-    transform: translate3d(0, 0, 0);
-    opacity: 0;
-  }
-  14% {
-    opacity: var(--target-opacity, 0.85);
-  }
-  74% {
-    opacity: var(--target-opacity, 0.85);
-  }
-  92% {
-    opacity: calc(var(--target-opacity, 0.85) * 0.3);
-  }
-  100% {
-    transform: translate3d(var(--drift-x, 0px), var(--travel-y, -63vh), 0);
-    opacity: 0;
-  }
-}
-
-.matrix-box {
-  width: var(--w, 12px);
-  height: var(--h, 17px);
-  border-radius: 2.5px;
-  transform-origin: center bottom;
-  pointer-events: none;
-  box-sizing: border-box;
-  will-change: transform, filter, background-color, border-color, box-shadow;
-  transition: 
-    background-color 1.4s cubic-bezier(0.2, 0.8, 0.2, 1),
-    border-color 1.4s cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 1.4s cubic-bezier(0.2, 0.8, 0.2, 1),
-    transform 80ms ease-out,
-    filter 80ms ease-out;
-}
-
-/* ==========================================================================
-   LEVEL PALETTES: GREEN (TIMER RUNNING)
-   Vibrant GitHub contribution shades from deep pine to radiant neon
-   ========================================================================== */
-.matrix-box.lvl-1 {
-  background-color: #0D2E18;
-  border: 1px solid rgba(16, 224, 104, 0.22);
-  box-shadow: 0 0 6px rgba(16, 224, 104, 0.08);
-  --target-opacity: 0.55;
-  --box-glow-color: rgba(16, 224, 104, 0.3);
-}
-
-.matrix-box.lvl-2 {
-  background-color: #134F2A;
-  border: 1px solid rgba(16, 224, 104, 0.35);
-  box-shadow: 0 0 8px rgba(16, 224, 104, 0.16);
-  --target-opacity: 0.70;
-  --box-glow-color: rgba(16, 224, 104, 0.45);
-}
-
-.matrix-box.lvl-3 {
-  background-color: #1F9851;
-  border: 1px solid rgba(36, 184, 98, 0.48);
-  box-shadow: 0 0 12px rgba(36, 184, 98, 0.26);
-  --target-opacity: 0.85;
-  --box-glow-color: rgba(36, 184, 98, 0.65);
-}
-
-.matrix-box.lvl-4 {
-  background-color: #10E068;
-  border: 1px solid rgba(78, 250, 143, 0.7);
-  box-shadow: 0 0 16px rgba(16, 224, 104, 0.42);
-  --target-opacity: 0.95;
-  --box-glow-color: rgba(16, 224, 104, 0.85);
-}
-
-/* ==========================================================================
-   LEVEL PALETTES: AMBER/YELLOW (STOPPED/PAUSED/IDLE)
-   Warm honey amber & golden bronze shades matching paused timer bead
-   ========================================================================== */
-body.is-timer-amber .matrix-box.lvl-1,
-body:not(.timer-running) .matrix-box.lvl-1 {
-  background-color: #2E1F09;
-  border-color: rgba(229, 169, 88, 0.22);
-  box-shadow: 0 0 6px rgba(229, 169, 88, 0.08);
-  --box-glow-color: rgba(229, 169, 88, 0.3);
-}
-
-body.is-timer-amber .matrix-box.lvl-2,
-body:not(.timer-running) .matrix-box.lvl-2 {
-  background-color: #4D330D;
-  border-color: rgba(229, 169, 88, 0.35);
-  box-shadow: 0 0 8px rgba(229, 169, 88, 0.16);
-  --box-glow-color: rgba(229, 169, 88, 0.45);
-}
-
-body.is-timer-amber .matrix-box.lvl-3,
-body:not(.timer-running) .matrix-box.lvl-3 {
-  background-color: #8C5C15;
-  border-color: rgba(245, 199, 126, 0.48);
-  box-shadow: 0 0 12px rgba(229, 169, 88, 0.26);
-  --box-glow-color: rgba(245, 199, 126, 0.65);
-}
-
-body.is-timer-amber .matrix-box.lvl-4,
-body:not(.timer-running) .matrix-box.lvl-4 {
-  background-color: #E5A958;
-  border-color: rgba(255, 220, 160, 0.7);
-  box-shadow: 0 0 16px rgba(229, 169, 88, 0.42);
-  --box-glow-color: rgba(229, 169, 88, 0.85);
-}
-
-/* ==========================================================================
-   HOLD-TO-RESET WARP ACCELERATION & STREAK ELONGATION
-   Boxes elongate vertically and surge upwards as user holds the dial pad
-   ========================================================================== */
-body.is-holding .matrix-box {
-  transform: scaleY(calc(1 + var(--hold-progress, 0) * 4.2)) scaleX(calc(1 - var(--hold-progress, 0) * 0.22)) translate3d(0, calc(var(--hold-progress, 0) * -65px), 0);
-  filter: brightness(calc(1 + var(--hold-progress, 0) * 1.15));
-  box-shadow: 0 0 calc(10px + var(--hold-progress, 0) * 22px) var(--box-glow-color);
-  transition: transform 60ms linear, filter 60ms linear, box-shadow 60ms linear;
-}
-
-/* Mobile responsive optimization: keep timer dial area clean */
-@media (max-width: 680px) {
-  .matrix-item.flank-inner {
-    display: none;
-  }
-}
-
-/* Aura disabled preference */
-html.aura-disabled .bg-matrix-stream {
+html.aura-disabled .bg-matrix-canvas {
   display: none !important;
 }
 
