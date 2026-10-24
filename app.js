@@ -985,20 +985,31 @@
       const el = document.getElementById(item.id);
       if (!el) continue;
       const len = (el.textContent || '').trim().length;
-      if (len > item.shrinkLen) {
-        el.style.fontSize = (item.id === 'stat-today-focus' || item.id === 'stat-total-focus') ? '0.62rem' : '0.72rem';
-      } else if (len > item.maxLen) {
-        el.style.fontSize = (item.id === 'stat-today-focus' || item.id === 'stat-total-focus') ? '0.68rem' : '0.80rem';
-      } else {
-        el.style.fontSize = '';
+      const targetSize = (len > item.shrinkLen)
+        ? ((item.id === 'stat-today-focus' || item.id === 'stat-total-focus') ? '0.62rem' : '0.72rem')
+        : (len > item.maxLen)
+          ? ((item.id === 'stat-today-focus' || item.id === 'stat-total-focus') ? '0.68rem' : '0.80rem')
+          : '';
+      if (el.style.fontSize !== targetSize) {
+        el.style.fontSize = targetSize;
       }
     }
   }
 
   // =========================================================================
-  // AUDIO SYNTHESIZER (Web Audio API Chimes)
+  // AUDIO SYNTHESIZER (Web Audio API Chimes with Auto-Sleep)
   // =========================================================================
   let audioContext = null;
+  let audioSuspendTimer = null;
+
+  function scheduleAudioSuspend() {
+    clearTimeout(audioSuspendTimer);
+    audioSuspendTimer = setTimeout(() => {
+      if (audioContext && audioContext.state === 'running') {
+        audioContext.suspend().catch(() => {});
+      }
+    }, 2500);
+  }
 
   function initAudio() {
     if (!audioContext) {
@@ -1065,6 +1076,8 @@
         osc.start(now);
         osc.stop(now + 0.23);
       }
+
+      scheduleAudioSuspend();
     } catch (e) {
       console.warn('StudyArc audio error:', e);
     }
@@ -1240,6 +1253,8 @@
     }
   }
 
+  const isCoarseTouchDevice = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+
   function renderDialColumn(col, v, maxBlur = 5.5) {
     const base = Math.floor(v);
     const f = v - base; // 0.0 <= f < 1.0
@@ -1250,9 +1265,10 @@
       col.layoutHolder.textContent = String(d1);
       col.activeLayer.textContent = String(d1);
       col.activeLayer.style.transform = 'translateY(0%) scale(1)';
-      col.activeLayer.style.filter = 'blur(0px)';
+      col.activeLayer.style.filter = '';
       col.activeLayer.style.opacity = '1';
       col.nextLayer.textContent = '';
+      col.nextLayer.style.filter = '';
       col.nextLayer.style.opacity = '0';
       return;
     }
@@ -1264,19 +1280,25 @@
     // Outgoing layer (d1, moving UP towards -50%)
     const oldY = -50 * f;
     const oldScale = 1 - f;
-    const oldBlur = Math.pow(f, 3) * maxBlur;
-
     col.activeLayer.style.transform = `translateY(${oldY.toFixed(2)}%) scale(${oldScale.toFixed(3)})`;
-    col.activeLayer.style.filter = `blur(${oldBlur.toFixed(2)}px)`;
+    if (!isCoarseTouchDevice && maxBlur > 0.1) {
+      const oldBlur = Math.pow(f, 3) * maxBlur;
+      col.activeLayer.style.filter = `blur(${oldBlur.toFixed(2)}px)`;
+    } else {
+      col.activeLayer.style.filter = '';
+    }
     col.activeLayer.style.opacity = (1 - f).toFixed(3);
 
     // Incoming layer (d2, moving IN from bottom +50% towards 0%)
     const newY = 50 * (1 - f);
     const newScale = f;
-    const newBlur = Math.pow(1 - f, 3) * maxBlur;
-
     col.nextLayer.style.transform = `translateY(${newY.toFixed(2)}%) scale(${newScale.toFixed(3)})`;
-    col.nextLayer.style.filter = `blur(${newBlur.toFixed(2)}px)`;
+    if (!isCoarseTouchDevice && maxBlur > 0.1) {
+      const newBlur = Math.pow(1 - f, 3) * maxBlur;
+      col.nextLayer.style.filter = `blur(${newBlur.toFixed(2)}px)`;
+    } else {
+      col.nextLayer.style.filter = '';
+    }
     col.nextLayer.style.opacity = f.toFixed(3);
   }
 
@@ -1675,53 +1697,52 @@
       // Single hardware glClearColor clear across framebuffer (GPU fast-path)
       ctx.clearRect(0, 0, this.width, this.height);
 
-      const amberT = this.currentAmber;
-      const greenT = 1.0 - amberT;
       const stretchY = this.currentStretchY || 1.0;
       const stretchX = this.currentStretchX || 1.0;
+      const height = this.height;
+      const fadeStart = height * 0.45;
+      const fadeRange = height * 0.49; // 45% down to 94%
 
-      // Precalculate 4 level fills once per frame (only 4 strings total)
-      const frameFills = new Array(4);
-      for (let lvl = 0; lvl < 4; lvl++) {
-        const gColor = this.colorsGreen[lvl];
-        const aColor = this.colorsAmber[lvl];
+      const amberT = this.currentAmber;
+      const greenT = 1.0 - amberT;
 
-        const r = (gColor.bg[0] * greenT + aColor.bg[0] * amberT) | 0;
-        const g = (gColor.bg[1] * greenT + aColor.bg[1] * amberT) | 0;
-        const b = (gColor.bg[2] * greenT + aColor.bg[2] * amberT) | 0;
-        const a = gColor.bg[3] * greenT + aColor.bg[3] * amberT;
-
-        frameFills[lvl] = `rgba(${r},${g},${b},${a})`;
+      // Cache color computation - only recalculate when actively shifting colors
+      if (!this.cachedFills || Math.abs(this.lastCachedAmber - amberT) > 0.005) {
+        this.lastCachedAmber = amberT;
+        if (!this.cachedFills) {
+          this.cachedFills = [new Array(4), new Array(4), new Array(4), new Array(4)];
+        }
+        for (let lvl = 0; lvl < 4; lvl++) {
+          const gColor = this.colorsGreen[lvl];
+          const aColor = this.colorsAmber[lvl];
+          this.cachedFills[lvl][0] = (gColor.bg[0] * greenT + aColor.bg[0] * amberT) | 0;
+          this.cachedFills[lvl][1] = (gColor.bg[1] * greenT + aColor.bg[1] * amberT) | 0;
+          this.cachedFills[lvl][2] = (gColor.bg[2] * greenT + aColor.bg[2] * amberT) | 0;
+          this.cachedFills[lvl][3] = gColor.bg[3] * greenT + aColor.bg[3] * amberT;
+        }
       }
 
-      // 4-Pass Level Batching: Reduces draw calls from 34+ down to exactly 4 GPU fills!
-      // Top and bottom fades are rendered by GPU hardware compositor via CSS mask-image
-      for (let lvl = 0; lvl < 4; lvl++) {
-        let hasLevel = false;
-        ctx.beginPath();
+      // Direct in-engine particle alpha rendering (eliminates ~624MB/s GPU CSS mask-image compositing)
+      for (let i = 0; i < this.activeCount; i++) {
+        const p = this.particles[i];
 
-        for (let i = 0; i < this.activeCount; i++) {
-          const p = this.particles[i];
-          if (p.level !== lvl) continue;
+        // Smooth top fade (0 to 60px) and bottom fade (45% down to 94% height)
+        const topFade = p.y < 60 ? Math.max(0, p.y / 60) : 1.0;
+        const bottomFade = p.y < fadeStart ? 1.0 : (p.y >= height * 0.94 ? 0.0 : Math.max(0, 1.0 - (p.y - fadeStart) / fadeRange));
+        const fadeAlpha = topFade * bottomFade;
 
-          hasLevel = true;
-          const drawW = (p.w * stretchX) | 0;
-          const drawH = (p.h * stretchY) | 0;
-          const drawX = (p.x - (drawW - p.w) * 0.5) | 0;
-          const drawY = p.y | 0;
-          const radius = Math.min(drawW * 0.45, 2.2);
+        // Skip completely invisible particles: zero draw calls while in deep spawn zone
+        if (fadeAlpha <= 0.01) continue;
 
-          if (ctx.roundRect) {
-            ctx.roundRect(drawX, drawY, drawW, drawH, radius);
-          } else {
-            ctx.rect(drawX, drawY, drawW, drawH);
-          }
-        }
+        const drawW = (p.w * stretchX) | 0;
+        const drawH = (p.h * stretchY) | 0;
+        const drawX = (p.x - (drawW - p.w) * 0.5) | 0;
+        const drawY = p.y | 0;
 
-        if (hasLevel) {
-          ctx.fillStyle = frameFills[lvl];
-          ctx.fill();
-        }
+        const c = this.cachedFills[p.level];
+        const finalAlpha = (c[3] * fadeAlpha).toFixed(3);
+        ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${finalAlpha})`;
+        ctx.fillRect(drawX, drawY, drawW, drawH);
       }
     }
   }
@@ -2856,14 +2877,6 @@
 
           cell.dataset.date = dStr;
           cell.dataset.minutes = mins;
-
-          cell.addEventListener('mouseenter', handleCellHover);
-          cell.addEventListener('mouseleave', handleCellLeave);
-          cell.addEventListener('click', (e) => {
-            e.stopPropagation();
-            handleCellLeave();
-            openDayDialog(dStr);
-          });
         }
 
         col.appendChild(cell);
@@ -2988,6 +3001,30 @@
 
     const scrollArea = document.getElementById('heatmap-scroll-area');
     if (!scrollArea) return;
+
+    // Delegated event handling for 730 heatmap day cells (eliminates 2,190 listener allocations)
+    const trackEl = document.getElementById('heatmap-track');
+    if (trackEl) {
+      trackEl.addEventListener('click', (e) => {
+        const cell = e.target.closest('.cell[data-date]');
+        if (cell && cell.dataset.date) {
+          handleCellLeave();
+          openDayDialog(cell.dataset.date);
+        }
+      });
+      trackEl.addEventListener('mouseover', (e) => {
+        const cell = e.target.closest('.cell[data-date]');
+        if (cell && cell.dataset.date) {
+          handleCellHover({ currentTarget: cell });
+        }
+      });
+      trackEl.addEventListener('mouseout', (e) => {
+        const cell = e.target.closest('.cell[data-date]');
+        if (cell) {
+          handleCellLeave();
+        }
+      });
+    }
 
     // Smooth horizontal mouse wheel scroll with snappy feel
     scrollArea.addEventListener('wheel', (e) => {
@@ -6688,20 +6725,12 @@
   }
 
   function initLenis() {
-    if (typeof Lenis === 'undefined') return;
-
-    try {
-      globalLenis = new Lenis({
-        autoRaf: true,
-        smoothWheel: true,
-        duration: 1.1,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      });
-      window.lenis = globalLenis;
-    } catch (e) {
-      console.warn('StudyArc: Could not initialize window Lenis:', e);
-    }
-
+    // The main app layout is an overflow: hidden fixed-height viewport with
+    // touchmove preventDefault, so a global window Lenis RAF loop is unnecessary
+    // and continuously burns CPU/battery. We delegate smooth scrolling
+    // exclusively to dialog feeds via initShellLenis().
+    globalLenis = null;
+    window.lenis = null;
     initShellLenis();
   }
 
