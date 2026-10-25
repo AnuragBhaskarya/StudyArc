@@ -1567,6 +1567,9 @@
       this.isHolding = false;
       this.baseRate = 0.45;
       this.currentRate = 0.45;
+      this.targetRate = 0.45;
+      this.rampRaf = null;
+      this.rampLastTime = 0;
       this.animations = [];
 
       this.build();
@@ -1667,10 +1670,48 @@
       }
     }
 
+    // Smoothly ease the actual playback speed toward its target. Runs only
+    // while the speed is changing (hold + a short coast-down after release),
+    // then stops completely.
+    startRamp() {
+      if (!this.isRunning || this.rampRaf !== null) return;
+      this.rampLastTime = performance.now();
+
+      const step = (now) => {
+        this.rampRaf = null;
+        if (!this.isRunning) return;
+
+        const dt = Math.min(0.05, Math.max(0.001, (now - this.rampLastTime) / 1000));
+        this.rampLastTime = now;
+
+        const diff = this.targetRate - this.currentRate;
+        if (Math.abs(diff) < 0.02) {
+          if (this.currentRate !== this.targetRate) this.applyRate(this.targetRate);
+          return;
+        }
+
+        // Accelerate eagerly, then coast down gently on release.
+        const responsiveness = diff > 0 ? 9 : 3.2;
+        const factor = 1 - Math.exp(-responsiveness * dt);
+        this.applyRate(this.currentRate + diff * factor);
+        this.rampRaf = requestAnimationFrame(step);
+      };
+
+      this.rampRaf = requestAnimationFrame(step);
+    }
+
     setTimerStatus(status) {
       this.baseRate = status === 'running' ? 1 : 0.45;
       this.container?.classList.toggle('is-amber', status !== 'running');
-      if (!this.isHolding) this.applyRate(this.baseRate);
+
+      if (this.isHolding) return;
+
+      this.targetRate = this.baseRate;
+      if (this.isRunning && Math.abs(this.currentRate - this.targetRate) > 0.02) {
+        this.startRamp();
+      } else if (!this.isRunning) {
+        this.applyRate(this.baseRate);
+      }
     }
 
     setHolding(isHolding, progress = 0) {
@@ -1680,11 +1721,14 @@
           this.container?.classList.add('is-boosting');
         }
         const p = Math.min(1, Math.max(0, progress));
-        this.applyRate(1 + Math.pow(p, 1.05) * 8.5);
+        // Starts with a real, visible boost and climbs quickly to ~12.5x.
+        this.targetRate = 2.4 + Math.pow(p, 0.72) * 10.1;
+        this.startRamp();
       } else if (this.isHolding) {
         this.isHolding = false;
         this.container?.classList.remove('is-boosting');
-        this.applyRate(this.baseRate);
+        this.targetRate = this.baseRate;
+        this.startRamp();
       }
     }
 
@@ -1699,16 +1743,26 @@
       for (let i = 0; i < this.animations.length; i++) {
         this.animations[i].play();
       }
-      this.applyRate(this.isHolding ? this.currentRate : this.baseRate);
+      if (this.isHolding) {
+        this.applyRate(this.currentRate);
+      } else {
+        this.targetRate = this.baseRate;
+        this.applyRate(this.baseRate);
+      }
     }
 
     stop() {
       this.isRunning = false;
+      if (this.rampRaf !== null) {
+        cancelAnimationFrame(this.rampRaf);
+        this.rampRaf = null;
+      }
       if (this.isHolding) {
         this.isHolding = false;
         this.container?.classList.remove('is-boosting');
-        this.applyRate(this.baseRate);
       }
+      this.targetRate = this.baseRate;
+      this.applyRate(this.baseRate);
       for (let i = 0; i < this.animations.length; i++) {
         this.animations[i].pause();
       }
