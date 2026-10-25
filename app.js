@@ -71,6 +71,7 @@
   let homeIntroTimers = new Set();
   let homeIntroDialActive = false;
   let homeIntroDialRaf = null;
+  let currentAuthSequence = 0;
 
   // Central high-speed precomputed cache & indices for zero-lag 60/120fps modal opens
   const sessionDataIndex = {
@@ -187,11 +188,19 @@
 
   async function syncWithBackend(options = {}) {
     const suppressAuthDialog = Boolean(options.suppressAuthDialog);
+    const seq = currentAuthSequence;
     try {
       const res = await fetch('/api/state');
+      if (seq !== currentAuthSequence) {
+        return { stale: true, authenticated: Boolean(state.authenticated && state.user) };
+      }
+
       if (res.status === 401) {
-        state.authenticated = false;
-        state.user = null;
+        if (state.authenticated) {
+          state.authenticated = false;
+          state.user = null;
+          saveState();
+        }
         document.documentElement.classList.add('unauthenticated-gate');
         updateAuthUI();
         if (!suppressAuthDialog) openAuthDialog('login');
@@ -200,11 +209,10 @@
 
       if (res.ok) {
         const data = await res.json();
+        if (seq !== currentAuthSequence) {
+          return { stale: true, authenticated: Boolean(state.authenticated && state.user) };
+        }
         if (data.success) {
-          const wasGated = document.documentElement.classList.contains('unauthenticated-gate');
-          if (wasGated) {
-            prepareAppLoaderForIntro('Syncing your progress', { immediate: true });
-          }
           state.authenticated = true;
           state.user = data.user || null;
           document.documentElement.classList.remove('unauthenticated-gate');
@@ -249,9 +257,6 @@
 
           // Start multi-device real-time SSE stream
           initRealtimeTimerSync();
-          if (wasGated) {
-            revealAfterSignIn();
-          }
           return { authenticated: true, authRequired: false };
         }
       }
@@ -781,11 +786,12 @@
       return;
     }
 
-    if (dialog.open) {
-      dialog.close();
-      if (window.AuthModalDots && typeof window.AuthModalDots.stop === 'function') {
-        window.AuthModalDots.stop();
-      }
+    try {
+      if (typeof dialog.close === 'function') dialog.close();
+    } catch (_) {}
+    dialog.removeAttribute('open');
+    if (window.AuthModalDots && typeof window.AuthModalDots.stop === 'function') {
+      window.AuthModalDots.stop();
     }
 
     // Resume the ambient stream only when no other modal is still open.
@@ -834,6 +840,7 @@
       const data = await res.json();
 
       if (res.ok && data.success) {
+        currentAuthSequence++;
         state.authenticated = true;
         state.user = data.user;
         saveState();
@@ -842,8 +849,9 @@
         // Cover the app while the freshly authenticated state is fetched, then
         // hand over to the same one-shot entrance used on a normal page load.
         prepareAppLoaderForIntro('Syncing your progress', { immediate: true });
-        updateAuthUI();
+        document.documentElement.classList.remove('unauthenticated-gate');
         closeAuthDialog(true);
+        updateAuthUI();
         await revealAfterSignIn();
       } else {
         if (errorEl) {
@@ -943,6 +951,7 @@
       const data = await res.json();
 
       if (res.ok && data.success) {
+        currentAuthSequence++;
         state.authenticated = true;
         state.user = data.user;
         saveState();
@@ -951,8 +960,9 @@
         // A new account gets the exact same loader + entrance treatment as a
         // returning account, once its server state is in place.
         prepareAppLoaderForIntro('Syncing your progress', { immediate: true });
-        updateAuthUI();
+        document.documentElement.classList.remove('unauthenticated-gate');
         closeAuthDialog(true);
+        updateAuthUI();
         await revealAfterSignIn();
       } else {
         if (errorEl) {
@@ -1009,6 +1019,7 @@
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (_) {}
+    currentAuthSequence++;
     saveState();
     matrixStreamEngine?.stop();
     document.documentElement.classList.add('unauthenticated-gate', 'intro-aura-hidden');
@@ -7795,11 +7806,10 @@
     document.body.setAttribute('aria-busy', 'true');
     if (!loader) return;
     loader.setAttribute('aria-hidden', 'false');
+    loader.removeAttribute('style');
     if (options && options.immediate) {
       loader.style.transition = 'none';
       loader.classList.remove('is-hidden');
-      loader.style.opacity = '1';
-      loader.style.visibility = 'visible';
       void loader.offsetWidth;
       loader.style.transition = '';
     } else {
@@ -7821,12 +7831,11 @@
     clearLoaderFailsafe();
     if (!loader) return Promise.resolve();
 
+    loader.removeAttribute('style');
     if (options && options.immediate) {
       loader.style.transition = 'none';
       loader.classList.add('is-hidden');
       loader.setAttribute('aria-hidden', 'true');
-      loader.style.opacity = '0';
-      loader.style.visibility = 'hidden';
       void loader.offsetWidth;
       loader.style.transition = '';
       return Promise.resolve();
@@ -8023,23 +8032,23 @@
       updateTimerRing(0, { intro: true });
 
       // Staggered Group Orchestration:
-      // Group 1: Dial Scale & Fade (CSS: 40ms - 480ms)
-      // Group 2: Dial Digits Smooth Slide Up (CSS: 440ms - 920ms)
-      // Group 3: Dial Ring Fill with Overshoot (JS: starts at 880ms)
-      scheduleHomeIntroStep(() => startHomeIntroDial(generation), 880);
+      // Group 1: Dial Pop Scale In with Overshoot & Fade (CSS: 180ms - 740ms)
+      // Group 2: Dial Digits Smooth Slide Up (CSS: 680ms - 1160ms)
+      // Group 3: Dial Ring Fill with Overshoot (JS: starts at 1050ms)
+      scheduleHomeIntroStep(() => startHomeIntroDial(generation), 1050);
 
-      // Group 4: Header Items Drop Down (CSS: starts at 960ms)
-      // Group 5: Stats Pills Pop Overshoot (CSS: starts at 1080ms)
-      // Group 6: Heatmap Card Slide (CSS: starts at 1220ms)
+      // Group 4: Header Items Drop Down (CSS: starts at 1120ms)
+      // Group 5: Stats Pills Pop Overshoot (CSS: starts at 1240ms)
+      // Group 6: Heatmap Card Slide (CSS: starts at 1380ms)
       // Heatmap cascading cells wave reveal (triggers right with heatmap card)
-      scheduleHomeIntroStep(() => replayHeatmapIntroReveal(), 1300);
+      scheduleHomeIntroStep(() => replayHeatmapIntroReveal(), 1450);
 
       // Group 7: Ambient Fluid Aura Soft Fade-in (as all groups land)
       scheduleHomeIntroStep(() => {
         if (generation !== homeIntroGeneration) return;
         document.documentElement.classList.remove('intro-aura-hidden');
         if (state.auraEnabled !== false) matrixStreamEngine?.start();
-      }, 1950);
+      }, 2100);
 
       // Cleanup: remove intro class once pure CSS animations complete
       scheduleHomeIntroStep(() => {
@@ -8047,7 +8056,7 @@
           document.body.classList.remove('is-home-intro');
           homeIntroRunning = false;
         }
-      }, 2700);
+      }, 2900);
     } catch (err) {
       console.warn('StudyArc: Home intro could not complete, revealing final state:', err);
       cancelHomeIntro();
@@ -8083,10 +8092,11 @@
 
         // Silently verify if a valid session cookie exists on server
         checkAuthAndSync({ suppressAuthDialog: true }).then((res) => {
-          if (res && res.authenticated) {
+          if (res && res.authenticated && !res.stale) {
             prepareAppLoaderForIntro('Syncing your progress', { immediate: true });
-            updateAuthUI();
+            document.documentElement.classList.remove('unauthenticated-gate');
             closeAuthDialog(true);
+            updateAuthUI();
             revealAfterSignIn();
           }
         }).catch(() => {});
