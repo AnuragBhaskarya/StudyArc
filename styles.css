@@ -871,6 +871,9 @@ body.is-dragging .timer-bead-rim {
   display: inline-flex;
   justify-content: center;
   align-items: center;
+  /* Reserve the widest glyph ("0") so a crossfade never changes the column
+     width and nudges the rest of the timer sideways. */
+  min-width: 1ch;
   line-height: 1;
   vertical-align: middle;
 }

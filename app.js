@@ -428,9 +428,15 @@
       const taskName = serverTimer.activeTaskName || state.activeTaskName || (state.subjects && state.subjects.length > 0 ? state.subjects[0].name : 'Focus Session');
       const targetDuration = serverTimer.targetSeconds || DEFAULT_TIMER_SECONDS;
       const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
+      const sessionStartTime = state.activeTaskStartTime;
+      logSession(minutesCompleted, taskName, {
+        render: false,
+        persist: false,
+        startTime: sessionStartTime,
+        deferUIDelay: 380
+      });
       const streakBonus = Math.max(0, state.streak || 0);
       spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
-      logSession(minutesCompleted, taskName);
 
       state.timer.status = 'idle';
       state.timer.targetSeconds = targetDuration;
@@ -442,7 +448,8 @@
       state.activeTaskTargetSeconds = null;
       if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
       saveState();
-      renderAll();
+      renderTimer();
+      scheduleSessionUIUpdate(380);
       return;
     }
 
@@ -481,7 +488,9 @@
       }
       saveState();
       renderTimer();
-      renderStats();
+      // The reset echo can arrive while the digits are still crossfading.
+      // Stats are not part of the timer, so let them settle afterwards.
+      scheduleSessionUIUpdate(380);
       return;
     }
 
@@ -1236,201 +1245,203 @@
   }
 
   // =========================================================================
-  // CINEMATIC DIAL ENGINE (Zack 3D Depth-of-Field Wheel for numbers)
+  // SHARED EASING CURVES
   // =========================================================================
   const easeInOutQuart = t => t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
 
   // =========================================================================
-  // CINEMATIC KINETIC DIAL ENGINE (Continuous Follower with Zack 3D Blur)
+  // COMPOSITOR-FRIENDLY DIGIT DIAL
   // =========================================================================
+  // A digit change crossfades two layers using only transform + opacity:
+  // the outgoing digit scales down and fades, the incoming digit scales up
+  // from the same smaller size and fades in. There is deliberately no
+  // translateY slide and no per-frame blur/filter work, so the whole
+  // transition runs on the compositor and cannot jitter the main thread.
+  const DIAL_TRANSITION_MS = 360;
+  const DIAL_OUT_SCALE = 0.15;
+  const DIAL_IN_SCALE = 0.15;
+  const DIAL_EASE = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+
+  function dialPrefersReducedMotion() {
+    return typeof window !== 'undefined' && window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
   class DialColumn {
     constructor(parentEl, initialChar) {
-      this.currentVal = parseInt(initialChar, 10) || 0;
-      this.targetVal = this.currentVal;
-      this.targetPos = this.currentVal;
-      this.animating = false;
-      this.rafId = null;
-      this.lastTime = 0;
+      const initial = String(parseInt(initialChar, 10) || 0);
+      this.currentDigit = initial;
+      this.targetDigit = null;
+      this.pendingDigit = null;
+      this.isTransitioning = false;
+      this.transitionToken = 0;
+      this.animations = [];
+      this.finishTimer = null;
 
       this.col = document.createElement('span');
       this.col.className = 'dial-col';
 
       this.layoutHolder = document.createElement('span');
       this.layoutHolder.className = 'dial-layout-holder';
-      this.layoutHolder.textContent = initialChar;
+      this.layoutHolder.textContent = initial;
       this.col.appendChild(this.layoutHolder);
 
       this.activeLayer = document.createElement('span');
       this.activeLayer.className = 'dial-layer';
-      this.activeLayer.textContent = initialChar;
+      this.activeLayer.textContent = initial;
+      this.activeLayer.style.transform = 'scale(1)';
+      this.activeLayer.style.opacity = '1';
       this.col.appendChild(this.activeLayer);
 
       this.nextLayer = document.createElement('span');
       this.nextLayer.className = 'dial-layer';
       this.nextLayer.textContent = '';
+      this.nextLayer.style.transform = `scale(${DIAL_IN_SCALE})`;
       this.nextLayer.style.opacity = '0';
       this.col.appendChild(this.nextLayer);
 
       parentEl.appendChild(this.col);
-      renderDialColumn(this, this.currentVal, 0);
+    }
+
+    _setLayer(layer, digit, scale, opacity) {
+      if (layer.textContent !== digit) layer.textContent = digit;
+      layer.style.transform = `scale(${scale})`;
+      layer.style.opacity = String(opacity);
+    }
+
+    _cancelAnimations() {
+      clearTimeout(this.finishTimer);
+      this.finishTimer = null;
+      for (let i = 0; i < this.animations.length; i++) {
+        try { this.animations[i].cancel(); } catch (e) {}
+      }
+      this.animations = [];
+    }
+
+    _settle(digit) {
+      this._cancelAnimations();
+      this.transitionToken++;
+      this.currentDigit = digit;
+      this.targetDigit = null;
+      this.pendingDigit = null;
+      this.isTransitioning = false;
+      this._setLayer(this.activeLayer, digit, 1, 1);
+      this._setLayer(this.nextLayer, '', DIAL_IN_SCALE, 0);
+      this.layoutHolder.textContent = digit;
     }
 
     setStatic(digit) {
-      if (this.rafId) {
-        cancelAnimationFrame(this.rafId);
-        this.rafId = null;
-      }
-      this.animating = false;
-      this.currentVal = parseInt(digit, 10) || 0;
-      this.targetVal = this.currentVal;
-      this.targetPos = this.currentVal;
-      renderDialColumn(this, this.currentVal, 0);
+      const next = String(parseInt(digit, 10) || 0);
+      if (!this.isTransitioning && this.currentDigit === next) return;
+      this._settle(next);
     }
 
     animateTo(targetDigit, direction = 1, options = {}) {
-      const targetInt = parseInt(targetDigit, 10) || 0;
+      const next = String(parseInt(targetDigit, 10) || 0);
 
-      // Motion blur is expensive to re-rasterize every frame. Hold-to-reset
-      // updates the digits rapidly, so it explicitly opts out of blur.
-      this.disableBlur = Boolean(options.disableBlur);
-
-      // If already targeting this digit, keep smoothly rolling!
-      if (this.animating && this.targetVal === targetInt) {
+      // Hold-to-reset and bead scrubbing update the display much faster than
+      // a transition can finish. Snapping those values keeps the digits
+      // locked to the ring and avoids a permanent crossfade backlog.
+      if (options.rapid || dialPrefersReducedMotion()) {
+        this.setStatic(next);
         return;
       }
 
-      // If already static at this exact target, nothing to do
-      const currentInt = ((Math.round(this.currentVal) % 10) + 10) % 10;
-      if (!this.animating && Math.abs(this.currentVal - Math.round(this.currentVal)) < 0.01 && currentInt === targetInt) {
-        return;
-      }
-
-      let newTargetPos;
-      if (direction >= 0) {
-        // Find smallest integer >= currentVal with digit === targetInt
-        const base = Math.floor(this.currentVal);
-        const curDigit = ((base % 10) + 10) % 10;
-        let diff = (targetInt - curDigit + 10) % 10;
-        if (diff === 0 && this.currentVal > base + 0.01) {
-          diff = 10;
+      if (this.isTransitioning) {
+        // The finish event can be delayed while a tab is throttled. If the
+        // animation has already reached its end, settle it now instead of
+        // queueing behind a stale transition.
+        if (this.animations.length && this.animations.every(a => a.playState === 'finished')) {
+          this._settle(this.targetDigit ?? this.currentDigit);
+        } else {
+          if (next !== this.targetDigit) this.pendingDigit = next;
+          return;
         }
-        newTargetPos = base + diff + (options.spins || 0) * 10;
-      } else {
-        // Find largest integer <= currentVal with digit === targetInt
-        const base = Math.ceil(this.currentVal);
-        const curDigit = ((base % 10) + 10) % 10;
-        let diff = (curDigit - targetInt + 10) % 10;
-        if (diff === 0 && this.currentVal < base - 0.01) {
-          diff = 10;
-        }
-        newTargetPos = base - diff - (options.spins || 0) * 10;
       }
 
-      this.targetPos = newTargetPos;
-      this.targetVal = targetInt;
-
-      // Start the RAF loop only if not already animating
-      if (!this.animating) {
-        this.animating = true;
-        this.lastTime = performance.now();
-        this.rafId = requestAnimationFrame(this.tick.bind(this));
-      }
+      if (next === this.currentDigit) return;
+      this._startTransition(next, options);
     }
 
-    tick(now) {
-      if (!this.animating) return;
+    _startTransition(next, options = {}) {
+      const outgoing = this.activeLayer;
+      const incoming = this.nextLayer;
 
-      const dt = Math.min(0.04, (now - this.lastTime) / 1000 || 0.016);
-      this.lastTime = now;
-
-      const diff = this.targetPos - this.currentVal;
-      const dist = Math.abs(diff);
-
-      if (dist < 0.008) {
-        const finalDigit = ((Math.round(this.targetPos) % 10) + 10) % 10;
-        this.currentVal = finalDigit;
-        this.targetPos = finalDigit;
-        this.targetVal = finalDigit;
-        renderDialColumn(this, finalDigit, 0);
-        this.animating = false;
-        this.rafId = null;
+      if (typeof outgoing.animate !== 'function') {
+        this._settle(next);
         return;
       }
 
-      // Dynamic pacing:
-      // Single-step adjustments (dist ~ 1): decay ~ 8.5 (smooth ~320ms roll)
-      // Fast sweeping or hold drain (dist > 1.2): decay scales up dynamically so it tracks responsively
-      const decay = dist <= 1.2 ? 8.5 : Math.min(18, 8.5 + (dist - 1.2) * 1.8);
-      const factor = 1 - Math.exp(-decay * dt);
-      this.currentVal += diff * factor;
+      const duration = Math.max(80, Number(options.duration) || DIAL_TRANSITION_MS);
 
-      // Motion blur proportional to velocity (Zack 3D depth-of-field blur)
-      const speed = dist * decay;
-      const blur = this.disableBlur ? 0 : Math.min(6.5, Math.max(0, (speed - 2.5) * 0.22));
+      this.isTransitioning = true;
+      this.targetDigit = next;
+      this.pendingDigit = null;
 
-      renderDialColumn(this, this.currentVal, blur);
+      // Underlying post-animation state. The WAAPI animations override it
+      // while running, so cancelling never flashes the wrong glyph.
+      this._setLayer(outgoing, this.currentDigit, 1, 1);
+      this._setLayer(incoming, next, DIAL_IN_SCALE, 0);
 
-      this.rafId = requestAnimationFrame(this.tick.bind(this));
+      const outAnim = outgoing.animate(
+        [
+          { transform: 'scale(1)', opacity: 1 },
+          { transform: `scale(${DIAL_OUT_SCALE})`, opacity: 0 }
+        ],
+        { duration, easing: DIAL_EASE, fill: 'both' }
+      );
+      const inAnim = incoming.animate(
+        [
+          { transform: `scale(${DIAL_IN_SCALE})`, opacity: 0 },
+          { transform: 'scale(1)', opacity: 1 }
+        ],
+        { duration, easing: DIAL_EASE, fill: 'both' }
+      );
+
+      this.animations = [outAnim, inAnim];
+
+      const token = ++this.transitionToken;
+      const finish = () => {
+        if (token !== this.transitionToken || !this.isTransitioning) return;
+        this._finishTransition(token);
+      };
+
+      outAnim.addEventListener('finish', finish);
+      inAnim.addEventListener('finish', finish);
+
+      // Safety net for background tabs where finish delivery can lag.
+      this.finishTimer = setTimeout(finish, duration + 80);
+    }
+
+    _finishTransition(token) {
+      if (token !== this.transitionToken || !this.isTransitioning) return;
+
+      const settled = this.targetDigit;
+      if (settled == null) {
+        this.isTransitioning = false;
+        return;
+      }
+      const queued = this.pendingDigit;
+
+      this._cancelAnimations();
+      this.currentDigit = settled;
+      this.targetDigit = null;
+      this.pendingDigit = null;
+      this.isTransitioning = false;
+
+      this._setLayer(this.activeLayer, settled, 1, 1);
+      this._setLayer(this.nextLayer, '', DIAL_IN_SCALE, 0);
+      this.layoutHolder.textContent = settled;
+
+      if (queued !== null && queued !== settled) {
+        this._startTransition(queued);
+      }
     }
 
     destroy() {
-      if (this.rafId) cancelAnimationFrame(this.rafId);
-      this.animating = false;
+      this._cancelAnimations();
       this.col.remove();
     }
-  }
-
-  const isCoarseTouchDevice = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-
-  function renderDialColumn(col, v, maxBlur = 5.5) {
-    const base = Math.floor(v);
-    const f = v - base; // 0.0 <= f < 1.0
-    const d1 = ((base % 10) + 10) % 10;
-    const d2 = (d1 + 1) % 10;
-    const d1Str = String(d1);
-    const d2Str = String(d2);
-
-    // Only touch the DOM when the visible character actually changes. During
-    // long rolls most frames reuse the same glyphs, so this avoids needless
-    // text mutations + re-rasterization.
-    if (col.layoutHolder.textContent !== d1Str) col.layoutHolder.textContent = d1Str;
-    if (col.activeLayer.textContent !== d1Str) col.activeLayer.textContent = d1Str;
-
-    if (f < 0.001) {
-      col.activeLayer.style.transform = 'translateY(0%) scale(1)';
-      col.activeLayer.style.filter = '';
-      col.activeLayer.style.opacity = '1';
-      if (col.nextLayer.textContent !== '') col.nextLayer.textContent = '';
-      col.nextLayer.style.filter = '';
-      col.nextLayer.style.opacity = '0';
-      return;
-    }
-
-    if (col.nextLayer.textContent !== d2Str) col.nextLayer.textContent = d2Str;
-
-    // Outgoing layer (d1, moving UP towards -50%)
-    const oldY = -50 * f;
-    const oldScale = 1 - f;
-    col.activeLayer.style.transform = `translateY(${oldY.toFixed(2)}%) scale(${oldScale.toFixed(3)})`;
-    if (!isCoarseTouchDevice && maxBlur > 0.1) {
-      const oldBlur = Math.pow(f, 3) * maxBlur;
-      col.activeLayer.style.filter = `blur(${oldBlur.toFixed(2)}px)`;
-    } else {
-      col.activeLayer.style.filter = '';
-    }
-    col.activeLayer.style.opacity = (1 - f).toFixed(3);
-
-    // Incoming layer (d2, moving IN from bottom +50% towards 0%)
-    const newY = 50 * (1 - f);
-    const newScale = f;
-    col.nextLayer.style.transform = `translateY(${newY.toFixed(2)}%) scale(${newScale.toFixed(3)})`;
-    if (!isCoarseTouchDevice && maxBlur > 0.1) {
-      const newBlur = Math.pow(1 - f, 3) * maxBlur;
-      col.nextLayer.style.filter = `blur(${newBlur.toFixed(2)}px)`;
-    } else {
-      col.nextLayer.style.filter = '';
-    }
-    col.nextLayer.style.opacity = f.toFixed(3);
   }
 
   class DialController {
@@ -1461,10 +1472,9 @@
 
       for (let i = 0; i < targetLen; i++) {
         const col = this.columns[i];
-        if (i < hideCount) {
-          col.col.style.display = 'none';
-        } else {
-          col.col.style.display = 'inline-flex';
+        const display = i < hideCount ? 'none' : 'inline-flex';
+        if (col.col.style.display !== display) {
+          col.col.style.display = display;
         }
 
         const char = paddedStr[i];
@@ -1510,6 +1520,16 @@
     const secs = safeSecs % 60;
     const hasHours = hrs > 0;
 
+    const timeDelta = lastDigitalSecs === -1 ? 0 : (safeSecs - lastDigitalSecs);
+
+    // The running timer calls this at 4Hz, so most calls land on the same
+    // displayed second. Bail out before touching the dials: re-setting a
+    // digit here used to cancel its transition mid-flight (the main source
+    // of choppy digit changes).
+    if (lastDigitalSecs !== -1 && timeDelta === 0 && !forceNoAnim) {
+      return;
+    }
+
     // Toggle sub-hour class for seamless animated collapse and scale
     digitsEl.classList.toggle('has-hours', hasHours);
     digitsEl.classList.toggle('is-sub-hour', !hasHours);
@@ -1517,11 +1537,10 @@
     ensureDialControllers();
 
     // Determine direction and whether to animate:
-    // When time decreases (countdown, hold-drain, sliding down): dir = -1 (down)
-    // When time increases (sliding up): dir = 1 (up)
-    const timeDelta = lastDigitalSecs === -1 ? 0 : (safeSecs - lastDigitalSecs);
+    // When time decreases (countdown, hold-drain, scrubbing down): dir = -1
+    // When time increases (preset, reset, scrubbing up): dir = 1
     const dir = timeDelta >= 0 ? 1 : -1;
-    const shouldAnimate = !forceNoAnim && lastDigitalSecs !== -1 && timeDelta !== 0;
+    const shouldAnimate = !forceNoAnim && !options.rapid && lastDigitalSecs !== -1 && timeDelta !== 0;
     lastDigitalSecs = safeSecs;
 
     const dialOptions = { ...options, totalDelta: timeDelta };
@@ -1872,17 +1891,33 @@
     const secs = totalSecs % 60;
     const secStr = String(secs).padStart(2, '0') + 's';
 
-    todayStatEl.textContent = hrs > 0
+    const nextText = hrs > 0
       ? `${hrs}h ${String(mins).padStart(2, '0')}m ${secStr}`
       : `${mins}m ${secStr}`;
 
+    if (todayStatEl.textContent !== nextText) {
+      todayStatEl.textContent = nextText;
+      adjustStatFontFit();
+    }
+
     if (statItemToday) {
-      statItemToday.title = `Today's Focus: ${todayStatEl.textContent} • Click to view Day Record`;
+      const nextTitle = `Today's Focus: ${nextText} • Click to view Day Record`;
+      if (statItemToday.title !== nextTitle) statItemToday.title = nextTitle;
       statItemToday.classList.toggle('is-running', state.timer.status === 'running');
       statItemToday.classList.toggle('is-paused', state.timer.status === 'paused');
     }
+  }
 
-    adjustStatFontFit();
+  function renderTimerTick() {
+    if (presetAnimationRaf === null) {
+      renderTimerDisplay(state.timer.remainingSeconds);
+    }
+    updateTodayLiveStat();
+
+    if (state.activeTaskName) {
+      const nextTitle = `(${formatDigitalTime(state.timer.remainingSeconds)}) ${state.activeTaskName} • StudyArc`;
+      if (document.title !== nextTitle) document.title = nextTitle;
+    }
   }
 
   function startTimer() {
@@ -1952,7 +1987,7 @@
     if (remaining <= 0) {
       completeSession();
     } else if (!document.hidden) {
-      renderTimer();
+      renderTimerTick();
     }
 
     // The persisted timer is intentionally stored as idle, so the old
@@ -1960,12 +1995,31 @@
     // timer ran. Every real state change already calls saveState().
   }
 
-  async function logSession(minutesCompleted, subjectName = null) {
+  let deferredSessionUiTimer = null;
+
+  // Stats + heatmap are surprisingly expensive (hundreds of cells). During a
+  // reset they must never run in the same frame as the timer repaint, so the
+  // non-timer UI settles a moment later while the digit transition plays.
+  function scheduleSessionUIUpdate(delay = 120) {
+    if (deferredSessionUiTimer !== null) {
+      clearTimeout(deferredSessionUiTimer);
+    }
+    deferredSessionUiTimer = setTimeout(() => {
+      deferredSessionUiTimer = null;
+      renderStats();
+      renderHeatmap();
+      refreshOpenHistoryDialog();
+    }, Math.max(0, delay));
+  }
+
+  async function logSession(minutesCompleted, subjectName = null, options = {}) {
     if (minutesCompleted < 1) return;
+    const renderNow = options.render !== false;
+    const persistNow = options.persist !== false;
     const todayStr = getLocalDateString();
     const subj = subjectName || state.activeTaskName || (state.subjects && state.subjects.length > 0 ? state.subjects[0].name : 'Focus Session');
     const now = Date.now();
-    const startMs = state.activeTaskStartTime || (now - minutesCompleted * 60000);
+    const startMs = options.startTime || state.activeTaskStartTime || (now - minutesCompleted * 60000);
     const startD = new Date(startMs);
     const endD = new Date(now);
     const startStr = formatTime(startD);
@@ -1992,9 +2046,11 @@
     invalidateSessionIndex();
 
     updateStreak();
-    saveState();
-    renderAll();
-    refreshOpenHistoryDialog();
+    if (persistNow) saveState();
+    if (renderNow) {
+      renderAll();
+      refreshOpenHistoryDialog();
+    }
 
     // Persist session to SQLite backend
     try {
@@ -2025,7 +2081,7 @@
             state.subjects = data.subjects;
           }
           saveState();
-          renderAll();
+          scheduleSessionUIUpdate(options.deferUIDelay ?? 120);
         }
       }
     } catch (err) {
@@ -2045,11 +2101,20 @@
     const taskName = state.activeTaskName || 'Focus Session';
     const targetDuration = state.activeTaskTargetSeconds || state.timer.targetSeconds;
     const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
-    logSession(minutesCompleted, taskName);
+    const sessionStartTime = state.activeTaskStartTime;
+
+    // Commit the session locally, but do not render the whole page here.
+    // The timer reset is painted first; stats + heatmap follow after the
+    // digit transition has had a chance to play smoothly.
+    logSession(minutesCompleted, taskName, {
+      render: false,
+      persist: false,
+      startTime: sessionStartTime,
+      deferUIDelay: 380
+    });
 
     const newLevelInfo = getLevelInfo(state.xp);
     const streakBonus = Math.max(0, state.streak || 0);
-    spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
 
     if (newLevelInfo.level > prevLevel) {
       setTimeout(() => {
@@ -2067,7 +2132,9 @@
     state.timer.status = 'idle';
     saveState();
     syncTimerAction('complete', { target_seconds: state.timer.targetSeconds });
-    renderAll();
+    renderTimer();
+    spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
+    scheduleSessionUIUpdate(380);
   }
 
   function updateStreak() {
@@ -2153,7 +2220,7 @@
       if (!dragDigitalRaf) {
         dragDigitalRaf = requestAnimationFrame(() => {
           dragDigitalRaf = null;
-          updateDigitalDisplay(state.timer.remainingSeconds);
+          updateDigitalDisplay(state.timer.remainingSeconds, false, { rapid: true });
         });
       }
     }
@@ -2265,13 +2332,13 @@
       const ringVisualSeconds = Math.max(0, holdStartRemaining * (1 - ringDrainRatio));
       updateTimerRing(ringVisualSeconds);
 
-      // 2. The countdown numbers visibly decrease with smooth rolling animation in real-time!
-      // Digits are repainted at ~30fps (not on every display frame) and without
-      // motion-blur filters; the ring remains the smooth 60fps feedback.
+      // 2. The countdown numbers visibly decrease in real-time. Rapid updates
+      // snap the glyphs so they stay locked to the ring without stacking
+      // transitions; the ring remains the smooth 60fps feedback.
       if (now - lastDigitsPaint >= 33 || progress >= 1) {
         lastDigitsPaint = now;
         const visualSeconds = Math.max(0, holdStartRemaining * (1 - progress));
-        updateDigitalDisplay(visualSeconds, false, { disableBlur: true });
+        updateDigitalDisplay(visualSeconds, false, { rapid: true });
       }
 
       if (progress >= 1) {
@@ -2285,22 +2352,25 @@
         matrixStreamEngine?.setTimerStatus('idle');
 
         if (navigator.vibrate) navigator.vibrate([40, 50, 40]);
-        playChime('reset');
 
         const taskName = state.activeTaskName || 'Focus Session';
         const targetSecs = state.activeTaskTargetSeconds || state.timer.targetSeconds || DEFAULT_TIMER_SECONDS;
         const elapsedStudy = Math.max(0, targetSecs - holdStartRemaining);
+        const minutesLogged = elapsedStudy >= 60 ? Math.round(elapsedStudy / 60) : 0;
+        const sessionStartTime = state.activeTaskStartTime;
+        const hadActiveTask = Boolean(state.activeTaskName);
 
-        // Strict 1-minute rule: discard session if < 60s, save if >= 60s
-        if (elapsedStudy >= 60) {
-          const minutesLogged = Math.round(elapsedStudy / 60);
-          logSession(minutesLogged, taskName);
-          const streakBonus = Math.max(0, state.streak || 0);
-          spawnRewardPills(minutesLogged, minutesLogged, streakBonus);
-        } else if (state.activeTaskName) {
-          spawnFlyingPill('Session Ended');
-        } else {
-          spawnFlyingPill('Timer Reset');
+        // Strict 1-minute rule: discard session if < 60s, save if >= 60s.
+        // Update the local session data without rendering: the timer reset
+        // below must be the first thing painted so releasing the hold feels
+        // instant instead of freezing for a frame or two.
+        if (minutesLogged > 0) {
+          logSession(minutesLogged, taskName, {
+            render: false,
+            persist: false,
+            startTime: sessionStartTime,
+            deferUIDelay: 380
+          });
         }
 
         if (timerInterval) {
@@ -2318,9 +2388,22 @@
         state.timer.anchorServerTime = null;
         state.timer.lastTickTime = null;
         state.timer.status = 'idle';
+
+        // One save contains both the logged session and the reset timer.
         saveState();
         syncTimerAction('reset', { target_seconds: DEFAULT_TIMER_SECONDS });
-        renderAll();
+        renderTimer();
+        playChime('reset');
+
+        if (minutesLogged > 0) {
+          const streakBonus = Math.max(0, state.streak || 0);
+          spawnRewardPills(minutesLogged, minutesLogged, streakBonus);
+          scheduleSessionUIUpdate(380);
+        } else if (hadActiveTask) {
+          spawnFlyingPill('Session Ended');
+        } else {
+          spawnFlyingPill('Timer Reset');
+        }
         return;
       }
 
