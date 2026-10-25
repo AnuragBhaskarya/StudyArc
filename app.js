@@ -312,6 +312,8 @@
   let bestRtt = Infinity;           // Lowest RTT sample seen (Cristian's Algorithm)
   let lastAppliedSequence = 0;      // Monotonic server sequence counter
   let lastRenderedSeconds = null;   // Monotonic display guard for running countdown
+  let localTimerStartPerf = null;   // Hardware monotonic baseline (performance.now()) for active screen
+  let localTimerStartRemaining = null; // Countdown seconds remaining at localTimerStartPerf
 
   // 1. Same-device multi-tab instantaneous 0ms sync via BroadcastChannel
   let timerBroadcastChannel = null;
@@ -442,6 +444,9 @@
       sendSocketPing();
       sioSocket.emit('get_state');
     }
+    // When returning from an inactive/backgrounded tab, reset local monotonic anchor to catch up
+    localTimerStartPerf = null;
+    localTimerStartRemaining = null;
     recalculateRemainingSeconds();
     renderTimer();
   }
@@ -452,14 +457,28 @@
   }
 
   /**
-   * Monotonic server-authoritative anchor calculation.
-   * Eliminates clock drift and freeze on inactive tabs or backgrounded mobile devices.
+   * Monotonic high-resolution countdown with server-authoritative anchor recovery.
+   * Decouples active-screen ticks from network ping/pong jitter using performance.now(),
+   * while preserving server-clock synchronization across device sleep/wake and tabs.
    */
   function recalculateRemainingSeconds() {
     if (state.timer.status !== 'running') {
       lastRenderedSeconds = null;
+      localTimerStartPerf = null;
+      localTimerStartRemaining = null;
       return state.timer.remainingSeconds;
     }
+
+    // 1. High-resolution local monotonic countdown (hardware clock, zero jitter from network pings)
+    if (localTimerStartPerf !== null && localTimerStartRemaining !== null) {
+      const elapsed = (performance.now() - localTimerStartPerf) / 1000;
+      let calculated = Math.max(0, localTimerStartRemaining - elapsed);
+      state.timer.remainingSeconds = calculated;
+      lastRenderedSeconds = calculated;
+      return calculated;
+    }
+
+    // 2. Server anchor recovery (used when waking from sleep, background tab, or fresh page load)
     const anchorServerTime = state.timer.anchorServerTime;
     const anchorRemaining = Number(state.timer.anchorRemainingSeconds != null ? state.timer.anchorRemainingSeconds : state.timer.remainingSeconds);
 
@@ -471,7 +490,7 @@
     const elapsed = Math.max(0, (estimatedServerNow - anchorServerTime) / 1000);
     let calculated = Math.max(0, anchorRemaining - elapsed);
 
-    // Monotonic display guard: during running countdown, the timer can NEVER tick upwards due to network jitter
+    // Monotonic display guard: during running countdown, the timer can NEVER tick upwards
     if (lastRenderedSeconds !== null && calculated > lastRenderedSeconds) {
       calculated = lastRenderedSeconds;
     } else {
@@ -479,6 +498,9 @@
     }
 
     state.timer.remainingSeconds = calculated;
+    // Anchor local monotonic clock to this point so subsequent ticks are continuous and jitter-free
+    localTimerStartPerf = performance.now();
+    localTimerStartRemaining = calculated;
     return calculated;
   }
 
@@ -564,6 +586,9 @@
 
     // 3. PAUSE SYNC (Immediate, zero-calculation!)
     if (serverTimer.status === 'paused') {
+      localTimerStartPerf = null;
+      localTimerStartRemaining = null;
+      lastRenderedSeconds = null;
       state.timer.status = 'paused';
       state.timer.targetSeconds = serverTimer.targetSeconds || DEFAULT_TIMER_SECONDS;
       state.timer.remainingSeconds = Number(serverTimer.remainingSeconds != null ? serverTimer.remainingSeconds : state.timer.remainingSeconds);
@@ -582,6 +607,9 @@
 
     // 4. IDLE / RESET SYNC (Immediate, zero-calculation!)
     if (serverTimer.status === 'idle') {
+      localTimerStartPerf = null;
+      localTimerStartRemaining = null;
+      lastRenderedSeconds = null;
       state.timer.status = 'idle';
       state.timer.targetSeconds = serverTimer.targetSeconds || DEFAULT_TIMER_SECONDS;
       state.timer.remainingSeconds = state.timer.targetSeconds;
@@ -612,6 +640,9 @@
       state.timer.lastTickTime = Date.now();
       state.activeTaskTargetSeconds = state.timer.targetSeconds;
 
+      localTimerStartPerf = null;
+      localTimerStartRemaining = null;
+      lastRenderedSeconds = null;
       recalculateRemainingSeconds();
 
       if (!timerInterval) {
@@ -633,7 +664,7 @@
     const payload = {
       action,
       target_seconds: state.timer.targetSeconds,
-      remaining_seconds: Math.round(state.timer.remainingSeconds),
+      remaining_seconds: Math.floor(state.timer.remainingSeconds),
       active_task_name: state.activeTaskName,
       origin_client_id: myClientId,
       ...extraPayload
@@ -643,7 +674,7 @@
     broadcastLocalTimer({
       status: state.timer.status,
       targetSeconds: state.timer.targetSeconds,
-      remainingSeconds: Math.round(state.timer.remainingSeconds),
+      remainingSeconds: Math.floor(state.timer.remainingSeconds),
       activeTaskName: state.activeTaskName,
       startedAt: state.timer.anchorServerTime || (Date.now() + serverClockOffset),
       sequence: lastAppliedSequence + 1,
@@ -1761,7 +1792,13 @@
     const digitsEl = document.getElementById('timer-digits');
     if (!digitsEl) return;
 
-    const safeSecs = Math.max(0, Math.floor(totalSecs));
+    let safeSecs = Math.max(0, Math.floor(totalSecs));
+
+    // Running countdown guard: when timer is running, digits can NEVER jump upwards due to latency
+    if (state.timer.status === 'running' && !forceNoAnim && !options.allowIncrease && lastDigitalSecs !== -1 && safeSecs > lastDigitalSecs) {
+      safeSecs = lastDigitalSecs;
+    }
+
     const hrs = Math.floor(safeSecs / 3600);
     const mins = Math.floor((safeSecs % 3600) / 60);
     const secs = safeSecs % 60;
@@ -2289,6 +2326,8 @@
     playChime('start');
 
     state.timer.status = 'running';
+    localTimerStartPerf = performance.now();
+    localTimerStartRemaining = state.timer.remainingSeconds;
     state.timer.anchorRemainingSeconds = state.timer.remainingSeconds;
     state.timer.anchorServerTime = Date.now() + serverClockOffset;
     state.timer.lastTickTime = Date.now();
@@ -2300,7 +2339,7 @@
     renderTimer();
     syncTimerAction('start', {
       target_seconds: state.timer.targetSeconds,
-      remaining_seconds: Math.round(state.timer.remainingSeconds),
+      remaining_seconds: Math.floor(state.timer.remainingSeconds),
       active_task_name: state.activeTaskName
     });
   }
@@ -2311,6 +2350,8 @@
     playChime('start');
 
     state.timer.status = 'running';
+    localTimerStartPerf = performance.now();
+    localTimerStartRemaining = state.timer.remainingSeconds;
     state.timer.anchorRemainingSeconds = state.timer.remainingSeconds;
     state.timer.anchorServerTime = Date.now() + serverClockOffset;
     state.timer.lastTickTime = Date.now();
@@ -2322,14 +2363,23 @@
     renderTimer();
     syncTimerAction('resume', {
       target_seconds: state.timer.targetSeconds,
-      remaining_seconds: Math.round(state.timer.remainingSeconds),
+      remaining_seconds: Math.floor(state.timer.remainingSeconds),
       active_task_name: state.activeTaskName
     });
   }
 
   function pauseTimer() {
+    // Freeze the exact remaining time right at the moment the user clicks pause
+    if (localTimerStartPerf !== null && localTimerStartRemaining !== null) {
+      const elapsed = (performance.now() - localTimerStartPerf) / 1000;
+      state.timer.remainingSeconds = Math.max(0, localTimerStartRemaining - elapsed);
+    }
+    localTimerStartPerf = null;
+    localTimerStartRemaining = null;
     lastRenderedSeconds = null;
+
     state.timer.status = 'paused';
+    state.timer.anchorRemainingSeconds = state.timer.remainingSeconds;
     state.timer.anchorServerTime = null;
     state.timer.lastTickTime = null;
     saveState();
@@ -2340,7 +2390,7 @@
     }
     renderTimer();
     syncTimerAction('pause', {
-      remaining_seconds: Math.round(state.timer.remainingSeconds)
+      remaining_seconds: Math.floor(state.timer.remainingSeconds)
     });
   }
 
@@ -2462,6 +2512,10 @@
 
   function completeSession() {
     if (resetVisualActive) return;
+
+    localTimerStartPerf = null;
+    localTimerStartRemaining = null;
+    lastRenderedSeconds = null;
 
     state.timer.remainingSeconds = 0;
     if (timerInterval) {
@@ -2775,6 +2829,10 @@
             state.activeTaskName = null;
             state.activeTaskStartTime = null;
             state.activeTaskTargetSeconds = null;
+
+            localTimerStartPerf = null;
+            localTimerStartRemaining = null;
+            lastRenderedSeconds = null;
 
             // Reset timer back to fixed 1:30:00 default in stopped/paused state
             state.timer.targetSeconds = DEFAULT_TIMER_SECONDS;
