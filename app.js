@@ -4331,6 +4331,8 @@
       this.currentLevel = currentLevel;
 
       this.mountedElements = new Map();
+      this.lastScrollTop = 0;
+      this.scrollDirection = 'down';
       this.totalHeight = 0;
       this.itemOffsets = new Float64Array(virtualItems.length);
       for (let i = 0; i < virtualItems.length; i++) {
@@ -4433,6 +4435,15 @@
       const viewportHeight = this.container.clientHeight || (this.isCatalogMode ? 520 : 360);
       const { startIndex, endIndex } = this.getVisibleRange(scrollTop, viewportHeight);
 
+      // Track scroll direction so re-entering items swoop in from the side they
+      // came from (Journey's bidirectional re-appearing animation)
+      if (scrollTop > this.lastScrollTop + 1) {
+        this.scrollDirection = 'down';
+      } else if (scrollTop < this.lastScrollTop - 1) {
+        this.scrollDirection = 'up';
+      }
+      this.lastScrollTop = scrollTop;
+
       // Identify active tier for sticky header & heading display
       const firstItem = this.virtualItems[startIndex];
       const activeTierIdx = firstItem.type === 'tier' ? firstItem.tierIndex : firstItem.level.tierIndex;
@@ -4514,9 +4525,15 @@
         this.bottomSpacer.style.height = '0px';
       }
 
-      // 4. Trigger animations:
-      // - ALL LEVELS: The beloved original delayed entrance with cascade as cards reach view threshold
-      // - MY JOURNEY: Immediate, zero-delay load for lightning-fast responsiveness
+      // 4. Trigger entrance animations
+      // Both views use the exact same view-boundary trigger, so cards & tier
+      // headers animate right as they cross into the visible area — never
+      // pre-triggered off-screen where nobody can see them.
+      // A forced reflow commits the pre-reveal state before the "visible"
+      // class is added, so the transition always plays, even on fast flings
+      // (without it, cards mounted & revealed in the same frame snap in).
+      // My Journey additionally swoops in from the direction of travel:
+      // from the top when scrolling up, from the bottom when scrolling down.
       const viewTop = scrollTop;
       const viewBottom = scrollTop + viewportHeight;
       const toAnimate = [];
@@ -4527,18 +4544,9 @@
         const itemTop = this.itemOffsets[idx];
         const itemBottom = itemTop + this.virtualItems[idx].height;
 
-        let isEnteringView = false;
-        if (this.isCatalogMode) {
-          // All Levels: The original view-boundary trigger
-          isEnteringView = (idx === pinHeaderIdx) || (
-            itemBottom >= viewTop - 10 && itemTop <= viewBottom + 25
-          );
-        } else {
-          // My Journey: Broad pre-trigger for instantaneous, zero-delay load
-          isEnteringView = (idx === pinHeaderIdx) || (
-            itemBottom >= viewTop - 100 && itemTop <= viewBottom + 300
-          );
-        }
+        const isEnteringView = (idx === pinHeaderIdx) || (
+          itemBottom >= viewTop - 10 && itemTop <= viewBottom + 25
+        );
 
         if (isEnteringView) {
           toAnimate.push(el);
@@ -4546,15 +4554,20 @@
       }
 
       if (toAnimate.length > 0) {
+        const fromTop = !this.isCatalogMode && this.scrollDirection === 'up';
+
         requestAnimationFrame(() => {
           toAnimate.forEach((el, i) => {
-            if (this.isCatalogMode) {
-              void el.offsetWidth; // Force reflow for the signature delayed multi-effect transition
-              const delay = Math.min((i % 5) * 35, 140);
-              el.style.transitionDelay = `${delay}ms`;
-            } else {
-              el.style.transitionDelay = '0ms';
+            if (el.classList.contains('visible')) return;
+
+            if (!this.isCatalogMode) {
+              el.classList.toggle('enter-top', fromTop);
+              el.classList.toggle('enter-bottom', !fromTop);
             }
+
+            void el.offsetWidth; // Force reflow for the signature delayed multi-effect transition
+            const delay = Math.min((i % 5) * 35, 140);
+            el.style.transitionDelay = `${delay}ms`;
             el.classList.add('visible');
           });
         });
