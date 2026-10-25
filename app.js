@@ -656,8 +656,8 @@
     const dialog = document.getElementById('auth-dialog');
     if (!dialog) return;
 
-    // The blurred backdrop over a live full-screen canvas is expensive to
-    // recomposite. Stop ambient rendering while the auth gate is open.
+    // The blurred backdrop over a live full-screen animation is expensive to
+    // recomposite. Pause the ambient stream while the auth gate is open.
     pauseAmbientCanvas();
 
     // Clear error messages
@@ -701,7 +701,7 @@
       }
     }
 
-    // Resume the ambient canvas only when no other modal is still open.
+    // Resume the ambient stream only when no other modal is still open.
     resumeAmbientCanvas();
   }
 
@@ -1290,6 +1290,10 @@
     animateTo(targetDigit, direction = 1, options = {}) {
       const targetInt = parseInt(targetDigit, 10) || 0;
 
+      // Motion blur is expensive to re-rasterize every frame. Hold-to-reset
+      // updates the digits rapidly, so it explicitly opts out of blur.
+      this.disableBlur = Boolean(options.disableBlur);
+
       // If already targeting this digit, keep smoothly rolling!
       if (this.animating && this.targetVal === targetInt) {
         return;
@@ -1362,7 +1366,7 @@
 
       // Motion blur proportional to velocity (Zack 3D depth-of-field blur)
       const speed = dist * decay;
-      const blur = Math.min(6.5, Math.max(0, (speed - 2.5) * 0.22));
+      const blur = this.disableBlur ? 0 : Math.min(6.5, Math.max(0, (speed - 2.5) * 0.22));
 
       renderDialColumn(this, this.currentVal, blur);
 
@@ -1383,22 +1387,26 @@
     const f = v - base; // 0.0 <= f < 1.0
     const d1 = ((base % 10) + 10) % 10;
     const d2 = (d1 + 1) % 10;
+    const d1Str = String(d1);
+    const d2Str = String(d2);
+
+    // Only touch the DOM when the visible character actually changes. During
+    // long rolls most frames reuse the same glyphs, so this avoids needless
+    // text mutations + re-rasterization.
+    if (col.layoutHolder.textContent !== d1Str) col.layoutHolder.textContent = d1Str;
+    if (col.activeLayer.textContent !== d1Str) col.activeLayer.textContent = d1Str;
 
     if (f < 0.001) {
-      col.layoutHolder.textContent = String(d1);
-      col.activeLayer.textContent = String(d1);
       col.activeLayer.style.transform = 'translateY(0%) scale(1)';
       col.activeLayer.style.filter = '';
       col.activeLayer.style.opacity = '1';
-      col.nextLayer.textContent = '';
+      if (col.nextLayer.textContent !== '') col.nextLayer.textContent = '';
       col.nextLayer.style.filter = '';
       col.nextLayer.style.opacity = '0';
       return;
     }
 
-    col.layoutHolder.textContent = String(d1);
-    col.activeLayer.textContent = String(d1);
-    col.nextLayer.textContent = String(d2);
+    if (col.nextLayer.textContent !== d2Str) col.nextLayer.textContent = d2Str;
 
     // Outgoing layer (d1, moving UP towards -50%)
     const oldY = -50 * f;
@@ -1542,96 +1550,28 @@
   }
 
   /* ==========================================================================
-     ULTRA-OPTIMIZED FLOATING HEATMAP MATRIX STREAM ENGINE
-     - 0.0% CPU overhead, zero allocations in RAF loop
-     - 58 smaller GitHub contribution cells continuously drifting upward
-     - Dynamic momentum physics: rockets upward during hold (up to 12x), decelerates forward on release
-     - Velocity-matched stretch (up to 8.5x) & sleek thinning (never snaps or moves backward)
-     - Dynamic spawn storm: streams extra burst boxes during hold, draining naturally on release
-     - 1.4s smooth chromatic shift between vibrant greens (running) & warm ambers (paused)
-     - Flank clustering: left (2.5%-26.5%) & right (73.5%-97.5%), leaving timer dial 100% clean
+     AMBIENT FLOATING HEATMAP STREAM ENGINE (COMPOSITOR-DRIVEN)
+     - Builds two static tile layers once; the browser animates them forever
+       with GPU transforms (no canvas, no RAF loop, no per-frame allocations).
+     - Hold-to-reset only changes animation playbackRate + a CSS class, so the
+       speed rush costs effectively nothing on the main thread.
+     - Paused/off = animations paused, so the compositor goes fully idle.
      ========================================================================== */
   class MatrixStreamEngine {
-    constructor(canvasId) {
-      this.canvas = document.getElementById(canvasId);
-      if (!this.canvas) return;
-      this.ctx = this.canvas.getContext('2d', { alpha: true });
-      if (!this.ctx) return;
+    constructor(streamId) {
+      this.stream = document.getElementById(streamId);
+      this.container = document.getElementById('ambient-aura-container');
+      if (!this.stream) return;
 
-      this.width = 0;
-      this.height = 0;
-      this.dpr = 1.0; // Native 1:1 CSS pixel rasterization for ultra-low GPU thermals
       this.isRunning = false;
-      this.rafId = null;
-      this.lastTime = 0;
-      this.lastRenderTime = 0;
-
-      // Speeds & Physics
-      this.currentSpeed = 0.45; // starts in idle/paused slower speed
-      this.targetSpeed = 0.45;
       this.isHolding = false;
-      this.holdProgress = 0;
+      this.baseRate = 0.45;
+      this.currentRate = 0.45;
+      this.animations = [];
 
-      // Lightweight particle density limits (tuned for minimal draw calls & zero lag)
-      const isMobile = window.innerWidth < 680;
-      this.baseCount = isMobile ? 18 : 26;
-      this.maxHoldCount = isMobile ? 26 : 38;
-      this.activeCount = this.baseCount;
+      this.build();
+      this.start();
 
-      // Pre-allocated particle pool for 100% zero-GC memory allocation
-      this.poolSize = 40;
-      this.particles = new Array(this.poolSize);
-      for (let i = 0; i < this.poolSize; i++) {
-        this.particles[i] = {
-          x: 0,
-          y: 0,
-          w: 8,
-          h: 11,
-          speed: 1,
-          level: 0,
-          spawnY: 0,
-          r: 2.2
-        };
-      }
-
-      // Color transition factor: 0.0 = Green (running), 1.0 = Amber (paused/stopped)
-      this.currentAmber = 1.0;
-      this.targetAmber = 1.0;
-
-      // Pre-computed color palettes: Level 1..4 (Green & Amber)
-      this.greenRgb = [
-        [13, 46, 24],   // lvl 1
-        [19, 79, 42],   // lvl 2
-        [31, 152, 81],  // lvl 3
-        [16, 224, 104]  // lvl 4
-      ];
-
-      this.amberRgb = [
-        [46, 31, 9],    // lvl 1
-        [77, 51, 13],   // lvl 2
-        [140, 92, 21],  // lvl 3
-        [229, 169, 88]  // lvl 4
-      ];
-
-      // Pre-computed RGB delta (Amber - Green) for zero-allocation lerping
-      this.deltaRgb = [
-        [33, -15, -15],
-        [58, -28, -29],
-        [109, -60, -60],
-        [213, -55, -16]
-      ];
-
-      this.baseAlphas = [0.70, 0.82, 0.90, 0.98];
-
-      // Opaque palette strings used with ctx.globalAlpha. This avoids
-      // building a fresh rgba()/toFixed() string for every particle.
-      this.greenSolid = this.greenRgb.map(c => `rgb(${c[0]},${c[1]},${c[2]})`);
-      this.amberSolid = this.amberRgb.map(c => `rgb(${c[0]},${c[1]},${c[2]})`);
-
-      this.resize();
-      this.initParticles();
-
-      window.addEventListener('resize', () => this.resize(), { passive: true });
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
           this.stop();
@@ -1642,7 +1582,7 @@
         }
       });
 
-      // Accessibility / Battery saver: respect system prefers-reduced-motion
+      // Accessibility / battery saver: respect system prefers-reduced-motion
       try {
         const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
         motionQuery.addEventListener('change', () => {
@@ -1652,96 +1592,99 @@
           }
         });
       } catch (e) {}
+    }
 
-      if (typeof state === 'undefined' || state.auraEnabled !== false) {
-        if (!document.documentElement.classList.contains('aura-disabled')) {
-          this.start();
+    build() {
+      this.stream.textContent = '';
+      this.animations = [];
+
+      const isMobile = window.innerWidth < 680;
+      const green = ['#0D2E18', '#134F2A', '#1F9851', '#10E068'];
+      const amber = ['#2E1F09', '#4D330D', '#8C5C15', '#E5A958'];
+
+      // Two depths give parallax without multiplying composited layers.
+      const layers = [
+        { duration: 26, count: isMobile ? 8 : 9, minW: 5, maxW: 8, opacity: 0.55 },
+        { duration: 16, count: isMobile ? 8 : 11, minW: 7.5, maxW: 12, opacity: 0.85 }
+      ];
+
+      layers.forEach((spec) => {
+        const layer = document.createElement('div');
+        layer.className = 'bg-matrix-layer';
+
+        const frag = document.createDocumentFragment();
+        for (let i = 0; i < spec.count; i++) {
+          const levelRoll = Math.random();
+          const level = levelRoll < 0.18 ? 0 : levelRoll < 0.5 ? 1 : levelRoll < 0.85 ? 2 : 3;
+          const width = spec.minW + Math.random() * (spec.maxW - spec.minW);
+          const height = width * 1.4;
+          const isLeft = Math.random() < 0.5;
+          const xMin = isLeft ? 2.5 : 73.5;
+          const xMax = isLeft ? 26.5 : 97.5;
+          const left = xMin + Math.random() * (xMax - xMin);
+          const top = Math.random() * 50;
+          const opacity = spec.opacity * (0.7 + Math.random() * 0.3);
+
+          // Each tile is painted twice, exactly one viewport apart. When the
+          // layer scrolls -50% (one viewport) the next copy is pixel-identical,
+          // so the infinite loop is seamless.
+          for (let copy = 0; copy < 2; copy++) {
+            const tile = document.createElement('span');
+            tile.className = 'bg-matrix-tile';
+            tile.style.cssText =
+              `--tile-green:${green[level]};--tile-amber:${amber[level]};` +
+              `left:${left.toFixed(2)}%;top:${(top + copy * 50).toFixed(2)}%;` +
+              `width:${width.toFixed(2)}px;height:${height.toFixed(2)}px;opacity:${opacity.toFixed(2)};`;
+            frag.appendChild(tile);
+          }
         }
-      }
+
+        layer.appendChild(frag);
+        this.stream.appendChild(layer);
+
+        const anim = layer.animate(
+          [
+            { transform: 'translate3d(0, 0, 0)' },
+            { transform: 'translate3d(0, -50%, 0)' }
+          ],
+          {
+            duration: spec.duration * 1000,
+            iterations: Infinity,
+            easing: 'linear'
+          }
+        );
+        anim.playbackRate = this.baseRate;
+        anim.currentTime = Math.random() * spec.duration * 1000;
+        anim.pause();
+        this.animations.push(anim);
+      });
     }
 
-    resize() {
-      const newWidth = window.innerWidth;
-      const newHeight = window.innerHeight;
-
-      // Ignore mobile browser URL bar height micro-resizes during scrolling
-      if (this.canvas && this.width === newWidth && Math.abs(this.height - newHeight) < 70) {
-        return;
+    applyRate(rate) {
+      this.currentRate = rate;
+      for (let i = 0; i < this.animations.length; i++) {
+        this.animations[i].playbackRate = rate;
       }
-
-      this.width = newWidth;
-      this.height = newHeight;
-      this.dpr = 1.0;
-      const isMobile = this.width < 680;
-      this.baseCount = isMobile ? 18 : 26;
-      this.maxHoldCount = isMobile ? 26 : 38;
-      if (!this.isHolding) {
-        this.activeCount = Math.min(this.activeCount, this.baseCount);
-      }
-
-      if (!this.canvas) return;
-      this.canvas.width = Math.round(this.width);
-      this.canvas.height = Math.round(this.height);
-      this.canvas.style.width = `${this.width}px`;
-      this.canvas.style.height = `${this.height}px`;
-    }
-
-    initParticles() {
-      this.activeCount = this.baseCount;
-      for (let i = 0; i < this.activeCount; i++) {
-        this.resetParticle(this.particles[i], true, false);
-      }
-    }
-
-    resetParticle(p, initial = false, isHoldBurst = false) {
-      // 50% left flank (2.5% to 26.5%), 50% right flank (73.5% to 97.5%)
-      const isLeft = Math.random() < 0.5;
-      const xMin = isLeft ? this.width * 0.025 : this.width * 0.735;
-      const xMax = isLeft ? this.width * 0.265 : this.width * 0.975;
-      p.x = xMin + Math.random() * (xMax - xMin);
-
-      // Initial load: distributed across entire screen so flanks are immediately filled
-      // Hold burst: spawns in lower rush zone (74% to 82% height) to create an upward rush
-      // Regular respawn: lifted spawn area (80% to 87% height) in bottom 20% zone
-      // (Spawns in green zone, gently fading in and smoothly transitioning to yellow above bottom 20% when paused)
-      if (initial) {
-        p.y = Math.random() * this.height;
-      } else if (isHoldBurst) {
-        p.y = this.height * (0.74 + Math.random() * 0.08);
-      } else {
-        p.y = this.height * (0.80 + Math.random() * 0.07);
-      }
-
-      // Smaller authentic GitHub tile proportions (~1:1.35)
-      // Width: 7.5px to 10px, Height: 10.5px to 14px
-      const sizeIndex = Math.floor(Math.random() * 4);
-      p.w = 7.5 + sizeIndex * 0.8;
-      p.h = 10.5 + sizeIndex * 1.1;
-
-      // Upward drift base speed (extra velocity diversity during hold burst)
-      p.speed = (isHoldBurst ? 1.15 : 0.65) + Math.random() * 0.85;
-
-      // Level (0 to 3)
-      p.level = Math.floor(Math.random() * 4);
-      p.r = 2.2;
-      return p;
     }
 
     setTimerStatus(status) {
-      const isRunning = status === 'running';
-      this.targetSpeed = isRunning ? 1.0 : 0.45;
-      this.targetAmber = isRunning ? 0.0 : 1.0;
+      this.baseRate = status === 'running' ? 1 : 0.45;
+      this.container?.classList.toggle('is-amber', status !== 'running');
+      if (!this.isHolding) this.applyRate(this.baseRate);
     }
 
     setHolding(isHolding, progress = 0) {
-      this.isHolding = isHolding;
-      this.holdProgress = progress;
       if (isHolding) {
-        // Rocket speed up to 18x velocity with accelerated response curve
-        this.targetSpeed = 1.0 + Math.pow(progress, 1.05) * 17.0;
-      } else {
-        // Decelerate smoothly forward to current timer state speed
-        this.targetSpeed = this.targetAmber === 0.0 ? 1.0 : 0.45;
+        if (!this.isHolding) {
+          this.isHolding = true;
+          this.container?.classList.add('is-boosting');
+        }
+        const p = Math.min(1, Math.max(0, progress));
+        this.applyRate(1 + Math.pow(p, 1.05) * 8.5);
+      } else if (this.isHolding) {
+        this.isHolding = false;
+        this.container?.classList.remove('is-boosting');
+        this.applyRate(this.baseRate);
       }
     }
 
@@ -1753,160 +1696,22 @@
       if (typeof state !== 'undefined' && state.auraEnabled === false) return;
       if (document.documentElement.classList.contains('aura-disabled')) return;
       this.isRunning = true;
-      this.lastTime = performance.now();
-      this.lastRenderTime = this.lastTime;
-
-      this.tick = (now) => {
-        if (!this.isRunning) return;
-
-        // Ambient rendering is decorative: 30 FPS is visually identical for
-        // slow drifting tiles and halves canvas/paint work on every device.
-        if (now - this.lastRenderTime >= 32) {
-          this.lastRenderTime = now;
-          this.update(now);
-          this.draw();
-        }
-
-        if (this.isRunning) {
-          this.rafId = requestAnimationFrame(this.tick);
-        }
-      };
-      this.rafId = requestAnimationFrame(this.tick);
+      for (let i = 0; i < this.animations.length; i++) {
+        this.animations[i].play();
+      }
+      this.applyRate(this.isHolding ? this.currentRate : this.baseRate);
     }
 
     stop() {
       this.isRunning = false;
-      if (this.rafId) {
-        cancelAnimationFrame(this.rafId);
-        this.rafId = null;
+      if (this.isHolding) {
+        this.isHolding = false;
+        this.container?.classList.remove('is-boosting');
+        this.applyRate(this.baseRate);
       }
-      if (this.ctx && this.canvas) {
-        this.ctx.clearRect(0, 0, this.width, this.height);
+      for (let i = 0; i < this.animations.length; i++) {
+        this.animations[i].pause();
       }
-    }
-
-    update(now) {
-      const dt = Math.min((now - this.lastTime) / 16.667, 2.0) || 1.0;
-      this.lastTime = now;
-
-      // Punchy acceleration rate when holding (0.25), gentle forward coasting on release (0.035)
-      const speedLerp = this.isHolding ? 0.25 : 0.035;
-      this.currentSpeed += (this.targetSpeed - this.currentSpeed) * speedLerp * dt;
-
-      // Smooth color metamorphosis between green and amber (1.4s)
-      this.currentAmber += (this.targetAmber - this.currentAmber) * 0.032 * dt;
-
-      // Speed ratio for stretch & thinning (matched 1:1 with 18x top speed!)
-      const speedRatio = Math.max(0, (this.currentSpeed - 1.0) / 17.0);
-      const stretchY = 1.0 + speedRatio * 9.5; // Stretches upwards up to 10.5x height!
-      const stretchX = Math.max(0.36, 1.0 / Math.sqrt(stretchY)); // Thins out sleekly!
-
-      // DYNAMIC HOLD SPAWN BURST: Paced, controlled extra particles while holding (reduced count)
-      if (this.isHolding && this.activeCount < this.maxHoldCount) {
-        if (Math.random() < 0.60) {
-          this.resetParticle(this.particles[this.activeCount++], false, true);
-        }
-      }
-
-      for (let i = 0; i < this.activeCount; i++) {
-        const p = this.particles[i];
-
-        // Physics integration: ALWAYS moves upward! Never decreases speed backwards!
-        p.y -= p.speed * this.currentSpeed * dt;
-
-        // When leaving off the top (-50px)
-        if (p.y < -50) {
-          if (this.activeCount > this.baseCount && !this.isHolding) {
-            // O(1) in-place swap drain: extra hold burst particles exit off top without respawning
-            this.activeCount--;
-            if (i < this.activeCount) {
-              const temp = this.particles[i];
-              this.particles[i] = this.particles[this.activeCount];
-              this.particles[this.activeCount] = temp;
-              i--; // Re-evaluate swapped particle
-            }
-            continue;
-          } else {
-            this.resetParticle(p, false, false);
-          }
-        }
-      }
-
-      this.currentStretchY = stretchY;
-      this.currentStretchX = stretchX;
-    }
-
-    draw() {
-      const ctx = this.ctx;
-      if (!ctx) return;
-
-      // Single hardware glClearColor clear across framebuffer (GPU fast-path)
-      ctx.clearRect(0, 0, this.width, this.height);
-
-      const stretchY = this.currentStretchY || 1.0;
-      const stretchX = this.currentStretchX || 1.0;
-      const height = this.height;
-
-      // Bottom 20% boundary (height * 0.80): below this is guaranteed 100% green
-      const shiftStart = height * 0.80;
-      // Shift upward completes towards middle of screen (height * 0.52)
-      const shiftEnd = height * 0.52;
-      const invShiftSpan = 1.0 / (shiftStart - shiftEnd);
-
-      // Smooth vertical visibility fade: 45% down to 90% height
-      const fadeStart = height * 0.45;
-      const fadeEnd = height * 0.90;
-      const invFadeSpan = 1.0 / (fadeEnd - fadeStart);
-
-      const isPlayState = this.currentAmber < 0.005;
-      const isFullAmber = this.currentAmber > 0.995;
-      const amberFactor = this.currentAmber;
-
-      // Direct in-engine particle rendering (zero CSS mask overhead, minimal CPU instructions)
-      for (let i = 0; i < this.activeCount; i++) {
-        const p = this.particles[i];
-
-        // Smooth top fade (0 to 60px) and bottom fade (fadeStart down to fadeEnd)
-        const topFade = p.y < 60 ? (p.y > 0 ? p.y * 0.01667 : 0) : 1.0;
-        const bottomFade = p.y < fadeStart ? 1.0 : (p.y >= fadeEnd ? 0.0 : (fadeEnd - p.y) * invFadeSpan);
-        const fadeAlpha = topFade * bottomFade;
-
-        // Skip completely invisible particles: zero canvas draw call
-        if (fadeAlpha <= 0.015) continue;
-
-        const lvl = p.level;
-        ctx.globalAlpha = this.baseAlphas[lvl] * fadeAlpha;
-
-        // COLOR SHIFT LOGIC (Ultra-low compute power):
-        // 1. Play state OR bottom 20% (p.y >= shiftStart): ALWAYS pure green!
-        if (isPlayState || p.y >= shiftStart) {
-          ctx.fillStyle = this.greenSolid[lvl];
-        }
-        // 2. Full amber paused state AND above transition zone (p.y <= shiftEnd): direct pure amber!
-        else if (isFullAmber && p.y <= shiftEnd) {
-          ctx.fillStyle = this.amberSolid[lvl];
-        }
-        // 3. Shifting between green and amber (moving upward through transition zone or during state change)
-        else {
-          const posRatio = p.y <= shiftEnd ? 1.0 : (shiftStart - p.y) * invShiftSpan;
-          const t = amberFactor * posRatio;
-          const g = this.greenRgb[lvl];
-          const d = this.deltaRgb[lvl];
-          const r = (g[0] + d[0] * t) | 0;
-          const greenVal = (g[1] + d[1] * t) | 0;
-          const b = (g[2] + d[2] * t) | 0;
-          ctx.fillStyle = `rgb(${r},${greenVal},${b})`;
-        }
-
-        const drawW = (p.w * stretchX) | 0;
-        const drawH = (p.h * stretchY) | 0;
-        const drawX = (p.x - (drawW - p.w) * 0.5) | 0;
-        const drawY = p.y | 0;
-
-        ctx.fillRect(drawX, drawY, drawW, drawH);
-      }
-
-      ctx.globalAlpha = 1;
     }
   }
 
@@ -1914,7 +1719,7 @@
 
   function initMatrixStream() {
     if (!matrixStreamEngine) {
-      matrixStreamEngine = new MatrixStreamEngine('bg-matrix-canvas');
+      matrixStreamEngine = new MatrixStreamEngine('bg-matrix-stream');
     }
     matrixStreamEngine.setTimerStatus(state.timer.status || 'idle');
   }
@@ -2385,6 +2190,7 @@
     let holdDelayTimer = null;
     let pointerDownTime = 0;
     let drainStartTime = 0;
+    let lastDigitsPaint = 0;
     let isPointerDown = false;
     let isDraining = false;
     let holdStartRemaining = 0;
@@ -2405,8 +2211,13 @@
       updateTimerRing(ringVisualSeconds);
 
       // 2. The countdown numbers visibly decrease with smooth rolling animation in real-time!
-      const visualSeconds = Math.max(0, holdStartRemaining * (1 - progress));
-      updateDigitalDisplay(visualSeconds);
+      // Digits are repainted at ~30fps (not on every display frame) and without
+      // motion-blur filters; the ring remains the smooth 60fps feedback.
+      if (now - lastDigitsPaint >= 33 || progress >= 1) {
+        lastDigitsPaint = now;
+        const visualSeconds = Math.max(0, holdStartRemaining * (1 - progress));
+        updateDigitalDisplay(visualSeconds, false, { disableBlur: true });
+      }
 
       if (progress >= 1) {
         // Complete 1.2-second hold: Trigger Save Progress & Exit!
@@ -2465,6 +2276,7 @@
       if (!isPointerDown) return;
       isDraining = true;
       drainStartTime = performance.now();
+      lastDigitsPaint = 0;
       document.body.classList.add('is-holding');
       pad.classList.add('holding');
       matrixStreamEngine?.setHolding(true, 0.08);

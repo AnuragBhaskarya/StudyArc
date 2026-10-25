@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=12.22">
+  <link rel="stylesheet" href="styles.css?v=12.23">
   <script>
     (function () {
       try {
@@ -73,8 +73,8 @@
 <body>
   <!-- AMBIENT FLUID GREEN AURA & FLOATING HEATMAP MATRIX STREAM BACKGROUND -->
   <div class="ambient-aura-container" id="ambient-aura-container" aria-hidden="true">
-    <!-- ULTRA-LIGHTWEIGHT GPU FLOATING HEATMAP MATRIX STREAM CANVAS -->
-    <canvas id="bg-matrix-canvas" class="bg-matrix-canvas" aria-hidden="true"></canvas>
+    <!-- COMPOSITOR-DRIVEN FLOATING HEATMAP STREAM (NO PER-FRAME JAVASCRIPT) -->
+    <div id="bg-matrix-stream" class="bg-matrix-stream" aria-hidden="true"></div>
   </div>
 
   <div class="app-layout">
@@ -1012,7 +1012,7 @@
   <!-- JAVASCRIPT LOGIC (Local zero-latency assets, resilient against CDN outages and content blockers) -->
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
-  <script src="app.js?v=12.22"></script>
+  <script src="app.js?v=12.23"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>
