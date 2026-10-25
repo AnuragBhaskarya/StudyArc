@@ -2467,13 +2467,22 @@
           timestamp: now,
           start_time: startStr,
           end_time: endStr,
-          unpaused: unpaused,
-          xp: earnedXp
+          unpaused: unpaused
         })
       });
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
+          if (data.session && data.session.id) {
+            const opt = state.sessions.find(s => s.id === ('sess_' + now));
+            if (opt) {
+              opt.id = data.session.id;
+              if (data.session.xp != null) {
+                opt.xp = data.session.xp;
+              }
+              invalidateSessionIndex();
+            }
+          }
           if (data.stats) {
             state.streak = data.stats.streak || 0;
             state.xp = data.stats.xp || 0;

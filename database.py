@@ -878,7 +878,8 @@ def delete_session(user_id, session_id):
 
     with get_connection() as ctx:
         cur = ctx.execute("""
-            SELECT id, subject_id, subject_name, duration_minutes, date, timestamp
+            SELECT id, subject_id, subject_name, duration_minutes, date, timestamp,
+                   COALESCE(NULLIF(xp, 0), duration_minutes * 10) as xp
             FROM sessions
             WHERE id = ? AND user_id = ?
         """, (session_id, user_id))
@@ -893,7 +894,8 @@ def delete_session(user_id, session_id):
             'subject_name': row['subject_name'],
             'duration_minutes': int(row['duration_minutes']),
             'date': row['date'],
-            'timestamp': int(row['timestamp'])
+            'timestamp': int(row['timestamp']),
+            'xp': int(row['xp'])
         }
 
         ctx.execute("DELETE FROM sessions WHERE id = ? AND user_id = ?", (session_id, user_id))
@@ -1253,7 +1255,7 @@ def get_full_state(user_id, client_date=None):
     day_act = {k: int(v) for k, v in (data.get('activity') or {}).items()}
     tot_focus_mins = sum(day_act.values())
     today_focus_mins = day_act.get(today_str, 0)
-    total_xp = int(data.get('total_xp') or (tot_focus_mins * 10))
+    total_xp = int(data['total_xp']) if data.get('total_xp') is not None else (tot_focus_mins * 10)
 
     active_dates = {d for d, mins in day_act.items() if mins > 0}
     current_check = current_date_obj
