@@ -189,6 +189,7 @@
           saveState();
           renderTimer();
           renderStats();
+          refreshOpenHistoryDialog();
           if (activityChanged) {
             renderHeatmap();
           }
@@ -2011,6 +2012,7 @@
     updateStreak();
     saveState();
     renderAll();
+    refreshOpenHistoryDialog();
 
     // Persist session to SQLite backend
     try {
@@ -3700,7 +3702,10 @@
 
     const historyDlg = document.getElementById('sessions-history-dialog');
     if (historyDlg && historyDlg.open) {
-      renderHistoryDialogDOM();
+      // Only refresh the lightweight summary pills here. Rebuilding the whole
+      // virtualized feed on every stats render used to replay every card's
+      // entrance animation (delete flows trigger renderStats multiple times).
+      updateHistoryDialogSummary();
     }
   }
 
@@ -4833,13 +4838,16 @@
       virtualItems,
       dateHeaderIndices,
       renderSessionCard,
-      renderDateHeader
+      renderDateHeader,
+      animateInitial = true,
+      initialScrollTop = 0
     }) {
       this.container = container;
       this.virtualItems = virtualItems;
       this.dateHeaderIndices = dateHeaderIndices;
       this.renderSessionCard = renderSessionCard;
       this.renderDateHeader = renderDateHeader;
+      this.animateInitial = animateInitial;
 
       this.mountedElements = new Map();
       this.totalHeight = 0;
@@ -4862,6 +4870,13 @@
 
       this.container.appendChild(this.topSpacer);
       this.container.appendChild(this.bottomSpacer);
+
+      // Restore the previous scroll position before the first window is
+      // calculated. Data refreshes (delete, archive sync) must never yank the
+      // user back to the top of the feed.
+      if (initialScrollTop > 0) {
+        this.container.scrollTop = initialScrollTop;
+      }
 
       this.pinnedHeader = document.getElementById('history-pinned-date-header');
       this.currentPinnedDate = null;
@@ -5015,9 +5030,13 @@
       // View-boundary entrance trigger (exact match with All Levels tab):
       // Swoops in smoothly as cards reach the viewport boundary (+45px lookahead)
       // so cards are visibly animating even when scrolling slowly!
+      // A rebuild caused by a data update must not replay the entrance
+      // animation for cards that are already on screen, otherwise deleting one
+      // session makes the whole feed animate several times in a row.
       const viewTop = scrollTop;
       const viewBottom = scrollTop + viewportHeight;
       const toAnimate = [];
+      const shouldAnimateInitial = !isInitial || this.animateInitial;
 
       for (const [idx, el] of this.mountedElements.entries()) {
         if (el.classList.contains('visible')) continue;
@@ -5035,14 +5054,21 @@
       }
 
       if (toAnimate.length > 0) {
-        requestAnimationFrame(() => {
-          toAnimate.forEach((el, i) => {
-            void el.offsetWidth; // Force reflow for the signature delayed multi-effect transition
-            const delay = isInitial ? Math.min((i % 5) * 35, 140) : 0;
-            el.style.transitionDelay = `${delay}ms`;
+        if (!shouldAnimateInitial) {
+          toAnimate.forEach((el) => {
+            el.style.transitionDelay = '0ms';
             el.classList.add('visible');
           });
-        });
+        } else {
+          requestAnimationFrame(() => {
+            toAnimate.forEach((el, i) => {
+              void el.offsetWidth; // Force reflow for the signature delayed multi-effect transition
+              const delay = isInitial ? Math.min((i % 5) * 35, 140) : 0;
+              el.style.transitionDelay = `${delay}ms`;
+              el.classList.add('visible');
+            });
+          });
+        }
       }
 
       // 5. Update Persistent Pinned Date Header Overlay:
@@ -5850,8 +5876,17 @@
       if (res.ok) {
         const data = await res.json();
         const incoming = Array.isArray(data) ? data : (data.sessions || []);
-        const prevLength = state.sessions ? state.sessions.length : -1;
-        const differs = incoming.length !== prevLength;
+        const previous = state.sessions || [];
+        let differs = incoming.length !== previous.length;
+        if (!differs) {
+          // Length alone misses replacements/deletes made on another device.
+          for (let i = 0; i < incoming.length; i++) {
+            if (String(incoming[i].id) !== String(previous[i].id)) {
+              differs = true;
+              break;
+            }
+          }
+        }
 
         if (differs) {
           state.sessions = incoming;
@@ -5924,7 +5959,7 @@
 
     // If sessions are already in state, render immediately with zero delay
     if (state.sessions && state.sessions.length > 0) {
-      renderHistoryDialogDOM();
+      renderHistoryDialogDOM({ animateEntrance: true });
     } else {
       // Show smooth emerald skeleton placeholder while fetching
       const feedList = document.getElementById('history-feed-list');
@@ -6047,12 +6082,40 @@
     return sessionDataIndex.historyScrollerData;
   }
 
-  function renderHistoryDialogDOM() {
+  function applyHistorySummaryPills(stats) {
+    const { totalSessions, totalFocusSec, activeDaysCount } = stats;
+
+    const pillTotalTime = document.getElementById('history-pill-total-time');
+    const pillSessions = document.getElementById('history-pill-sessions-count');
+    const pillDays = document.getElementById('history-pill-days-count');
+
+    if (pillTotalTime) pillTotalTime.textContent = formatHoursMinutes(totalFocusSec);
+    if (pillSessions) pillSessions.textContent = totalSessions.toLocaleString();
+    if (pillDays) pillDays.textContent = activeDaysCount.toLocaleString();
+  }
+
+  // Cheap summary-only refresh used by renderStats(). It must never rebuild the
+  // virtualized feed, otherwise every stats update (including the synchronous
+  // and asynchronous parts of a delete) replays all card entrance animations.
+  function updateHistoryDialogSummary() {
+    const dialog = document.getElementById('sessions-history-dialog');
+    if (!dialog || !dialog.open) return;
+    applyHistorySummaryPills(getHistoryScrollerData().stats);
+  }
+
+  function renderHistoryDialogDOM({ animateEntrance = false } = {}) {
     const dialog = document.getElementById('sessions-history-dialog');
     if (!dialog) return;
 
     const feedList = document.getElementById('history-feed-list');
     if (!feedList) return;
+
+    // Capture the current scroll position before the feed is torn down so
+    // in-place refreshes (delete, archive sync) never jump back to the top.
+    const hadActiveScroller = !!activeHistoryScroller;
+    const previousScrollTop = activeHistoryScroller
+      ? activeHistoryScroller.container.scrollTop
+      : (feedList.scrollTop || 0);
 
     if (activeHistoryScroller) {
       try { activeHistoryScroller.destroy(); } catch (e) {}
@@ -6064,18 +6127,13 @@
     }
 
     const data = getHistoryScrollerData();
-    const { totalSessions, totalFocusSec, activeDaysCount } = data.stats;
+    const { totalSessions } = data.stats;
 
-    const pillTotalTime = document.getElementById('history-pill-total-time');
-    const pillSessions = document.getElementById('history-pill-sessions-count');
-    const pillDays = document.getElementById('history-pill-days-count');
-
-    if (pillTotalTime) pillTotalTime.textContent = formatHoursMinutes(totalFocusSec);
-    if (pillSessions) pillSessions.textContent = totalSessions.toLocaleString();
-    if (pillDays) pillDays.textContent = activeDaysCount.toLocaleString();
+    applyHistorySummaryPills(data.stats);
 
     // Handle Empty State
     if (totalSessions === 0) {
+      feedList.scrollTop = 0;
       feedList.innerHTML = `
         <div class="history-empty-card">
           <div class="history-empty-icon">
@@ -6091,23 +6149,42 @@
       return;
     }
 
-    // Instantiate VirtualHistoryScroller with precomputed virtual items
+    // Instantiate VirtualHistoryScroller with precomputed virtual items.
+    // Only an explicit dialog open animates the initial batch of cards; data
+    // refreshes keep the feed visually stable.
     activeHistoryScroller = new VirtualHistoryScroller({
       container: feedList,
       virtualItems: data.virtualItems,
       dateHeaderIndices: data.dateHeaderIndices,
       renderSessionCard: createHistorySessionCard,
-      renderDateHeader: createHistoryDateHeader
+      renderDateHeader: createHistoryDateHeader,
+      // A feed that was previously empty (skeleton/empty state) should still
+      // get its first entrance animation; a rebuild over existing cards should not.
+      animateInitial: animateEntrance || !hadActiveScroller,
+      initialScrollTop: previousScrollTop
     });
 
     initShellLenis();
     if (typeof historyLenis !== 'undefined' && historyLenis) {
       historyLenis.resize();
+      // Re-sync Lenis with the restored native scroll offset, otherwise its
+      // internal momentum state can snap the feed back to a stale position.
+      const restoredScrollTop = feedList.scrollTop || 0;
+      historyLenis.scroll = restoredScrollTop;
+      historyLenis.targetScroll = restoredScrollTop;
+      historyLenis.velocity = 0;
       historyLenis.start();
     }
     setTimeout(() => {
       historyLenis?.resize();
     }, 40);
+  }
+
+  function refreshOpenHistoryDialog(options = {}) {
+    const dialog = document.getElementById('sessions-history-dialog');
+    if (!dialog || !dialog.open) return false;
+    renderHistoryDialogDOM(options);
+    return true;
   }
 
   // =========================================================================
@@ -6282,7 +6359,12 @@
   function deleteSession(sessionId, dateStr) {
     if (!sessionId) return;
 
-    const targetCards = Array.from(document.querySelectorAll(`[data-session-id="${sessionId}"]`));
+    // The delete button also carries data-session-id, so scope the selector to
+    // actual card elements. Matching the button as a second "card" used to run
+    // the dismiss animation twice and rebuild the history feed twice.
+    const targetCards = Array.from(document.querySelectorAll(
+      '.day-session-card[data-session-id], .history-session-card[data-session-id]'
+    )).filter(el => el.getAttribute('data-session-id') === String(sessionId));
     const cardEl = targetCards[0] || null;
 
     // 1. Identify session duration from client state or card dataset
