@@ -1,4 +1,4 @@
-# Gunicorn Configuration for StudyArc on Render / Production
+# Gunicorn Configuration for StudyArk on Render / Production
 # Automatically loaded by Gunicorn on startup, ensuring the correct WebSocket worker
 # and single-worker concurrency even if the hosting platform overrides the CLI command.
 

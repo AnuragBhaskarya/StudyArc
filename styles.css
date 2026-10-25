@@ -1,5 +1,5 @@
 /* ==========================================================================
-   STUDYARC — MINIMAL, ELEGANT STUDY TIME TRACKER
+   STUDYARK — MINIMAL, ELEGANT STUDY TIME TRACKER
    Visual Design System & Responsive Layout
    ========================================================================== */
 
@@ -162,8 +162,7 @@ html.app-booting .app-layout {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.95rem;
-  transform: translateY(-2dvh);
+  justify-content: center;
 }
 
 .app-loader-emblem {

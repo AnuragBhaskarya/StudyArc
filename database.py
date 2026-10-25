@@ -93,9 +93,10 @@ class DBContext:
             conn.autocommit = True
             self.conn = conn
         else:
-            self.conn = sqlite3.connect(DB_PATH)
+            self.conn = sqlite3.connect(DB_PATH, timeout=10.0)
             self.conn.row_factory = sqlite3.Row
             self.conn.execute("PRAGMA foreign_keys = ON")
+            self.conn.execute("PRAGMA busy_timeout = 10000")
 
     def __enter__(self):
         return self
@@ -268,6 +269,11 @@ def init_db():
 
         else:
             # SQLite Schema
+            try:
+                ctx.conn.execute("PRAGMA journal_mode = WAL")
+                ctx.conn.execute("PRAGMA synchronous = NORMAL")
+            except Exception:
+                pass
             ctx.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,

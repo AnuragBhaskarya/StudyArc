@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>StudyArc — Minimal Focus & Habit Tracker</title>
-  <meta name="description" content="StudyArc is a minimal, elegant study time tracker featuring a circular focus timer, GitHub-style consistency heatmap, XP, and streak progression.">
+  <title>StudyArk — Minimal Focus & Habit Tracker</title>
+  <meta name="description" content="StudyArk is a minimal, elegant study time tracker featuring a circular focus timer, GitHub-style consistency heatmap, XP, and streak progression.">
   
   <!-- Open Graph / Facebook / Discord / LinkedIn / WhatsApp Social Media Banners -->
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="StudyArc">
-  <meta property="og:title" content="StudyArc — Minimal Focus & Habit Tracker">
+  <meta property="og:site_name" content="StudyArk">
+  <meta property="og:title" content="StudyArk — Minimal Focus & Habit Tracker">
   <meta property="og:description" content="Level up your study habits with a circular focus dial, GitHub-style consistency heatmap, XP progression, and clean minimal aesthetics.">
   <meta property="og:image" content="https://files.catbox.moe/he9ic7.png">
   <meta property="og:image:secure_url" content="https://files.catbox.moe/he9ic7.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="StudyArc — Minimal Focus & Habit Tracker">
+  <meta property="og:image:alt" content="StudyArk — Minimal Focus & Habit Tracker">
   <meta property="og:image" content="https://files.catbox.moe/txwp6p.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="512">
@@ -24,19 +24,19 @@
 
   <!-- Twitter / X Card Meta Tags -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="StudyArc — Minimal Focus & Habit Tracker">
+  <meta name="twitter:title" content="StudyArk — Minimal Focus & Habit Tracker">
   <meta name="twitter:description" content="Level up your study habits with a circular focus dial, GitHub-style consistency heatmap, XP progression, and clean minimal aesthetics.">
   <meta name="twitter:image" content="https://files.catbox.moe/he9ic7.png">
-  <meta name="twitter:image:alt" content="StudyArc — Minimal Focus & Habit Tracker">
+  <meta name="twitter:image:alt" content="StudyArk — Minimal Focus & Habit Tracker">
   
   <!-- PWA & Mobile Configuration -->
   <meta name="theme-color" content="#070D09">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="StudyArc">
+  <meta name="apple-mobile-web-app-title" content="StudyArk">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="application-name" content="StudyArc">
+  <meta name="application-name" content="StudyArk">
   <link rel="manifest" href="/manifest.webmanifest">
 
   <!-- Favicons and Apple Touch Icons -->
@@ -52,13 +52,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=12.36">
+  <link rel="stylesheet" href="styles.css?v=12.37">
   <script>
     (function () {
       var isAuth = false;
       var auraOff = false;
       try {
-        var s = localStorage.getItem('studyarc_store_v1');
+        var s = localStorage.getItem('studyark_store_v1') || localStorage.getItem('studyarc_store_v1');
         var parsed = s ? JSON.parse(s) : null;
         if (parsed && parsed.authenticated && parsed.user) {
           isAuth = true;
@@ -73,8 +73,8 @@
         // settled. The failsafe prevents a broken app.js from trapping users on
         // the loading screen forever.
         document.documentElement.classList.add('app-booting', 'intro-aura-hidden');
-        window.__studyArcLoaderShownAt = performance.now();
-        window.__studyArcLoaderFailsafe = window.setTimeout(function () {
+        window.__studyArkLoaderShownAt = performance.now();
+        window.__studyArkLoaderFailsafe = window.setTimeout(function () {
           document.documentElement.classList.remove('app-booting', 'intro-aura-hidden');
           var loader = document.getElementById('app-loader');
           if (loader) {
@@ -94,8 +94,8 @@
   </script>
 </head>
 <body>
-  <!-- MINIMAL APP BOOT LOADER: removed only after the first state sync settles -->
-  <div class="app-loader" id="app-loader" role="status" aria-live="polite" aria-label="Loading StudyArc">
+  <!-- MINIMAL APP BOOT LOADER: centered emblem only, no text -->
+  <div class="app-loader" id="app-loader" role="status" aria-live="polite" aria-label="Loading StudyArk">
     <div class="app-loader-glow" aria-hidden="true"></div>
     <div class="app-loader-content">
       <div class="app-loader-emblem" aria-hidden="true">
@@ -105,9 +105,6 @@
           <path d="M1.8 21.6c0-3.2 2-5.7 5.4-6.4 2.6-.5 5.3-2.1 6.3-3.2" stroke="#080B0A" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
       </div>
-      <span class="app-loader-wordmark">StudyArc</span>
-      <div class="app-loader-progress" aria-hidden="true"><span></span></div>
-      <span class="app-loader-status" id="app-loader-status">Preparing your arc</span>
     </div>
   </div>
 
@@ -127,12 +124,12 @@
       <!-- TOP HEADER (Desktop Avatar / Mobile Branding & Top Bar) -->
       <header class="app-header">
         <div class="header-left">
-          <div class="mobile-brand" id="brand-home" title="StudyArc • Focus">
+          <div class="mobile-brand" id="brand-home" title="StudyArk • Focus">
             <svg class="brand-leaf" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M11.5 20.5A7.5 7.5 0 0 1 10.2 5.6C16.3 4.4 17.9 3.8 20 1.2c1.1 2.1 2.1 4.5 2.1 8.6 0 5.9-5.1 10.7-10.6 10.7Z" fill="currentColor"/>
               <path d="M1.8 21.6c0-3.2 2-5.7 5.4-6.4 2.6-.5 5.3-2.1 6.3-3.2" stroke="#080B0A" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
-            <span class="brand-text">StudyArc</span>
+            <span class="brand-text">StudyArk</span>
           </div>
 
           <!-- Quick session-duration presets -->
@@ -399,7 +396,7 @@
                 </span>
               </div>
             </div>
-            <button class="settings-logout-btn" id="btn-logout" title="Sign Out of StudyArc">
+            <button class="settings-logout-btn" id="btn-logout" title="Sign Out of StudyArk">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                 <polyline points="16 17 21 12 16 7"></polyline>
@@ -1052,7 +1049,7 @@
   <!-- JAVASCRIPT LOGIC (Local zero-latency assets, resilient against CDN outages and content blockers) -->
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
-  <script src="app.js?v=12.36"></script>
+  <script src="app.js?v=12.37"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>
@@ -1060,14 +1057,14 @@
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/sw.js', { scope: '/' })
           .then(function(registration) {
-            console.log('[StudyArc PWA] Service worker registered with scope:', registration.scope);
+            console.log('[StudyArk PWA] Service worker registered with scope:', registration.scope);
             registration.update();
             if (registration.waiting) {
               registration.waiting.postMessage({ type: 'SKIP_WAITING' });
             }
           })
           .catch(function(error) {
-            console.warn('[StudyArc PWA] Service worker registration failed:', error);
+            console.warn('[StudyArk PWA] Service worker registration failed:', error);
           });
       });
     }

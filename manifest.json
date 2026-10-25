@@ -1,6 +1,6 @@
 {
-  "name": "StudyArc — Minimal Focus & Habit Tracker",
-  "short_name": "StudyArc",
+  "name": "StudyArk — Minimal Focus & Habit Tracker",
+  "short_name": "StudyArk",
   "description": "Minimal, elegant study time tracker featuring a circular focus timer, GitHub-style consistency heatmap, XP, and streak progression.",
   "start_url": "/",
   "scope": "/",
@@ -51,7 +51,7 @@
       "sizes": "1200x630",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "StudyArc Focus & Heatmap Dashboard"
+      "label": "StudyArk Focus & Heatmap Dashboard"
     }
   ]
 }

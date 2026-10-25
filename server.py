@@ -18,7 +18,7 @@ app = Flask(__name__, static_folder='.', static_url_path='')
 socketio = SocketIO(app, cors_allowed_origins='*', async_mode='gevent', ping_timeout=30, ping_interval=10)
 
 # Secret key configuration for cryptographic session signing
-app.secret_key = os.environ.get('SECRET_KEY', 'studyarc-production-super-secret-key-change-me')
+app.secret_key = os.environ.get('SECRET_KEY', 'studyark-production-super-secret-key-change-me')
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = bool(os.environ.get('RENDER') or os.environ.get('DYNO'))
@@ -66,7 +66,7 @@ def ping_endpoint():
     """
     return jsonify({
         'status': 'pong',
-        'app': 'StudyArc',
+        'app': 'StudyArk',
         'database': 'postgresql' if database.is_postgres() else 'sqlite',
         'timestamp': int(datetime.now().timestamp() * 1000)
     }), 200
@@ -743,5 +743,5 @@ except Exception as e:
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     engine = 'PostgreSQL' if database.is_postgres() else 'SQLite'
-    print(f"StudyArc {engine} + Socket.IO server running at http://0.0.0.0:{port}")
+    print(f"StudyArk {engine} + Socket.IO server running at http://0.0.0.0:{port}")
     socketio.run(app, host='0.0.0.0', port=port, debug=False)

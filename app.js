@@ -1,5 +1,5 @@
 /**
- * STUDYARC — CLIENT LOGIC & ENGINE
+ * STUDYARK — CLIENT LOGIC & ENGINE
  * Architecture: Clean Vanilla JS, accurate time delta timer,
  * Web Audio synthesizer, dynamic calendar heatmap, and reactive localStorage.
  */
@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'studyarc_store_v1';
+  const STORAGE_KEY = 'studyark_store_v1';
 
   // =========================================================================
   // APP STATE & STORAGE
@@ -64,7 +64,7 @@
   // =========================================================================
   const APP_LOADER_MIN_VISIBLE_MS = 560;
   const APP_LOADER_FADE_MS = 450;
-  let appLoaderShownAt = Number(window.__studyArcLoaderShownAt) || performance.now();
+  let appLoaderShownAt = Number(window.__studyArkLoaderShownAt) || Number(window.__studyArcLoaderShownAt) || performance.now();
   let homeIntroPlayed = false;
   let homeIntroRunning = false;
   let homeIntroGeneration = 0;
@@ -102,7 +102,11 @@
 
   function loadState() {
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
+      let data = localStorage.getItem(STORAGE_KEY);
+      if (!data) {
+        // Fallback from legacy StudyArk storage
+        data = localStorage.getItem('studyarc_store_v1');
+      }
       if (data) {
         const parsed = JSON.parse(data);
         const merged = Object.assign({}, defaultState, parsed);
@@ -129,7 +133,7 @@
         return merged;
       }
     } catch (e) {
-      console.warn('StudyArc: Could not read localStorage:', e);
+      console.warn('StudyArk: Could not read localStorage:', e);
     }
     return JSON.parse(JSON.stringify(defaultState));
   }
@@ -149,7 +153,7 @@
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(persistentState));
     } catch (e) {
-      console.warn('StudyArc: Could not save to localStorage:', e);
+      console.warn('StudyArk: Could not save to localStorage:', e);
     }
   }
 
@@ -262,7 +266,7 @@
       }
       return { authenticated: Boolean(state.authenticated && state.user), authRequired: false };
     } catch (err) {
-      console.warn('StudyArc: Backend sync error, using local cache:', err);
+      console.warn('StudyArk: Backend sync error, using local cache:', err);
       return { authenticated: Boolean(state.authenticated && state.user), authRequired: false, error: true };
     }
   }
@@ -287,7 +291,7 @@
         }
       }
     } catch (e) {
-      console.warn('StudyArc: Quick timer fetch failed:', e);
+      console.warn('StudyArk: Quick timer fetch failed:', e);
     }
   }
 
@@ -307,7 +311,7 @@
   let timerBroadcastChannel = null;
   try {
     if (typeof BroadcastChannel !== 'undefined') {
-      timerBroadcastChannel = new BroadcastChannel('studyarc_timer_sync');
+      timerBroadcastChannel = new BroadcastChannel('studyark_timer_sync');
       timerBroadcastChannel.onmessage = (event) => {
         if (event && event.data && event.data.timer) {
           applyLiveServerTimer(event.data.timer, false);
@@ -315,7 +319,7 @@
       };
     }
   } catch (e) {
-    console.warn('StudyArc: BroadcastChannel unsupported:', e);
+    console.warn('StudyArk: BroadcastChannel unsupported:', e);
   }
 
   function broadcastLocalTimer(timerState) {
@@ -331,7 +335,7 @@
     if (!state.authenticated) return;
     if (sioSocket && sioSocket.connected) return;
     if (typeof io !== 'function') {
-      console.warn('StudyArc: Socket.IO library not loaded, using HTTP fallback');
+      console.warn('StudyArk: Socket.IO library not loaded, using HTTP fallback');
       return;
     }
 
@@ -354,13 +358,13 @@
     });
 
     sioSocket.on('connect', () => {
-      console.log('StudyArc: Socket.IO connected via', sioSocket.io.engine.transport.name);
+      console.log('StudyArk: Socket.IO connected via', sioSocket.io.engine.transport.name);
       // Measure clock offset immediately
       sendSocketPing();
 
       // Socket.IO upgrades polling→websocket automatically, log it
       sioSocket.io.engine.on('upgrade', (transport) => {
-        console.log('StudyArc: Transport upgraded to', transport.name);
+        console.log('StudyArk: Transport upgraded to', transport.name);
       });
     });
 
@@ -410,11 +414,11 @@
     });
 
     sioSocket.on('disconnect', (reason) => {
-      console.log('StudyArc: Socket.IO disconnected:', reason);
+      console.log('StudyArk: Socket.IO disconnected:', reason);
     });
 
     sioSocket.on('connect_error', (err) => {
-      console.warn('StudyArc: Socket.IO connect error:', err.message);
+      console.warn('StudyArk: Socket.IO connect error:', err.message);
     });
   }
 
@@ -643,7 +647,7 @@
         }
       }
     } catch (err) {
-      console.warn('StudyArc: Timer sync warning:', err);
+      console.warn('StudyArk: Timer sync warning:', err);
     }
   }
 
@@ -1199,7 +1203,7 @@
 
       scheduleAudioSuspend();
     } catch (e) {
-      console.warn('StudyArc audio error:', e);
+      console.warn('StudyArk audio error:', e);
     }
   }
 
@@ -1860,7 +1864,7 @@
       try {
         if (typeof options.onComplete === 'function') options.onComplete();
       } catch (e) {
-        console.warn('StudyArc: Timer reset completion error:', e);
+        console.warn('StudyArk: Timer reset completion error:', e);
       }
       scheduleStatePersistence(90);
     };
@@ -1875,7 +1879,7 @@
       try {
         if (typeof options.onCommit === 'function') options.onCommit();
       } catch (e) {
-        console.warn('StudyArc: Timer reset commit error:', e);
+        console.warn('StudyArk: Timer reset commit error:', e);
       }
       if (token !== resetReturnToken) return;
 
@@ -2171,16 +2175,16 @@
         timerSection?.classList.add('is-running');
         timerSection?.classList.remove('is-paused');
         centerPad?.setAttribute('aria-label', `Focusing on ${state.activeTaskName}. Tap to pause, hold 1.2s to save.`);
-        document.title = `(${formatDigitalTime(state.timer.remainingSeconds)}) ${state.activeTaskName} • StudyArc`;
+        document.title = `(${formatDigitalTime(state.timer.remainingSeconds)}) ${state.activeTaskName} • StudyArk`;
       } else if (state.timer.status === 'paused') {
         timerSection?.classList.remove('is-running');
         timerSection?.classList.add('is-paused');
         centerPad?.setAttribute('aria-label', `Paused on ${state.activeTaskName}. Tap to resume, hold 1.2s to save.`);
-        document.title = `Paused (${formatDigitalTime(state.timer.remainingSeconds)}) • StudyArc`;
+        document.title = `Paused (${formatDigitalTime(state.timer.remainingSeconds)}) • StudyArk`;
       } else {
         timerSection?.classList.remove('is-running', 'is-paused');
         centerPad?.setAttribute('aria-label', `Ready to focus on ${state.activeTaskName}. Tap to start.`);
-        document.title = `StudyArc — Minimal Focus & Habit Tracker`;
+        document.title = `StudyArk — Minimal Focus & Habit Tracker`;
       }
     } else {
       document.body.classList.add('is-timer-amber');
@@ -2199,7 +2203,7 @@
       }
 
       centerPad?.setAttribute('aria-label', 'Timer ready. Tap to start, drag bead to adjust.');
-      document.title = `StudyArc — Minimal Focus & Habit Tracker`;
+      document.title = `StudyArk — Minimal Focus & Habit Tracker`;
     }
 
     updateTodayLiveStat();
@@ -2250,7 +2254,7 @@
     updateTodayLiveStat();
 
     if (state.activeTaskName) {
-      const nextTitle = `(${formatDigitalTime(state.timer.remainingSeconds)}) ${state.activeTaskName} • StudyArc`;
+      const nextTitle = `(${formatDigitalTime(state.timer.remainingSeconds)}) ${state.activeTaskName} • StudyArk`;
       if (document.title !== nextTitle) document.title = nextTitle;
     }
   }
@@ -2425,7 +2429,7 @@
         }
       }
     } catch (err) {
-      console.warn('StudyArc: SQLite sync error:', err);
+      console.warn('StudyArk: SQLite sync error:', err);
     }
   }
 
@@ -4484,7 +4488,7 @@
         }
       }
     } catch (e) {
-      console.warn('StudyArc: Error fetching day data from backend:', e);
+      console.warn('StudyArk: Error fetching day data from backend:', e);
     }
 
     // 4. Ensure user hasn't switched to another date before applying
@@ -6362,7 +6366,7 @@
         }
       }
     } catch (e) {
-      console.warn('StudyArc: Could not refresh sessions archive:', e);
+      console.warn('StudyArk: Could not refresh sessions archive:', e);
       const dialog = document.getElementById('sessions-history-dialog');
       if (dialog && dialog.open && !activeHistoryScroller) {
         renderHistoryDialogDOM();
@@ -6642,7 +6646,7 @@
   function confirmAction({ title = 'Are you sure?', message = '', confirmLabel = 'Confirm', variant = 'delete', pills = null } = {}) {
     const dialog = document.getElementById('confirm-dialog');
     if (!dialog || typeof dialog.showModal !== 'function') {
-      console.warn('StudyArc: Confirmation dialog is unavailable.');
+      console.warn('StudyArk: Confirmation dialog is unavailable.');
       return Promise.resolve(false);
     }
 
@@ -6695,7 +6699,7 @@
     try {
       dialog.showModal();
     } catch (err) {
-      console.warn('StudyArc: Could not open confirmation dialog:', err);
+      console.warn('StudyArk: Could not open confirmation dialog:', err);
       resumeAmbientCanvas();
       return Promise.resolve(false);
     }
@@ -7006,7 +7010,7 @@
         }
       }
     }).catch((err) => {
-      console.warn('StudyArc: Background session deletion notice:', err);
+      console.warn('StudyArk: Background session deletion notice:', err);
     });
   }
 
@@ -7392,7 +7396,7 @@
           applyAuraPreference();
         } catch (err) {
           if (requestId !== auraSettingsRequestId) return;
-          console.warn('StudyArc: Could not sync aura preference:', err);
+          console.warn('StudyArk: Could not sync aura preference:', err);
           state.auraEnabled = previousValue;
           auraToggle.checked = previousValue;
           saveState();
@@ -7751,7 +7755,7 @@
         });
         window.levelsLenis = levelsLenis;
       } catch (e) {
-        console.warn('StudyArc: Error initializing levelsLenis:', e);
+        console.warn('StudyArk: Error initializing levelsLenis:', e);
       }
     }
 
@@ -7770,7 +7774,7 @@
         });
         window.dayLenis = dayLenis;
       } catch (e) {
-        console.warn('StudyArc: Error initializing dayLenis:', e);
+        console.warn('StudyArk: Error initializing dayLenis:', e);
       }
     }
 
@@ -7787,6 +7791,10 @@
   }
 
   function clearLoaderFailsafe() {
+    if (window.__studyArkLoaderFailsafe) {
+      clearTimeout(window.__studyArkLoaderFailsafe);
+      window.__studyArkLoaderFailsafe = null;
+    }
     if (window.__studyArcLoaderFailsafe) {
       clearTimeout(window.__studyArcLoaderFailsafe);
       window.__studyArcLoaderFailsafe = null;
@@ -7989,7 +7997,7 @@
         await finishLoaderForAuthGate();
       }
     } catch (err) {
-      console.warn('StudyArc: Sign-in reveal failed, showing available data:', err);
+      console.warn('StudyArk: Sign-in reveal failed, showing available data:', err);
       cancelHomeIntro();
       await finishLoaderForAuthGate();
     }
@@ -8058,7 +8066,7 @@
         }
       }, 2900);
     } catch (err) {
-      console.warn('StudyArc: Home intro could not complete, revealing final state:', err);
+      console.warn('StudyArk: Home intro could not complete, revealing final state:', err);
       cancelHomeIntro();
     } finally {
       // The loader must always disappear, even if an unexpected exception occurs.
@@ -8117,7 +8125,7 @@
         await finishLoaderForAuthGate();
       }
     } catch (err) {
-      console.warn('StudyArc: Boot sequence failed, revealing cached app:', err);
+      console.warn('StudyArk: Boot sequence failed, revealing cached app:', err);
       cancelHomeIntro();
       await finishLoaderForAuthGate();
     }

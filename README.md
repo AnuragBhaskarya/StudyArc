@@ -1,6 +1,6 @@
 <div align="center">
 
-  # 🌱 StudyArc
+  # 🌱 StudyArk
 
   **Minimalist, Gamified Study & Habit Tracker with Kinetic Focus Engine and Multi-Year Activity Heatmap**
 
@@ -27,9 +27,9 @@
 
 ## 🌟 Overview
 
-**StudyArc** is an ultra-focused study and productivity companion built with modern web aesthetics and zero frontend bloat. It combines the tactile satisfaction of an analog dial with the gamified feedback loops of GitHub's contribution graph and RPG-style XP leveling.
+**StudyArk** is an ultra-focused study and productivity companion built with modern web aesthetics and zero frontend bloat. It combines the tactile satisfaction of an analog dial with the gamified feedback loops of GitHub's contribution graph and RPG-style XP leveling.
 
-Engineered with a centered, distraction-free interface, StudyArc eliminates clutter—no unnecessary sidebars, tabs, or modal traps. Every focus block is persisted in an embedded SQLite database with minute-level precision and chronological timeline tracking.
+Engineered with a centered, distraction-free interface, StudyArk eliminates clutter—no unnecessary sidebars, tabs, or modal traps. Every focus block is persisted in an embedded SQLite database with minute-level precision and chronological timeline tracking.
 
 ---
 
@@ -37,11 +37,11 @@ Engineered with a centered, distraction-free interface, StudyArc eliminates clut
 
 <div align="center">
   <h3>Hero Timer & Consistency Heatmap</h3>
-  <img src="assets/preview-main.png" alt="StudyArc Main Dashboard" width="900" style="border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);" />
+  <img src="assets/preview-main.png" alt="StudyArk Main Dashboard" width="900" style="border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);" />
   <p><em>Centered distraction-free viewport: circular progress arc, live gamification metrics, and multi-year consistency heatmap.</em></p>
   <br/>
   <h3>Day Record Modal & Chronological Timeline</h3>
-  <img src="assets/preview-day-dialog.png" alt="StudyArc Day Record Modal" width="600" style="border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);" />
+  <img src="assets/preview-day-dialog.png" alt="StudyArk Day Record Modal" width="600" style="border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);" />
   <p><em>Inspect any day's metrics: 4 highlight summary pills and detailed chronological session logs with "from when to when" time ranges.</em></p>
 </div>
 
@@ -87,8 +87,8 @@ Engineered with a centered, distraction-free interface, StudyArc eliminates clut
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/AnuragBhaskarya/StudyArc.git
-cd StudyArc
+git clone https://github.com/AnuragBhaskarya/StudyArk.git
+cd StudyArk
 ```
 
 ### 2. Set Up Virtual Environment (Optional but recommended)
@@ -98,7 +98,7 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3. Launch StudyArc
+### 3. Launch StudyArk
 ```bash
 python3 server.py
 ```
@@ -177,7 +177,7 @@ The backend provides a clean RESTful interface for all timer, session, and heatm
 
 ## 🗄️ Database Schema
 
-StudyArc runs on an embedded SQLite engine with foreign key constraints enabled:
+StudyArk runs on an embedded SQLite engine with foreign key constraints enabled:
 
 ```mermaid
 erDiagram
@@ -220,7 +220,7 @@ erDiagram
 ## 📁 Repository Structure
 
 ```
-StudyArc/
+StudyArk/
 ├── assets/
 │   ├── preview-main.png          # Main interface screenshot
 │   └── preview-day-dialog.png    # Day record modal screenshot
