@@ -136,6 +136,35 @@
     }
   }
 
+  // The session archive can be large, so serializing it is the one genuinely
+  // expensive part of finishing a focus block. Coalesce those writes and let
+  // the reset animation finish first; the server already receives the session
+  // immediately, so the local cache cannot lose data.
+  let deferredPersistTimer = null;
+  function scheduleStatePersistence(delay = 120) {
+    if (deferredPersistTimer !== null) {
+      clearTimeout(deferredPersistTimer);
+    }
+    deferredPersistTimer = setTimeout(() => {
+      deferredPersistTimer = null;
+      if (resetVisualActive) {
+        scheduleStatePersistence(120);
+        return;
+      }
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(() => {
+          if (resetVisualActive) {
+            scheduleStatePersistence(150);
+            return;
+          }
+          saveState();
+        }, { timeout: 900 });
+      } else {
+        saveState();
+      }
+    }, Math.max(0, delay));
+  }
+
   // =========================================================================
   // SERVER SYNCHRONIZATION & AUTHENTICATION ENGINE
   // =========================================================================
@@ -420,11 +449,33 @@
       lastAppliedSequence = seq;
     }
 
+    // The reset echo arrives while the local 0:00 -> target transition is
+    // still playing. State is already correct locally, so accepting the echo
+    // would snap the digits and pay for another large localStorage write.
+    // The same no-op check also absorbs late idle echoes after the animation.
+    const idleTargetMatches =
+      Math.abs(Number(serverTimer.targetSeconds || 0) - Number(state.timer.targetSeconds || 0)) < 0.5;
+    if (
+      !serverTimer.hasCompleted &&
+      serverTimer.status === 'idle' &&
+      !serverTimer.activeTaskName &&
+      idleTargetMatches &&
+      (resetVisualActive || (state.timer.status === 'idle' && !state.activeTaskName))
+    ) {
+      return;
+    }
+
+    // A completion echo must not restore a task name that the local
+    // zero-hold animation already cleared for this completion.
+    if (serverTimer.hasCompleted && resetVisualActive) return;
+
     // 1. Task name sync across devices
     state.activeTaskName = serverTimer.activeTaskName || null;
 
     // 2. Handle completed-while-away
     if (serverTimer.hasCompleted) {
+      // A local completion/reset already owns the zero-hold animation.
+      if (resetVisualActive) return;
       const taskName = serverTimer.activeTaskName || state.activeTaskName || (state.subjects && state.subjects.length > 0 ? state.subjects[0].name : 'Focus Session');
       const targetDuration = serverTimer.targetSeconds || DEFAULT_TIMER_SECONDS;
       const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
@@ -433,7 +484,7 @@
         render: false,
         persist: false,
         startTime: sessionStartTime,
-        deferUIDelay: 380
+        deferUIDelay: false
       });
       const streakBonus = Math.max(0, state.streak || 0);
       spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
@@ -1106,24 +1157,49 @@
   const RADIUS = 172;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // ~1080.7078px
 
+  // Hold-to-reset timing. The final 30 seconds are shown one-by-one at a
+  // 60 Hz cadence; everything above that is a smooth decelerating sweep.
+  const HOLD_DELAY_MS = 220;
+  const HOLD_TOTAL_MS = 1200;
+  const HOLD_DRAIN_MS = HOLD_TOTAL_MS - HOLD_DELAY_MS;
+  const RESET_TAIL_SECONDS = 30;
+  const RESET_TAIL_STEP_MS = 1000 / 60;
+  const RESET_ZERO_HOLD_MS = 200;
+  const RESET_RETURN_MS = 460;
+
+  // While a reset is being painted, server echoes must not snap the display
+  // back to the target before the zero hold / refill animation has played.
+  let resetVisualActive = false;
+  let resetZeroTimer = null;
+  let resetReturnRaf = null;
+  let resetFinishTimer = null;
+  let resetReturnToken = 0;
+
+  let timerArcEl = null;
+  let timerBeadGroupEl = null;
+
   function updateTimerRing(seconds) {
-    const arc = document.getElementById('timer-arc');
-    const beadGroup = document.getElementById('timer-bead-group');
-    if (!arc || !beadGroup) return;
+    if (!timerArcEl || !timerArcEl.isConnected) {
+      timerArcEl = document.getElementById('timer-arc');
+    }
+    if (!timerBeadGroupEl || !timerBeadGroupEl.isConnected) {
+      timerBeadGroupEl = document.getElementById('timer-bead-group');
+    }
+    if (!timerArcEl || !timerBeadGroupEl) return;
 
     // Fraction of 3 hours (0 to 1)
     const fraction = Math.max(0, Math.min(1, seconds / MAX_TIMER_SECONDS));
 
     // Arc stroke-dashoffset (circle is rotated -90deg in SVG, so offset controls drawn arc length)
     const offset = CIRCUMFERENCE * (1 - fraction);
-    arc.style.strokeDashoffset = offset;
+    timerArcEl.style.strokeDashoffset = offset;
 
     // Angle clockwise from 12 o'clock (0 = top, PI/2 = 3 o'clock, PI = 6 o'clock, etc.)
     const angle = fraction * 2 * Math.PI;
     const bx = 210 + RADIUS * Math.sin(angle);
     const by = 210 - RADIUS * Math.cos(angle);
 
-    beadGroup.setAttribute('transform', `translate(${bx.toFixed(2)}, ${by.toFixed(2)})`);
+    timerBeadGroupEl.setAttribute('transform', `translate(${bx.toFixed(2)}, ${by.toFixed(2)})`);
   }
 
   // =========================================================================
@@ -1277,6 +1353,7 @@
       this.transitionToken = 0;
       this.animations = [];
       this.finishTimer = null;
+      this.rapidSettled = true;
 
       this.col = document.createElement('span');
       this.col.className = 'dial-col';
@@ -1328,11 +1405,24 @@
       this._setLayer(this.activeLayer, digit, 1, 1);
       this._setLayer(this.nextLayer, '', DIAL_IN_SCALE, 0);
       this.layoutHolder.textContent = digit;
+      this.rapidSettled = true;
     }
 
     setStatic(digit) {
       const next = String(parseInt(digit, 10) || 0);
       if (!this.isTransitioning && this.currentDigit === next) return;
+
+      // Rapid hold/scrub updates have no transition in flight. After the
+      // first snap, changing only the visible glyph avoids rewriting two
+      // transforms + opacities per column on every animation frame.
+      if (this.rapidSettled && !this.isTransitioning) {
+        this.currentDigit = next;
+        if (this.activeLayer.textContent !== next) {
+          this.activeLayer.textContent = next;
+        }
+        return;
+      }
+
       this._settle(next);
     }
 
@@ -1377,6 +1467,7 @@
       this.isTransitioning = true;
       this.targetDigit = next;
       this.pendingDigit = null;
+      this.rapidSettled = false;
 
       // Underlying post-animation state. The WAAPI animations override it
       // while running, so cancelling never flashes the wrong glyph.
@@ -1432,6 +1523,7 @@
       this._setLayer(this.activeLayer, settled, 1, 1);
       this._setLayer(this.nextLayer, '', DIAL_IN_SCALE, 0);
       this.layoutHolder.textContent = settled;
+      this.rapidSettled = true;
 
       if (queued !== null && queued !== settled) {
         this._startTransition(queued);
@@ -1495,6 +1587,14 @@
   let lastDigitalSecs = -1;
 
   function ensureDialControllers() {
+    if (
+      hoursDial && hoursDial.container.isConnected &&
+      minsDial && minsDial.container.isConnected &&
+      secsDial && secsDial.container.isConnected
+    ) {
+      return;
+    }
+
     const hoursVal = document.getElementById('timer-hours-val');
     const minsVal = document.getElementById('timer-mins-val');
     const secsVal = document.getElementById('timer-secs-val');
@@ -1531,8 +1631,10 @@
     }
 
     // Toggle sub-hour class for seamless animated collapse and scale
-    digitsEl.classList.toggle('has-hours', hasHours);
-    digitsEl.classList.toggle('is-sub-hour', !hasHours);
+    if (digitsEl.classList.contains('has-hours') !== hasHours) {
+      digitsEl.classList.toggle('has-hours', hasHours);
+      digitsEl.classList.toggle('is-sub-hour', !hasHours);
+    }
 
     ensureDialControllers();
 
@@ -1566,6 +1668,116 @@
   function renderTimerDisplay(seconds, options = {}) {
     updateDigitalDisplay(seconds, false, options);
     updateTimerRing(seconds);
+  }
+
+  // Frame-locked hold countdown. Large durations are swept through with an
+  // ease-out curve, then the last 30 seconds tick down one integer at a time
+  // at a 60 Hz cadence. Nothing is throttled to 30 Hz and no frame repeats the
+  // previous glyph, so the counter tracks the ring instead of stuttering.
+  function getHoldVisualSeconds(totalSeconds, elapsedMs) {
+    const total = Math.max(0, Math.floor(totalSeconds));
+    if (total <= 0) return 0;
+
+    const elapsed = Math.max(0, Number(elapsedMs) || 0);
+    if (elapsed >= HOLD_DRAIN_MS) return 0;
+
+    if (total <= RESET_TAIL_SECONDS) {
+      const stepMs = HOLD_DRAIN_MS / total;
+      return Math.max(0, total - Math.floor(elapsed / stepMs));
+    }
+
+    const tailMs = RESET_TAIL_SECONDS * RESET_TAIL_STEP_MS;
+    const tailStart = Math.max(0, HOLD_DRAIN_MS - tailMs);
+
+    if (elapsed >= tailStart) {
+      const steps = Math.floor((elapsed - tailStart) / RESET_TAIL_STEP_MS);
+      return Math.max(0, RESET_TAIL_SECONDS - steps);
+    }
+
+    const progress = tailStart > 0 ? Math.min(1, elapsed / tailStart) : 1;
+    const eased = 1 - Math.pow(1 - progress, 2.6);
+    return Math.max(RESET_TAIL_SECONDS, Math.round(total - (total - RESET_TAIL_SECONDS) * eased));
+  }
+
+  function beginTimerResetReturn(targetSeconds, options = {}) {
+    const target = Math.max(0, Math.min(MAX_TIMER_SECONDS, Math.round(Number(targetSeconds) || 0)));
+    const zeroHoldMs = Math.max(0, Number(options.zeroHoldMs) || 0);
+    const returnMs = Math.max(90, Number(options.returnMs) || RESET_RETURN_MS);
+    const token = ++resetReturnToken;
+
+    resetVisualActive = true;
+    document.body.classList.add('is-reset-returning');
+
+    clearTimeout(resetZeroTimer);
+    clearTimeout(resetFinishTimer);
+    if (resetReturnRaf !== null) {
+      cancelAnimationFrame(resetReturnRaf);
+      resetReturnRaf = null;
+    }
+
+    // Paint 0:00 immediately. The browser commits this frame before the
+    // zero-hold pauses, so the user actually sees zero this time.
+    updateTimerRing(0);
+    updateDigitalDisplay(0, true);
+
+    const finish = () => {
+      if (token !== resetReturnToken) return;
+
+      clearTimeout(resetFinishTimer);
+      clearTimeout(resetZeroTimer);
+      resetFinishTimer = null;
+      resetZeroTimer = null;
+
+      if (resetReturnRaf !== null) {
+        cancelAnimationFrame(resetReturnRaf);
+        resetReturnRaf = null;
+      }
+
+      resetVisualActive = false;
+      document.body.classList.remove('is-reset-returning');
+
+      renderTimerDisplay(target);
+      renderTimer();
+      try {
+        if (typeof options.onComplete === 'function') options.onComplete();
+      } catch (e) {
+        console.warn('StudyArc: Timer reset completion error:', e);
+      }
+      scheduleStatePersistence(90);
+    };
+
+    // Safety net for background tabs (rAF can be fully paused there).
+    resetFinishTimer = setTimeout(finish, zeroHoldMs + returnMs + 320);
+
+    resetZeroTimer = setTimeout(() => {
+      if (token !== resetReturnToken) return;
+      resetZeroTimer = null;
+
+      try {
+        if (typeof options.onCommit === 'function') options.onCommit();
+      } catch (e) {
+        console.warn('StudyArc: Timer reset commit error:', e);
+      }
+      if (token !== resetReturnToken) return;
+
+      // Digits crossfade directly to the new target while the rim refills.
+      updateDigitalDisplay(target, false, { duration: 340 });
+
+      const startedAt = performance.now();
+      const step = (now) => {
+        if (token !== resetReturnToken) return;
+        const progress = Math.min(1, (now - startedAt) / returnMs);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        updateTimerRing(target * eased);
+
+        if (progress >= 1) {
+          finish();
+          return;
+        }
+        resetReturnRaf = requestAnimationFrame(step);
+      };
+      resetReturnRaf = requestAnimationFrame(step);
+    }, zeroHoldMs);
   }
 
   /* ==========================================================================
@@ -1799,8 +2011,9 @@
   }
 
   function renderTimer() {
-    // While a preset transition is gliding the rim, server echoes must not snap it
-    if (presetAnimationRaf === null) {
+    // While a preset glide, hold drain, or zero-hold reset is playing, other
+    // render paths must not snap the display before the animation finishes.
+    if (presetAnimationRaf === null && !resetVisualActive && !isCenterPadHolding) {
       renderTimerDisplay(state.timer.remainingSeconds);
     }
 
@@ -1909,7 +2122,7 @@
   }
 
   function renderTimerTick() {
-    if (presetAnimationRaf === null) {
+    if (presetAnimationRaf === null && !resetVisualActive && !isCenterPadHolding) {
       renderTimerDisplay(state.timer.remainingSeconds);
     }
     updateTodayLiveStat();
@@ -1980,7 +2193,7 @@
 
   function handleTimerTick() {
     if (state.timer.status !== 'running') return;
-    if (isCenterPadHolding) return;
+    if (isCenterPadHolding || resetVisualActive) return;
 
     const remaining = recalculateRemainingSeconds();
 
@@ -2080,8 +2293,13 @@
           if (data.subjects) {
             state.subjects = data.subjects;
           }
-          saveState();
-          scheduleSessionUIUpdate(options.deferUIDelay ?? 120);
+          if (options.persist !== false) {
+            if (resetVisualActive) scheduleStatePersistence(120);
+            else saveState();
+          }
+          if (options.deferUIDelay !== false) {
+            scheduleSessionUIUpdate(options.deferUIDelay ?? 120);
+          }
         }
       }
     } catch (err) {
@@ -2090,6 +2308,8 @@
   }
 
   function completeSession() {
+    if (resetVisualActive) return;
+
     state.timer.remainingSeconds = 0;
     if (timerInterval) {
       clearInterval(timerInterval);
@@ -2099,42 +2319,57 @@
 
     const prevLevel = getLevelInfo(state.xp).level;
     const taskName = state.activeTaskName || 'Focus Session';
-    const targetDuration = state.activeTaskTargetSeconds || state.timer.targetSeconds;
+    const targetDuration = Math.max(
+      60,
+      Number(state.activeTaskTargetSeconds || state.timer.targetSeconds) || DEFAULT_TIMER_SECONDS
+    );
     const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
     const sessionStartTime = state.activeTaskStartTime;
 
-    // Commit the session locally, but do not render the whole page here.
-    // The timer reset is painted first; stats + heatmap follow after the
-    // digit transition has had a chance to play smoothly.
+    // Send the session to the server immediately, but keep all heavy local
+    // persistence for after the zero-hold + refill animation.
     logSession(minutesCompleted, taskName, {
       render: false,
       persist: false,
       startTime: sessionStartTime,
-      deferUIDelay: 380
+      deferUIDelay: false
     });
 
-    const newLevelInfo = getLevelInfo(state.xp);
-    const streakBonus = Math.max(0, state.streak || 0);
+    beginTimerResetReturn(targetDuration, {
+      zeroHoldMs: 460,
+      returnMs: 520,
+      onCommit: () => {
+        const newLevelInfo = getLevelInfo(state.xp);
 
-    if (newLevelInfo.level > prevLevel) {
-      setTimeout(() => {
-        spawnFlyingPill(`🎉 Lv. ${newLevelInfo.level}!`, { extraClass: 'pill-xp', lane: 'center' });
-        showToast(`Level Up! Reached Level ${newLevelInfo.level}: ${newLevelInfo.title}! ✨`);
-      }, 550);
-    }
+        if (newLevelInfo.level > prevLevel) {
+          setTimeout(() => {
+            spawnFlyingPill(`🎉 Lv. ${newLevelInfo.level}!`, { extraClass: 'pill-xp', lane: 'center' });
+            showToast(`Level Up! Reached Level ${newLevelInfo.level}: ${newLevelInfo.title}! ✨`);
+          }, 550);
+        }
 
-    state.activeTaskName = null;
-    state.activeTaskStartTime = null;
-    state.activeTaskTargetSeconds = null;
+        state.activeTaskName = null;
+        state.activeTaskStartTime = null;
+        state.activeTaskTargetSeconds = null;
 
-    // Reset back to set target duration
-    state.timer.remainingSeconds = state.timer.targetSeconds;
-    state.timer.status = 'idle';
-    saveState();
-    syncTimerAction('complete', { target_seconds: state.timer.targetSeconds });
-    renderTimer();
-    spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
-    scheduleSessionUIUpdate(380);
+        state.timer.targetSeconds = targetDuration;
+        state.timer.remainingSeconds = targetDuration;
+        state.timer.anchorRemainingSeconds = targetDuration;
+        state.timer.anchorServerTime = null;
+        state.timer.lastTickTime = null;
+        state.timer.status = 'idle';
+
+        // Timer UI classes/title refresh now; the rim/digits are owned by the
+        // reset refill animation until it completes.
+        renderTimer();
+        syncTimerAction('complete', { target_seconds: targetDuration });
+      },
+      onComplete: () => {
+        const streakBonus = Math.max(0, state.streak || 0);
+        spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
+        scheduleSessionUIUpdate(140);
+      }
+    });
   }
 
   function updateStreak() {
@@ -2248,6 +2483,7 @@
 
     function startDragging(e) {
       if (e.button && e.button !== 0) return; // Only primary mouse button or touch
+      if (resetVisualActive) return;
       e.preventDefault();
       e.stopPropagation();
 
@@ -2279,6 +2515,7 @@
 
     // Also allow grabbing anywhere on the SVG outer ring (outside center pad)
     svg.addEventListener('pointerdown', (e) => {
+      if (resetVisualActive) return;
       if (state.activeTaskName || state.timer.status !== 'idle') {
         return; // Locked in session
       }
@@ -2303,16 +2540,10 @@
     const pad = document.getElementById('timer-center-pad');
     if (!pad) return;
 
-    // Grace delay: normal clicks last ~80-160ms. Hold drain activates after 220ms
-    const HOLD_DELAY_MS = 220;
-    const TOTAL_HOLD_MS = 1200; // 1.2-second hold period
-    const DRAIN_MS = TOTAL_HOLD_MS - HOLD_DELAY_MS; // 980ms drain
-
     let holdRaf = null;
     let holdDelayTimer = null;
     let pointerDownTime = 0;
     let drainStartTime = 0;
-    let lastDigitsPaint = 0;
     let isPointerDown = false;
     let isDraining = false;
     let holdStartRemaining = 0;
@@ -2320,29 +2551,35 @@
 
     function stepHold(now) {
       if (!isDraining) return;
+
+      // Natural completion can start the reset while the pad is still held.
+      // Abandon the manual drain so the session cannot be logged twice.
+      if (resetVisualActive) {
+        isDraining = false;
+        isCenterPadHolding = false;
+        holdCompleted = true;
+        document.body.classList.remove('is-holding');
+        pad.classList.remove('holding');
+        matrixStreamEngine?.setHolding(false);
+        return;
+      }
+
       const elapsed = now - drainStartTime;
-      const progress = Math.min(1, elapsed / DRAIN_MS);
+      const progress = Math.min(1, elapsed / HOLD_DRAIN_MS);
 
       // Accelerate background matrix stream and elongate boxes as hold progresses!
       matrixStreamEngine?.setHolding(true, progress);
 
-      // 1. The circular ring timer drains with an accelerating ease-in curve:
-      // Starts gently and crawls, then accelerates faster and faster into 0!
-      const ringDrainRatio = Math.pow(progress, 2.3);
-      const ringVisualSeconds = Math.max(0, holdStartRemaining * (1 - ringDrainRatio));
-      updateTimerRing(ringVisualSeconds);
+      // Ring and digits share one frame-locked visual value. The value sweeps
+      // quickly through large durations, then decelerates into a one-by-one
+      // 30 -> 0 countdown so the display never looks like it is skipping.
+      const visualSeconds = getHoldVisualSeconds(holdStartRemaining, elapsed);
+      updateTimerRing(visualSeconds);
+      updateDigitalDisplay(visualSeconds, false, { rapid: true });
 
-      // 2. The countdown numbers visibly decrease in real-time. Rapid updates
-      // snap the glyphs so they stay locked to the ring without stacking
-      // transitions; the ring remains the smooth 60fps feedback.
-      if (now - lastDigitsPaint >= 33 || progress >= 1) {
-        lastDigitsPaint = now;
-        const visualSeconds = Math.max(0, holdStartRemaining * (1 - progress));
-        updateDigitalDisplay(visualSeconds, false, { rapid: true });
-      }
-
-      if (progress >= 1) {
-        // Complete 1.2-second hold: Trigger Save Progress & Exit!
+      if (elapsed >= HOLD_DRAIN_MS) {
+        // Complete 1.2-second hold: freeze on a real 0:00 frame first, then
+        // commit/persist after the zero-hold instead of blocking that frame.
         holdCompleted = true;
         isDraining = false;
         isCenterPadHolding = false;
@@ -2350,6 +2587,9 @@
         pad.classList.remove('holding');
         matrixStreamEngine?.setHolding(false);
         matrixStreamEngine?.setTimerStatus('idle');
+
+        updateTimerRing(0);
+        updateDigitalDisplay(0, true);
 
         if (navigator.vibrate) navigator.vibrate([40, 50, 40]);
 
@@ -2360,50 +2600,54 @@
         const sessionStartTime = state.activeTaskStartTime;
         const hadActiveTask = Boolean(state.activeTaskName);
 
-        // Strict 1-minute rule: discard session if < 60s, save if >= 60s.
-        // Update the local session data without rendering: the timer reset
-        // below must be the first thing painted so releasing the hold feels
-        // instant instead of freezing for a frame or two.
-        if (minutesLogged > 0) {
-          logSession(minutesLogged, taskName, {
-            render: false,
-            persist: false,
-            startTime: sessionStartTime,
-            deferUIDelay: 380
-          });
-        }
+        beginTimerResetReturn(DEFAULT_TIMER_SECONDS, {
+          zeroHoldMs: RESET_ZERO_HOLD_MS,
+          returnMs: RESET_RETURN_MS,
+          onCommit: () => {
+            // Strict 1-minute rule: discard session if < 60s, save if >= 60s.
+            if (minutesLogged > 0) {
+              logSession(minutesLogged, taskName, {
+                render: false,
+                persist: false,
+                startTime: sessionStartTime,
+                deferUIDelay: false
+              });
+            }
 
-        if (timerInterval) {
-          clearInterval(timerInterval);
-          timerInterval = null;
-        }
-        state.activeTaskName = null;
-        state.activeTaskStartTime = null;
-        state.activeTaskTargetSeconds = null;
+            if (timerInterval) {
+              clearInterval(timerInterval);
+              timerInterval = null;
+            }
+            state.activeTaskName = null;
+            state.activeTaskStartTime = null;
+            state.activeTaskTargetSeconds = null;
 
-        // Reset timer back to fixed 1:30:00 default in stopped/paused state
-        state.timer.targetSeconds = DEFAULT_TIMER_SECONDS;
-        state.timer.remainingSeconds = DEFAULT_TIMER_SECONDS;
-        state.timer.anchorRemainingSeconds = DEFAULT_TIMER_SECONDS;
-        state.timer.anchorServerTime = null;
-        state.timer.lastTickTime = null;
-        state.timer.status = 'idle';
+            // Reset timer back to fixed 1:30:00 default in stopped/paused state
+            state.timer.targetSeconds = DEFAULT_TIMER_SECONDS;
+            state.timer.remainingSeconds = DEFAULT_TIMER_SECONDS;
+            state.timer.anchorRemainingSeconds = DEFAULT_TIMER_SECONDS;
+            state.timer.anchorServerTime = null;
+            state.timer.lastTickTime = null;
+            state.timer.status = 'idle';
 
-        // One save contains both the logged session and the reset timer.
-        saveState();
-        syncTimerAction('reset', { target_seconds: DEFAULT_TIMER_SECONDS });
-        renderTimer();
-        playChime('reset');
-
-        if (minutesLogged > 0) {
-          const streakBonus = Math.max(0, state.streak || 0);
-          spawnRewardPills(minutesLogged, minutesLogged, streakBonus);
-          scheduleSessionUIUpdate(380);
-        } else if (hadActiveTask) {
-          spawnFlyingPill('Session Ended');
-        } else {
-          spawnFlyingPill('Timer Reset');
-        }
+            // UI classes/theme refresh now; the rim/digits are owned by the
+            // reset refill animation until it finishes.
+            renderTimer();
+            syncTimerAction('reset', { target_seconds: DEFAULT_TIMER_SECONDS });
+            playChime('reset');
+          },
+          onComplete: () => {
+            if (minutesLogged > 0) {
+              const streakBonus = Math.max(0, state.streak || 0);
+              spawnRewardPills(minutesLogged, minutesLogged, streakBonus);
+              scheduleSessionUIUpdate(140);
+            } else if (hadActiveTask) {
+              spawnFlyingPill('Session Ended');
+            } else {
+              spawnFlyingPill('Timer Reset');
+            }
+          }
+        });
         return;
       }
 
@@ -2411,10 +2655,9 @@
     }
 
     function startHoldDrain() {
-      if (!isPointerDown) return;
+      if (!isPointerDown || resetVisualActive) return;
       isDraining = true;
       drainStartTime = performance.now();
-      lastDigitsPaint = 0;
       document.body.classList.add('is-holding');
       pad.classList.add('holding');
       matrixStreamEngine?.setHolding(true, 0.08);
@@ -2425,6 +2668,7 @@
 
     pad.addEventListener('pointerdown', (e) => {
       if (e.button && e.button !== 0) return; // Only primary mouse button or touch
+      if (resetVisualActive) return;
       cancelTimerPresetAnimation();
       isPointerDown = true;
       isDraining = false;
@@ -2478,10 +2722,11 @@
         handlePlayPauseAction();
       } else if (wasDraining) {
         // Held partially (>220ms) but released before 1.2s: restore display cleanly
-        renderTimerDisplay(state.timer.remainingSeconds, { duration: 340 });
         if (state.timer.status === 'running') {
+          state.timer.remainingSeconds = recalculateRemainingSeconds();
           state.timer.lastTickTime = Date.now();
         }
+        renderTimerDisplay(state.timer.remainingSeconds, { duration: 340 });
       }
     }
 
@@ -2505,6 +2750,7 @@
   // TASK FOCUS PROMPT & ACTIONS
   // =========================================================================
   function handlePlayPauseAction() {
+    if (resetVisualActive) return;
     if (state.timer.status === 'running') {
       pauseTimer();
     } else if (state.timer.status === 'paused') {
