@@ -115,7 +115,8 @@ def seed_anurag_data():
                     date_str,
                     timestamp_ms,
                     start_time_str,
-                    end_time_str
+                    end_time_str,
+                    duration * 10
                 ))
 
             current_date += timedelta(days=1)
@@ -126,15 +127,15 @@ def seed_anurag_data():
         if ctx.is_pg:
             from psycopg2.extras import execute_values
             sql = """
-                INSERT INTO sessions (user_id, subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time)
+                INSERT INTO sessions (user_id, subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time, xp)
                 VALUES %s
             """
             cur = ctx.cursor()
             execute_values(cur, sql, sessions_to_insert)
         else:
             ctx.conn.executemany("""
-                INSERT INTO sessions (user_id, subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO sessions (user_id, subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time, xp)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, sessions_to_insert)
 
         ctx.commit()

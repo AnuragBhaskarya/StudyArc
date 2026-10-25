@@ -696,8 +696,13 @@ def handle_sessions(user_id):
     start_time = data.get('start_time') or data.get('startTime')
     end_time = data.get('end_time') or data.get('endTime')
 
+    unpaused = bool(data.get('unpaused', True))
+    if data.get('has_been_paused') or data.get('hasBeenPaused'):
+        unpaused = False
+    xp_override = data.get('xp')
+
     new_session = database.add_session(
-        user_id, subject_name, duration_minutes, date_str, timestamp_ms, start_time, end_time
+        user_id, subject_name, duration_minutes, date_str, timestamp_ms, start_time, end_time, unpaused=unpaused, xp=xp_override
     )
 
     # Automatically update persistent timer state back to idle upon session save & broadcast to all WebSockets

@@ -2283,10 +2283,13 @@
     }
   }
 
+  let activeSessionHasBeenPaused = false;
+
   function startTimer() {
     lastRenderedSeconds = null;
     initAudio();
     playChime('start');
+    activeSessionHasBeenPaused = false;
 
     state.timer.status = 'running';
     state.timer.anchorRemainingSeconds = state.timer.remainingSeconds;
@@ -2329,6 +2332,7 @@
 
   function pauseTimer() {
     lastRenderedSeconds = null;
+    activeSessionHasBeenPaused = true;
     state.timer.status = 'paused';
     state.timer.anchorServerTime = null;
     state.timer.lastTickTime = null;
@@ -2342,6 +2346,37 @@
     syncTimerAction('pause', {
       remaining_seconds: Math.round(state.timer.remainingSeconds)
     });
+  }
+
+  function estimateSessionXp(minutes, unpaused = true) {
+    const base = Math.max(1, minutes) * 10;
+    let flowMult = 1.0;
+    if (minutes >= 90) flowMult = 1.35;
+    else if (minutes >= 60) flowMult = 1.25;
+    else if (minutes >= 30) flowMult = 1.15;
+
+    const pristineMult = unpaused ? 1.10 : 1.0;
+
+    const streak = state.streak || 0;
+    let streakMult = 1.0;
+    if (streak >= 31) streakMult = 1.20;
+    else if (streak >= 15) streakMult = 1.15;
+    else if (streak >= 8) streakMult = 1.10;
+    else if (streak >= 4) streakMult = 1.05;
+
+    let scaled = Math.round(base * flowMult * pristineMult * streakMult);
+
+    const todayStr = getLocalDateString();
+    const todayMins = state.dayActivity[todayStr] || 0;
+    if (todayMins === 0) {
+      scaled += 100;
+    }
+    const newTotal = todayMins + minutes;
+    if (todayMins < 60 && newTotal >= 60) scaled += 150;
+    if (todayMins < 120 && newTotal >= 120) scaled += 300;
+    if (todayMins < 240 && newTotal >= 240) scaled += 600;
+
+    return scaled;
   }
 
   function handleTimerTick() {
@@ -2391,9 +2426,11 @@
     const startStr = formatTime(startD);
     const endStr = formatTime(endD);
     const timeRangeStr = `${startStr} – ${endStr}`;
+    const unpaused = options.unpaused !== false;
+    const earnedXp = estimateSessionXp(minutesCompleted, unpaused);
 
     // Optimistic local update
-    state.xp += minutesCompleted;
+    state.xp += earnedXp;
     state.totalFocusSeconds += minutesCompleted * 60;
     state.dayActivity[todayStr] = (state.dayActivity[todayStr] || 0) + minutesCompleted;
 
@@ -2406,7 +2443,7 @@
       startTime: startStr,
       endTime: endStr,
       timeRange: timeRangeStr,
-      xp: minutesCompleted
+      xp: earnedXp
     });
     dayDetailsCache.delete(todayStr);
     invalidateSessionIndex();
@@ -2418,7 +2455,7 @@
       refreshOpenHistoryDialog();
     }
 
-    // Persist session to SQLite backend
+    // Persist session to backend
     try {
       const res = await fetch('/api/sessions', {
         method: 'POST',
@@ -2429,7 +2466,9 @@
           date: todayStr,
           timestamp: now,
           start_time: startStr,
-          end_time: endStr
+          end_time: endStr,
+          unpaused: unpaused,
+          xp: earnedXp
         })
       });
       if (res.ok) {
@@ -2485,7 +2524,8 @@
       render: false,
       persist: false,
       startTime: sessionStartTime,
-      deferUIDelay: false
+      deferUIDelay: false,
+      unpaused: !activeSessionHasBeenPaused
     });
 
     beginTimerResetReturn(targetDuration, {
@@ -4104,7 +4144,7 @@
       const tier = RPG_TIERS[tierIdx] || 'The Absolute';
       const sub = ROMAN_NUMERALS[(lvl - 1) % 10];
       const title = `${tier} ${sub}`;
-      const xpReq = Math.max(50, Math.round((50 + 8 * (lvl - 1) + 0.15 * Math.pow(lvl, 1.3)) / 5) * 5);
+      const xpReq = Math.max(300, Math.round((300 + 8 * (lvl - 1) + 0.012 * Math.pow(lvl, 2)) / 5) * 5);
       const minXp = cum;
       const maxXp = cum + xpReq;
       cum = maxXp;
@@ -4189,7 +4229,7 @@
       xpBarFillEl.style.width = `${lvlInfo.progressPercent.toFixed(1)}%`;
     }
     if (xpItemEl) {
-      xpItemEl.title = `Level ${lvlInfo.level}: ${lvlInfo.title} (${lvlInfo.tier})\nCollected: ${lvlInfo.currentLevelXp.toLocaleString()} / ${lvlInfo.xpRequired.toLocaleString()} XP (${lvlInfo.progressPercent.toFixed(1)}%)\nTotal Studied: ${Number(state.xp || 0).toLocaleString()} XP`;
+      xpItemEl.title = `Level ${lvlInfo.level}: ${lvlInfo.title} (${lvlInfo.tier})\nCollected: ${lvlInfo.currentLevelXp.toLocaleString()} / ${lvlInfo.xpRequired.toLocaleString()} XP (${lvlInfo.progressPercent.toFixed(1)}%)\nTotal Experience: ${Number(state.xp || 0).toLocaleString()} XP`;
     }
 
     if (settingTotalFocusEl) {
@@ -4340,9 +4380,10 @@
         totalTimeFormatted: formattedTotal,
         totalSessions: totalSess,
         avgFocusMinutes: avgMins,
-        totalXp: matchingMins,
+        totalXp: sortedMatching.reduce((acc, s) => acc + (s.xp != null ? s.xp : ((s.durationMinutes || s.duration_minutes || 0) * 10)), 0),
         sessions: sortedMatching.map(s => {
           const duration = s.durationMinutes || s.duration_minutes || 0;
+          const sessXp = s.xp != null ? s.xp : (duration * 10);
           const ts = s._ts || s.timestamp || Date.now();
           const endD = new Date(ts);
           const startD = new Date(ts - duration * 60000);
@@ -4353,7 +4394,7 @@
             color: s.color || '#10E068',
             durationMinutes: duration,
             timeRange: timeRange,
-            xp: duration
+            xp: sessXp
           };
         })
       };
@@ -4403,7 +4444,7 @@
         `;
       } else {
         listEl.innerHTML = dayData.sessions.map(s => `
-          <div class="day-session-card" data-session-id="${escapeHtml(s.id)}" data-duration="${s.durationMinutes}">
+          <div class="day-session-card" data-session-id="${escapeHtml(s.id)}" data-duration="${s.durationMinutes}" data-xp="${s.xp != null ? s.xp : (s.durationMinutes * 10)}">
             <div class="day-session-left">
               <div class="day-session-timeline">
                 <span class="day-session-track-line"></span>
@@ -4425,7 +4466,7 @@
                 </svg>
                 <span>${s.durationMinutes} mins</span>
               </div>
-              <span class="day-session-xp">+${formatCompactNumber(s.xp || s.durationMinutes)} XP</span>
+              <span class="day-session-xp">+${formatCompactNumber(s.xp != null ? s.xp : (s.durationMinutes * 10))} XP</span>
               <button class="day-session-delete-btn" data-session-id="${escapeHtml(s.id)}" data-date="${escapeHtml(dayData.date)}" title="Delete session" aria-label="Delete session">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="3 6 5 6 21 6"></polyline>
@@ -4577,7 +4618,7 @@
 
     for (let i = 0; i < sessions.length; i++) {
       const s = sessions[i];
-      cum += Number(s.xp || s.durationMinutes || 0);
+      cum += Number(s.xp != null ? s.xp : ((s.durationMinutes || s.duration_minutes || 0) * 10));
       while (nextLvlIdx < totalLevels && cum >= RPG_LEVELS[nextLvlIdx].maxXp) {
         const l = RPG_LEVELS[nextLvlIdx];
         if (!dates[l.level]) {
@@ -5290,7 +5331,7 @@
 
   function createHistorySessionCard(s) {
     const dur = s.durationMinutes || s.duration_minutes || 0;
-    const xp = s.xp || dur;
+    const xp = s.xp != null ? s.xp : (dur * 10);
     const taskName = s.taskName || s.task_name || '';
     const taskNote = taskName ? `<span class="history-session-task">"${escapeHtml(taskName)}"</span>` : '';
     const timeRangeStr = s.timeRange ? `<span class="history-session-timerange">${escapeHtml(s.timeRange)}</span>` : '';
@@ -5301,6 +5342,7 @@
     card.setAttribute('data-session-id', s.id);
     card.setAttribute('data-date', s.date || '');
     card.setAttribute('data-duration', dur);
+    card.setAttribute('data-xp', xp);
 
     card.innerHTML = `
       <div class="history-session-left">
@@ -6807,6 +6849,7 @@
     const taskNote = card?.querySelector('.history-session-task')?.textContent?.trim() || '';
     const timeRange = card?.querySelector('.day-session-timerange, .history-session-timerange')?.textContent?.trim() || '';
     const xpText = card?.querySelector('.day-session-xp, .history-session-xp')?.textContent?.trim() || '';
+    const xpVal = parseInt(card?.getAttribute('data-xp') || '', 10) || (duration * 10);
     const dateLabel = dateStr ? formatDayDateHeader(dateStr) : '';
 
     return {
@@ -6817,7 +6860,7 @@
         date: dateLabel,
         time: timeRange,
         duration: duration > 0 ? `${duration} min` : '',
-        xp: xpText || (duration > 0 ? `+${duration} XP` : '')
+        xp: xpText || (xpVal > 0 ? `+${formatCompactNumber(xpVal)} XP` : '')
       }
     };
   }
@@ -6841,12 +6884,15 @@
       ('sess_' + s.id) === String(sessionId)
     );
     let duration = 0;
+    let sessionXp = 0;
     if (idx !== -1) {
       duration = state.sessions[idx].durationMinutes || state.sessions[idx].duration_minutes || 0;
+      sessionXp = state.sessions[idx].xp != null ? state.sessions[idx].xp : (duration * 10);
       state.sessions.splice(idx, 1);
       invalidateSessionIndex();
     } else if (cardEl) {
       duration = parseInt(cardEl.dataset.duration || cardEl.querySelector('.day-session-duration')?.textContent || '0', 10) || 0;
+      sessionXp = parseInt(cardEl.dataset.xp || '0', 10) || (duration * 10);
     }
 
     // 2. Update day activity and gamification stats immediately
@@ -6856,7 +6902,7 @@
         delete state.dayActivity[dateStr];
       }
     }
-    state.xp = Math.max(0, (state.xp || 0) - duration);
+    state.xp = Math.max(0, (state.xp || 0) - sessionXp);
     state.totalFocusSeconds = Math.max(0, (state.totalFocusSeconds || 0) - duration * 60);
     updateStreak();
 
@@ -6874,7 +6920,7 @@
         const hrs = Math.floor(cached.totalMinutes / 60);
         const mins = cached.totalMinutes % 60;
         cached.totalTimeFormatted = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
-        cached.totalXp = cached.totalMinutes;
+        cached.totalXp = cached.sessions.reduce((acc, s) => acc + (s.xp != null ? s.xp : ((s.durationMinutes || 0) * 10)), 0);
         dayDetailsCache.set(dateStr, cached);
       } else {
         dayDetailsCache.delete(dateStr);

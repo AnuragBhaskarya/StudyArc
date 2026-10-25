@@ -258,6 +258,7 @@ def init_db():
                     timestamp BIGINT NOT NULL,
                     start_time VARCHAR(32),
                     end_time VARCHAR(32),
+                    xp INTEGER NOT NULL DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -276,6 +277,14 @@ def init_db():
             """)
             if not cur.fetchone():
                 ctx.execute("ALTER TABLE sessions ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE")
+
+            cur = ctx.execute("""
+                SELECT column_name FROM information_schema.columns 
+                WHERE table_schema = 'public' AND table_name = 'sessions' AND column_name = 'xp'
+            """)
+            if not cur.fetchone():
+                ctx.execute("ALTER TABLE sessions ADD COLUMN xp INTEGER NOT NULL DEFAULT 0")
+            ctx.execute("UPDATE sessions SET xp = duration_minutes * 10 WHERE xp IS NULL OR xp = 0")
 
             try:
                 ctx.execute("ALTER TABLE sessions ALTER COLUMN subject_id DROP NOT NULL")
@@ -353,6 +362,7 @@ def init_db():
                     timestamp BIGINT NOT NULL,
                     start_time TEXT,
                     end_time TEXT,
+                    xp INTEGER NOT NULL DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -365,6 +375,10 @@ def init_db():
 
             cur = ctx.execute("PRAGMA table_info(sessions)")
             cols = [r['name'] for r in cur.fetchall()]
+            if 'xp' not in cols:
+                ctx.execute("ALTER TABLE sessions ADD COLUMN xp INTEGER NOT NULL DEFAULT 0")
+            ctx.execute("UPDATE sessions SET xp = duration_minutes * 10 WHERE xp IS NULL OR xp = 0")
+
             # SQLite automatic migration: decouple sessions from subject ON DELETE CASCADE
             try:
                 cur = ctx.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='sessions'")
@@ -382,10 +396,11 @@ def init_db():
                             timestamp BIGINT NOT NULL,
                             start_time TEXT,
                             end_time TEXT,
+                            xp INTEGER NOT NULL DEFAULT 0,
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                         )
                     """)
-                    ctx.execute("INSERT INTO sessions_v2 SELECT * FROM sessions")
+                    ctx.execute("INSERT INTO sessions_v2 (id, user_id, subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time, xp, created_at) SELECT id, user_id, subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time, COALESCE(NULLIF(xp, 0), duration_minutes * 10), created_at FROM sessions")
                     ctx.execute("DROP TABLE sessions")
                     ctx.execute("ALTER TABLE sessions_v2 RENAME TO sessions")
                     ctx.execute("CREATE INDEX IF NOT EXISTS idx_sessions_user_date ON sessions (user_id, date)")
@@ -705,7 +720,97 @@ def add_or_get_subject(user_id, name, color=None):
         )
         return {'id': new_id, 'name': clean_name, 'color': color}
 
-def add_session(user_id, subject_name, duration_minutes, date_str=None, timestamp_ms=None, start_time=None, end_time=None):
+def calculate_session_xp(user_id, duration_minutes, date_str=None, unpaused=True):
+    """
+    Computes dynamic XP for a study session based on:
+    - Base XP: duration_minutes * 10
+    - Flow Multiplier: 1.0x (<30m), 1.15x (30-59m), 1.25x (60-89m), 1.35x (90-180m)
+    - Pristine Focus: +10% (1.10x) if unpaused
+    - Streak Multiplier: 1.0x (1-3d), 1.05x (4-7d), 1.10x (8-14d), 1.15x (15-30d), 1.20x (31+d)
+    - Daily First Session Ignition: +100 XP
+    - Daily Volume Milestones: +150 XP (crossed 60m), +300 XP (crossed 120m), +600 XP (crossed 240m)
+    """
+    if not date_str:
+        date_str = datetime.now().strftime('%Y-%m-%d')
+    try:
+        duration_minutes = int(duration_minutes)
+    except (ValueError, TypeError):
+        duration_minutes = 25
+    duration_minutes = max(1, min(duration_minutes, 1440))
+
+    base_xp = duration_minutes * 10
+
+    # Flow Multiplier
+    if duration_minutes >= 90:
+        flow_mult = 1.35
+    elif duration_minutes >= 60:
+        flow_mult = 1.25
+    elif duration_minutes >= 30:
+        flow_mult = 1.15
+    else:
+        flow_mult = 1.00
+
+    # Pristine Focus
+    pristine_mult = 1.10 if unpaused else 1.00
+
+    # Current Streak
+    stats = get_stats(user_id, client_date=date_str)
+    streak = stats.get('streak', 0)
+    if streak >= 31:
+        streak_mult = 1.20
+    elif streak >= 15:
+        streak_mult = 1.15
+    elif streak >= 8:
+        streak_mult = 1.10
+    elif streak >= 4:
+        streak_mult = 1.05
+    else:
+        streak_mult = 1.00
+
+    scaled_xp = round(base_xp * flow_mult * pristine_mult * streak_mult)
+
+    # First session of the day & Milestone bonuses
+    bonus_first = 0
+    bonus_milestone = 0
+    with get_connection() as ctx:
+        cur = ctx.execute(
+            "SELECT COALESCE(SUM(duration_minutes), 0) as today_mins, COUNT(id) as today_count FROM sessions WHERE user_id = ? AND date = ?",
+            (user_id, date_str)
+        )
+        row = cur.fetchone()
+        today_mins = 0
+        today_count = 0
+        if row:
+            if isinstance(row, dict) or hasattr(row, 'keys'):
+                today_mins = int(row['today_mins'] or 0)
+                today_count = int(row['today_count'] or 0)
+            else:
+                today_mins = int(row[0] or 0)
+                today_count = int(row[1] or 0)
+
+        if today_count == 0:
+            bonus_first = 100
+
+        new_total_mins = today_mins + duration_minutes
+        if today_mins < 60 and new_total_mins >= 60:
+            bonus_milestone += 150
+        if today_mins < 120 and new_total_mins >= 120:
+            bonus_milestone += 300
+        if today_mins < 240 and new_total_mins >= 240:
+            bonus_milestone += 600
+
+    total_xp = scaled_xp + bonus_first + bonus_milestone
+    return {
+        'total_xp': total_xp,
+        'base_xp': base_xp,
+        'flow_mult': flow_mult,
+        'pristine_mult': pristine_mult,
+        'streak_mult': streak_mult,
+        'bonus_first': bonus_first,
+        'bonus_milestone': bonus_milestone
+    }
+
+def add_session(user_id, subject_name, duration_minutes, date_str=None, timestamp_ms=None, start_time=None, end_time=None, unpaused=True, xp=None):
     try:
         duration_minutes = int(duration_minutes)
     except (ValueError, TypeError):
@@ -732,11 +837,22 @@ def add_session(user_id, subject_name, duration_minutes, date_str=None, timestam
 
     subj = add_or_get_subject(user_id, clean_subj_name)
 
+    session_xp = None
+    if xp is not None:
+        try:
+            session_xp = int(xp)
+        except (ValueError, TypeError):
+            session_xp = None
+
+    if session_xp is None:
+        xp_calc = calculate_session_xp(user_id, duration_minutes, date_str, unpaused=unpaused)
+        session_xp = xp_calc['total_xp']
+
     with get_connection() as ctx:
         session_id = ctx.execute_insert("""
-            INSERT INTO sessions (user_id, subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (user_id, subj['id'], subj['name'], duration_minutes, date_str, timestamp_ms, start_time, end_time))
+            INSERT INTO sessions (user_id, subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time, xp)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (user_id, subj['id'], subj['name'], duration_minutes, date_str, timestamp_ms, start_time, end_time, session_xp))
 
     return {
         'id': f"sess_{session_id}",
@@ -748,7 +864,8 @@ def add_session(user_id, subject_name, duration_minutes, date_str=None, timestam
         'timestamp': timestamp_ms,
         'startTime': start_time,
         'endTime': end_time,
-        'timeRange': f"{start_time} – {end_time}"
+        'timeRange': f"{start_time} – {end_time}",
+        'xp': session_xp
     }
 
 def delete_session(user_id, session_id):
@@ -787,7 +904,8 @@ def get_sessions(user_id, limit=5000):
         cur = ctx.execute("""
             SELECT sess.id, sess.subject_id, sess.subject_name, s.color, 
                    sess.duration_minutes, sess.date, sess.timestamp,
-                   sess.start_time, sess.end_time
+                   sess.start_time, sess.end_time,
+                   COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp
             FROM sessions sess
             LEFT JOIN subjects s ON sess.subject_id = s.id
             WHERE sess.user_id = ?
@@ -799,6 +917,7 @@ def get_sessions(user_id, limit=5000):
         result = []
         for r in rows:
             duration = int(r['duration_minutes'])
+            sess_xp = int(r.get('xp') or (duration * 10))
             ts = int(r['timestamp'])
             end_dt = datetime.fromtimestamp(ts / 1000)
             start_dt = end_dt - timedelta(minutes=duration)
@@ -816,7 +935,7 @@ def get_sessions(user_id, limit=5000):
                 'startTime': start_str,
                 'endTime': end_str,
                 'timeRange': f"{start_str} – {end_str}",
-                'xp': duration
+                'xp': sess_xp
             })
         return result
 
@@ -825,7 +944,8 @@ def get_day_details(user_id, date_str):
         cur = ctx.execute("""
             SELECT sess.id, sess.subject_id, sess.subject_name, s.color,
                    sess.duration_minutes, sess.date, sess.timestamp,
-                   sess.start_time, sess.end_time
+                   sess.start_time, sess.end_time,
+                   COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp
             FROM sessions sess
             LEFT JOIN subjects s ON sess.subject_id = s.id
             WHERE sess.user_id = ? AND sess.date = ?
@@ -835,9 +955,12 @@ def get_day_details(user_id, date_str):
 
     sessions = []
     total_minutes = 0
+    total_xp = 0
     for r in rows:
         duration = int(r['duration_minutes'])
+        sess_xp = int(r.get('xp') or (duration * 10))
         total_minutes += duration
+        total_xp += sess_xp
         ts = int(r['timestamp'])
         end_dt = datetime.fromtimestamp(ts / 1000)
         start_dt = end_dt - timedelta(minutes=duration)
@@ -855,7 +978,7 @@ def get_day_details(user_id, date_str):
             'startTime': start_str,
             'endTime': end_str,
             'timeRange': f"{start_str} – {end_str}",
-            'xp': duration
+            'xp': sess_xp
         })
 
     total_sessions = len(sessions)
@@ -882,7 +1005,7 @@ def get_day_details(user_id, date_str):
         'totalTimeFormatted': total_formatted,
         'totalSessions': total_sessions,
         'avgFocusMinutes': avg_minutes,
-        'totalXp': total_minutes,
+        'totalXp': total_xp,
         'sessions': sessions
     }
 
@@ -920,6 +1043,9 @@ def get_stats(user_id, client_date=None):
         )
         today_focus_minutes = int(fetch_scalar(cur.fetchone()) or 0)
 
+        cur = ctx.execute("SELECT COALESCE(SUM(COALESCE(NULLIF(xp, 0), duration_minutes * 10)), 0) FROM sessions WHERE user_id = ?", (user_id,))
+        total_xp = int(fetch_scalar(cur.fetchone()) or 0)
+
         cur = ctx.execute("""
             SELECT date, SUM(duration_minutes) as mins
             FROM sessions
@@ -941,7 +1067,7 @@ def get_stats(user_id, client_date=None):
 
     return {
         'streak': streak,
-        'xp': total_focus_minutes,
+        'xp': total_xp,
         'totalFocusSeconds': total_focus_minutes * 60,
         'todayFocusSeconds': today_focus_minutes * 60,
         'todayFocusMinutes': today_focus_minutes
@@ -987,13 +1113,17 @@ def get_full_state(user_id, client_date=None):
                     ),
                     'sessions', (
                         SELECT COALESCE(json_agg(sess_row), '[]'::json) FROM (
-                            SELECT sess.id, sess.subject_id, sess.subject_name, s.color, sess.duration_minutes, sess.date, sess.timestamp, sess.start_time, sess.end_time
+                            SELECT sess.id, sess.subject_id, sess.subject_name, s.color, sess.duration_minutes, sess.date, sess.timestamp, sess.start_time, sess.end_time, COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10)::int as xp
                             FROM sessions sess
                             LEFT JOIN subjects s ON sess.subject_id = s.id
                             WHERE sess.user_id = %s
                             ORDER BY sess.timestamp DESC
                             LIMIT 5000
                         ) sess_row
+                    ),
+                    'total_xp', (
+                        SELECT COALESCE(SUM(COALESCE(NULLIF(xp, 0), duration_minutes * 10)), 0)::int
+                        FROM sessions WHERE user_id = %s
                     ),
                     'activity', (
                         SELECT COALESCE(json_object_agg(a.date, a.total_minutes), '{}'::json) FROM (
@@ -1007,7 +1137,7 @@ def get_full_state(user_id, client_date=None):
                         FROM users WHERE id = %s
                     )
                 ) AS full_state
-            """, (user_id, user_id, user_id, user_id, user_id, user_id))
+            """, (user_id, user_id, user_id, user_id, user_id, user_id, user_id))
             data = cur.fetchone()['full_state']
         else:
             # SQLite fallback: fetch with single connection
@@ -1020,11 +1150,13 @@ def get_full_state(user_id, client_date=None):
             """, (user_id, user_id))
             sub_rows = [dict(r) for r in cur_s.fetchall()]
             cur_sess = ctx.execute("""
-                SELECT sess.id, sess.subject_id, sess.subject_name, s.color, sess.duration_minutes, sess.date, sess.timestamp, sess.start_time, sess.end_time
+                SELECT sess.id, sess.subject_id, sess.subject_name, s.color, sess.duration_minutes, sess.date, sess.timestamp, sess.start_time, sess.end_time, COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp
                 FROM sessions sess LEFT JOIN subjects s ON sess.subject_id = s.id
                 WHERE sess.user_id = ? ORDER BY sess.timestamp DESC LIMIT 5000
             """, (user_id,))
             sess_rows = [dict(r) for r in cur_sess.fetchall()]
+            cur_xp = ctx.execute("SELECT COALESCE(SUM(COALESCE(NULLIF(xp, 0), duration_minutes * 10)), 0) FROM sessions WHERE user_id = ?", (user_id,))
+            total_xp = int(fetch_scalar(cur_xp.fetchone()) or 0)
             cur_act = ctx.execute("SELECT date, SUM(duration_minutes) as total_minutes FROM sessions WHERE user_id = ? GROUP BY date ORDER BY date ASC", (user_id,))
             act_dict = {r['date']: int(r['total_minutes']) for r in cur_act.fetchall()}
             cur_pref = ctx.execute("SELECT aura_enabled FROM users WHERE id = ?", (user_id,))
@@ -1036,6 +1168,7 @@ def get_full_state(user_id, client_date=None):
                 'timer': dict(t_row) if t_row else None,
                 'subjects': sub_rows,
                 'sessions': sess_rows,
+                'total_xp': total_xp,
                 'activity': act_dict,
                 'preferences': {'auraEnabled': aura_enabled}
             }
@@ -1113,13 +1246,14 @@ def get_full_state(user_id, client_date=None):
             'startTime': start_str,
             'endTime': end_str,
             'timeRange': f"{start_str} – {end_str}",
-            'xp': duration
+            'xp': int(r.get('xp') or (duration * 10))
         })
 
     # 4. Process Activity & Compute Stats in Python (0 extra DB queries!)
     day_act = {k: int(v) for k, v in (data.get('activity') or {}).items()}
     tot_focus_mins = sum(day_act.values())
     today_focus_mins = day_act.get(today_str, 0)
+    total_xp = int(data.get('total_xp') or (tot_focus_mins * 10))
 
     active_dates = {d for d, mins in day_act.items() if mins > 0}
     current_check = current_date_obj
@@ -1132,7 +1266,7 @@ def get_full_state(user_id, client_date=None):
 
     stats_res = {
         'streak': streak,
-        'xp': tot_focus_mins,
+        'xp': total_xp,
         'totalFocusSeconds': tot_focus_mins * 60,
         'todayFocusSeconds': today_focus_mins * 60,
         'todayFocusMinutes': today_focus_mins
