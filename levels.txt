@@ -1,1306 +1,1008 @@
 ================================================================================
-  STUDYARK RPG PROGRESSION — 100 TIERS & 1,000 LEVELS OF MASTERY
+STUDYARK 1,000-LEVEL PROGRESSION CATALOG (10-YEAR MASTERY CURVE)
 ================================================================================
-
-LVL    | TITLE                      | TIER                   | XP NEEDED  | XP RANGE (TOTAL)
+LVL    | TITLE                            | REQ XP     | MIN XP       | MAX XP      
 --------------------------------------------------------------------------------
-
->>> TIER 1: NOVICE <<<
---------------------------------------------------
-1      | Novice I                   | Novice                 | 300        | 0 -> 300 XP
-2      | Novice II                  | Novice                 | 310        | 300 -> 610 XP
-3      | Novice III                 | Novice                 | 315        | 610 -> 925 XP
-4      | Novice IV                  | Novice                 | 325        | 925 -> 1,250 XP
-5      | Novice V                   | Novice                 | 330        | 1,250 -> 1,580 XP
-6      | Novice VI                  | Novice                 | 340        | 1,580 -> 1,920 XP
-7      | Novice VII                 | Novice                 | 350        | 1,920 -> 2,270 XP
-8      | Novice VIII                | Novice                 | 355        | 2,270 -> 2,625 XP
-9      | Novice IX                  | Novice                 | 365        | 2,625 -> 2,990 XP
-10     | Novice X                   | Novice                 | 375        | 2,990 -> 3,365 XP
-
->>> TIER 2: TRAINEE <<<
---------------------------------------------------
-11     | Trainee I                  | Trainee                | 380        | 3,365 -> 3,745 XP
-12     | Trainee II                 | Trainee                | 390        | 3,745 -> 4,135 XP
-13     | Trainee III                | Trainee                | 400        | 4,135 -> 4,535 XP
-14     | Trainee IV                 | Trainee                | 405        | 4,535 -> 4,940 XP
-15     | Trainee V                  | Trainee                | 415        | 4,940 -> 5,355 XP
-16     | Trainee VI                 | Trainee                | 425        | 5,355 -> 5,780 XP
-17     | Trainee VII                | Trainee                | 430        | 5,780 -> 6,210 XP
-18     | Trainee VIII               | Trainee                | 440        | 6,210 -> 6,650 XP
-19     | Trainee IX                 | Trainee                | 450        | 6,650 -> 7,100 XP
-20     | Trainee X                  | Trainee                | 455        | 7,100 -> 7,555 XP
-
->>> TIER 3: APPRENTICE <<<
---------------------------------------------------
-21     | Apprentice I               | Apprentice             | 465        | 7,555 -> 8,020 XP
-22     | Apprentice II              | Apprentice             | 475        | 8,020 -> 8,495 XP
-23     | Apprentice III             | Apprentice             | 480        | 8,495 -> 8,975 XP
-24     | Apprentice IV              | Apprentice             | 490        | 8,975 -> 9,465 XP
-25     | Apprentice V               | Apprentice             | 500        | 9,465 -> 9,965 XP
-26     | Apprentice VI              | Apprentice             | 510        | 9,965 -> 10,475 XP
-27     | Apprentice VII             | Apprentice             | 515        | 10,475 -> 10,990 XP
-28     | Apprentice VIII            | Apprentice             | 525        | 10,990 -> 11,515 XP
-29     | Apprentice IX              | Apprentice             | 535        | 11,515 -> 12,050 XP
-30     | Apprentice X               | Apprentice             | 545        | 12,050 -> 12,595 XP
-
->>> TIER 4: INITIATE <<<
---------------------------------------------------
-31     | Initiate I                 | Initiate               | 550        | 12,595 -> 13,145 XP
-32     | Initiate II                | Initiate               | 560        | 13,145 -> 13,705 XP
-33     | Initiate III               | Initiate               | 570        | 13,705 -> 14,275 XP
-34     | Initiate IV                | Initiate               | 580        | 14,275 -> 14,855 XP
-35     | Initiate V                 | Initiate               | 585        | 14,855 -> 15,440 XP
-36     | Initiate VI                | Initiate               | 595        | 15,440 -> 16,035 XP
-37     | Initiate VII               | Initiate               | 605        | 16,035 -> 16,640 XP
-38     | Initiate VIII              | Initiate               | 615        | 16,640 -> 17,255 XP
-39     | Initiate IX                | Initiate               | 620        | 17,255 -> 17,875 XP
-40     | Initiate X                 | Initiate               | 630        | 17,875 -> 18,505 XP
-
->>> TIER 5: RECRUIT <<<
---------------------------------------------------
-41     | Recruit I                  | Recruit                | 640        | 18,505 -> 19,145 XP
-42     | Recruit II                 | Recruit                | 650        | 19,145 -> 19,795 XP
-43     | Recruit III                | Recruit                | 660        | 19,795 -> 20,455 XP
-44     | Recruit IV                 | Recruit                | 665        | 20,455 -> 21,120 XP
-45     | Recruit V                  | Recruit                | 675        | 21,120 -> 21,795 XP
-46     | Recruit VI                 | Recruit                | 685        | 21,795 -> 22,480 XP
-47     | Recruit VII                | Recruit                | 695        | 22,480 -> 23,175 XP
-48     | Recruit VIII               | Recruit                | 705        | 23,175 -> 23,880 XP
-49     | Recruit IX                 | Recruit                | 715        | 23,880 -> 24,595 XP
-50     | Recruit X                  | Recruit                | 720        | 24,595 -> 25,315 XP
-
->>> TIER 6: SCOUT <<<
---------------------------------------------------
-51     | Scout I                    | Scout                  | 730        | 25,315 -> 26,045 XP
-52     | Scout II                   | Scout                  | 740        | 26,045 -> 26,785 XP
-53     | Scout III                  | Scout                  | 750        | 26,785 -> 27,535 XP
-54     | Scout IV                   | Scout                  | 760        | 27,535 -> 28,295 XP
-55     | Scout V                    | Scout                  | 770        | 28,295 -> 29,065 XP
-56     | Scout VI                   | Scout                  | 780        | 29,065 -> 29,845 XP
-57     | Scout VII                  | Scout                  | 785        | 29,845 -> 30,630 XP
-58     | Scout VIII                 | Scout                  | 795        | 30,630 -> 31,425 XP
-59     | Scout IX                   | Scout                  | 805        | 31,425 -> 32,230 XP
-60     | Scout X                    | Scout                  | 815        | 32,230 -> 33,045 XP
-
->>> TIER 7: PATHFINDER <<<
---------------------------------------------------
-61     | Pathfinder I               | Pathfinder             | 825        | 33,045 -> 33,870 XP
-62     | Pathfinder II              | Pathfinder             | 835        | 33,870 -> 34,705 XP
-63     | Pathfinder III             | Pathfinder             | 845        | 34,705 -> 35,550 XP
-64     | Pathfinder IV              | Pathfinder             | 855        | 35,550 -> 36,405 XP
-65     | Pathfinder V               | Pathfinder             | 865        | 36,405 -> 37,270 XP
-66     | Pathfinder VI              | Pathfinder             | 870        | 37,270 -> 38,140 XP
-67     | Pathfinder VII             | Pathfinder             | 880        | 38,140 -> 39,020 XP
-68     | Pathfinder VIII            | Pathfinder             | 890        | 39,020 -> 39,910 XP
-69     | Pathfinder IX              | Pathfinder             | 900        | 39,910 -> 40,810 XP
-70     | Pathfinder X               | Pathfinder             | 910        | 40,810 -> 41,720 XP
-
->>> TIER 8: ADVENTURER <<<
---------------------------------------------------
-71     | Adventurer I               | Adventurer             | 920        | 41,720 -> 42,640 XP
-72     | Adventurer II              | Adventurer             | 930        | 42,640 -> 43,570 XP
-73     | Adventurer III             | Adventurer             | 940        | 43,570 -> 44,510 XP
-74     | Adventurer IV              | Adventurer             | 950        | 44,510 -> 45,460 XP
-75     | Adventurer V               | Adventurer             | 960        | 45,460 -> 46,420 XP
-76     | Adventurer VI              | Adventurer             | 970        | 46,420 -> 47,390 XP
-77     | Adventurer VII             | Adventurer             | 980        | 47,390 -> 48,370 XP
-78     | Adventurer VIII            | Adventurer             | 990        | 48,370 -> 49,360 XP
-79     | Adventurer IX              | Adventurer             | 1000       | 49,360 -> 50,360 XP
-80     | Adventurer X               | Adventurer             | 1010       | 50,360 -> 51,370 XP
-
->>> TIER 9: EXPLORER <<<
---------------------------------------------------
-81     | Explorer I                 | Explorer               | 1020       | 51,370 -> 52,390 XP
-82     | Explorer II                | Explorer               | 1030       | 52,390 -> 53,420 XP
-83     | Explorer III               | Explorer               | 1040       | 53,420 -> 54,460 XP
-84     | Explorer IV                | Explorer               | 1050       | 54,460 -> 55,510 XP
-85     | Explorer V                 | Explorer               | 1060       | 55,510 -> 56,570 XP
-86     | Explorer VI                | Explorer               | 1070       | 56,570 -> 57,640 XP
-87     | Explorer VII               | Explorer               | 1080       | 57,640 -> 58,720 XP
-88     | Explorer VIII              | Explorer               | 1090       | 58,720 -> 59,810 XP
-89     | Explorer IX                | Explorer               | 1100       | 59,810 -> 60,910 XP
-90     | Explorer X                 | Explorer               | 1110       | 60,910 -> 62,020 XP
-
->>> TIER 10: PIONEER <<<
---------------------------------------------------
-91     | Pioneer I                  | Pioneer                | 1120       | 62,020 -> 63,140 XP
-92     | Pioneer II                 | Pioneer                | 1130       | 63,140 -> 64,270 XP
-93     | Pioneer III                | Pioneer                | 1140       | 64,270 -> 65,410 XP
-94     | Pioneer IV                 | Pioneer                | 1150       | 65,410 -> 66,560 XP
-95     | Pioneer V                  | Pioneer                | 1160       | 66,560 -> 67,720 XP
-96     | Pioneer VI                 | Pioneer                | 1170       | 67,720 -> 68,890 XP
-97     | Pioneer VII                | Pioneer                | 1180       | 68,890 -> 70,070 XP
-98     | Pioneer VIII               | Pioneer                | 1190       | 70,070 -> 71,260 XP
-99     | Pioneer IX                 | Pioneer                | 1200       | 71,260 -> 72,460 XP
-100    | Pioneer X                  | Pioneer                | 1210       | 72,460 -> 73,670 XP
-
->>> TIER 11: IRON INITIATE <<<
---------------------------------------------------
-101    | Iron Initiate I            | Iron Initiate          | 1220       | 73,670 -> 74,890 XP
-102    | Iron Initiate II           | Iron Initiate          | 1235       | 74,890 -> 76,125 XP
-103    | Iron Initiate III          | Iron Initiate          | 1245       | 76,125 -> 77,370 XP
-104    | Iron Initiate IV           | Iron Initiate          | 1255       | 77,370 -> 78,625 XP
-105    | Iron Initiate V            | Iron Initiate          | 1265       | 78,625 -> 79,890 XP
-106    | Iron Initiate VI           | Iron Initiate          | 1275       | 79,890 -> 81,165 XP
-107    | Iron Initiate VII          | Iron Initiate          | 1285       | 81,165 -> 82,450 XP
-108    | Iron Initiate VIII         | Iron Initiate          | 1295       | 82,450 -> 83,745 XP
-109    | Iron Initiate IX           | Iron Initiate          | 1305       | 83,745 -> 85,050 XP
-110    | Iron Initiate X            | Iron Initiate          | 1315       | 85,050 -> 86,365 XP
-
->>> TIER 12: IRON GUARD <<<
---------------------------------------------------
-111    | Iron Guard I               | Iron Guard             | 1330       | 86,365 -> 87,695 XP
-112    | Iron Guard II              | Iron Guard             | 1340       | 87,695 -> 89,035 XP
-113    | Iron Guard III             | Iron Guard             | 1350       | 89,035 -> 90,385 XP
-114    | Iron Guard IV              | Iron Guard             | 1360       | 90,385 -> 91,745 XP
-115    | Iron Guard V               | Iron Guard             | 1370       | 91,745 -> 93,115 XP
-116    | Iron Guard VI              | Iron Guard             | 1380       | 93,115 -> 94,495 XP
-117    | Iron Guard VII             | Iron Guard             | 1390       | 94,495 -> 95,885 XP
-118    | Iron Guard VIII            | Iron Guard             | 1405       | 95,885 -> 97,290 XP
-119    | Iron Guard IX              | Iron Guard             | 1415       | 97,290 -> 98,705 XP
-120    | Iron Guard X               | Iron Guard             | 1425       | 98,705 -> 100,130 XP
-
->>> TIER 13: IRON VANGUARD <<<
---------------------------------------------------
-121    | Iron Vanguard I            | Iron Vanguard          | 1435       | 100,130 -> 101,565 XP
-122    | Iron Vanguard II           | Iron Vanguard          | 1445       | 101,565 -> 103,010 XP
-123    | Iron Vanguard III          | Iron Vanguard          | 1460       | 103,010 -> 104,470 XP
-124    | Iron Vanguard IV           | Iron Vanguard          | 1470       | 104,470 -> 105,940 XP
-125    | Iron Vanguard V            | Iron Vanguard          | 1480       | 105,940 -> 107,420 XP
-126    | Iron Vanguard VI           | Iron Vanguard          | 1490       | 107,420 -> 108,910 XP
-127    | Iron Vanguard VII          | Iron Vanguard          | 1500       | 108,910 -> 110,410 XP
-128    | Iron Vanguard VIII         | Iron Vanguard          | 1515       | 110,410 -> 111,925 XP
-129    | Iron Vanguard IX           | Iron Vanguard          | 1525       | 111,925 -> 113,450 XP
-130    | Iron Vanguard X            | Iron Vanguard          | 1535       | 113,450 -> 114,985 XP
-
->>> TIER 14: IRON KNIGHT <<<
---------------------------------------------------
-131    | Iron Knight I              | Iron Knight            | 1545       | 114,985 -> 116,530 XP
-132    | Iron Knight II             | Iron Knight            | 1555       | 116,530 -> 118,085 XP
-133    | Iron Knight III            | Iron Knight            | 1570       | 118,085 -> 119,655 XP
-134    | Iron Knight IV             | Iron Knight            | 1580       | 119,655 -> 121,235 XP
-135    | Iron Knight V              | Iron Knight            | 1590       | 121,235 -> 122,825 XP
-136    | Iron Knight VI             | Iron Knight            | 1600       | 122,825 -> 124,425 XP
-137    | Iron Knight VII            | Iron Knight            | 1615       | 124,425 -> 126,040 XP
-138    | Iron Knight VIII           | Iron Knight            | 1625       | 126,040 -> 127,665 XP
-139    | Iron Knight IX             | Iron Knight            | 1635       | 127,665 -> 129,300 XP
-140    | Iron Knight X              | Iron Knight            | 1645       | 129,300 -> 130,945 XP
-
->>> TIER 15: BRONZE STRIKER <<<
---------------------------------------------------
-141    | Bronze Striker I           | Bronze Striker         | 1660       | 130,945 -> 132,605 XP
-142    | Bronze Striker II          | Bronze Striker         | 1670       | 132,605 -> 134,275 XP
-143    | Bronze Striker III         | Bronze Striker         | 1680       | 134,275 -> 135,955 XP
-144    | Bronze Striker IV          | Bronze Striker         | 1695       | 135,955 -> 137,650 XP
-145    | Bronze Striker V           | Bronze Striker         | 1705       | 137,650 -> 139,355 XP
-146    | Bronze Striker VI          | Bronze Striker         | 1715       | 139,355 -> 141,070 XP
-147    | Bronze Striker VII         | Bronze Striker         | 1725       | 141,070 -> 142,795 XP
-148    | Bronze Striker VIII        | Bronze Striker         | 1740       | 142,795 -> 144,535 XP
-149    | Bronze Striker IX          | Bronze Striker         | 1750       | 144,535 -> 146,285 XP
-150    | Bronze Striker X           | Bronze Striker         | 1760       | 146,285 -> 148,045 XP
-
->>> TIER 16: BRONZE WARRIOR <<<
---------------------------------------------------
-151    | Bronze Warrior I           | Bronze Warrior         | 1775       | 148,045 -> 149,820 XP
-152    | Bronze Warrior II          | Bronze Warrior         | 1785       | 149,820 -> 151,605 XP
-153    | Bronze Warrior III         | Bronze Warrior         | 1795       | 151,605 -> 153,400 XP
-154    | Bronze Warrior IV          | Bronze Warrior         | 1810       | 153,400 -> 155,210 XP
-155    | Bronze Warrior V           | Bronze Warrior         | 1820       | 155,210 -> 157,030 XP
-156    | Bronze Warrior VI          | Bronze Warrior         | 1830       | 157,030 -> 158,860 XP
-157    | Bronze Warrior VII         | Bronze Warrior         | 1845       | 158,860 -> 160,705 XP
-158    | Bronze Warrior VIII        | Bronze Warrior         | 1855       | 160,705 -> 162,560 XP
-159    | Bronze Warrior IX          | Bronze Warrior         | 1865       | 162,560 -> 164,425 XP
-160    | Bronze Warrior X           | Bronze Warrior         | 1880       | 164,425 -> 166,305 XP
-
->>> TIER 17: BRONZE KNIGHT <<<
---------------------------------------------------
-161    | Bronze Knight I            | Bronze Knight          | 1890       | 166,305 -> 168,195 XP
-162    | Bronze Knight II           | Bronze Knight          | 1905       | 168,195 -> 170,100 XP
-163    | Bronze Knight III          | Bronze Knight          | 1915       | 170,100 -> 172,015 XP
-164    | Bronze Knight IV           | Bronze Knight          | 1925       | 172,015 -> 173,940 XP
-165    | Bronze Knight V            | Bronze Knight          | 1940       | 173,940 -> 175,880 XP
-166    | Bronze Knight VI           | Bronze Knight          | 1950       | 175,880 -> 177,830 XP
-167    | Bronze Knight VII          | Bronze Knight          | 1965       | 177,830 -> 179,795 XP
-168    | Bronze Knight VIII         | Bronze Knight          | 1975       | 179,795 -> 181,770 XP
-169    | Bronze Knight IX           | Bronze Knight          | 1985       | 181,770 -> 183,755 XP
-170    | Bronze Knight X            | Bronze Knight          | 2000       | 183,755 -> 185,755 XP
-
->>> TIER 18: BRONZE CHAMPION <<<
---------------------------------------------------
-171    | Bronze Champion I          | Bronze Champion        | 2010       | 185,755 -> 187,765 XP
-172    | Bronze Champion II         | Bronze Champion        | 2025       | 187,765 -> 189,790 XP
-173    | Bronze Champion III        | Bronze Champion        | 2035       | 189,790 -> 191,825 XP
-174    | Bronze Champion IV         | Bronze Champion        | 2045       | 191,825 -> 193,870 XP
-175    | Bronze Champion V          | Bronze Champion        | 2060       | 193,870 -> 195,930 XP
-176    | Bronze Champion VI         | Bronze Champion        | 2070       | 195,930 -> 198,000 XP
-177    | Bronze Champion VII        | Bronze Champion        | 2085       | 198,000 -> 200,085 XP
-178    | Bronze Champion VIII       | Bronze Champion        | 2095       | 200,085 -> 202,180 XP
-179    | Bronze Champion IX         | Bronze Champion        | 2110       | 202,180 -> 204,290 XP
-180    | Bronze Champion X          | Bronze Champion        | 2120       | 204,290 -> 206,410 XP
-
->>> TIER 19: SILVER SCOUT <<<
---------------------------------------------------
-181    | Silver Scout I             | Silver Scout           | 2135       | 206,410 -> 208,545 XP
-182    | Silver Scout II            | Silver Scout           | 2145       | 208,545 -> 210,690 XP
-183    | Silver Scout III           | Silver Scout           | 2160       | 210,690 -> 212,850 XP
-184    | Silver Scout IV            | Silver Scout           | 2170       | 212,850 -> 215,020 XP
-185    | Silver Scout V             | Silver Scout           | 2185       | 215,020 -> 217,205 XP
-186    | Silver Scout VI            | Silver Scout           | 2195       | 217,205 -> 219,400 XP
-187    | Silver Scout VII           | Silver Scout           | 2210       | 219,400 -> 221,610 XP
-188    | Silver Scout VIII          | Silver Scout           | 2220       | 221,610 -> 223,830 XP
-189    | Silver Scout IX            | Silver Scout           | 2235       | 223,830 -> 226,065 XP
-190    | Silver Scout X             | Silver Scout           | 2245       | 226,065 -> 228,310 XP
-
->>> TIER 20: SILVER GUARD <<<
---------------------------------------------------
-191    | Silver Guard I             | Silver Guard           | 2260       | 228,310 -> 230,570 XP
-192    | Silver Guard II            | Silver Guard           | 2270       | 230,570 -> 232,840 XP
-193    | Silver Guard III           | Silver Guard           | 2285       | 232,840 -> 235,125 XP
-194    | Silver Guard IV            | Silver Guard           | 2295       | 235,125 -> 237,420 XP
-195    | Silver Guard V             | Silver Guard           | 2310       | 237,420 -> 239,730 XP
-196    | Silver Guard VI            | Silver Guard           | 2320       | 239,730 -> 242,050 XP
-197    | Silver Guard VII           | Silver Guard           | 2335       | 242,050 -> 244,385 XP
-198    | Silver Guard VIII          | Silver Guard           | 2345       | 244,385 -> 246,730 XP
-199    | Silver Guard IX            | Silver Guard           | 2360       | 246,730 -> 249,090 XP
-200    | Silver Guard X             | Silver Guard           | 2370       | 249,090 -> 251,460 XP
-
->>> TIER 21: SILVER KNIGHT <<<
---------------------------------------------------
-201    | Silver Knight I            | Silver Knight          | 2385       | 251,460 -> 253,845 XP
-202    | Silver Knight II           | Silver Knight          | 2400       | 253,845 -> 256,245 XP
-203    | Silver Knight III          | Silver Knight          | 2410       | 256,245 -> 258,655 XP
-204    | Silver Knight IV           | Silver Knight          | 2425       | 258,655 -> 261,080 XP
-205    | Silver Knight V            | Silver Knight          | 2435       | 261,080 -> 263,515 XP
-206    | Silver Knight VI           | Silver Knight          | 2450       | 263,515 -> 265,965 XP
-207    | Silver Knight VII          | Silver Knight          | 2460       | 265,965 -> 268,425 XP
-208    | Silver Knight VIII         | Silver Knight          | 2475       | 268,425 -> 270,900 XP
-209    | Silver Knight IX           | Silver Knight          | 2490       | 270,900 -> 273,390 XP
-210    | Silver Knight X            | Silver Knight          | 2500       | 273,390 -> 275,890 XP
-
->>> TIER 22: SILVER CHAMPION <<<
---------------------------------------------------
-211    | Silver Champion I          | Silver Champion        | 2515       | 275,890 -> 278,405 XP
-212    | Silver Champion II         | Silver Champion        | 2525       | 278,405 -> 280,930 XP
-213    | Silver Champion III        | Silver Champion        | 2540       | 280,930 -> 283,470 XP
-214    | Silver Champion IV         | Silver Champion        | 2555       | 283,470 -> 286,025 XP
-215    | Silver Champion V          | Silver Champion        | 2565       | 286,025 -> 288,590 XP
-216    | Silver Champion VI         | Silver Champion        | 2580       | 288,590 -> 291,170 XP
-217    | Silver Champion VII        | Silver Champion        | 2595       | 291,170 -> 293,765 XP
-218    | Silver Champion VIII       | Silver Champion        | 2605       | 293,765 -> 296,370 XP
-219    | Silver Champion IX         | Silver Champion        | 2620       | 296,370 -> 298,990 XP
-220    | Silver Champion X          | Silver Champion        | 2635       | 298,990 -> 301,625 XP
-
->>> TIER 23: GOLD STRIKER <<<
---------------------------------------------------
-221    | Gold Striker I             | Gold Striker           | 2645       | 301,625 -> 304,270 XP
-222    | Gold Striker II            | Gold Striker           | 2660       | 304,270 -> 306,930 XP
-223    | Gold Striker III           | Gold Striker           | 2675       | 306,930 -> 309,605 XP
-224    | Gold Striker IV            | Gold Striker           | 2685       | 309,605 -> 312,290 XP
-225    | Gold Striker V             | Gold Striker           | 2700       | 312,290 -> 314,990 XP
-226    | Gold Striker VI            | Gold Striker           | 2715       | 314,990 -> 317,705 XP
-227    | Gold Striker VII           | Gold Striker           | 2725       | 317,705 -> 320,430 XP
-228    | Gold Striker VIII          | Gold Striker           | 2740       | 320,430 -> 323,170 XP
-229    | Gold Striker IX            | Gold Striker           | 2755       | 323,170 -> 325,925 XP
-230    | Gold Striker X             | Gold Striker           | 2765       | 325,925 -> 328,690 XP
-
->>> TIER 24: GOLD WARRIOR <<<
---------------------------------------------------
-231    | Gold Warrior I             | Gold Warrior           | 2780       | 328,690 -> 331,470 XP
-232    | Gold Warrior II            | Gold Warrior           | 2795       | 331,470 -> 334,265 XP
-233    | Gold Warrior III           | Gold Warrior           | 2805       | 334,265 -> 337,070 XP
-234    | Gold Warrior IV            | Gold Warrior           | 2820       | 337,070 -> 339,890 XP
-235    | Gold Warrior V             | Gold Warrior           | 2835       | 339,890 -> 342,725 XP
-236    | Gold Warrior VI            | Gold Warrior           | 2850       | 342,725 -> 345,575 XP
-237    | Gold Warrior VII           | Gold Warrior           | 2860       | 345,575 -> 348,435 XP
-238    | Gold Warrior VIII          | Gold Warrior           | 2875       | 348,435 -> 351,310 XP
-239    | Gold Warrior IX            | Gold Warrior           | 2890       | 351,310 -> 354,200 XP
-240    | Gold Warrior X             | Gold Warrior           | 2905       | 354,200 -> 357,105 XP
-
->>> TIER 25: GOLD KNIGHT <<<
---------------------------------------------------
-241    | Gold Knight I              | Gold Knight            | 2915       | 357,105 -> 360,020 XP
-242    | Gold Knight II             | Gold Knight            | 2930       | 360,020 -> 362,950 XP
-243    | Gold Knight III            | Gold Knight            | 2945       | 362,950 -> 365,895 XP
-244    | Gold Knight IV             | Gold Knight            | 2960       | 365,895 -> 368,855 XP
-245    | Gold Knight V              | Gold Knight            | 2970       | 368,855 -> 371,825 XP
-246    | Gold Knight VI             | Gold Knight            | 2985       | 371,825 -> 374,810 XP
-247    | Gold Knight VII            | Gold Knight            | 3000       | 374,810 -> 377,810 XP
-248    | Gold Knight VIII           | Gold Knight            | 3015       | 377,810 -> 380,825 XP
-249    | Gold Knight IX             | Gold Knight            | 3030       | 380,825 -> 383,855 XP
-250    | Gold Knight X              | Gold Knight            | 3040       | 383,855 -> 386,895 XP
-
->>> TIER 26: GOLD PALADIN <<<
---------------------------------------------------
-251    | Gold Paladin I             | Gold Paladin           | 3055       | 386,895 -> 389,950 XP
-252    | Gold Paladin II            | Gold Paladin           | 3070       | 389,950 -> 393,020 XP
-253    | Gold Paladin III           | Gold Paladin           | 3085       | 393,020 -> 396,105 XP
-254    | Gold Paladin IV            | Gold Paladin           | 3100       | 396,105 -> 399,205 XP
-255    | Gold Paladin V             | Gold Paladin           | 3110       | 399,205 -> 402,315 XP
-256    | Gold Paladin VI            | Gold Paladin           | 3125       | 402,315 -> 405,440 XP
-257    | Gold Paladin VII           | Gold Paladin           | 3140       | 405,440 -> 408,580 XP
-258    | Gold Paladin VIII          | Gold Paladin           | 3155       | 408,580 -> 411,735 XP
-259    | Gold Paladin IX            | Gold Paladin           | 3170       | 411,735 -> 414,905 XP
-260    | Gold Paladin X             | Gold Paladin           | 3185       | 414,905 -> 418,090 XP
-
->>> TIER 27: GOLD CHAMPION <<<
---------------------------------------------------
-261    | Gold Champion I            | Gold Champion          | 3195       | 418,090 -> 421,285 XP
-262    | Gold Champion II           | Gold Champion          | 3210       | 421,285 -> 424,495 XP
-263    | Gold Champion III          | Gold Champion          | 3225       | 424,495 -> 427,720 XP
-264    | Gold Champion IV           | Gold Champion          | 3240       | 427,720 -> 430,960 XP
-265    | Gold Champion V            | Gold Champion          | 3255       | 430,960 -> 434,215 XP
-266    | Gold Champion VI           | Gold Champion          | 3270       | 434,215 -> 437,485 XP
-267    | Gold Champion VII          | Gold Champion          | 3285       | 437,485 -> 440,770 XP
-268    | Gold Champion VIII         | Gold Champion          | 3300       | 440,770 -> 444,070 XP
-269    | Gold Champion IX           | Gold Champion          | 3310       | 444,070 -> 447,380 XP
-270    | Gold Champion X            | Gold Champion          | 3325       | 447,380 -> 450,705 XP
-
->>> TIER 28: PLATINUM SCOUT <<<
---------------------------------------------------
-271    | Platinum Scout I           | Platinum Scout         | 3340       | 450,705 -> 454,045 XP
-272    | Platinum Scout II          | Platinum Scout         | 3355       | 454,045 -> 457,400 XP
-273    | Platinum Scout III         | Platinum Scout         | 3370       | 457,400 -> 460,770 XP
-274    | Platinum Scout IV          | Platinum Scout         | 3385       | 460,770 -> 464,155 XP
-275    | Platinum Scout V           | Platinum Scout         | 3400       | 464,155 -> 467,555 XP
-276    | Platinum Scout VI          | Platinum Scout         | 3415       | 467,555 -> 470,970 XP
-277    | Platinum Scout VII         | Platinum Scout         | 3430       | 470,970 -> 474,400 XP
-278    | Platinum Scout VIII        | Platinum Scout         | 3445       | 474,400 -> 477,845 XP
-279    | Platinum Scout IX          | Platinum Scout         | 3460       | 477,845 -> 481,305 XP
-280    | Platinum Scout X           | Platinum Scout         | 3475       | 481,305 -> 484,780 XP
-
->>> TIER 29: PLATINUM KNIGHT <<<
---------------------------------------------------
-281    | Platinum Knight I          | Platinum Knight        | 3490       | 484,780 -> 488,270 XP
-282    | Platinum Knight II         | Platinum Knight        | 3500       | 488,270 -> 491,770 XP
-283    | Platinum Knight III        | Platinum Knight        | 3515       | 491,770 -> 495,285 XP
-284    | Platinum Knight IV         | Platinum Knight        | 3530       | 495,285 -> 498,815 XP
-285    | Platinum Knight V          | Platinum Knight        | 3545       | 498,815 -> 502,360 XP
-286    | Platinum Knight VI         | Platinum Knight        | 3560       | 502,360 -> 505,920 XP
-287    | Platinum Knight VII        | Platinum Knight        | 3575       | 505,920 -> 509,495 XP
-288    | Platinum Knight VIII       | Platinum Knight        | 3590       | 509,495 -> 513,085 XP
-289    | Platinum Knight IX         | Platinum Knight        | 3605       | 513,085 -> 516,690 XP
-290    | Platinum Knight X          | Platinum Knight        | 3620       | 516,690 -> 520,310 XP
-
->>> TIER 30: PLATINUM PALADIN <<<
---------------------------------------------------
-291    | Platinum Paladin I         | Platinum Paladin       | 3635       | 520,310 -> 523,945 XP
-292    | Platinum Paladin II        | Platinum Paladin       | 3650       | 523,945 -> 527,595 XP
-293    | Platinum Paladin III       | Platinum Paladin       | 3665       | 527,595 -> 531,260 XP
-294    | Platinum Paladin IV        | Platinum Paladin       | 3680       | 531,260 -> 534,940 XP
-295    | Platinum Paladin V         | Platinum Paladin       | 3695       | 534,940 -> 538,635 XP
-296    | Platinum Paladin VI        | Platinum Paladin       | 3710       | 538,635 -> 542,345 XP
-297    | Platinum Paladin VII       | Platinum Paladin       | 3725       | 542,345 -> 546,070 XP
-298    | Platinum Paladin VIII      | Platinum Paladin       | 3740       | 546,070 -> 549,810 XP
-299    | Platinum Paladin IX        | Platinum Paladin       | 3755       | 549,810 -> 553,565 XP
-300    | Platinum Paladin X         | Platinum Paladin       | 3770       | 553,565 -> 557,335 XP
-
->>> TIER 31: PLATINUM CHAMPION <<<
---------------------------------------------------
-301    | Platinum Champion I        | Platinum Champion      | 3785       | 557,335 -> 561,120 XP
-302    | Platinum Champion II       | Platinum Champion      | 3800       | 561,120 -> 564,920 XP
-303    | Platinum Champion III      | Platinum Champion      | 3820       | 564,920 -> 568,740 XP
-304    | Platinum Champion IV       | Platinum Champion      | 3835       | 568,740 -> 572,575 XP
-305    | Platinum Champion V        | Platinum Champion      | 3850       | 572,575 -> 576,425 XP
-306    | Platinum Champion VI       | Platinum Champion      | 3865       | 576,425 -> 580,290 XP
-307    | Platinum Champion VII      | Platinum Champion      | 3880       | 580,290 -> 584,170 XP
-308    | Platinum Champion VIII     | Platinum Champion      | 3895       | 584,170 -> 588,065 XP
-309    | Platinum Champion IX       | Platinum Champion      | 3910       | 588,065 -> 591,975 XP
-310    | Platinum Champion X        | Platinum Champion      | 3925       | 591,975 -> 595,900 XP
-
->>> TIER 32: DIAMOND STRIKER <<<
---------------------------------------------------
-311    | Diamond Striker I          | Diamond Striker        | 3940       | 595,900 -> 599,840 XP
-312    | Diamond Striker II         | Diamond Striker        | 3955       | 599,840 -> 603,795 XP
-313    | Diamond Striker III        | Diamond Striker        | 3970       | 603,795 -> 607,765 XP
-314    | Diamond Striker IV         | Diamond Striker        | 3985       | 607,765 -> 611,750 XP
-315    | Diamond Striker V          | Diamond Striker        | 4005       | 611,750 -> 615,755 XP
-316    | Diamond Striker VI         | Diamond Striker        | 4020       | 615,755 -> 619,775 XP
-317    | Diamond Striker VII        | Diamond Striker        | 4035       | 619,775 -> 623,810 XP
-318    | Diamond Striker VIII       | Diamond Striker        | 4050       | 623,810 -> 627,860 XP
-319    | Diamond Striker IX         | Diamond Striker        | 4065       | 627,860 -> 631,925 XP
-320    | Diamond Striker X          | Diamond Striker        | 4080       | 631,925 -> 636,005 XP
-
->>> TIER 33: DIAMOND GUARD <<<
---------------------------------------------------
-321    | Diamond Guard I            | Diamond Guard          | 4095       | 636,005 -> 640,100 XP
-322    | Diamond Guard II           | Diamond Guard          | 4110       | 640,100 -> 644,210 XP
-323    | Diamond Guard III          | Diamond Guard          | 4130       | 644,210 -> 648,340 XP
-324    | Diamond Guard IV           | Diamond Guard          | 4145       | 648,340 -> 652,485 XP
-325    | Diamond Guard V            | Diamond Guard          | 4160       | 652,485 -> 656,645 XP
-326    | Diamond Guard VI           | Diamond Guard          | 4175       | 656,645 -> 660,820 XP
-327    | Diamond Guard VII          | Diamond Guard          | 4190       | 660,820 -> 665,010 XP
-328    | Diamond Guard VIII         | Diamond Guard          | 4205       | 665,010 -> 669,215 XP
-329    | Diamond Guard IX           | Diamond Guard          | 4225       | 669,215 -> 673,440 XP
-330    | Diamond Guard X            | Diamond Guard          | 4240       | 673,440 -> 677,680 XP
-
->>> TIER 34: DIAMOND KNIGHT <<<
---------------------------------------------------
-331    | Diamond Knight I           | Diamond Knight         | 4255       | 677,680 -> 681,935 XP
-332    | Diamond Knight II          | Diamond Knight         | 4270       | 681,935 -> 686,205 XP
-333    | Diamond Knight III         | Diamond Knight         | 4285       | 686,205 -> 690,490 XP
-334    | Diamond Knight IV          | Diamond Knight         | 4305       | 690,490 -> 694,795 XP
-335    | Diamond Knight V           | Diamond Knight         | 4320       | 694,795 -> 699,115 XP
-336    | Diamond Knight VI          | Diamond Knight         | 4335       | 699,115 -> 703,450 XP
-337    | Diamond Knight VII         | Diamond Knight         | 4350       | 703,450 -> 707,800 XP
-338    | Diamond Knight VIII        | Diamond Knight         | 4365       | 707,800 -> 712,165 XP
-339    | Diamond Knight IX          | Diamond Knight         | 4385       | 712,165 -> 716,550 XP
-340    | Diamond Knight X           | Diamond Knight         | 4400       | 716,550 -> 720,950 XP
-
->>> TIER 35: DIAMOND VANGUARD <<<
---------------------------------------------------
-341    | Diamond Vanguard I         | Diamond Vanguard       | 4415       | 720,950 -> 725,365 XP
-342    | Diamond Vanguard II        | Diamond Vanguard       | 4430       | 725,365 -> 729,795 XP
-343    | Diamond Vanguard III       | Diamond Vanguard       | 4450       | 729,795 -> 734,245 XP
-344    | Diamond Vanguard IV        | Diamond Vanguard       | 4465       | 734,245 -> 738,710 XP
-345    | Diamond Vanguard V         | Diamond Vanguard       | 4480       | 738,710 -> 743,190 XP
-346    | Diamond Vanguard VI        | Diamond Vanguard       | 4495       | 743,190 -> 747,685 XP
-347    | Diamond Vanguard VII       | Diamond Vanguard       | 4515       | 747,685 -> 752,200 XP
-348    | Diamond Vanguard VIII      | Diamond Vanguard       | 4530       | 752,200 -> 756,730 XP
-349    | Diamond Vanguard IX        | Diamond Vanguard       | 4545       | 756,730 -> 761,275 XP
-350    | Diamond Vanguard X         | Diamond Vanguard       | 4560       | 761,275 -> 765,835 XP
-
->>> TIER 36: DIAMOND CHAMPION <<<
---------------------------------------------------
-351    | Diamond Champion I         | Diamond Champion       | 4580       | 765,835 -> 770,415 XP
-352    | Diamond Champion II        | Diamond Champion       | 4595       | 770,415 -> 775,010 XP
-353    | Diamond Champion III       | Diamond Champion       | 4610       | 775,010 -> 779,620 XP
-354    | Diamond Champion IV        | Diamond Champion       | 4630       | 779,620 -> 784,250 XP
-355    | Diamond Champion V         | Diamond Champion       | 4645       | 784,250 -> 788,895 XP
-356    | Diamond Champion VI        | Diamond Champion       | 4660       | 788,895 -> 793,555 XP
-357    | Diamond Champion VII       | Diamond Champion       | 4675       | 793,555 -> 798,230 XP
-358    | Diamond Champion VIII      | Diamond Champion       | 4695       | 798,230 -> 802,925 XP
-359    | Diamond Champion IX        | Diamond Champion       | 4710       | 802,925 -> 807,635 XP
-360    | Diamond Champion X         | Diamond Champion       | 4725       | 807,635 -> 812,360 XP
-
->>> TIER 37: EMERALD RANGER <<<
---------------------------------------------------
-361    | Emerald Ranger I           | Emerald Ranger         | 4745       | 812,360 -> 817,105 XP
-362    | Emerald Ranger II          | Emerald Ranger         | 4760       | 817,105 -> 821,865 XP
-363    | Emerald Ranger III         | Emerald Ranger         | 4775       | 821,865 -> 826,640 XP
-364    | Emerald Ranger IV          | Emerald Ranger         | 4795       | 826,640 -> 831,435 XP
-365    | Emerald Ranger V           | Emerald Ranger         | 4810       | 831,435 -> 836,245 XP
-366    | Emerald Ranger VI          | Emerald Ranger         | 4825       | 836,245 -> 841,070 XP
-367    | Emerald Ranger VII         | Emerald Ranger         | 4845       | 841,070 -> 845,915 XP
-368    | Emerald Ranger VIII        | Emerald Ranger         | 4860       | 845,915 -> 850,775 XP
-369    | Emerald Ranger IX          | Emerald Ranger         | 4880       | 850,775 -> 855,655 XP
-370    | Emerald Ranger X           | Emerald Ranger         | 4895       | 855,655 -> 860,550 XP
-
->>> TIER 38: EMERALD WARRIOR <<<
---------------------------------------------------
-371    | Emerald Warrior I          | Emerald Warrior        | 4910       | 860,550 -> 865,460 XP
-372    | Emerald Warrior II         | Emerald Warrior        | 4930       | 865,460 -> 870,390 XP
-373    | Emerald Warrior III        | Emerald Warrior        | 4945       | 870,390 -> 875,335 XP
-374    | Emerald Warrior IV         | Emerald Warrior        | 4965       | 875,335 -> 880,300 XP
-375    | Emerald Warrior V          | Emerald Warrior        | 4980       | 880,300 -> 885,280 XP
-376    | Emerald Warrior VI         | Emerald Warrior        | 4995       | 885,280 -> 890,275 XP
-377    | Emerald Warrior VII        | Emerald Warrior        | 5015       | 890,275 -> 895,290 XP
-378    | Emerald Warrior VIII       | Emerald Warrior        | 5030       | 895,290 -> 900,320 XP
-379    | Emerald Warrior IX         | Emerald Warrior        | 5050       | 900,320 -> 905,370 XP
-380    | Emerald Warrior X          | Emerald Warrior        | 5065       | 905,370 -> 910,435 XP
-
->>> TIER 39: EMERALD KNIGHT <<<
---------------------------------------------------
-381    | Emerald Knight I           | Emerald Knight         | 5080       | 910,435 -> 915,515 XP
-382    | Emerald Knight II          | Emerald Knight         | 5100       | 915,515 -> 920,615 XP
-383    | Emerald Knight III         | Emerald Knight         | 5115       | 920,615 -> 925,730 XP
-384    | Emerald Knight IV          | Emerald Knight         | 5135       | 925,730 -> 930,865 XP
-385    | Emerald Knight V           | Emerald Knight         | 5150       | 930,865 -> 936,015 XP
-386    | Emerald Knight VI          | Emerald Knight         | 5170       | 936,015 -> 941,185 XP
-387    | Emerald Knight VII         | Emerald Knight         | 5185       | 941,185 -> 946,370 XP
-388    | Emerald Knight VIII        | Emerald Knight         | 5205       | 946,370 -> 951,575 XP
-389    | Emerald Knight IX          | Emerald Knight         | 5220       | 951,575 -> 956,795 XP
-390    | Emerald Knight X           | Emerald Knight         | 5235       | 956,795 -> 962,030 XP
-
->>> TIER 40: EMERALD CHAMPION <<<
---------------------------------------------------
-391    | Emerald Champion I         | Emerald Champion       | 5255       | 962,030 -> 967,285 XP
-392    | Emerald Champion II        | Emerald Champion       | 5270       | 967,285 -> 972,555 XP
-393    | Emerald Champion III       | Emerald Champion       | 5290       | 972,555 -> 977,845 XP
-394    | Emerald Champion IV        | Emerald Champion       | 5305       | 977,845 -> 983,150 XP
-395    | Emerald Champion V         | Emerald Champion       | 5325       | 983,150 -> 988,475 XP
-396    | Emerald Champion VI        | Emerald Champion       | 5340       | 988,475 -> 993,815 XP
-397    | Emerald Champion VII       | Emerald Champion       | 5360       | 993,815 -> 999,175 XP
-398    | Emerald Champion VIII      | Emerald Champion       | 5375       | 999,175 -> 1,004,550 XP
-399    | Emerald Champion IX        | Emerald Champion       | 5395       | 1,004,550 -> 1,009,945 XP
-400    | Emerald Champion X         | Emerald Champion       | 5410       | 1,009,945 -> 1,015,355 XP
-
->>> TIER 41: RUBY BERSERKER <<<
---------------------------------------------------
-401    | Ruby Berserker I           | Ruby Berserker         | 5430       | 1,015,355 -> 1,020,785 XP
-402    | Ruby Berserker II          | Ruby Berserker         | 5445       | 1,020,785 -> 1,026,230 XP
-403    | Ruby Berserker III         | Ruby Berserker         | 5465       | 1,026,230 -> 1,031,695 XP
-404    | Ruby Berserker IV          | Ruby Berserker         | 5485       | 1,031,695 -> 1,037,180 XP
-405    | Ruby Berserker V           | Ruby Berserker         | 5500       | 1,037,180 -> 1,042,680 XP
-406    | Ruby Berserker VI          | Ruby Berserker         | 5520       | 1,042,680 -> 1,048,200 XP
-407    | Ruby Berserker VII         | Ruby Berserker         | 5535       | 1,048,200 -> 1,053,735 XP
-408    | Ruby Berserker VIII        | Ruby Berserker         | 5555       | 1,053,735 -> 1,059,290 XP
-409    | Ruby Berserker IX          | Ruby Berserker         | 5570       | 1,059,290 -> 1,064,860 XP
-410    | Ruby Berserker X           | Ruby Berserker         | 5590       | 1,064,860 -> 1,070,450 XP
-
->>> TIER 42: RUBY SLAYER <<<
---------------------------------------------------
-411    | Ruby Slayer I              | Ruby Slayer            | 5605       | 1,070,450 -> 1,076,055 XP
-412    | Ruby Slayer II             | Ruby Slayer            | 5625       | 1,076,055 -> 1,081,680 XP
-413    | Ruby Slayer III            | Ruby Slayer            | 5645       | 1,081,680 -> 1,087,325 XP
-414    | Ruby Slayer IV             | Ruby Slayer            | 5660       | 1,087,325 -> 1,092,985 XP
-415    | Ruby Slayer V              | Ruby Slayer            | 5680       | 1,092,985 -> 1,098,665 XP
-416    | Ruby Slayer VI             | Ruby Slayer            | 5695       | 1,098,665 -> 1,104,360 XP
-417    | Ruby Slayer VII            | Ruby Slayer            | 5715       | 1,104,360 -> 1,110,075 XP
-418    | Ruby Slayer VIII           | Ruby Slayer            | 5735       | 1,110,075 -> 1,115,810 XP
-419    | Ruby Slayer IX             | Ruby Slayer            | 5750       | 1,115,810 -> 1,121,560 XP
-420    | Ruby Slayer X              | Ruby Slayer            | 5770       | 1,121,560 -> 1,127,330 XP
-
->>> TIER 43: RUBY KNIGHT <<<
---------------------------------------------------
-421    | Ruby Knight I              | Ruby Knight            | 5785       | 1,127,330 -> 1,133,115 XP
-422    | Ruby Knight II             | Ruby Knight            | 5805       | 1,133,115 -> 1,138,920 XP
-423    | Ruby Knight III            | Ruby Knight            | 5825       | 1,138,920 -> 1,144,745 XP
-424    | Ruby Knight IV             | Ruby Knight            | 5840       | 1,144,745 -> 1,150,585 XP
-425    | Ruby Knight V              | Ruby Knight            | 5860       | 1,150,585 -> 1,156,445 XP
-426    | Ruby Knight VI             | Ruby Knight            | 5880       | 1,156,445 -> 1,162,325 XP
-427    | Ruby Knight VII            | Ruby Knight            | 5895       | 1,162,325 -> 1,168,220 XP
-428    | Ruby Knight VIII           | Ruby Knight            | 5915       | 1,168,220 -> 1,174,135 XP
-429    | Ruby Knight IX             | Ruby Knight            | 5930       | 1,174,135 -> 1,180,065 XP
-430    | Ruby Knight X              | Ruby Knight            | 5950       | 1,180,065 -> 1,186,015 XP
-
->>> TIER 44: RUBY CHAMPION <<<
---------------------------------------------------
-431    | Ruby Champion I            | Ruby Champion          | 5970       | 1,186,015 -> 1,191,985 XP
-432    | Ruby Champion II           | Ruby Champion          | 5985       | 1,191,985 -> 1,197,970 XP
-433    | Ruby Champion III          | Ruby Champion          | 6005       | 1,197,970 -> 1,203,975 XP
-434    | Ruby Champion IV           | Ruby Champion          | 6025       | 1,203,975 -> 1,210,000 XP
-435    | Ruby Champion V            | Ruby Champion          | 6045       | 1,210,000 -> 1,216,045 XP
-436    | Ruby Champion VI           | Ruby Champion          | 6060       | 1,216,045 -> 1,222,105 XP
-437    | Ruby Champion VII          | Ruby Champion          | 6080       | 1,222,105 -> 1,228,185 XP
-438    | Ruby Champion VIII         | Ruby Champion          | 6100       | 1,228,185 -> 1,234,285 XP
-439    | Ruby Champion IX           | Ruby Champion          | 6115       | 1,234,285 -> 1,240,400 XP
-440    | Ruby Champion X            | Ruby Champion          | 6135       | 1,240,400 -> 1,246,535 XP
-
->>> TIER 45: SAPPHIRE SCOUT <<<
---------------------------------------------------
-441    | Sapphire Scout I           | Sapphire Scout         | 6155       | 1,246,535 -> 1,252,690 XP
-442    | Sapphire Scout II          | Sapphire Scout         | 6170       | 1,252,690 -> 1,258,860 XP
-443    | Sapphire Scout III         | Sapphire Scout         | 6190       | 1,258,860 -> 1,265,050 XP
-444    | Sapphire Scout IV          | Sapphire Scout         | 6210       | 1,265,050 -> 1,271,260 XP
-445    | Sapphire Scout V           | Sapphire Scout         | 6230       | 1,271,260 -> 1,277,490 XP
-446    | Sapphire Scout VI          | Sapphire Scout         | 6245       | 1,277,490 -> 1,283,735 XP
-447    | Sapphire Scout VII         | Sapphire Scout         | 6265       | 1,283,735 -> 1,290,000 XP
-448    | Sapphire Scout VIII        | Sapphire Scout         | 6285       | 1,290,000 -> 1,296,285 XP
-449    | Sapphire Scout IX          | Sapphire Scout         | 6305       | 1,296,285 -> 1,302,590 XP
-450    | Sapphire Scout X           | Sapphire Scout         | 6320       | 1,302,590 -> 1,308,910 XP
-
->>> TIER 46: SAPPHIRE GUARDIAN <<<
---------------------------------------------------
-451    | Sapphire Guardian I        | Sapphire Guardian      | 6340       | 1,308,910 -> 1,315,250 XP
-452    | Sapphire Guardian II       | Sapphire Guardian      | 6360       | 1,315,250 -> 1,321,610 XP
-453    | Sapphire Guardian III      | Sapphire Guardian      | 6380       | 1,321,610 -> 1,327,990 XP
-454    | Sapphire Guardian IV       | Sapphire Guardian      | 6395       | 1,327,990 -> 1,334,385 XP
-455    | Sapphire Guardian V        | Sapphire Guardian      | 6415       | 1,334,385 -> 1,340,800 XP
-456    | Sapphire Guardian VI       | Sapphire Guardian      | 6435       | 1,340,800 -> 1,347,235 XP
-457    | Sapphire Guardian VII      | Sapphire Guardian      | 6455       | 1,347,235 -> 1,353,690 XP
-458    | Sapphire Guardian VIII     | Sapphire Guardian      | 6475       | 1,353,690 -> 1,360,165 XP
-459    | Sapphire Guardian IX       | Sapphire Guardian      | 6490       | 1,360,165 -> 1,366,655 XP
-460    | Sapphire Guardian X        | Sapphire Guardian      | 6510       | 1,366,655 -> 1,373,165 XP
-
->>> TIER 47: SAPPHIRE KNIGHT <<<
---------------------------------------------------
-461    | Sapphire Knight I          | Sapphire Knight        | 6530       | 1,373,165 -> 1,379,695 XP
-462    | Sapphire Knight II         | Sapphire Knight        | 6550       | 1,379,695 -> 1,386,245 XP
-463    | Sapphire Knight III        | Sapphire Knight        | 6570       | 1,386,245 -> 1,392,815 XP
-464    | Sapphire Knight IV         | Sapphire Knight        | 6590       | 1,392,815 -> 1,399,405 XP
-465    | Sapphire Knight V          | Sapphire Knight        | 6605       | 1,399,405 -> 1,406,010 XP
-466    | Sapphire Knight VI         | Sapphire Knight        | 6625       | 1,406,010 -> 1,412,635 XP
-467    | Sapphire Knight VII        | Sapphire Knight        | 6645       | 1,412,635 -> 1,419,280 XP
-468    | Sapphire Knight VIII       | Sapphire Knight        | 6665       | 1,419,280 -> 1,425,945 XP
-469    | Sapphire Knight IX         | Sapphire Knight        | 6685       | 1,425,945 -> 1,432,630 XP
-470    | Sapphire Knight X          | Sapphire Knight        | 6705       | 1,432,630 -> 1,439,335 XP
-
->>> TIER 48: SAPPHIRE CHAMPION <<<
---------------------------------------------------
-471    | Sapphire Champion I        | Sapphire Champion      | 6720       | 1,439,335 -> 1,446,055 XP
-472    | Sapphire Champion II       | Sapphire Champion      | 6740       | 1,446,055 -> 1,452,795 XP
-473    | Sapphire Champion III      | Sapphire Champion      | 6760       | 1,452,795 -> 1,459,555 XP
-474    | Sapphire Champion IV       | Sapphire Champion      | 6780       | 1,459,555 -> 1,466,335 XP
-475    | Sapphire Champion V        | Sapphire Champion      | 6800       | 1,466,335 -> 1,473,135 XP
-476    | Sapphire Champion VI       | Sapphire Champion      | 6820       | 1,473,135 -> 1,479,955 XP
-477    | Sapphire Champion VII      | Sapphire Champion      | 6840       | 1,479,955 -> 1,486,795 XP
-478    | Sapphire Champion VIII     | Sapphire Champion      | 6860       | 1,486,795 -> 1,493,655 XP
-479    | Sapphire Champion IX       | Sapphire Champion      | 6875       | 1,493,655 -> 1,500,530 XP
-480    | Sapphire Champion X        | Sapphire Champion      | 6895       | 1,500,530 -> 1,507,425 XP
-
->>> TIER 49: OBSIDIAN STRIKER <<<
---------------------------------------------------
-481    | Obsidian Striker I         | Obsidian Striker       | 6915       | 1,507,425 -> 1,514,340 XP
-482    | Obsidian Striker II        | Obsidian Striker       | 6935       | 1,514,340 -> 1,521,275 XP
-483    | Obsidian Striker III       | Obsidian Striker       | 6955       | 1,521,275 -> 1,528,230 XP
-484    | Obsidian Striker IV        | Obsidian Striker       | 6975       | 1,528,230 -> 1,535,205 XP
-485    | Obsidian Striker V         | Obsidian Striker       | 6995       | 1,535,205 -> 1,542,200 XP
-486    | Obsidian Striker VI        | Obsidian Striker       | 7015       | 1,542,200 -> 1,549,215 XP
-487    | Obsidian Striker VII       | Obsidian Striker       | 7035       | 1,549,215 -> 1,556,250 XP
-488    | Obsidian Striker VIII      | Obsidian Striker       | 7055       | 1,556,250 -> 1,563,305 XP
-489    | Obsidian Striker IX        | Obsidian Striker       | 7075       | 1,563,305 -> 1,570,380 XP
-490    | Obsidian Striker X         | Obsidian Striker       | 7095       | 1,570,380 -> 1,577,475 XP
-
->>> TIER 50: OBSIDIAN KNIGHT <<<
---------------------------------------------------
-491    | Obsidian Knight I          | Obsidian Knight        | 7115       | 1,577,475 -> 1,584,590 XP
-492    | Obsidian Knight II         | Obsidian Knight        | 7135       | 1,584,590 -> 1,591,725 XP
-493    | Obsidian Knight III        | Obsidian Knight        | 7155       | 1,591,725 -> 1,598,880 XP
-494    | Obsidian Knight IV         | Obsidian Knight        | 7170       | 1,598,880 -> 1,606,050 XP
-495    | Obsidian Knight V          | Obsidian Knight        | 7190       | 1,606,050 -> 1,613,240 XP
-496    | Obsidian Knight VI         | Obsidian Knight        | 7210       | 1,613,240 -> 1,620,450 XP
-497    | Obsidian Knight VII        | Obsidian Knight        | 7230       | 1,620,450 -> 1,627,680 XP
-498    | Obsidian Knight VIII       | Obsidian Knight        | 7250       | 1,627,680 -> 1,634,930 XP
-499    | Obsidian Knight IX         | Obsidian Knight        | 7270       | 1,634,930 -> 1,642,200 XP
-500    | Obsidian Knight X          | Obsidian Knight        | 7290       | 1,642,200 -> 1,649,490 XP
-
->>> TIER 51: OBSIDIAN VANGUARD <<<
---------------------------------------------------
-501    | Obsidian Vanguard I        | Obsidian Vanguard      | 7310       | 1,649,490 -> 1,656,800 XP
-502    | Obsidian Vanguard II       | Obsidian Vanguard      | 7330       | 1,656,800 -> 1,664,130 XP
-503    | Obsidian Vanguard III      | Obsidian Vanguard      | 7350       | 1,664,130 -> 1,671,480 XP
-504    | Obsidian Vanguard IV       | Obsidian Vanguard      | 7370       | 1,671,480 -> 1,678,850 XP
-505    | Obsidian Vanguard V        | Obsidian Vanguard      | 7390       | 1,678,850 -> 1,686,240 XP
-506    | Obsidian Vanguard VI       | Obsidian Vanguard      | 7410       | 1,686,240 -> 1,693,650 XP
-507    | Obsidian Vanguard VII      | Obsidian Vanguard      | 7435       | 1,693,650 -> 1,701,085 XP
-508    | Obsidian Vanguard VIII     | Obsidian Vanguard      | 7455       | 1,701,085 -> 1,708,540 XP
-509    | Obsidian Vanguard IX       | Obsidian Vanguard      | 7475       | 1,708,540 -> 1,716,015 XP
-510    | Obsidian Vanguard X        | Obsidian Vanguard      | 7495       | 1,716,015 -> 1,723,510 XP
-
->>> TIER 52: OBSIDIAN CHAMPION <<<
---------------------------------------------------
-511    | Obsidian Champion I        | Obsidian Champion      | 7515       | 1,723,510 -> 1,731,025 XP
-512    | Obsidian Champion II       | Obsidian Champion      | 7535       | 1,731,025 -> 1,738,560 XP
-513    | Obsidian Champion III      | Obsidian Champion      | 7555       | 1,738,560 -> 1,746,115 XP
-514    | Obsidian Champion IV       | Obsidian Champion      | 7575       | 1,746,115 -> 1,753,690 XP
-515    | Obsidian Champion V        | Obsidian Champion      | 7595       | 1,753,690 -> 1,761,285 XP
-516    | Obsidian Champion VI       | Obsidian Champion      | 7615       | 1,761,285 -> 1,768,900 XP
-517    | Obsidian Champion VII      | Obsidian Champion      | 7635       | 1,768,900 -> 1,776,535 XP
-518    | Obsidian Champion VIII     | Obsidian Champion      | 7655       | 1,776,535 -> 1,784,190 XP
-519    | Obsidian Champion IX       | Obsidian Champion      | 7675       | 1,784,190 -> 1,791,865 XP
-520    | Obsidian Champion X        | Obsidian Champion      | 7695       | 1,791,865 -> 1,799,560 XP
-
->>> TIER 53: SHADOW SCOUT <<<
---------------------------------------------------
-521    | Shadow Scout I             | Shadow Scout           | 7715       | 1,799,560 -> 1,807,275 XP
-522    | Shadow Scout II            | Shadow Scout           | 7740       | 1,807,275 -> 1,815,015 XP
-523    | Shadow Scout III           | Shadow Scout           | 7760       | 1,815,015 -> 1,822,775 XP
-524    | Shadow Scout IV            | Shadow Scout           | 7780       | 1,822,775 -> 1,830,555 XP
-525    | Shadow Scout V             | Shadow Scout           | 7800       | 1,830,555 -> 1,838,355 XP
-526    | Shadow Scout VI            | Shadow Scout           | 7820       | 1,838,355 -> 1,846,175 XP
-527    | Shadow Scout VII           | Shadow Scout           | 7840       | 1,846,175 -> 1,854,015 XP
-528    | Shadow Scout VIII          | Shadow Scout           | 7860       | 1,854,015 -> 1,861,875 XP
-529    | Shadow Scout IX            | Shadow Scout           | 7880       | 1,861,875 -> 1,869,755 XP
-530    | Shadow Scout X             | Shadow Scout           | 7905       | 1,869,755 -> 1,877,660 XP
-
->>> TIER 54: SHADOW BLADE <<<
---------------------------------------------------
-531    | Shadow Blade I             | Shadow Blade           | 7925       | 1,877,660 -> 1,885,585 XP
-532    | Shadow Blade II            | Shadow Blade           | 7945       | 1,885,585 -> 1,893,530 XP
-533    | Shadow Blade III           | Shadow Blade           | 7965       | 1,893,530 -> 1,901,495 XP
-534    | Shadow Blade IV            | Shadow Blade           | 7985       | 1,901,495 -> 1,909,480 XP
-535    | Shadow Blade V             | Shadow Blade           | 8005       | 1,909,480 -> 1,917,485 XP
-536    | Shadow Blade VI            | Shadow Blade           | 8030       | 1,917,485 -> 1,925,515 XP
-537    | Shadow Blade VII           | Shadow Blade           | 8050       | 1,925,515 -> 1,933,565 XP
-538    | Shadow Blade VIII          | Shadow Blade           | 8070       | 1,933,565 -> 1,941,635 XP
-539    | Shadow Blade IX            | Shadow Blade           | 8090       | 1,941,635 -> 1,949,725 XP
-540    | Shadow Blade X             | Shadow Blade           | 8110       | 1,949,725 -> 1,957,835 XP
-
->>> TIER 55: SHADOW KNIGHT <<<
---------------------------------------------------
-541    | Shadow Knight I            | Shadow Knight          | 8130       | 1,957,835 -> 1,965,965 XP
-542    | Shadow Knight II           | Shadow Knight          | 8155       | 1,965,965 -> 1,974,120 XP
-543    | Shadow Knight III          | Shadow Knight          | 8175       | 1,974,120 -> 1,982,295 XP
-544    | Shadow Knight IV           | Shadow Knight          | 8195       | 1,982,295 -> 1,990,490 XP
-545    | Shadow Knight V            | Shadow Knight          | 8215       | 1,990,490 -> 1,998,705 XP
-546    | Shadow Knight VI           | Shadow Knight          | 8235       | 1,998,705 -> 2,006,940 XP
-547    | Shadow Knight VII          | Shadow Knight          | 8260       | 2,006,940 -> 2,015,200 XP
-548    | Shadow Knight VIII         | Shadow Knight          | 8280       | 2,015,200 -> 2,023,480 XP
-549    | Shadow Knight IX           | Shadow Knight          | 8300       | 2,023,480 -> 2,031,780 XP
-550    | Shadow Knight X            | Shadow Knight          | 8320       | 2,031,780 -> 2,040,100 XP
-
->>> TIER 56: SHADOW MASTER <<<
---------------------------------------------------
-551    | Shadow Master I            | Shadow Master          | 8345       | 2,040,100 -> 2,048,445 XP
-552    | Shadow Master II           | Shadow Master          | 8365       | 2,048,445 -> 2,056,810 XP
-553    | Shadow Master III          | Shadow Master          | 8385       | 2,056,810 -> 2,065,195 XP
-554    | Shadow Master IV           | Shadow Master          | 8405       | 2,065,195 -> 2,073,600 XP
-555    | Shadow Master V            | Shadow Master          | 8430       | 2,073,600 -> 2,082,030 XP
-556    | Shadow Master VI           | Shadow Master          | 8450       | 2,082,030 -> 2,090,480 XP
-557    | Shadow Master VII          | Shadow Master          | 8470       | 2,090,480 -> 2,098,950 XP
-558    | Shadow Master VIII         | Shadow Master          | 8490       | 2,098,950 -> 2,107,440 XP
-559    | Shadow Master IX           | Shadow Master          | 8515       | 2,107,440 -> 2,115,955 XP
-560    | Shadow Master X            | Shadow Master          | 8535       | 2,115,955 -> 2,124,490 XP
-
->>> TIER 57: RANGER ELITE <<<
---------------------------------------------------
-561    | Ranger Elite I             | Ranger Elite           | 8555       | 2,124,490 -> 2,133,045 XP
-562    | Ranger Elite II            | Ranger Elite           | 8580       | 2,133,045 -> 2,141,625 XP
-563    | Ranger Elite III           | Ranger Elite           | 8600       | 2,141,625 -> 2,150,225 XP
-564    | Ranger Elite IV            | Ranger Elite           | 8620       | 2,150,225 -> 2,158,845 XP
-565    | Ranger Elite V             | Ranger Elite           | 8645       | 2,158,845 -> 2,167,490 XP
-566    | Ranger Elite VI            | Ranger Elite           | 8665       | 2,167,490 -> 2,176,155 XP
-567    | Ranger Elite VII           | Ranger Elite           | 8685       | 2,176,155 -> 2,184,840 XP
-568    | Ranger Elite VIII          | Ranger Elite           | 8705       | 2,184,840 -> 2,193,545 XP
-569    | Ranger Elite IX            | Ranger Elite           | 8730       | 2,193,545 -> 2,202,275 XP
-570    | Ranger Elite X             | Ranger Elite           | 8750       | 2,202,275 -> 2,211,025 XP
-
->>> TIER 58: HUNTER MASTER <<<
---------------------------------------------------
-571    | Hunter Master I            | Hunter Master          | 8770       | 2,211,025 -> 2,219,795 XP
-572    | Hunter Master II           | Hunter Master          | 8795       | 2,219,795 -> 2,228,590 XP
-573    | Hunter Master III          | Hunter Master          | 8815       | 2,228,590 -> 2,237,405 XP
-574    | Hunter Master IV           | Hunter Master          | 8840       | 2,237,405 -> 2,246,245 XP
-575    | Hunter Master V            | Hunter Master          | 8860       | 2,246,245 -> 2,255,105 XP
-576    | Hunter Master VI           | Hunter Master          | 8880       | 2,255,105 -> 2,263,985 XP
-577    | Hunter Master VII          | Hunter Master          | 8905       | 2,263,985 -> 2,272,890 XP
-578    | Hunter Master VIII         | Hunter Master          | 8925       | 2,272,890 -> 2,281,815 XP
-579    | Hunter Master IX           | Hunter Master          | 8945       | 2,281,815 -> 2,290,760 XP
-580    | Hunter Master X            | Hunter Master          | 8970       | 2,290,760 -> 2,299,730 XP
-
->>> TIER 59: ASSASSIN ELITE <<<
---------------------------------------------------
-581    | Assassin Elite I           | Assassin Elite         | 8990       | 2,299,730 -> 2,308,720 XP
-582    | Assassin Elite II          | Assassin Elite         | 9015       | 2,308,720 -> 2,317,735 XP
-583    | Assassin Elite III         | Assassin Elite         | 9035       | 2,317,735 -> 2,326,770 XP
-584    | Assassin Elite IV          | Assassin Elite         | 9055       | 2,326,770 -> 2,335,825 XP
-585    | Assassin Elite V           | Assassin Elite         | 9080       | 2,335,825 -> 2,344,905 XP
-586    | Assassin Elite VI          | Assassin Elite         | 9100       | 2,344,905 -> 2,354,005 XP
-587    | Assassin Elite VII         | Assassin Elite         | 9125       | 2,354,005 -> 2,363,130 XP
-588    | Assassin Elite VIII        | Assassin Elite         | 9145       | 2,363,130 -> 2,372,275 XP
-589    | Assassin Elite IX          | Assassin Elite         | 9165       | 2,372,275 -> 2,381,440 XP
-590    | Assassin Elite X           | Assassin Elite         | 9190       | 2,381,440 -> 2,390,630 XP
-
->>> TIER 60: DUELIST CHAMPION <<<
---------------------------------------------------
-591    | Duelist Champion I         | Duelist Champion       | 9210       | 2,390,630 -> 2,399,840 XP
-592    | Duelist Champion II        | Duelist Champion       | 9235       | 2,399,840 -> 2,409,075 XP
-593    | Duelist Champion III       | Duelist Champion       | 9255       | 2,409,075 -> 2,418,330 XP
-594    | Duelist Champion IV        | Duelist Champion       | 9280       | 2,418,330 -> 2,427,610 XP
-595    | Duelist Champion V         | Duelist Champion       | 9300       | 2,427,610 -> 2,436,910 XP
-596    | Duelist Champion VI        | Duelist Champion       | 9325       | 2,436,910 -> 2,446,235 XP
-597    | Duelist Champion VII       | Duelist Champion       | 9345       | 2,446,235 -> 2,455,580 XP
-598    | Duelist Champion VIII      | Duelist Champion       | 9365       | 2,455,580 -> 2,464,945 XP
-599    | Duelist Champion IX        | Duelist Champion       | 9390       | 2,464,945 -> 2,474,335 XP
-600    | Duelist Champion X         | Duelist Champion       | 9410       | 2,474,335 -> 2,483,745 XP
-
->>> TIER 61: GLADIATOR WARLORD <<<
---------------------------------------------------
-601    | Gladiator Warlord I        | Gladiator Warlord      | 9435       | 2,483,745 -> 2,493,180 XP
-602    | Gladiator Warlord II       | Gladiator Warlord      | 9455       | 2,493,180 -> 2,502,635 XP
-603    | Gladiator Warlord III      | Gladiator Warlord      | 9480       | 2,502,635 -> 2,512,115 XP
-604    | Gladiator Warlord IV       | Gladiator Warlord      | 9500       | 2,512,115 -> 2,521,615 XP
-605    | Gladiator Warlord V        | Gladiator Warlord      | 9525       | 2,521,615 -> 2,531,140 XP
-606    | Gladiator Warlord VI       | Gladiator Warlord      | 9545       | 2,531,140 -> 2,540,685 XP
-607    | Gladiator Warlord VII      | Gladiator Warlord      | 9570       | 2,540,685 -> 2,550,255 XP
-608    | Gladiator Warlord VIII     | Gladiator Warlord      | 9590       | 2,550,255 -> 2,559,845 XP
-609    | Gladiator Warlord IX       | Gladiator Warlord      | 9615       | 2,559,845 -> 2,569,460 XP
-610    | Gladiator Warlord X        | Gladiator Warlord      | 9635       | 2,569,460 -> 2,579,095 XP
-
->>> TIER 62: BERSERKER CHAMPION <<<
---------------------------------------------------
-611    | Berserker Champion I       | Berserker Champion     | 9660       | 2,579,095 -> 2,588,755 XP
-612    | Berserker Champion II      | Berserker Champion     | 9685       | 2,588,755 -> 2,598,440 XP
-613    | Berserker Champion III     | Berserker Champion     | 9705       | 2,598,440 -> 2,608,145 XP
-614    | Berserker Champion IV      | Berserker Champion     | 9730       | 2,608,145 -> 2,617,875 XP
-615    | Berserker Champion V       | Berserker Champion     | 9750       | 2,617,875 -> 2,627,625 XP
-616    | Berserker Champion VI      | Berserker Champion     | 9775       | 2,627,625 -> 2,637,400 XP
-617    | Berserker Champion VII     | Berserker Champion     | 9795       | 2,637,400 -> 2,647,195 XP
-618    | Berserker Champion VIII    | Berserker Champion     | 9820       | 2,647,195 -> 2,657,015 XP
-619    | Berserker Champion IX      | Berserker Champion     | 9840       | 2,657,015 -> 2,666,855 XP
-620    | Berserker Champion X       | Berserker Champion     | 9865       | 2,666,855 -> 2,676,720 XP
-
->>> TIER 63: PALADIN COMMANDER <<<
---------------------------------------------------
-621    | Paladin Commander I        | Paladin Commander      | 9890       | 2,676,720 -> 2,686,610 XP
-622    | Paladin Commander II       | Paladin Commander      | 9910       | 2,686,610 -> 2,696,520 XP
-623    | Paladin Commander III      | Paladin Commander      | 9935       | 2,696,520 -> 2,706,455 XP
-624    | Paladin Commander IV       | Paladin Commander      | 9955       | 2,706,455 -> 2,716,410 XP
-625    | Paladin Commander V        | Paladin Commander      | 9980       | 2,716,410 -> 2,726,390 XP
-626    | Paladin Commander VI       | Paladin Commander      | 10005      | 2,726,390 -> 2,736,395 XP
-627    | Paladin Commander VII      | Paladin Commander      | 10025      | 2,736,395 -> 2,746,420 XP
-628    | Paladin Commander VIII     | Paladin Commander      | 10050      | 2,746,420 -> 2,756,470 XP
-629    | Paladin Commander IX       | Paladin Commander      | 10070      | 2,756,470 -> 2,766,540 XP
-630    | Paladin Commander X        | Paladin Commander      | 10095      | 2,766,540 -> 2,776,635 XP
-
->>> TIER 64: TEMPLAR KNIGHT <<<
---------------------------------------------------
-631    | Templar Knight I           | Templar Knight         | 10120      | 2,776,635 -> 2,786,755 XP
-632    | Templar Knight II          | Templar Knight         | 10140      | 2,786,755 -> 2,796,895 XP
-633    | Templar Knight III         | Templar Knight         | 10165      | 2,796,895 -> 2,807,060 XP
-634    | Templar Knight IV          | Templar Knight         | 10185      | 2,807,060 -> 2,817,245 XP
-635    | Templar Knight V           | Templar Knight         | 10210      | 2,817,245 -> 2,827,455 XP
-636    | Templar Knight VI          | Templar Knight         | 10235      | 2,827,455 -> 2,837,690 XP
-637    | Templar Knight VII         | Templar Knight         | 10255      | 2,837,690 -> 2,847,945 XP
-638    | Templar Knight VIII        | Templar Knight         | 10280      | 2,847,945 -> 2,858,225 XP
-639    | Templar Knight IX          | Templar Knight         | 10305      | 2,858,225 -> 2,868,530 XP
-640    | Templar Knight X           | Templar Knight         | 10325      | 2,868,530 -> 2,878,855 XP
-
->>> TIER 65: CRUSADER CHAMPION <<<
---------------------------------------------------
-641    | Crusader Champion I        | Crusader Champion      | 10350      | 2,878,855 -> 2,889,205 XP
-642    | Crusader Champion II       | Crusader Champion      | 10375      | 2,889,205 -> 2,899,580 XP
-643    | Crusader Champion III      | Crusader Champion      | 10395      | 2,899,580 -> 2,909,975 XP
-644    | Crusader Champion IV       | Crusader Champion      | 10420      | 2,909,975 -> 2,920,395 XP
-645    | Crusader Champion V        | Crusader Champion      | 10445      | 2,920,395 -> 2,930,840 XP
-646    | Crusader Champion VI       | Crusader Champion      | 10470      | 2,930,840 -> 2,941,310 XP
-647    | Crusader Champion VII      | Crusader Champion      | 10490      | 2,941,310 -> 2,951,800 XP
-648    | Crusader Champion VIII     | Crusader Champion      | 10515      | 2,951,800 -> 2,962,315 XP
-649    | Crusader Champion IX       | Crusader Champion      | 10540      | 2,962,315 -> 2,972,855 XP
-650    | Crusader Champion X        | Crusader Champion      | 10560      | 2,972,855 -> 2,983,415 XP
-
->>> TIER 66: BATTLEMAGE <<<
---------------------------------------------------
-651    | Battlemage I               | Battlemage             | 10585      | 2,983,415 -> 2,994,000 XP
-652    | Battlemage II              | Battlemage             | 10610      | 2,994,000 -> 3,004,610 XP
-653    | Battlemage III             | Battlemage             | 10635      | 3,004,610 -> 3,015,245 XP
-654    | Battlemage IV              | Battlemage             | 10655      | 3,015,245 -> 3,025,900 XP
-655    | Battlemage V               | Battlemage             | 10680      | 3,025,900 -> 3,036,580 XP
-656    | Battlemage VI              | Battlemage             | 10705      | 3,036,580 -> 3,047,285 XP
-657    | Battlemage VII             | Battlemage             | 10730      | 3,047,285 -> 3,058,015 XP
-658    | Battlemage VIII            | Battlemage             | 10750      | 3,058,015 -> 3,068,765 XP
-659    | Battlemage IX              | Battlemage             | 10775      | 3,068,765 -> 3,079,540 XP
-660    | Battlemage X               | Battlemage             | 10800      | 3,079,540 -> 3,090,340 XP
-
->>> TIER 67: SPELLBLADE MASTER <<<
---------------------------------------------------
-661    | Spellblade Master I        | Spellblade Master      | 10825      | 3,090,340 -> 3,101,165 XP
-662    | Spellblade Master II       | Spellblade Master      | 10845      | 3,101,165 -> 3,112,010 XP
-663    | Spellblade Master III      | Spellblade Master      | 10870      | 3,112,010 -> 3,122,880 XP
-664    | Spellblade Master IV       | Spellblade Master      | 10895      | 3,122,880 -> 3,133,775 XP
-665    | Spellblade Master V        | Spellblade Master      | 10920      | 3,133,775 -> 3,144,695 XP
-666    | Spellblade Master VI       | Spellblade Master      | 10945      | 3,144,695 -> 3,155,640 XP
-667    | Spellblade Master VII      | Spellblade Master      | 10965      | 3,155,640 -> 3,166,605 XP
-668    | Spellblade Master VIII     | Spellblade Master      | 10990      | 3,166,605 -> 3,177,595 XP
-669    | Spellblade Master IX       | Spellblade Master      | 11015      | 3,177,595 -> 3,188,610 XP
-670    | Spellblade Master X        | Spellblade Master      | 11040      | 3,188,610 -> 3,199,650 XP
-
->>> TIER 68: STORMCALLER <<<
---------------------------------------------------
-671    | Stormcaller I              | Stormcaller            | 11065      | 3,199,650 -> 3,210,715 XP
-672    | Stormcaller II             | Stormcaller            | 11085      | 3,210,715 -> 3,221,800 XP
-673    | Stormcaller III            | Stormcaller            | 11110      | 3,221,800 -> 3,232,910 XP
-674    | Stormcaller IV             | Stormcaller            | 11135      | 3,232,910 -> 3,244,045 XP
-675    | Stormcaller V              | Stormcaller            | 11160      | 3,244,045 -> 3,255,205 XP
-676    | Stormcaller VI             | Stormcaller            | 11185      | 3,255,205 -> 3,266,390 XP
-677    | Stormcaller VII            | Stormcaller            | 11210      | 3,266,390 -> 3,277,600 XP
-678    | Stormcaller VIII           | Stormcaller            | 11230      | 3,277,600 -> 3,288,830 XP
-679    | Stormcaller IX             | Stormcaller            | 11255      | 3,288,830 -> 3,300,085 XP
-680    | Stormcaller X              | Stormcaller            | 11280      | 3,300,085 -> 3,311,365 XP
-
->>> TIER 69: FROST KNIGHT <<<
---------------------------------------------------
-681    | Frost Knight I             | Frost Knight           | 11305      | 3,311,365 -> 3,322,670 XP
-682    | Frost Knight II            | Frost Knight           | 11330      | 3,322,670 -> 3,334,000 XP
-683    | Frost Knight III           | Frost Knight           | 11355      | 3,334,000 -> 3,345,355 XP
-684    | Frost Knight IV            | Frost Knight           | 11380      | 3,345,355 -> 3,356,735 XP
-685    | Frost Knight V             | Frost Knight           | 11405      | 3,356,735 -> 3,368,140 XP
-686    | Frost Knight VI            | Frost Knight           | 11425      | 3,368,140 -> 3,379,565 XP
-687    | Frost Knight VII           | Frost Knight           | 11450      | 3,379,565 -> 3,391,015 XP
-688    | Frost Knight VIII          | Frost Knight           | 11475      | 3,391,015 -> 3,402,490 XP
-689    | Frost Knight IX            | Frost Knight           | 11500      | 3,402,490 -> 3,413,990 XP
-690    | Frost Knight X             | Frost Knight           | 11525      | 3,413,990 -> 3,425,515 XP
-
->>> TIER 70: FLAME KNIGHT <<<
---------------------------------------------------
-691    | Flame Knight I             | Flame Knight           | 11550      | 3,425,515 -> 3,437,065 XP
-692    | Flame Knight II            | Flame Knight           | 11575      | 3,437,065 -> 3,448,640 XP
-693    | Flame Knight III           | Flame Knight           | 11600      | 3,448,640 -> 3,460,240 XP
-694    | Flame Knight IV            | Flame Knight           | 11625      | 3,460,240 -> 3,471,865 XP
-695    | Flame Knight V             | Flame Knight           | 11650      | 3,471,865 -> 3,483,515 XP
-696    | Flame Knight VI            | Flame Knight           | 11675      | 3,483,515 -> 3,495,190 XP
-697    | Flame Knight VII           | Flame Knight           | 11700      | 3,495,190 -> 3,506,890 XP
-698    | Flame Knight VIII          | Flame Knight           | 11720      | 3,506,890 -> 3,518,610 XP
-699    | Flame Knight IX            | Flame Knight           | 11745      | 3,518,610 -> 3,530,355 XP
-700    | Flame Knight X             | Flame Knight           | 11770      | 3,530,355 -> 3,542,125 XP
-
->>> TIER 71: THUNDER VANGUARD <<<
---------------------------------------------------
-701    | Thunder Vanguard I         | Thunder Vanguard       | 11795      | 3,542,125 -> 3,553,920 XP
-702    | Thunder Vanguard II        | Thunder Vanguard       | 11820      | 3,553,920 -> 3,565,740 XP
-703    | Thunder Vanguard III       | Thunder Vanguard       | 11845      | 3,565,740 -> 3,577,585 XP
-704    | Thunder Vanguard IV        | Thunder Vanguard       | 11870      | 3,577,585 -> 3,589,455 XP
-705    | Thunder Vanguard V         | Thunder Vanguard       | 11895      | 3,589,455 -> 3,601,350 XP
-706    | Thunder Vanguard VI        | Thunder Vanguard       | 11920      | 3,601,350 -> 3,613,270 XP
-707    | Thunder Vanguard VII       | Thunder Vanguard       | 11945      | 3,613,270 -> 3,625,215 XP
-708    | Thunder Vanguard VIII      | Thunder Vanguard       | 11970      | 3,625,215 -> 3,637,185 XP
-709    | Thunder Vanguard IX        | Thunder Vanguard       | 11995      | 3,637,185 -> 3,649,180 XP
-710    | Thunder Vanguard X         | Thunder Vanguard       | 12020      | 3,649,180 -> 3,661,200 XP
-
->>> TIER 72: VOID WALKER <<<
---------------------------------------------------
-711    | Void Walker I              | Void Walker            | 12045      | 3,661,200 -> 3,673,245 XP
-712    | Void Walker II             | Void Walker            | 12070      | 3,673,245 -> 3,685,315 XP
-713    | Void Walker III            | Void Walker            | 12095      | 3,685,315 -> 3,697,410 XP
-714    | Void Walker IV             | Void Walker            | 12120      | 3,697,410 -> 3,709,530 XP
-715    | Void Walker V              | Void Walker            | 12145      | 3,709,530 -> 3,721,675 XP
-716    | Void Walker VI             | Void Walker            | 12170      | 3,721,675 -> 3,733,845 XP
-717    | Void Walker VII            | Void Walker            | 12195      | 3,733,845 -> 3,746,040 XP
-718    | Void Walker VIII           | Void Walker            | 12220      | 3,746,040 -> 3,758,260 XP
-719    | Void Walker IX             | Void Walker            | 12250      | 3,758,260 -> 3,770,510 XP
-720    | Void Walker X              | Void Walker            | 12275      | 3,770,510 -> 3,782,785 XP
-
->>> TIER 73: VOID SLAYER <<<
---------------------------------------------------
-721    | Void Slayer I              | Void Slayer            | 12300      | 3,782,785 -> 3,795,085 XP
-722    | Void Slayer II             | Void Slayer            | 12325      | 3,795,085 -> 3,807,410 XP
-723    | Void Slayer III            | Void Slayer            | 12350      | 3,807,410 -> 3,819,760 XP
-724    | Void Slayer IV             | Void Slayer            | 12375      | 3,819,760 -> 3,832,135 XP
-725    | Void Slayer V              | Void Slayer            | 12400      | 3,832,135 -> 3,844,535 XP
-726    | Void Slayer VI             | Void Slayer            | 12425      | 3,844,535 -> 3,856,960 XP
-727    | Void Slayer VII            | Void Slayer            | 12450      | 3,856,960 -> 3,869,410 XP
-728    | Void Slayer VIII           | Void Slayer            | 12475      | 3,869,410 -> 3,881,885 XP
-729    | Void Slayer IX             | Void Slayer            | 12500      | 3,881,885 -> 3,894,385 XP
-730    | Void Slayer X              | Void Slayer            | 12525      | 3,894,385 -> 3,906,910 XP
-
->>> TIER 74: DRAGON KNIGHT <<<
---------------------------------------------------
-731    | Dragon Knight I            | Dragon Knight          | 12550      | 3,906,910 -> 3,919,460 XP
-732    | Dragon Knight II           | Dragon Knight          | 12580      | 3,919,460 -> 3,932,040 XP
-733    | Dragon Knight III          | Dragon Knight          | 12605      | 3,932,040 -> 3,944,645 XP
-734    | Dragon Knight IV           | Dragon Knight          | 12630      | 3,944,645 -> 3,957,275 XP
-735    | Dragon Knight V            | Dragon Knight          | 12655      | 3,957,275 -> 3,969,930 XP
-736    | Dragon Knight VI           | Dragon Knight          | 12680      | 3,969,930 -> 3,982,610 XP
-737    | Dragon Knight VII          | Dragon Knight          | 12705      | 3,982,610 -> 3,995,315 XP
-738    | Dragon Knight VIII         | Dragon Knight          | 12730      | 3,995,315 -> 4,008,045 XP
-739    | Dragon Knight IX           | Dragon Knight          | 12755      | 4,008,045 -> 4,020,800 XP
-740    | Dragon Knight X            | Dragon Knight          | 12785      | 4,020,800 -> 4,033,585 XP
-
->>> TIER 75: DRAGON SLAYER <<<
---------------------------------------------------
-741    | Dragon Slayer I            | Dragon Slayer          | 12810      | 4,033,585 -> 4,046,395 XP
-742    | Dragon Slayer II           | Dragon Slayer          | 12835      | 4,046,395 -> 4,059,230 XP
-743    | Dragon Slayer III          | Dragon Slayer          | 12860      | 4,059,230 -> 4,072,090 XP
-744    | Dragon Slayer IV           | Dragon Slayer          | 12885      | 4,072,090 -> 4,084,975 XP
-745    | Dragon Slayer V            | Dragon Slayer          | 12910      | 4,084,975 -> 4,097,885 XP
-746    | Dragon Slayer VI           | Dragon Slayer          | 12940      | 4,097,885 -> 4,110,825 XP
-747    | Dragon Slayer VII          | Dragon Slayer          | 12965      | 4,110,825 -> 4,123,790 XP
-748    | Dragon Slayer VIII         | Dragon Slayer          | 12990      | 4,123,790 -> 4,136,780 XP
-749    | Dragon Slayer IX           | Dragon Slayer          | 13015      | 4,136,780 -> 4,149,795 XP
-750    | Dragon Slayer X            | Dragon Slayer          | 13040      | 4,149,795 -> 4,162,835 XP
-
->>> TIER 76: TITAN SLAYER <<<
---------------------------------------------------
-751    | Titan Slayer I             | Titan Slayer           | 13070      | 4,162,835 -> 4,175,905 XP
-752    | Titan Slayer II            | Titan Slayer           | 13095      | 4,175,905 -> 4,189,000 XP
-753    | Titan Slayer III           | Titan Slayer           | 13120      | 4,189,000 -> 4,202,120 XP
-754    | Titan Slayer IV            | Titan Slayer           | 13145      | 4,202,120 -> 4,215,265 XP
-755    | Titan Slayer V             | Titan Slayer           | 13170      | 4,215,265 -> 4,228,435 XP
-756    | Titan Slayer VI            | Titan Slayer           | 13200      | 4,228,435 -> 4,241,635 XP
-757    | Titan Slayer VII           | Titan Slayer           | 13225      | 4,241,635 -> 4,254,860 XP
-758    | Titan Slayer VIII          | Titan Slayer           | 13250      | 4,254,860 -> 4,268,110 XP
-759    | Titan Slayer IX            | Titan Slayer           | 13275      | 4,268,110 -> 4,281,385 XP
-760    | Titan Slayer X             | Titan Slayer           | 13305      | 4,281,385 -> 4,294,690 XP
-
->>> TIER 77: COLOSSUS GUARD <<<
---------------------------------------------------
-761    | Colossus Guard I           | Colossus Guard         | 13330      | 4,294,690 -> 4,308,020 XP
-762    | Colossus Guard II          | Colossus Guard         | 13355      | 4,308,020 -> 4,321,375 XP
-763    | Colossus Guard III         | Colossus Guard         | 13380      | 4,321,375 -> 4,334,755 XP
-764    | Colossus Guard IV          | Colossus Guard         | 13410      | 4,334,755 -> 4,348,165 XP
-765    | Colossus Guard V           | Colossus Guard         | 13435      | 4,348,165 -> 4,361,600 XP
-766    | Colossus Guard VI          | Colossus Guard         | 13460      | 4,361,600 -> 4,375,060 XP
-767    | Colossus Guard VII         | Colossus Guard         | 13485      | 4,375,060 -> 4,388,545 XP
-768    | Colossus Guard VIII        | Colossus Guard         | 13515      | 4,388,545 -> 4,402,060 XP
-769    | Colossus Guard IX          | Colossus Guard         | 13540      | 4,402,060 -> 4,415,600 XP
-770    | Colossus Guard X           | Colossus Guard         | 13565      | 4,415,600 -> 4,429,165 XP
-
->>> TIER 78: JUGGERNAUT <<<
---------------------------------------------------
-771    | Juggernaut I               | Juggernaut             | 13595      | 4,429,165 -> 4,442,760 XP
-772    | Juggernaut II              | Juggernaut             | 13620      | 4,442,760 -> 4,456,380 XP
-773    | Juggernaut III             | Juggernaut             | 13645      | 4,456,380 -> 4,470,025 XP
-774    | Juggernaut IV              | Juggernaut             | 13675      | 4,470,025 -> 4,483,700 XP
-775    | Juggernaut V               | Juggernaut             | 13700      | 4,483,700 -> 4,497,400 XP
-776    | Juggernaut VI              | Juggernaut             | 13725      | 4,497,400 -> 4,511,125 XP
-777    | Juggernaut VII             | Juggernaut             | 13755      | 4,511,125 -> 4,524,880 XP
-778    | Juggernaut VIII            | Juggernaut             | 13780      | 4,524,880 -> 4,538,660 XP
-779    | Juggernaut IX              | Juggernaut             | 13805      | 4,538,660 -> 4,552,465 XP
-780    | Juggernaut X               | Juggernaut             | 13835      | 4,552,465 -> 4,566,300 XP
-
->>> TIER 79: WARLORD <<<
---------------------------------------------------
-781    | Warlord I                  | Warlord                | 13860      | 4,566,300 -> 4,580,160 XP
-782    | Warlord II                 | Warlord                | 13885      | 4,580,160 -> 4,594,045 XP
-783    | Warlord III                | Warlord                | 13915      | 4,594,045 -> 4,607,960 XP
-784    | Warlord IV                 | Warlord                | 13940      | 4,607,960 -> 4,621,900 XP
-785    | Warlord V                  | Warlord                | 13965      | 4,621,900 -> 4,635,865 XP
-786    | Warlord VI                 | Warlord                | 13995      | 4,635,865 -> 4,649,860 XP
-787    | Warlord VII                | Warlord                | 14020      | 4,649,860 -> 4,663,880 XP
-788    | Warlord VIII               | Warlord                | 14045      | 4,663,880 -> 4,677,925 XP
-789    | Warlord IX                 | Warlord                | 14075      | 4,677,925 -> 4,692,000 XP
-790    | Warlord X                  | Warlord                | 14100      | 4,692,000 -> 4,706,100 XP
-
->>> TIER 80: HIGH COMMANDER <<<
---------------------------------------------------
-791    | High Commander I           | High Commander         | 14130      | 4,706,100 -> 4,720,230 XP
-792    | High Commander II          | High Commander         | 14155      | 4,720,230 -> 4,734,385 XP
-793    | High Commander III         | High Commander         | 14180      | 4,734,385 -> 4,748,565 XP
-794    | High Commander IV          | High Commander         | 14210      | 4,748,565 -> 4,762,775 XP
-795    | High Commander V           | High Commander         | 14235      | 4,762,775 -> 4,777,010 XP
-796    | High Commander VI          | High Commander         | 14265      | 4,777,010 -> 4,791,275 XP
-797    | High Commander VII         | High Commander         | 14290      | 4,791,275 -> 4,805,565 XP
-798    | High Commander VIII        | High Commander         | 14320      | 4,805,565 -> 4,819,885 XP
-799    | High Commander IX          | High Commander         | 14345      | 4,819,885 -> 4,834,230 XP
-800    | High Commander X           | High Commander         | 14370      | 4,834,230 -> 4,848,600 XP
-
->>> TIER 81: GRAND MARSHAL <<<
---------------------------------------------------
-801    | Grand Marshal I            | Grand Marshal          | 14400      | 4,848,600 -> 4,863,000 XP
-802    | Grand Marshal II           | Grand Marshal          | 14425      | 4,863,000 -> 4,877,425 XP
-803    | Grand Marshal III          | Grand Marshal          | 14455      | 4,877,425 -> 4,891,880 XP
-804    | Grand Marshal IV           | Grand Marshal          | 14480      | 4,891,880 -> 4,906,360 XP
-805    | Grand Marshal V            | Grand Marshal          | 14510      | 4,906,360 -> 4,920,870 XP
-806    | Grand Marshal VI           | Grand Marshal          | 14535      | 4,920,870 -> 4,935,405 XP
-807    | Grand Marshal VII          | Grand Marshal          | 14565      | 4,935,405 -> 4,949,970 XP
-808    | Grand Marshal VIII         | Grand Marshal          | 14590      | 4,949,970 -> 4,964,560 XP
-809    | Grand Marshal IX           | Grand Marshal          | 14620      | 4,964,560 -> 4,979,180 XP
-810    | Grand Marshal X            | Grand Marshal          | 14645      | 4,979,180 -> 4,993,825 XP
-
->>> TIER 82: VANGUARD SOVEREIGN <<<
---------------------------------------------------
-811    | Vanguard Sovereign I       | Vanguard Sovereign     | 14675      | 4,993,825 -> 5,008,500 XP
-812    | Vanguard Sovereign II      | Vanguard Sovereign     | 14700      | 5,008,500 -> 5,023,200 XP
-813    | Vanguard Sovereign III     | Vanguard Sovereign     | 14730      | 5,023,200 -> 5,037,930 XP
-814    | Vanguard Sovereign IV      | Vanguard Sovereign     | 14755      | 5,037,930 -> 5,052,685 XP
-815    | Vanguard Sovereign V       | Vanguard Sovereign     | 14785      | 5,052,685 -> 5,067,470 XP
-816    | Vanguard Sovereign VI      | Vanguard Sovereign     | 14810      | 5,067,470 -> 5,082,280 XP
-817    | Vanguard Sovereign VII     | Vanguard Sovereign     | 14840      | 5,082,280 -> 5,097,120 XP
-818    | Vanguard Sovereign VIII    | Vanguard Sovereign     | 14865      | 5,097,120 -> 5,111,985 XP
-819    | Vanguard Sovereign IX      | Vanguard Sovereign     | 14895      | 5,111,985 -> 5,126,880 XP
-820    | Vanguard Sovereign X       | Vanguard Sovereign     | 14920      | 5,126,880 -> 5,141,800 XP
-
->>> TIER 83: HERO <<<
---------------------------------------------------
-821    | Hero I                     | Hero                   | 14950      | 5,141,800 -> 5,156,750 XP
-822    | Hero II                    | Hero                   | 14975      | 5,156,750 -> 5,171,725 XP
-823    | Hero III                   | Hero                   | 15005      | 5,171,725 -> 5,186,730 XP
-824    | Hero IV                    | Hero                   | 15030      | 5,186,730 -> 5,201,760 XP
-825    | Hero V                     | Hero                   | 15060      | 5,201,760 -> 5,216,820 XP
-826    | Hero VI                    | Hero                   | 15085      | 5,216,820 -> 5,231,905 XP
-827    | Hero VII                   | Hero                   | 15115      | 5,231,905 -> 5,247,020 XP
-828    | Hero VIII                  | Hero                   | 15145      | 5,247,020 -> 5,262,165 XP
-829    | Hero IX                    | Hero                   | 15170      | 5,262,165 -> 5,277,335 XP
-830    | Hero X                     | Hero                   | 15200      | 5,277,335 -> 5,292,535 XP
-
->>> TIER 84: VETERAN HERO <<<
---------------------------------------------------
-831    | Veteran Hero I             | Veteran Hero           | 15225      | 5,292,535 -> 5,307,760 XP
-832    | Veteran Hero II            | Veteran Hero           | 15255      | 5,307,760 -> 5,323,015 XP
-833    | Veteran Hero III           | Veteran Hero           | 15285      | 5,323,015 -> 5,338,300 XP
-834    | Veteran Hero IV            | Veteran Hero           | 15310      | 5,338,300 -> 5,353,610 XP
-835    | Veteran Hero V             | Veteran Hero           | 15340      | 5,353,610 -> 5,368,950 XP
-836    | Veteran Hero VI            | Veteran Hero           | 15365      | 5,368,950 -> 5,384,315 XP
-837    | Veteran Hero VII           | Veteran Hero           | 15395      | 5,384,315 -> 5,399,710 XP
-838    | Veteran Hero VIII          | Veteran Hero           | 15425      | 5,399,710 -> 5,415,135 XP
-839    | Veteran Hero IX            | Veteran Hero           | 15450      | 5,415,135 -> 5,430,585 XP
-840    | Veteran Hero X             | Veteran Hero           | 15480      | 5,430,585 -> 5,446,065 XP
-
->>> TIER 85: APEX CHAMPION <<<
---------------------------------------------------
-841    | Apex Champion I            | Apex Champion          | 15505      | 5,446,065 -> 5,461,570 XP
-842    | Apex Champion II           | Apex Champion          | 15535      | 5,461,570 -> 5,477,105 XP
-843    | Apex Champion III          | Apex Champion          | 15565      | 5,477,105 -> 5,492,670 XP
-844    | Apex Champion IV           | Apex Champion          | 15590      | 5,492,670 -> 5,508,260 XP
-845    | Apex Champion V            | Apex Champion          | 15620      | 5,508,260 -> 5,523,880 XP
-846    | Apex Champion VI           | Apex Champion          | 15650      | 5,523,880 -> 5,539,530 XP
-847    | Apex Champion VII          | Apex Champion          | 15675      | 5,539,530 -> 5,555,205 XP
-848    | Apex Champion VIII         | Apex Champion          | 15705      | 5,555,205 -> 5,570,910 XP
-849    | Apex Champion IX           | Apex Champion          | 15735      | 5,570,910 -> 5,586,645 XP
-850    | Apex Champion X            | Apex Champion          | 15760      | 5,586,645 -> 5,602,405 XP
-
->>> TIER 86: GRANDMASTER <<<
---------------------------------------------------
-851    | Grandmaster I              | Grandmaster            | 15790      | 5,602,405 -> 5,618,195 XP
-852    | Grandmaster II             | Grandmaster            | 15820      | 5,618,195 -> 5,634,015 XP
-853    | Grandmaster III            | Grandmaster            | 15845      | 5,634,015 -> 5,649,860 XP
-854    | Grandmaster IV             | Grandmaster            | 15875      | 5,649,860 -> 5,665,735 XP
-855    | Grandmaster V              | Grandmaster            | 15905      | 5,665,735 -> 5,681,640 XP
-856    | Grandmaster VI             | Grandmaster            | 15935      | 5,681,640 -> 5,697,575 XP
-857    | Grandmaster VII            | Grandmaster            | 15960      | 5,697,575 -> 5,713,535 XP
-858    | Grandmaster VIII           | Grandmaster            | 15990      | 5,713,535 -> 5,729,525 XP
-859    | Grandmaster IX             | Grandmaster            | 16020      | 5,729,525 -> 5,745,545 XP
-860    | Grandmaster X              | Grandmaster            | 16045      | 5,745,545 -> 5,761,590 XP
-
->>> TIER 87: HIGH GRANDMASTER <<<
---------------------------------------------------
-861    | High Grandmaster I         | High Grandmaster       | 16075      | 5,761,590 -> 5,777,665 XP
-862    | High Grandmaster II        | High Grandmaster       | 16105      | 5,777,665 -> 5,793,770 XP
-863    | High Grandmaster III       | High Grandmaster       | 16135      | 5,793,770 -> 5,809,905 XP
-864    | High Grandmaster IV        | High Grandmaster       | 16160      | 5,809,905 -> 5,826,065 XP
-865    | High Grandmaster V         | High Grandmaster       | 16190      | 5,826,065 -> 5,842,255 XP
-866    | High Grandmaster VI        | High Grandmaster       | 16220      | 5,842,255 -> 5,858,475 XP
-867    | High Grandmaster VII       | High Grandmaster       | 16250      | 5,858,475 -> 5,874,725 XP
-868    | High Grandmaster VIII      | High Grandmaster       | 16275      | 5,874,725 -> 5,891,000 XP
-869    | High Grandmaster IX        | High Grandmaster       | 16305      | 5,891,000 -> 5,907,305 XP
-870    | High Grandmaster X         | High Grandmaster       | 16335      | 5,907,305 -> 5,923,640 XP
-
->>> TIER 88: MYTHIC KNIGHT <<<
---------------------------------------------------
-871    | Mythic Knight I            | Mythic Knight          | 16365      | 5,923,640 -> 5,940,005 XP
-872    | Mythic Knight II           | Mythic Knight          | 16395      | 5,940,005 -> 5,956,400 XP
-873    | Mythic Knight III          | Mythic Knight          | 16420      | 5,956,400 -> 5,972,820 XP
-874    | Mythic Knight IV           | Mythic Knight          | 16450      | 5,972,820 -> 5,989,270 XP
-875    | Mythic Knight V            | Mythic Knight          | 16480      | 5,989,270 -> 6,005,750 XP
-876    | Mythic Knight VI           | Mythic Knight          | 16510      | 6,005,750 -> 6,022,260 XP
-877    | Mythic Knight VII          | Mythic Knight          | 16540      | 6,022,260 -> 6,038,800 XP
-878    | Mythic Knight VIII         | Mythic Knight          | 16565      | 6,038,800 -> 6,055,365 XP
-879    | Mythic Knight IX           | Mythic Knight          | 16595      | 6,055,365 -> 6,071,960 XP
-880    | Mythic Knight X            | Mythic Knight          | 16625      | 6,071,960 -> 6,088,585 XP
-
->>> TIER 89: MYTHIC CHAMPION <<<
---------------------------------------------------
-881    | Mythic Champion I          | Mythic Champion        | 16655      | 6,088,585 -> 6,105,240 XP
-882    | Mythic Champion II         | Mythic Champion        | 16685      | 6,105,240 -> 6,121,925 XP
-883    | Mythic Champion III        | Mythic Champion        | 16710      | 6,121,925 -> 6,138,635 XP
-884    | Mythic Champion IV         | Mythic Champion        | 16740      | 6,138,635 -> 6,155,375 XP
-885    | Mythic Champion V          | Mythic Champion        | 16770      | 6,155,375 -> 6,172,145 XP
-886    | Mythic Champion VI         | Mythic Champion        | 16800      | 6,172,145 -> 6,188,945 XP
-887    | Mythic Champion VII        | Mythic Champion        | 16830      | 6,188,945 -> 6,205,775 XP
-888    | Mythic Champion VIII       | Mythic Champion        | 16860      | 6,205,775 -> 6,222,635 XP
-889    | Mythic Champion IX         | Mythic Champion        | 16890      | 6,222,635 -> 6,239,525 XP
-890    | Mythic Champion X          | Mythic Champion        | 16915      | 6,239,525 -> 6,256,440 XP
-
->>> TIER 90: MYTHIC WARLORD <<<
---------------------------------------------------
-891    | Mythic Warlord I           | Mythic Warlord         | 16945      | 6,256,440 -> 6,273,385 XP
-892    | Mythic Warlord II          | Mythic Warlord         | 16975      | 6,273,385 -> 6,290,360 XP
-893    | Mythic Warlord III         | Mythic Warlord         | 17005      | 6,290,360 -> 6,307,365 XP
-894    | Mythic Warlord IV          | Mythic Warlord         | 17035      | 6,307,365 -> 6,324,400 XP
-895    | Mythic Warlord V           | Mythic Warlord         | 17065      | 6,324,400 -> 6,341,465 XP
-896    | Mythic Warlord VI          | Mythic Warlord         | 17095      | 6,341,465 -> 6,358,560 XP
-897    | Mythic Warlord VII         | Mythic Warlord         | 17125      | 6,358,560 -> 6,375,685 XP
-898    | Mythic Warlord VIII        | Mythic Warlord         | 17155      | 6,375,685 -> 6,392,840 XP
-899    | Mythic Warlord IX          | Mythic Warlord         | 17180      | 6,392,840 -> 6,410,020 XP
-900    | Mythic Warlord X           | Mythic Warlord         | 17210      | 6,410,020 -> 6,427,230 XP
-
->>> TIER 91: LEGEND <<<
---------------------------------------------------
-901    | Legend I                   | Legend                 | 17240      | 6,427,230 -> 6,444,470 XP
-902    | Legend II                  | Legend                 | 17270      | 6,444,470 -> 6,461,740 XP
-903    | Legend III                 | Legend                 | 17300      | 6,461,740 -> 6,479,040 XP
-904    | Legend IV                  | Legend                 | 17330      | 6,479,040 -> 6,496,370 XP
-905    | Legend V                   | Legend                 | 17360      | 6,496,370 -> 6,513,730 XP
-906    | Legend VI                  | Legend                 | 17390      | 6,513,730 -> 6,531,120 XP
-907    | Legend VII                 | Legend                 | 17420      | 6,531,120 -> 6,548,540 XP
-908    | Legend VIII                | Legend                 | 17450      | 6,548,540 -> 6,565,990 XP
-909    | Legend IX                  | Legend                 | 17480      | 6,565,990 -> 6,583,470 XP
-910    | Legend X                   | Legend                 | 17510      | 6,583,470 -> 6,600,980 XP
-
->>> TIER 92: APEX LEGEND <<<
---------------------------------------------------
-911    | Apex Legend I              | Apex Legend            | 17540      | 6,600,980 -> 6,618,520 XP
-912    | Apex Legend II             | Apex Legend            | 17570      | 6,618,520 -> 6,636,090 XP
-913    | Apex Legend III            | Apex Legend            | 17600      | 6,636,090 -> 6,653,690 XP
-914    | Apex Legend IV             | Apex Legend            | 17630      | 6,653,690 -> 6,671,320 XP
-915    | Apex Legend V              | Apex Legend            | 17660      | 6,671,320 -> 6,688,980 XP
-916    | Apex Legend VI             | Apex Legend            | 17690      | 6,688,980 -> 6,706,670 XP
-917    | Apex Legend VII            | Apex Legend            | 17720      | 6,706,670 -> 6,724,390 XP
-918    | Apex Legend VIII           | Apex Legend            | 17750      | 6,724,390 -> 6,742,140 XP
-919    | Apex Legend IX             | Apex Legend            | 17780      | 6,742,140 -> 6,759,920 XP
-920    | Apex Legend X              | Apex Legend            | 17810      | 6,759,920 -> 6,777,730 XP
-
->>> TIER 93: DEMIGOD <<<
---------------------------------------------------
-921    | Demigod I                  | Demigod                | 17840      | 6,777,730 -> 6,795,570 XP
-922    | Demigod II                 | Demigod                | 17870      | 6,795,570 -> 6,813,440 XP
-923    | Demigod III                | Demigod                | 17900      | 6,813,440 -> 6,831,340 XP
-924    | Demigod IV                 | Demigod                | 17930      | 6,831,340 -> 6,849,270 XP
-925    | Demigod V                  | Demigod                | 17960      | 6,849,270 -> 6,867,230 XP
-926    | Demigod VI                 | Demigod                | 17990      | 6,867,230 -> 6,885,220 XP
-927    | Demigod VII                | Demigod                | 18020      | 6,885,220 -> 6,903,240 XP
-928    | Demigod VIII               | Demigod                | 18050      | 6,903,240 -> 6,921,290 XP
-929    | Demigod IX                 | Demigod                | 18080      | 6,921,290 -> 6,939,370 XP
-930    | Demigod X                  | Demigod                | 18110      | 6,939,370 -> 6,957,480 XP
-
->>> TIER 94: IMMORTAL <<<
---------------------------------------------------
-931    | Immortal I                 | Immortal               | 18140      | 6,957,480 -> 6,975,620 XP
-932    | Immortal II                | Immortal               | 18170      | 6,975,620 -> 6,993,790 XP
-933    | Immortal III               | Immortal               | 18200      | 6,993,790 -> 7,011,990 XP
-934    | Immortal IV                | Immortal               | 18230      | 7,011,990 -> 7,030,220 XP
-935    | Immortal V                 | Immortal               | 18265      | 7,030,220 -> 7,048,485 XP
-936    | Immortal VI                | Immortal               | 18295      | 7,048,485 -> 7,066,780 XP
-937    | Immortal VII               | Immortal               | 18325      | 7,066,780 -> 7,085,105 XP
-938    | Immortal VIII              | Immortal               | 18355      | 7,085,105 -> 7,103,460 XP
-939    | Immortal IX                | Immortal               | 18385      | 7,103,460 -> 7,121,845 XP
-940    | Immortal X                 | Immortal               | 18415      | 7,121,845 -> 7,140,260 XP
-
->>> TIER 95: CELESTIAL KNIGHT <<<
---------------------------------------------------
-941    | Celestial Knight I         | Celestial Knight       | 18445      | 7,140,260 -> 7,158,705 XP
-942    | Celestial Knight II        | Celestial Knight       | 18475      | 7,158,705 -> 7,177,180 XP
-943    | Celestial Knight III       | Celestial Knight       | 18505      | 7,177,180 -> 7,195,685 XP
-944    | Celestial Knight IV        | Celestial Knight       | 18540      | 7,195,685 -> 7,214,225 XP
-945    | Celestial Knight V         | Celestial Knight       | 18570      | 7,214,225 -> 7,232,795 XP
-946    | Celestial Knight VI        | Celestial Knight       | 18600      | 7,232,795 -> 7,251,395 XP
-947    | Celestial Knight VII       | Celestial Knight       | 18630      | 7,251,395 -> 7,270,025 XP
-948    | Celestial Knight VIII      | Celestial Knight       | 18660      | 7,270,025 -> 7,288,685 XP
-949    | Celestial Knight IX        | Celestial Knight       | 18690      | 7,288,685 -> 7,307,375 XP
-950    | Celestial Knight X         | Celestial Knight       | 18720      | 7,307,375 -> 7,326,095 XP
-
->>> TIER 96: ASCENDANT <<<
---------------------------------------------------
-951    | Ascendant I                | Ascendant              | 18755      | 7,326,095 -> 7,344,850 XP
-952    | Ascendant II               | Ascendant              | 18785      | 7,344,850 -> 7,363,635 XP
-953    | Ascendant III              | Ascendant              | 18815      | 7,363,635 -> 7,382,450 XP
-954    | Ascendant IV               | Ascendant              | 18845      | 7,382,450 -> 7,401,295 XP
-955    | Ascendant V                | Ascendant              | 18875      | 7,401,295 -> 7,420,170 XP
-956    | Ascendant VI               | Ascendant              | 18905      | 7,420,170 -> 7,439,075 XP
-957    | Ascendant VII              | Ascendant              | 18940      | 7,439,075 -> 7,458,015 XP
-958    | Ascendant VIII             | Ascendant              | 18970      | 7,458,015 -> 7,476,985 XP
-959    | Ascendant IX               | Ascendant              | 19000      | 7,476,985 -> 7,495,985 XP
-960    | Ascendant X                | Ascendant              | 19030      | 7,495,985 -> 7,515,015 XP
-
->>> TIER 97: TRANSCENDENT <<<
---------------------------------------------------
-961    | Transcendent I             | Transcendent           | 19060      | 7,515,015 -> 7,534,075 XP
-962    | Transcendent II            | Transcendent           | 19095      | 7,534,075 -> 7,553,170 XP
-963    | Transcendent III           | Transcendent           | 19125      | 7,553,170 -> 7,572,295 XP
-964    | Transcendent IV            | Transcendent           | 19155      | 7,572,295 -> 7,591,450 XP
-965    | Transcendent V             | Transcendent           | 19185      | 7,591,450 -> 7,610,635 XP
-966    | Transcendent VI            | Transcendent           | 19220      | 7,610,635 -> 7,629,855 XP
-967    | Transcendent VII           | Transcendent           | 19250      | 7,629,855 -> 7,649,105 XP
-968    | Transcendent VIII          | Transcendent           | 19280      | 7,649,105 -> 7,668,385 XP
-969    | Transcendent IX            | Transcendent           | 19310      | 7,668,385 -> 7,687,695 XP
-970    | Transcendent X             | Transcendent           | 19345      | 7,687,695 -> 7,707,040 XP
-
->>> TIER 98: ARCHON <<<
---------------------------------------------------
-971    | Archon I                   | Archon                 | 19375      | 7,707,040 -> 7,726,415 XP
-972    | Archon II                  | Archon                 | 19405      | 7,726,415 -> 7,745,820 XP
-973    | Archon III                 | Archon                 | 19435      | 7,745,820 -> 7,765,255 XP
-974    | Archon IV                  | Archon                 | 19470      | 7,765,255 -> 7,784,725 XP
-975    | Archon V                   | Archon                 | 19500      | 7,784,725 -> 7,804,225 XP
-976    | Archon VI                  | Archon                 | 19530      | 7,804,225 -> 7,823,755 XP
-977    | Archon VII                 | Archon                 | 19560      | 7,823,755 -> 7,843,315 XP
-978    | Archon VIII                | Archon                 | 19595      | 7,843,315 -> 7,862,910 XP
-979    | Archon IX                  | Archon                 | 19625      | 7,862,910 -> 7,882,535 XP
-980    | Archon X                   | Archon                 | 19655      | 7,882,535 -> 7,902,190 XP
-
->>> TIER 99: SOVEREIGN <<<
---------------------------------------------------
-981    | Sovereign I                | Sovereign              | 19690      | 7,902,190 -> 7,921,880 XP
-982    | Sovereign II               | Sovereign              | 19720      | 7,921,880 -> 7,941,600 XP
-983    | Sovereign III              | Sovereign              | 19750      | 7,941,600 -> 7,961,350 XP
-984    | Sovereign IV               | Sovereign              | 19785      | 7,961,350 -> 7,981,135 XP
-985    | Sovereign V                | Sovereign              | 19815      | 7,981,135 -> 8,000,950 XP
-986    | Sovereign VI               | Sovereign              | 19845      | 8,000,950 -> 8,020,795 XP
-987    | Sovereign VII              | Sovereign              | 19880      | 8,020,795 -> 8,040,675 XP
-988    | Sovereign VIII             | Sovereign              | 19910      | 8,040,675 -> 8,060,585 XP
-989    | Sovereign IX               | Sovereign              | 19940      | 8,060,585 -> 8,080,525 XP
-990    | Sovereign X                | Sovereign              | 19975      | 8,080,525 -> 8,100,500 XP
-
->>> TIER 100: THE ABSOLUTE <<<
---------------------------------------------------
-991    | The Absolute I             | The Absolute           | 20005      | 8,100,500 -> 8,120,505 XP
-992    | The Absolute II            | The Absolute           | 20035      | 8,120,505 -> 8,140,540 XP
-993    | The Absolute III           | The Absolute           | 20070      | 8,140,540 -> 8,160,610 XP
-994    | The Absolute IV            | The Absolute           | 20100      | 8,160,610 -> 8,180,710 XP
-995    | The Absolute V             | The Absolute           | 20130      | 8,180,710 -> 8,200,840 XP
-996    | The Absolute VI            | The Absolute           | 20165      | 8,200,840 -> 8,221,005 XP
-997    | The Absolute VII           | The Absolute           | 20195      | 8,221,005 -> 8,241,200 XP
-998    | The Absolute VIII          | The Absolute           | 20230      | 8,241,200 -> 8,261,430 XP
-999    | The Absolute IX            | The Absolute           | 20260      | 8,261,430 -> 8,281,690 XP
-1000   | The Absolute X             | The Absolute           | 20290      | 8,281,690 -> 8,301,980 XP
+1      | Novice I                         | 300        | 0            | 300         
+2      | Novice II                        | 310        | 300          | 610         
+3      | Novice III                       | 320        | 610          | 930         
+4      | Novice IV                        | 330        | 930          | 1,260       
+5      | Novice V                         | 340        | 1,260        | 1,600       
+6      | Novice VI                        | 350        | 1,600        | 1,950       
+7      | Novice VII                       | 360        | 1,950        | 2,310       
+8      | Novice VIII                      | 375        | 2,310        | 2,685       
+9      | Novice IX                        | 385        | 2,685        | 3,070       
+10     | Novice X                         | 395        | 3,070        | 3,465       
+11     | Trainee I                        | 405        | 3,465        | 3,870       
+12     | Trainee II                       | 415        | 3,870        | 4,285       
+13     | Trainee III                      | 430        | 4,285        | 4,715       
+14     | Trainee IV                       | 440        | 4,715        | 5,155       
+15     | Trainee V                        | 450        | 5,155        | 5,605       
+16     | Trainee VI                       | 460        | 5,605        | 6,065       
+17     | Trainee VII                      | 475        | 6,065        | 6,540       
+18     | Trainee VIII                     | 485        | 6,540        | 7,025       
+19     | Trainee IX                       | 495        | 7,025        | 7,520       
+20     | Trainee X                        | 510        | 7,520        | 8,030       
+21     | Apprentice I                     | 520        | 8,030        | 8,550       
+22     | Apprentice II                    | 530        | 8,550        | 9,080       
+23     | Apprentice III                   | 545        | 9,080        | 9,625       
+24     | Apprentice IV                    | 555        | 9,625        | 10,180      
+25     | Apprentice V                     | 570        | 10,180       | 10,750      
+26     | Apprentice VI                    | 580        | 10,750       | 11,330      
+27     | Apprentice VII                   | 595        | 11,330       | 11,925      
+28     | Apprentice VIII                  | 605        | 11,925       | 12,530      
+29     | Apprentice IX                    | 620        | 12,530       | 13,150      
+30     | Apprentice X                     | 630        | 13,150       | 13,780      
+31     | Initiate I                       | 645        | 13,780       | 14,425      
+32     | Initiate II                      | 655        | 14,425       | 15,080      
+33     | Initiate III                     | 670        | 15,080       | 15,750      
+34     | Initiate IV                      | 685        | 15,750       | 16,435      
+35     | Initiate V                       | 695        | 16,435       | 17,130      
+36     | Initiate VI                      | 710        | 17,130       | 17,840      
+37     | Initiate VII                     | 725        | 17,840       | 18,565      
+38     | Initiate VIII                    | 735        | 18,565       | 19,300      
+39     | Initiate IX                      | 750        | 19,300       | 20,050      
+40     | Initiate X                       | 765        | 20,050       | 20,815      
+41     | Recruit I                        | 780        | 20,815       | 21,595      
+42     | Recruit II                       | 790        | 21,595       | 22,385      
+43     | Recruit III                      | 805        | 22,385       | 23,190      
+44     | Recruit IV                       | 820        | 23,190       | 24,010      
+45     | Recruit V                        | 835        | 24,010       | 24,845      
+46     | Recruit VI                       | 850        | 24,845       | 25,695      
+47     | Recruit VII                      | 865        | 25,695       | 26,560      
+48     | Recruit VIII                     | 875        | 26,560       | 27,435      
+49     | Recruit IX                       | 890        | 27,435       | 28,325      
+50     | Recruit X                        | 905        | 28,325       | 29,230      
+51     | Scout I                          | 920        | 29,230       | 30,150      
+52     | Scout II                         | 935        | 30,150       | 31,085      
+53     | Scout III                        | 950        | 31,085       | 32,035      
+54     | Scout IV                         | 965        | 32,035       | 33,000      
+55     | Scout V                          | 980        | 33,000       | 33,980      
+56     | Scout VI                         | 995        | 33,980       | 34,975      
+57     | Scout VII                        | 1,010      | 34,975       | 35,985      
+58     | Scout VIII                       | 1,025      | 35,985       | 37,010      
+59     | Scout IX                         | 1,045      | 37,010       | 38,055      
+60     | Scout X                          | 1,060      | 38,055       | 39,115      
+61     | Pathfinder I                     | 1,075      | 39,115       | 40,190      
+62     | Pathfinder II                    | 1,090      | 40,190       | 41,280      
+63     | Pathfinder III                   | 1,105      | 41,280       | 42,385      
+64     | Pathfinder IV                    | 1,120      | 42,385       | 43,505      
+65     | Pathfinder V                     | 1,140      | 43,505       | 44,645      
+66     | Pathfinder VI                    | 1,155      | 44,645       | 45,800      
+67     | Pathfinder VII                   | 1,170      | 45,800       | 46,970      
+68     | Pathfinder VIII                  | 1,190      | 46,970       | 48,160      
+69     | Pathfinder IX                    | 1,205      | 48,160       | 49,365      
+70     | Pathfinder X                     | 1,220      | 49,365       | 50,585      
+71     | Adventurer I                     | 1,240      | 50,585       | 51,825      
+72     | Adventurer II                    | 1,255      | 51,825       | 53,080      
+73     | Adventurer III                   | 1,270      | 53,080       | 54,350      
+74     | Adventurer IV                    | 1,290      | 54,350       | 55,640      
+75     | Adventurer V                     | 1,305      | 55,640       | 56,945      
+76     | Adventurer VI                    | 1,325      | 56,945       | 58,270      
+77     | Adventurer VII                   | 1,340      | 58,270       | 59,610      
+78     | Adventurer VIII                  | 1,360      | 59,610       | 60,970      
+79     | Adventurer IX                    | 1,375      | 60,970       | 62,345      
+80     | Adventurer X                     | 1,395      | 62,345       | 63,740      
+81     | Explorer I                       | 1,410      | 63,740       | 65,150      
+82     | Explorer II                      | 1,430      | 65,150       | 66,580      
+83     | Explorer III                     | 1,445      | 66,580       | 68,025      
+84     | Explorer IV                      | 1,465      | 68,025       | 69,490      
+85     | Explorer V                       | 1,485      | 69,490       | 70,975      
+86     | Explorer VI                      | 1,500      | 70,975       | 72,475      
+87     | Explorer VII                     | 1,520      | 72,475       | 73,995      
+88     | Explorer VIII                    | 1,540      | 73,995       | 75,535      
+89     | Explorer IX                      | 1,560      | 75,535       | 77,095      
+90     | Explorer X                       | 1,575      | 77,095       | 78,670      
+91     | Pioneer I                        | 1,595      | 78,670       | 80,265      
+92     | Pioneer II                       | 1,615      | 80,265       | 81,880      
+93     | Pioneer III                      | 1,635      | 81,880       | 83,515      
+94     | Pioneer IV                       | 1,655      | 83,515       | 85,170      
+95     | Pioneer V                        | 1,670      | 85,170       | 86,840      
+96     | Pioneer VI                       | 1,690      | 86,840       | 88,530      
+97     | Pioneer VII                      | 1,710      | 88,530       | 90,240      
+98     | Pioneer VIII                     | 1,730      | 90,240       | 91,970      
+99     | Pioneer IX                       | 1,750      | 91,970       | 93,720      
+100    | Pioneer X                        | 1,770      | 93,720       | 95,490      
+101    | Iron Initiate I                  | 1,790      | 95,490       | 97,280      
+102    | Iron Initiate II                 | 1,810      | 97,280       | 99,090      
+103    | Iron Initiate III                | 1,830      | 99,090       | 100,920     
+104    | Iron Initiate IV                 | 1,850      | 100,920      | 102,770     
+105    | Iron Initiate V                  | 1,870      | 102,770      | 104,640     
+106    | Iron Initiate VI                 | 1,890      | 104,640      | 106,530     
+107    | Iron Initiate VII                | 1,910      | 106,530      | 108,440     
+108    | Iron Initiate VIII               | 1,935      | 108,440      | 110,375     
+109    | Iron Initiate IX                 | 1,955      | 110,375      | 112,330     
+110    | Iron Initiate X                  | 1,975      | 112,330      | 114,305     
+111    | Iron Guard I                     | 1,995      | 114,305      | 116,300     
+112    | Iron Guard II                    | 2,015      | 116,300      | 118,315     
+113    | Iron Guard III                   | 2,040      | 118,315      | 120,355     
+114    | Iron Guard IV                    | 2,060      | 120,355      | 122,415     
+115    | Iron Guard V                     | 2,080      | 122,415      | 124,495     
+116    | Iron Guard VI                    | 2,100      | 124,495      | 126,595     
+117    | Iron Guard VII                   | 2,125      | 126,595      | 128,720     
+118    | Iron Guard VIII                  | 2,145      | 128,720      | 130,865     
+119    | Iron Guard IX                    | 2,170      | 130,865      | 133,035     
+120    | Iron Guard X                     | 2,190      | 133,035      | 135,225     
+121    | Iron Vanguard I                  | 2,210      | 135,225      | 137,435     
+122    | Iron Vanguard II                 | 2,235      | 137,435      | 139,670     
+123    | Iron Vanguard III                | 2,255      | 139,670      | 141,925     
+124    | Iron Vanguard IV                 | 2,280      | 141,925      | 144,205     
+125    | Iron Vanguard V                  | 2,300      | 144,205      | 146,505     
+126    | Iron Vanguard VI                 | 2,325      | 146,505      | 148,830     
+127    | Iron Vanguard VII                | 2,345      | 148,830      | 151,175     
+128    | Iron Vanguard VIII               | 2,370      | 151,175      | 153,545     
+129    | Iron Vanguard IX                 | 2,395      | 153,545      | 155,940     
+130    | Iron Vanguard X                  | 2,415      | 155,940      | 158,355     
+131    | Iron Knight I                    | 2,440      | 158,355      | 160,795     
+132    | Iron Knight II                   | 2,465      | 160,795      | 163,260     
+133    | Iron Knight III                  | 2,485      | 163,260      | 165,745     
+134    | Iron Knight IV                   | 2,510      | 165,745      | 168,255     
+135    | Iron Knight V                    | 2,535      | 168,255      | 170,790     
+136    | Iron Knight VI                   | 2,560      | 170,790      | 173,350     
+137    | Iron Knight VII                  | 2,580      | 173,350      | 175,930     
+138    | Iron Knight VIII                 | 2,605      | 175,930      | 178,535     
+139    | Iron Knight IX                   | 2,630      | 178,535      | 181,165     
+140    | Iron Knight X                    | 2,655      | 181,165      | 183,820     
+141    | Bronze Striker I                 | 2,680      | 183,820      | 186,500     
+142    | Bronze Striker II                | 2,705      | 186,500      | 189,205     
+143    | Bronze Striker III               | 2,730      | 189,205      | 191,935     
+144    | Bronze Striker IV                | 2,755      | 191,935      | 194,690     
+145    | Bronze Striker V                 | 2,780      | 194,690      | 197,470     
+146    | Bronze Striker VI                | 2,805      | 197,470      | 200,275     
+147    | Bronze Striker VII               | 2,830      | 200,275      | 203,105     
+148    | Bronze Striker VIII              | 2,855      | 203,105      | 205,960     
+149    | Bronze Striker IX                | 2,880      | 205,960      | 208,840     
+150    | Bronze Striker X                 | 2,905      | 208,840      | 211,745     
+151    | Bronze Warrior I                 | 2,930      | 211,745      | 214,675     
+152    | Bronze Warrior II                | 2,955      | 214,675      | 217,630     
+153    | Bronze Warrior III               | 2,980      | 217,630      | 220,610     
+154    | Bronze Warrior IV                | 3,005      | 220,610      | 223,615     
+155    | Bronze Warrior V                 | 3,035      | 223,615      | 226,650     
+156    | Bronze Warrior VI                | 3,060      | 226,650      | 229,710     
+157    | Bronze Warrior VII               | 3,085      | 229,710      | 232,795     
+158    | Bronze Warrior VIII              | 3,110      | 232,795      | 235,905     
+159    | Bronze Warrior IX                | 3,140      | 235,905      | 239,045     
+160    | Bronze Warrior X                 | 3,165      | 239,045      | 242,210     
+161    | Bronze Knight I                  | 3,190      | 242,210      | 245,400     
+162    | Bronze Knight II                 | 3,220      | 245,400      | 248,620     
+163    | Bronze Knight III                | 3,245      | 248,620      | 251,865     
+164    | Bronze Knight IV                 | 3,275      | 251,865      | 255,140     
+165    | Bronze Knight V                  | 3,300      | 255,140      | 258,440     
+166    | Bronze Knight VI                 | 3,325      | 258,440      | 261,765     
+167    | Bronze Knight VII                | 3,355      | 261,765      | 265,120     
+168    | Bronze Knight VIII               | 3,380      | 265,120      | 268,500     
+169    | Bronze Knight IX                 | 3,410      | 268,500      | 271,910     
+170    | Bronze Knight X                  | 3,440      | 271,910      | 275,350     
+171    | Bronze Champion I                | 3,465      | 275,350      | 278,815     
+172    | Bronze Champion II               | 3,495      | 278,815      | 282,310     
+173    | Bronze Champion III              | 3,520      | 282,310      | 285,830     
+174    | Bronze Champion IV               | 3,550      | 285,830      | 289,380     
+175    | Bronze Champion V                | 3,580      | 289,380      | 292,960     
+176    | Bronze Champion VI               | 3,605      | 292,960      | 296,565     
+177    | Bronze Champion VII              | 3,635      | 296,565      | 300,200     
+178    | Bronze Champion VIII             | 3,665      | 300,200      | 303,865     
+179    | Bronze Champion IX               | 3,695      | 303,865      | 307,560     
+180    | Bronze Champion X                | 3,725      | 307,560      | 311,285     
+181    | Silver Scout I                   | 3,750      | 311,285      | 315,035     
+182    | Silver Scout II                  | 3,780      | 315,035      | 318,815     
+183    | Silver Scout III                 | 3,810      | 318,815      | 322,625     
+184    | Silver Scout IV                  | 3,840      | 322,625      | 326,465     
+185    | Silver Scout V                   | 3,870      | 326,465      | 330,335     
+186    | Silver Scout VI                  | 3,900      | 330,335      | 334,235     
+187    | Silver Scout VII                 | 3,930      | 334,235      | 338,165     
+188    | Silver Scout VIII                | 3,960      | 338,165      | 342,125     
+189    | Silver Scout IX                  | 3,990      | 342,125      | 346,115     
+190    | Silver Scout X                   | 4,020      | 346,115      | 350,135     
+191    | Silver Guard I                   | 4,050      | 350,135      | 354,185     
+192    | Silver Guard II                  | 4,080      | 354,185      | 358,265     
+193    | Silver Guard III                 | 4,110      | 358,265      | 362,375     
+194    | Silver Guard IV                  | 4,145      | 362,375      | 366,520     
+195    | Silver Guard V                   | 4,175      | 366,520      | 370,695     
+196    | Silver Guard VI                  | 4,205      | 370,695      | 374,900     
+197    | Silver Guard VII                 | 4,235      | 374,900      | 379,135     
+198    | Silver Guard VIII                | 4,265      | 379,135      | 383,400     
+199    | Silver Guard IX                  | 4,300      | 383,400      | 387,700     
+200    | Silver Guard X                   | 4,330      | 387,700      | 392,030     
+201    | Silver Knight I                  | 4,360      | 392,030      | 396,390     
+202    | Silver Knight II                 | 4,395      | 396,390      | 400,785     
+203    | Silver Knight III                | 4,425      | 400,785      | 405,210     
+204    | Silver Knight IV                 | 4,455      | 405,210      | 409,665     
+205    | Silver Knight V                  | 4,490      | 409,665      | 414,155     
+206    | Silver Knight VI                 | 4,520      | 414,155      | 418,675     
+207    | Silver Knight VII                | 4,555      | 418,675      | 423,230     
+208    | Silver Knight VIII               | 4,585      | 423,230      | 427,815     
+209    | Silver Knight IX                 | 4,620      | 427,815      | 432,435     
+210    | Silver Knight X                  | 4,650      | 432,435      | 437,085     
+211    | Silver Champion I                | 4,685      | 437,085      | 441,770     
+212    | Silver Champion II               | 4,720      | 441,770      | 446,490     
+213    | Silver Champion III              | 4,750      | 446,490      | 451,240     
+214    | Silver Champion IV               | 4,785      | 451,240      | 456,025     
+215    | Silver Champion V                | 4,820      | 456,025      | 460,845     
+216    | Silver Champion VI               | 4,850      | 460,845      | 465,695     
+217    | Silver Champion VII              | 4,885      | 465,695      | 470,580     
+218    | Silver Champion VIII             | 4,920      | 470,580      | 475,500     
+219    | Silver Champion IX               | 4,955      | 475,500      | 480,455     
+220    | Silver Champion X                | 4,985      | 480,455      | 485,440     
+221    | Gold Striker I                   | 5,020      | 485,440      | 490,460     
+222    | Gold Striker II                  | 5,055      | 490,460      | 495,515     
+223    | Gold Striker III                 | 5,090      | 495,515      | 500,605     
+224    | Gold Striker IV                  | 5,125      | 500,605      | 505,730     
+225    | Gold Striker V                   | 5,160      | 505,730      | 510,890     
+226    | Gold Striker VI                  | 5,195      | 510,890      | 516,085     
+227    | Gold Striker VII                 | 5,230      | 516,085      | 521,315     
+228    | Gold Striker VIII                | 5,265      | 521,315      | 526,580     
+229    | Gold Striker IX                  | 5,300      | 526,580      | 531,880     
+230    | Gold Striker X                   | 5,335      | 531,880      | 537,215     
+231    | Gold Warrior I                   | 5,370      | 537,215      | 542,585     
+232    | Gold Warrior II                  | 5,405      | 542,585      | 547,990     
+233    | Gold Warrior III                 | 5,440      | 547,990      | 553,430     
+234    | Gold Warrior IV                  | 5,480      | 553,430      | 558,910     
+235    | Gold Warrior V                   | 5,515      | 558,910      | 564,425     
+236    | Gold Warrior VI                  | 5,550      | 564,425      | 569,975     
+237    | Gold Warrior VII                 | 5,585      | 569,975      | 575,560     
+238    | Gold Warrior VIII                | 5,625      | 575,560      | 581,185     
+239    | Gold Warrior IX                  | 5,660      | 581,185      | 586,845     
+240    | Gold Warrior X                   | 5,695      | 586,845      | 592,540     
+241    | Gold Knight I                    | 5,735      | 592,540      | 598,275     
+242    | Gold Knight II                   | 5,770      | 598,275      | 604,045     
+243    | Gold Knight III                  | 5,810      | 604,045      | 609,855     
+244    | Gold Knight IV                   | 5,845      | 609,855      | 615,700     
+245    | Gold Knight V                    | 5,880      | 615,700      | 621,580     
+246    | Gold Knight VI                   | 5,920      | 621,580      | 627,500     
+247    | Gold Knight VII                  | 5,955      | 627,500      | 633,455     
+248    | Gold Knight VIII                 | 5,995      | 633,455      | 639,450     
+249    | Gold Knight IX                   | 6,035      | 639,450      | 645,485     
+250    | Gold Knight X                    | 6,070      | 645,485      | 651,555     
+251    | Gold Paladin I                   | 6,110      | 651,555      | 657,665     
+252    | Gold Paladin II                  | 6,150      | 657,665      | 663,815     
+253    | Gold Paladin III                 | 6,185      | 663,815      | 670,000     
+254    | Gold Paladin IV                  | 6,225      | 670,000      | 676,225     
+255    | Gold Paladin V                   | 6,265      | 676,225      | 682,490     
+256    | Gold Paladin VI                  | 6,300      | 682,490      | 688,790     
+257    | Gold Paladin VII                 | 6,340      | 688,790      | 695,130     
+258    | Gold Paladin VIII                | 6,380      | 695,130      | 701,510     
+259    | Gold Paladin IX                  | 6,420      | 701,510      | 707,930     
+260    | Gold Paladin X                   | 6,460      | 707,930      | 714,390     
+261    | Gold Champion I                  | 6,500      | 714,390      | 720,890     
+262    | Gold Champion II                 | 6,540      | 720,890      | 727,430     
+263    | Gold Champion III                | 6,580      | 727,430      | 734,010     
+264    | Gold Champion IV                 | 6,620      | 734,010      | 740,630     
+265    | Gold Champion V                  | 6,660      | 740,630      | 747,290     
+266    | Gold Champion VI                 | 6,700      | 747,290      | 753,990     
+267    | Gold Champion VII                | 6,740      | 753,990      | 760,730     
+268    | Gold Champion VIII               | 6,780      | 760,730      | 767,510     
+269    | Gold Champion IX                 | 6,820      | 767,510      | 774,330     
+270    | Gold Champion X                  | 6,860      | 774,330      | 781,190     
+271    | Platinum Scout I                 | 6,900      | 781,190      | 788,090     
+272    | Platinum Scout II                | 6,945      | 788,090      | 795,035     
+273    | Platinum Scout III               | 6,985      | 795,035      | 802,020     
+274    | Platinum Scout IV                | 7,025      | 802,020      | 809,045     
+275    | Platinum Scout V                 | 7,065      | 809,045      | 816,110     
+276    | Platinum Scout VI                | 7,110      | 816,110      | 823,220     
+277    | Platinum Scout VII               | 7,150      | 823,220      | 830,370     
+278    | Platinum Scout VIII              | 7,190      | 830,370      | 837,560     
+279    | Platinum Scout IX                | 7,235      | 837,560      | 844,795     
+280    | Platinum Scout X                 | 7,275      | 844,795      | 852,070     
+281    | Platinum Knight I                | 7,320      | 852,070      | 859,390     
+282    | Platinum Knight II               | 7,360      | 859,390      | 866,750     
+283    | Platinum Knight III              | 7,405      | 866,750      | 874,155     
+284    | Platinum Knight IV               | 7,445      | 874,155      | 881,600     
+285    | Platinum Knight V                | 7,490      | 881,600      | 889,090     
+286    | Platinum Knight VI               | 7,535      | 889,090      | 896,625     
+287    | Platinum Knight VII              | 7,575      | 896,625      | 904,200     
+288    | Platinum Knight VIII             | 7,620      | 904,200      | 911,820     
+289    | Platinum Knight IX               | 7,665      | 911,820      | 919,485     
+290    | Platinum Knight X                | 7,705      | 919,485      | 927,190     
+291    | Platinum Paladin I               | 7,750      | 927,190      | 934,940     
+292    | Platinum Paladin II              | 7,795      | 934,940      | 942,735     
+293    | Platinum Paladin III             | 7,840      | 942,735      | 950,575     
+294    | Platinum Paladin IV              | 7,880      | 950,575      | 958,455     
+295    | Platinum Paladin V               | 7,925      | 958,455      | 966,380     
+296    | Platinum Paladin VI              | 7,970      | 966,380      | 974,350     
+297    | Platinum Paladin VII             | 8,015      | 974,350      | 982,365     
+298    | Platinum Paladin VIII            | 8,060      | 982,365      | 990,425     
+299    | Platinum Paladin IX              | 8,105      | 990,425      | 998,530     
+300    | Platinum Paladin X               | 8,150      | 998,530      | 1,006,680   
+301    | Platinum Champion I              | 8,195      | 1,006,680    | 1,014,875   
+302    | Platinum Champion II             | 8,240      | 1,014,875    | 1,023,115   
+303    | Platinum Champion III            | 8,285      | 1,023,115    | 1,031,400   
+304    | Platinum Champion IV             | 8,330      | 1,031,400    | 1,039,730   
+305    | Platinum Champion V              | 8,375      | 1,039,730    | 1,048,105   
+306    | Platinum Champion VI             | 8,425      | 1,048,105    | 1,056,530   
+307    | Platinum Champion VII            | 8,470      | 1,056,530    | 1,065,000   
+308    | Platinum Champion VIII           | 8,515      | 1,065,000    | 1,073,515   
+309    | Platinum Champion IX             | 8,560      | 1,073,515    | 1,082,075   
+310    | Platinum Champion X              | 8,610      | 1,082,075    | 1,090,685   
+311    | Diamond Striker I                | 8,655      | 1,090,685    | 1,099,340   
+312    | Diamond Striker II               | 8,700      | 1,099,340    | 1,108,040   
+313    | Diamond Striker III              | 8,750      | 1,108,040    | 1,116,790   
+314    | Diamond Striker IV               | 8,795      | 1,116,790    | 1,125,585   
+315    | Diamond Striker V                | 8,845      | 1,125,585    | 1,134,430   
+316    | Diamond Striker VI               | 8,890      | 1,134,430    | 1,143,320   
+317    | Diamond Striker VII              | 8,940      | 1,143,320    | 1,152,260   
+318    | Diamond Striker VIII             | 8,985      | 1,152,260    | 1,161,245   
+319    | Diamond Striker IX               | 9,035      | 1,161,245    | 1,170,280   
+320    | Diamond Striker X                | 9,080      | 1,170,280    | 1,179,360   
+321    | Diamond Guard I                  | 9,130      | 1,179,360    | 1,188,490   
+322    | Diamond Guard II                 | 9,175      | 1,188,490    | 1,197,665   
+323    | Diamond Guard III                | 9,225      | 1,197,665    | 1,206,890   
+324    | Diamond Guard IV                 | 9,275      | 1,206,890    | 1,216,165   
+325    | Diamond Guard V                  | 9,325      | 1,216,165    | 1,225,490   
+326    | Diamond Guard VI                 | 9,370      | 1,225,490    | 1,234,860   
+327    | Diamond Guard VII                | 9,420      | 1,234,860    | 1,244,280   
+328    | Diamond Guard VIII               | 9,470      | 1,244,280    | 1,253,750   
+329    | Diamond Guard IX                 | 9,520      | 1,253,750    | 1,263,270   
+330    | Diamond Guard X                  | 9,570      | 1,263,270    | 1,272,840   
+331    | Diamond Knight I                 | 9,620      | 1,272,840    | 1,282,460   
+332    | Diamond Knight II                | 9,670      | 1,282,460    | 1,292,130   
+333    | Diamond Knight III               | 9,720      | 1,292,130    | 1,301,850   
+334    | Diamond Knight IV                | 9,770      | 1,301,850    | 1,311,620   
+335    | Diamond Knight V                 | 9,820      | 1,311,620    | 1,321,440   
+336    | Diamond Knight VI                | 9,870      | 1,321,440    | 1,331,310   
+337    | Diamond Knight VII               | 9,920      | 1,331,310    | 1,341,230   
+338    | Diamond Knight VIII              | 9,970      | 1,341,230    | 1,351,200   
+339    | Diamond Knight IX                | 10,020     | 1,351,200    | 1,361,220   
+340    | Diamond Knight X                 | 10,070     | 1,361,220    | 1,371,290   
+341    | Diamond Vanguard I               | 10,120     | 1,371,290    | 1,381,410   
+342    | Diamond Vanguard II              | 10,175     | 1,381,410    | 1,391,585   
+343    | Diamond Vanguard III             | 10,225     | 1,391,585    | 1,401,810   
+344    | Diamond Vanguard IV              | 10,275     | 1,401,810    | 1,412,085   
+345    | Diamond Vanguard V               | 10,330     | 1,412,085    | 1,422,415   
+346    | Diamond Vanguard VI              | 10,380     | 1,422,415    | 1,432,795   
+347    | Diamond Vanguard VII             | 10,430     | 1,432,795    | 1,443,225   
+348    | Diamond Vanguard VIII            | 10,485     | 1,443,225    | 1,453,710   
+349    | Diamond Vanguard IX              | 10,535     | 1,453,710    | 1,464,245   
+350    | Diamond Vanguard X               | 10,590     | 1,464,245    | 1,474,835   
+351    | Diamond Champion I               | 10,640     | 1,474,835    | 1,485,475   
+352    | Diamond Champion II              | 10,695     | 1,485,475    | 1,496,170   
+353    | Diamond Champion III             | 10,745     | 1,496,170    | 1,506,915   
+354    | Diamond Champion IV              | 10,800     | 1,506,915    | 1,517,715   
+355    | Diamond Champion V               | 10,855     | 1,517,715    | 1,528,570   
+356    | Diamond Champion VI              | 10,905     | 1,528,570    | 1,539,475   
+357    | Diamond Champion VII             | 10,960     | 1,539,475    | 1,550,435   
+358    | Diamond Champion VIII            | 11,015     | 1,550,435    | 1,561,450   
+359    | Diamond Champion IX              | 11,070     | 1,561,450    | 1,572,520   
+360    | Diamond Champion X               | 11,120     | 1,572,520    | 1,583,640   
+361    | Emerald Ranger I                 | 11,175     | 1,583,640    | 1,594,815   
+362    | Emerald Ranger II                | 11,230     | 1,594,815    | 1,606,045   
+363    | Emerald Ranger III               | 11,285     | 1,606,045    | 1,617,330   
+364    | Emerald Ranger IV                | 11,340     | 1,617,330    | 1,628,670   
+365    | Emerald Ranger V                 | 11,395     | 1,628,670    | 1,640,065   
+366    | Emerald Ranger VI                | 11,450     | 1,640,065    | 1,651,515   
+367    | Emerald Ranger VII               | 11,505     | 1,651,515    | 1,663,020   
+368    | Emerald Ranger VIII              | 11,560     | 1,663,020    | 1,674,580   
+369    | Emerald Ranger IX                | 11,615     | 1,674,580    | 1,686,195   
+370    | Emerald Ranger X                 | 11,670     | 1,686,195    | 1,697,865   
+371    | Emerald Warrior I                | 11,725     | 1,697,865    | 1,709,590   
+372    | Emerald Warrior II               | 11,780     | 1,709,590    | 1,721,370   
+373    | Emerald Warrior III              | 11,840     | 1,721,370    | 1,733,210   
+374    | Emerald Warrior IV               | 11,895     | 1,733,210    | 1,745,105   
+375    | Emerald Warrior V                | 11,950     | 1,745,105    | 1,757,055   
+376    | Emerald Warrior VI               | 12,005     | 1,757,055    | 1,769,060   
+377    | Emerald Warrior VII              | 12,065     | 1,769,060    | 1,781,125   
+378    | Emerald Warrior VIII             | 12,120     | 1,781,125    | 1,793,245   
+379    | Emerald Warrior IX               | 12,175     | 1,793,245    | 1,805,420   
+380    | Emerald Warrior X                | 12,235     | 1,805,420    | 1,817,655   
+381    | Emerald Knight I                 | 12,290     | 1,817,655    | 1,829,945   
+382    | Emerald Knight II                | 12,350     | 1,829,945    | 1,842,295   
+383    | Emerald Knight III               | 12,405     | 1,842,295    | 1,854,700   
+384    | Emerald Knight IV                | 12,465     | 1,854,700    | 1,867,165   
+385    | Emerald Knight V                 | 12,520     | 1,867,165    | 1,879,685   
+386    | Emerald Knight VI                | 12,580     | 1,879,685    | 1,892,265   
+387    | Emerald Knight VII               | 12,640     | 1,892,265    | 1,904,905   
+388    | Emerald Knight VIII              | 12,695     | 1,904,905    | 1,917,600   
+389    | Emerald Knight IX                | 12,755     | 1,917,600    | 1,930,355   
+390    | Emerald Knight X                 | 12,815     | 1,930,355    | 1,943,170   
+391    | Emerald Champion I               | 12,875     | 1,943,170    | 1,956,045   
+392    | Emerald Champion II              | 12,930     | 1,956,045    | 1,968,975   
+393    | Emerald Champion III             | 12,990     | 1,968,975    | 1,981,965   
+394    | Emerald Champion IV              | 13,050     | 1,981,965    | 1,995,015   
+395    | Emerald Champion V               | 13,110     | 1,995,015    | 2,008,125   
+396    | Emerald Champion VI              | 13,170     | 2,008,125    | 2,021,295   
+397    | Emerald Champion VII             | 13,230     | 2,021,295    | 2,034,525   
+398    | Emerald Champion VIII            | 13,290     | 2,034,525    | 2,047,815   
+399    | Emerald Champion IX              | 13,350     | 2,047,815    | 2,061,165   
+400    | Emerald Champion X               | 13,410     | 2,061,165    | 2,074,575   
+401    | Ruby Berserker I                 | 13,470     | 2,074,575    | 2,088,045   
+402    | Ruby Berserker II                | 13,530     | 2,088,045    | 2,101,575   
+403    | Ruby Berserker III               | 13,590     | 2,101,575    | 2,115,165   
+404    | Ruby Berserker IV                | 13,655     | 2,115,165    | 2,128,820   
+405    | Ruby Berserker V                 | 13,715     | 2,128,820    | 2,142,535   
+406    | Ruby Berserker VI                | 13,775     | 2,142,535    | 2,156,310   
+407    | Ruby Berserker VII               | 13,835     | 2,156,310    | 2,170,145   
+408    | Ruby Berserker VIII              | 13,900     | 2,170,145    | 2,184,045   
+409    | Ruby Berserker IX                | 13,960     | 2,184,045    | 2,198,005   
+410    | Ruby Berserker X                 | 14,020     | 2,198,005    | 2,212,025   
+411    | Ruby Slayer I                    | 14,085     | 2,212,025    | 2,226,110   
+412    | Ruby Slayer II                   | 14,145     | 2,226,110    | 2,240,255   
+413    | Ruby Slayer III                  | 14,210     | 2,240,255    | 2,254,465   
+414    | Ruby Slayer IV                   | 14,270     | 2,254,465    | 2,268,735   
+415    | Ruby Slayer V                    | 14,335     | 2,268,735    | 2,283,070   
+416    | Ruby Slayer VI                   | 14,395     | 2,283,070    | 2,297,465   
+417    | Ruby Slayer VII                  | 14,460     | 2,297,465    | 2,311,925   
+418    | Ruby Slayer VIII                 | 14,525     | 2,311,925    | 2,326,450   
+419    | Ruby Slayer IX                   | 14,585     | 2,326,450    | 2,341,035   
+420    | Ruby Slayer X                    | 14,650     | 2,341,035    | 2,355,685   
+421    | Ruby Knight I                    | 14,715     | 2,355,685    | 2,370,400   
+422    | Ruby Knight II                   | 14,780     | 2,370,400    | 2,385,180   
+423    | Ruby Knight III                  | 14,840     | 2,385,180    | 2,400,020   
+424    | Ruby Knight IV                   | 14,905     | 2,400,020    | 2,414,925   
+425    | Ruby Knight V                    | 14,970     | 2,414,925    | 2,429,895   
+426    | Ruby Knight VI                   | 15,035     | 2,429,895    | 2,444,930   
+427    | Ruby Knight VII                  | 15,100     | 2,444,930    | 2,460,030   
+428    | Ruby Knight VIII                 | 15,165     | 2,460,030    | 2,475,195   
+429    | Ruby Knight IX                   | 15,230     | 2,475,195    | 2,490,425   
+430    | Ruby Knight X                    | 15,295     | 2,490,425    | 2,505,720   
+431    | Ruby Champion I                  | 15,360     | 2,505,720    | 2,521,080   
+432    | Ruby Champion II                 | 15,425     | 2,521,080    | 2,536,505   
+433    | Ruby Champion III                | 15,490     | 2,536,505    | 2,551,995   
+434    | Ruby Champion IV                 | 15,560     | 2,551,995    | 2,567,555   
+435    | Ruby Champion V                  | 15,625     | 2,567,555    | 2,583,180   
+436    | Ruby Champion VI                 | 15,690     | 2,583,180    | 2,598,870   
+437    | Ruby Champion VII                | 15,755     | 2,598,870    | 2,614,625   
+438    | Ruby Champion VIII               | 15,825     | 2,614,625    | 2,630,450   
+439    | Ruby Champion IX                 | 15,890     | 2,630,450    | 2,646,340   
+440    | Ruby Champion X                  | 15,960     | 2,646,340    | 2,662,300   
+441    | Sapphire Scout I                 | 16,025     | 2,662,300    | 2,678,325   
+442    | Sapphire Scout II                | 16,090     | 2,678,325    | 2,694,415   
+443    | Sapphire Scout III               | 16,160     | 2,694,415    | 2,710,575   
+444    | Sapphire Scout IV                | 16,225     | 2,710,575    | 2,726,800   
+445    | Sapphire Scout V                 | 16,295     | 2,726,800    | 2,743,095   
+446    | Sapphire Scout VI                | 16,365     | 2,743,095    | 2,759,460   
+447    | Sapphire Scout VII               | 16,430     | 2,759,460    | 2,775,890   
+448    | Sapphire Scout VIII              | 16,500     | 2,775,890    | 2,792,390   
+449    | Sapphire Scout IX                | 16,570     | 2,792,390    | 2,808,960   
+450    | Sapphire Scout X                 | 16,635     | 2,808,960    | 2,825,595   
+451    | Sapphire Guardian I              | 16,705     | 2,825,595    | 2,842,300   
+452    | Sapphire Guardian II             | 16,775     | 2,842,300    | 2,859,075   
+453    | Sapphire Guardian III            | 16,845     | 2,859,075    | 2,875,920   
+454    | Sapphire Guardian IV             | 16,915     | 2,875,920    | 2,892,835   
+455    | Sapphire Guardian V              | 16,980     | 2,892,835    | 2,909,815   
+456    | Sapphire Guardian VI             | 17,050     | 2,909,815    | 2,926,865   
+457    | Sapphire Guardian VII            | 17,120     | 2,926,865    | 2,943,985   
+458    | Sapphire Guardian VIII           | 17,190     | 2,943,985    | 2,961,175   
+459    | Sapphire Guardian IX             | 17,260     | 2,961,175    | 2,978,435   
+460    | Sapphire Guardian X              | 17,330     | 2,978,435    | 2,995,765   
+461    | Sapphire Knight I                | 17,405     | 2,995,765    | 3,013,170   
+462    | Sapphire Knight II               | 17,475     | 3,013,170    | 3,030,645   
+463    | Sapphire Knight III              | 17,545     | 3,030,645    | 3,048,190   
+464    | Sapphire Knight IV               | 17,615     | 3,048,190    | 3,065,805   
+465    | Sapphire Knight V                | 17,685     | 3,065,805    | 3,083,490   
+466    | Sapphire Knight VI               | 17,760     | 3,083,490    | 3,101,250   
+467    | Sapphire Knight VII              | 17,830     | 3,101,250    | 3,119,080   
+468    | Sapphire Knight VIII             | 17,900     | 3,119,080    | 3,136,980   
+469    | Sapphire Knight IX               | 17,975     | 3,136,980    | 3,154,955   
+470    | Sapphire Knight X                | 18,045     | 3,154,955    | 3,173,000   
+471    | Sapphire Champion I              | 18,115     | 3,173,000    | 3,191,115   
+472    | Sapphire Champion II             | 18,190     | 3,191,115    | 3,209,305   
+473    | Sapphire Champion III            | 18,265     | 3,209,305    | 3,227,570   
+474    | Sapphire Champion IV             | 18,335     | 3,227,570    | 3,245,905   
+475    | Sapphire Champion V              | 18,410     | 3,245,905    | 3,264,315   
+476    | Sapphire Champion VI             | 18,480     | 3,264,315    | 3,282,795   
+477    | Sapphire Champion VII            | 18,555     | 3,282,795    | 3,301,350   
+478    | Sapphire Champion VIII           | 18,630     | 3,301,350    | 3,319,980   
+479    | Sapphire Champion IX             | 18,700     | 3,319,980    | 3,338,680   
+480    | Sapphire Champion X              | 18,775     | 3,338,680    | 3,357,455   
+481    | Obsidian Striker I               | 18,850     | 3,357,455    | 3,376,305   
+482    | Obsidian Striker II              | 18,925     | 3,376,305    | 3,395,230   
+483    | Obsidian Striker III             | 19,000     | 3,395,230    | 3,414,230   
+484    | Obsidian Striker IV              | 19,075     | 3,414,230    | 3,433,305   
+485    | Obsidian Striker V               | 19,150     | 3,433,305    | 3,452,455   
+486    | Obsidian Striker VI              | 19,225     | 3,452,455    | 3,471,680   
+487    | Obsidian Striker VII             | 19,300     | 3,471,680    | 3,490,980   
+488    | Obsidian Striker VIII            | 19,375     | 3,490,980    | 3,510,355   
+489    | Obsidian Striker IX              | 19,450     | 3,510,355    | 3,529,805   
+490    | Obsidian Striker X               | 19,525     | 3,529,805    | 3,549,330   
+491    | Obsidian Knight I                | 19,600     | 3,549,330    | 3,568,930   
+492    | Obsidian Knight II               | 19,675     | 3,568,930    | 3,588,605   
+493    | Obsidian Knight III              | 19,750     | 3,588,605    | 3,608,355   
+494    | Obsidian Knight IV               | 19,830     | 3,608,355    | 3,628,185   
+495    | Obsidian Knight V                | 19,905     | 3,628,185    | 3,648,090   
+496    | Obsidian Knight VI               | 19,980     | 3,648,090    | 3,668,070   
+497    | Obsidian Knight VII              | 20,060     | 3,668,070    | 3,688,130   
+498    | Obsidian Knight VIII             | 20,135     | 3,688,130    | 3,708,265   
+499    | Obsidian Knight IX               | 20,215     | 3,708,265    | 3,728,480   
+500    | Obsidian Knight X                | 20,290     | 3,728,480    | 3,748,770   
+501    | Obsidian Vanguard I              | 20,370     | 3,748,770    | 3,769,140   
+502    | Obsidian Vanguard II             | 20,445     | 3,769,140    | 3,789,585   
+503    | Obsidian Vanguard III            | 20,525     | 3,789,585    | 3,810,110   
+504    | Obsidian Vanguard IV             | 20,600     | 3,810,110    | 3,830,710   
+505    | Obsidian Vanguard V              | 20,680     | 3,830,710    | 3,851,390   
+506    | Obsidian Vanguard VI             | 20,760     | 3,851,390    | 3,872,150   
+507    | Obsidian Vanguard VII            | 20,835     | 3,872,150    | 3,892,985   
+508    | Obsidian Vanguard VIII           | 20,915     | 3,892,985    | 3,913,900   
+509    | Obsidian Vanguard IX             | 20,995     | 3,913,900    | 3,934,895   
+510    | Obsidian Vanguard X              | 21,075     | 3,934,895    | 3,955,970   
+511    | Obsidian Champion I              | 21,155     | 3,955,970    | 3,977,125   
+512    | Obsidian Champion II             | 21,235     | 3,977,125    | 3,998,360   
+513    | Obsidian Champion III            | 21,315     | 3,998,360    | 4,019,675   
+514    | Obsidian Champion IV             | 21,395     | 4,019,675    | 4,041,070   
+515    | Obsidian Champion V              | 21,475     | 4,041,070    | 4,062,545   
+516    | Obsidian Champion VI             | 21,555     | 4,062,545    | 4,084,100   
+517    | Obsidian Champion VII            | 21,635     | 4,084,100    | 4,105,735   
+518    | Obsidian Champion VIII           | 21,715     | 4,105,735    | 4,127,450   
+519    | Obsidian Champion IX             | 21,795     | 4,127,450    | 4,149,245   
+520    | Obsidian Champion X              | 21,875     | 4,149,245    | 4,171,120   
+521    | Shadow Scout I                   | 21,955     | 4,171,120    | 4,193,075   
+522    | Shadow Scout II                  | 22,040     | 4,193,075    | 4,215,115   
+523    | Shadow Scout III                 | 22,120     | 4,215,115    | 4,237,235   
+524    | Shadow Scout IV                  | 22,200     | 4,237,235    | 4,259,435   
+525    | Shadow Scout V                   | 22,285     | 4,259,435    | 4,281,720   
+526    | Shadow Scout VI                  | 22,365     | 4,281,720    | 4,304,085   
+527    | Shadow Scout VII                 | 22,450     | 4,304,085    | 4,326,535   
+528    | Shadow Scout VIII                | 22,530     | 4,326,535    | 4,349,065   
+529    | Shadow Scout IX                  | 22,615     | 4,349,065    | 4,371,680   
+530    | Shadow Scout X                   | 22,695     | 4,371,680    | 4,394,375   
+531    | Shadow Blade I                   | 22,780     | 4,394,375    | 4,417,155   
+532    | Shadow Blade II                  | 22,865     | 4,417,155    | 4,440,020   
+533    | Shadow Blade III                 | 22,945     | 4,440,020    | 4,462,965   
+534    | Shadow Blade IV                  | 23,030     | 4,462,965    | 4,485,995   
+535    | Shadow Blade V                   | 23,115     | 4,485,995    | 4,509,110   
+536    | Shadow Blade VI                  | 23,200     | 4,509,110    | 4,532,310   
+537    | Shadow Blade VII                 | 23,280     | 4,532,310    | 4,555,590   
+538    | Shadow Blade VIII                | 23,365     | 4,555,590    | 4,578,955   
+539    | Shadow Blade IX                  | 23,450     | 4,578,955    | 4,602,405   
+540    | Shadow Blade X                   | 23,535     | 4,602,405    | 4,625,940   
+541    | Shadow Knight I                  | 23,620     | 4,625,940    | 4,649,560   
+542    | Shadow Knight II                 | 23,705     | 4,649,560    | 4,673,265   
+543    | Shadow Knight III                | 23,790     | 4,673,265    | 4,697,055   
+544    | Shadow Knight IV                 | 23,875     | 4,697,055    | 4,720,930   
+545    | Shadow Knight V                  | 23,960     | 4,720,930    | 4,744,890   
+546    | Shadow Knight VI                 | 24,050     | 4,744,890    | 4,768,940   
+547    | Shadow Knight VII                | 24,135     | 4,768,940    | 4,793,075   
+548    | Shadow Knight VIII               | 24,220     | 4,793,075    | 4,817,295   
+549    | Shadow Knight IX                 | 24,305     | 4,817,295    | 4,841,600   
+550    | Shadow Knight X                  | 24,395     | 4,841,600    | 4,865,995   
+551    | Shadow Master I                  | 24,480     | 4,865,995    | 4,890,475   
+552    | Shadow Master II                 | 24,570     | 4,890,475    | 4,915,045   
+553    | Shadow Master III                | 24,655     | 4,915,045    | 4,939,700   
+554    | Shadow Master IV                 | 24,740     | 4,939,700    | 4,964,440   
+555    | Shadow Master V                  | 24,830     | 4,964,440    | 4,989,270   
+556    | Shadow Master VI                 | 24,920     | 4,989,270    | 5,014,190   
+557    | Shadow Master VII                | 25,005     | 5,014,190    | 5,039,195   
+558    | Shadow Master VIII               | 25,095     | 5,039,195    | 5,064,290   
+559    | Shadow Master IX                 | 25,180     | 5,064,290    | 5,089,470   
+560    | Shadow Master X                  | 25,270     | 5,089,470    | 5,114,740   
+561    | Ranger Elite I                   | 25,360     | 5,114,740    | 5,140,100   
+562    | Ranger Elite II                  | 25,450     | 5,140,100    | 5,165,550   
+563    | Ranger Elite III                 | 25,535     | 5,165,550    | 5,191,085   
+564    | Ranger Elite IV                  | 25,625     | 5,191,085    | 5,216,710   
+565    | Ranger Elite V                   | 25,715     | 5,216,710    | 5,242,425   
+566    | Ranger Elite VI                  | 25,805     | 5,242,425    | 5,268,230   
+567    | Ranger Elite VII                 | 25,895     | 5,268,230    | 5,294,125   
+568    | Ranger Elite VIII                | 25,985     | 5,294,125    | 5,320,110   
+569    | Ranger Elite IX                  | 26,075     | 5,320,110    | 5,346,185   
+570    | Ranger Elite X                   | 26,165     | 5,346,185    | 5,372,350   
+571    | Hunter Master I                  | 26,255     | 5,372,350    | 5,398,605   
+572    | Hunter Master II                 | 26,350     | 5,398,605    | 5,424,955   
+573    | Hunter Master III                | 26,440     | 5,424,955    | 5,451,395   
+574    | Hunter Master IV                 | 26,530     | 5,451,395    | 5,477,925   
+575    | Hunter Master V                  | 26,620     | 5,477,925    | 5,504,545   
+576    | Hunter Master VI                 | 26,715     | 5,504,545    | 5,531,260   
+577    | Hunter Master VII                | 26,805     | 5,531,260    | 5,558,065   
+578    | Hunter Master VIII               | 26,895     | 5,558,065    | 5,584,960   
+579    | Hunter Master IX                 | 26,990     | 5,584,960    | 5,611,950   
+580    | Hunter Master X                  | 27,080     | 5,611,950    | 5,639,030   
+581    | Assassin Elite I                 | 27,175     | 5,639,030    | 5,666,205   
+582    | Assassin Elite II                | 27,265     | 5,666,205    | 5,693,470   
+583    | Assassin Elite III               | 27,360     | 5,693,470    | 5,720,830   
+584    | Assassin Elite IV                | 27,455     | 5,720,830    | 5,748,285   
+585    | Assassin Elite V                 | 27,545     | 5,748,285    | 5,775,830   
+586    | Assassin Elite VI                | 27,640     | 5,775,830    | 5,803,470   
+587    | Assassin Elite VII               | 27,735     | 5,803,470    | 5,831,205   
+588    | Assassin Elite VIII              | 27,825     | 5,831,205    | 5,859,030   
+589    | Assassin Elite IX                | 27,920     | 5,859,030    | 5,886,950   
+590    | Assassin Elite X                 | 28,015     | 5,886,950    | 5,914,965   
+591    | Duelist Champion I               | 28,110     | 5,914,965    | 5,943,075   
+592    | Duelist Champion II              | 28,205     | 5,943,075    | 5,971,280   
+593    | Duelist Champion III             | 28,300     | 5,971,280    | 5,999,580   
+594    | Duelist Champion IV              | 28,395     | 5,999,580    | 6,027,975   
+595    | Duelist Champion V               | 28,490     | 6,027,975    | 6,056,465   
+596    | Duelist Champion VI              | 28,585     | 6,056,465    | 6,085,050   
+597    | Duelist Champion VII             | 28,680     | 6,085,050    | 6,113,730   
+598    | Duelist Champion VIII            | 28,780     | 6,113,730    | 6,142,510   
+599    | Duelist Champion IX              | 28,875     | 6,142,510    | 6,171,385   
+600    | Duelist Champion X               | 28,970     | 6,171,385    | 6,200,355   
+601    | Gladiator Warlord I              | 29,065     | 6,200,355    | 6,229,420   
+602    | Gladiator Warlord II             | 29,165     | 6,229,420    | 6,258,585   
+603    | Gladiator Warlord III            | 29,260     | 6,258,585    | 6,287,845   
+604    | Gladiator Warlord IV             | 29,355     | 6,287,845    | 6,317,200   
+605    | Gladiator Warlord V              | 29,455     | 6,317,200    | 6,346,655   
+606    | Gladiator Warlord VI             | 29,550     | 6,346,655    | 6,376,205   
+607    | Gladiator Warlord VII            | 29,650     | 6,376,205    | 6,405,855   
+608    | Gladiator Warlord VIII           | 29,750     | 6,405,855    | 6,435,605   
+609    | Gladiator Warlord IX             | 29,845     | 6,435,605    | 6,465,450   
+610    | Gladiator Warlord X              | 29,945     | 6,465,450    | 6,495,395   
+611    | Berserker Champion I             | 30,040     | 6,495,395    | 6,525,435   
+612    | Berserker Champion II            | 30,140     | 6,525,435    | 6,555,575   
+613    | Berserker Champion III           | 30,240     | 6,555,575    | 6,585,815   
+614    | Berserker Champion IV            | 30,340     | 6,585,815    | 6,616,155   
+615    | Berserker Champion V             | 30,440     | 6,616,155    | 6,646,595   
+616    | Berserker Champion VI            | 30,540     | 6,646,595    | 6,677,135   
+617    | Berserker Champion VII           | 30,640     | 6,677,135    | 6,707,775   
+618    | Berserker Champion VIII          | 30,735     | 6,707,775    | 6,738,510   
+619    | Berserker Champion IX            | 30,840     | 6,738,510    | 6,769,350   
+620    | Berserker Champion X             | 30,940     | 6,769,350    | 6,800,290   
+621    | Paladin Commander I              | 31,040     | 6,800,290    | 6,831,330   
+622    | Paladin Commander II             | 31,140     | 6,831,330    | 6,862,470   
+623    | Paladin Commander III            | 31,240     | 6,862,470    | 6,893,710   
+624    | Paladin Commander IV             | 31,340     | 6,893,710    | 6,925,050   
+625    | Paladin Commander V              | 31,440     | 6,925,050    | 6,956,490   
+626    | Paladin Commander VI             | 31,545     | 6,956,490    | 6,988,035   
+627    | Paladin Commander VII            | 31,645     | 6,988,035    | 7,019,680   
+628    | Paladin Commander VIII           | 31,745     | 7,019,680    | 7,051,425   
+629    | Paladin Commander IX             | 31,850     | 7,051,425    | 7,083,275   
+630    | Paladin Commander X              | 31,950     | 7,083,275    | 7,115,225   
+631    | Templar Knight I                 | 32,055     | 7,115,225    | 7,147,280   
+632    | Templar Knight II                | 32,155     | 7,147,280    | 7,179,435   
+633    | Templar Knight III               | 32,260     | 7,179,435    | 7,211,695   
+634    | Templar Knight IV                | 32,365     | 7,211,695    | 7,244,060   
+635    | Templar Knight V                 | 32,465     | 7,244,060    | 7,276,525   
+636    | Templar Knight VI                | 32,570     | 7,276,525    | 7,309,095   
+637    | Templar Knight VII               | 32,675     | 7,309,095    | 7,341,770   
+638    | Templar Knight VIII              | 32,780     | 7,341,770    | 7,374,550   
+639    | Templar Knight IX                | 32,880     | 7,374,550    | 7,407,430   
+640    | Templar Knight X                 | 32,985     | 7,407,430    | 7,440,415   
+641    | Crusader Champion I              | 33,090     | 7,440,415    | 7,473,505   
+642    | Crusader Champion II             | 33,195     | 7,473,505    | 7,506,700   
+643    | Crusader Champion III            | 33,300     | 7,506,700    | 7,540,000   
+644    | Crusader Champion IV             | 33,405     | 7,540,000    | 7,573,405   
+645    | Crusader Champion V              | 33,510     | 7,573,405    | 7,606,915   
+646    | Crusader Champion VI             | 33,615     | 7,606,915    | 7,640,530   
+647    | Crusader Champion VII            | 33,725     | 7,640,530    | 7,674,255   
+648    | Crusader Champion VIII           | 33,830     | 7,674,255    | 7,708,085   
+649    | Crusader Champion IX             | 33,935     | 7,708,085    | 7,742,020   
+650    | Crusader Champion X              | 34,040     | 7,742,020    | 7,776,060   
+651    | Battlemage I                     | 34,150     | 7,776,060    | 7,810,210   
+652    | Battlemage II                    | 34,255     | 7,810,210    | 7,844,465   
+653    | Battlemage III                   | 34,360     | 7,844,465    | 7,878,825   
+654    | Battlemage IV                    | 34,470     | 7,878,825    | 7,913,295   
+655    | Battlemage V                     | 34,575     | 7,913,295    | 7,947,870   
+656    | Battlemage VI                    | 34,685     | 7,947,870    | 7,982,555   
+657    | Battlemage VII                   | 34,790     | 7,982,555    | 8,017,345   
+658    | Battlemage VIII                  | 34,900     | 8,017,345    | 8,052,245   
+659    | Battlemage IX                    | 35,010     | 8,052,245    | 8,087,255   
+660    | Battlemage X                     | 35,115     | 8,087,255    | 8,122,370   
+661    | Spellblade Master I              | 35,225     | 8,122,370    | 8,157,595   
+662    | Spellblade Master II             | 35,335     | 8,157,595    | 8,192,930   
+663    | Spellblade Master III            | 35,445     | 8,192,930    | 8,228,375   
+664    | Spellblade Master IV             | 35,555     | 8,228,375    | 8,263,930   
+665    | Spellblade Master V              | 35,665     | 8,263,930    | 8,299,595   
+666    | Spellblade Master VI             | 35,770     | 8,299,595    | 8,335,365   
+667    | Spellblade Master VII            | 35,880     | 8,335,365    | 8,371,245   
+668    | Spellblade Master VIII           | 35,990     | 8,371,245    | 8,407,235   
+669    | Spellblade Master IX             | 36,105     | 8,407,235    | 8,443,340   
+670    | Spellblade Master X              | 36,215     | 8,443,340    | 8,479,555   
+671    | Stormcaller I                    | 36,325     | 8,479,555    | 8,515,880   
+672    | Stormcaller II                   | 36,435     | 8,515,880    | 8,552,315   
+673    | Stormcaller III                  | 36,545     | 8,552,315    | 8,588,860   
+674    | Stormcaller IV                   | 36,660     | 8,588,860    | 8,625,520   
+675    | Stormcaller V                    | 36,770     | 8,625,520    | 8,662,290   
+676    | Stormcaller VI                   | 36,880     | 8,662,290    | 8,699,170   
+677    | Stormcaller VII                  | 36,995     | 8,699,170    | 8,736,165   
+678    | Stormcaller VIII                 | 37,105     | 8,736,165    | 8,773,270   
+679    | Stormcaller IX                   | 37,220     | 8,773,270    | 8,810,490   
+680    | Stormcaller X                    | 37,330     | 8,810,490    | 8,847,820   
+681    | Frost Knight I                   | 37,445     | 8,847,820    | 8,885,265   
+682    | Frost Knight II                  | 37,555     | 8,885,265    | 8,922,820   
+683    | Frost Knight III                 | 37,670     | 8,922,820    | 8,960,490   
+684    | Frost Knight IV                  | 37,785     | 8,960,490    | 8,998,275   
+685    | Frost Knight V                   | 37,900     | 8,998,275    | 9,036,175   
+686    | Frost Knight VI                  | 38,010     | 9,036,175    | 9,074,185   
+687    | Frost Knight VII                 | 38,125     | 9,074,185    | 9,112,310   
+688    | Frost Knight VIII                | 38,240     | 9,112,310    | 9,150,550   
+689    | Frost Knight IX                  | 38,355     | 9,150,550    | 9,188,905   
+690    | Frost Knight X                   | 38,470     | 9,188,905    | 9,227,375   
+691    | Flame Knight I                   | 38,585     | 9,227,375    | 9,265,960   
+692    | Flame Knight II                  | 38,700     | 9,265,960    | 9,304,660   
+693    | Flame Knight III                 | 38,815     | 9,304,660    | 9,343,475   
+694    | Flame Knight IV                  | 38,930     | 9,343,475    | 9,382,405   
+695    | Flame Knight V                   | 39,045     | 9,382,405    | 9,421,450   
+696    | Flame Knight VI                  | 39,165     | 9,421,450    | 9,460,615   
+697    | Flame Knight VII                 | 39,280     | 9,460,615    | 9,499,895   
+698    | Flame Knight VIII                | 39,395     | 9,499,895    | 9,539,290   
+699    | Flame Knight IX                  | 39,515     | 9,539,290    | 9,578,805   
+700    | Flame Knight X                   | 39,630     | 9,578,805    | 9,618,435   
+701    | Thunder Vanguard I               | 39,745     | 9,618,435    | 9,658,180   
+702    | Thunder Vanguard II              | 39,865     | 9,658,180    | 9,698,045   
+703    | Thunder Vanguard III             | 39,980     | 9,698,045    | 9,738,025   
+704    | Thunder Vanguard IV              | 40,100     | 9,738,025    | 9,778,125   
+705    | Thunder Vanguard V               | 40,220     | 9,778,125    | 9,818,345   
+706    | Thunder Vanguard VI              | 40,335     | 9,818,345    | 9,858,680   
+707    | Thunder Vanguard VII             | 40,455     | 9,858,680    | 9,899,135   
+708    | Thunder Vanguard VIII            | 40,575     | 9,899,135    | 9,939,710   
+709    | Thunder Vanguard IX              | 40,695     | 9,939,710    | 9,980,405   
+710    | Thunder Vanguard X               | 40,810     | 9,980,405    | 10,021,215  
+711    | Void Walker I                    | 40,930     | 10,021,215   | 10,062,145  
+712    | Void Walker II                   | 41,050     | 10,062,145   | 10,103,195  
+713    | Void Walker III                  | 41,170     | 10,103,195   | 10,144,365  
+714    | Void Walker IV                   | 41,290     | 10,144,365   | 10,185,655  
+715    | Void Walker V                    | 41,410     | 10,185,655   | 10,227,065  
+716    | Void Walker VI                   | 41,530     | 10,227,065   | 10,268,595  
+717    | Void Walker VII                  | 41,650     | 10,268,595   | 10,310,245  
+718    | Void Walker VIII                 | 41,775     | 10,310,245   | 10,352,020  
+719    | Void Walker IX                   | 41,895     | 10,352,020   | 10,393,915  
+720    | Void Walker X                    | 42,015     | 10,393,915   | 10,435,930  
+721    | Void Slayer I                    | 42,135     | 10,435,930   | 10,478,065  
+722    | Void Slayer II                   | 42,260     | 10,478,065   | 10,520,325  
+723    | Void Slayer III                  | 42,380     | 10,520,325   | 10,562,705  
+724    | Void Slayer IV                   | 42,505     | 10,562,705   | 10,605,210  
+725    | Void Slayer V                    | 42,625     | 10,605,210   | 10,647,835  
+726    | Void Slayer VI                   | 42,750     | 10,647,835   | 10,690,585  
+727    | Void Slayer VII                  | 42,870     | 10,690,585   | 10,733,455  
+728    | Void Slayer VIII                 | 42,995     | 10,733,455   | 10,776,450  
+729    | Void Slayer IX                   | 43,115     | 10,776,450   | 10,819,565  
+730    | Void Slayer X                    | 43,240     | 10,819,565   | 10,862,805  
+731    | Dragon Knight I                  | 43,365     | 10,862,805   | 10,906,170  
+732    | Dragon Knight II                 | 43,490     | 10,906,170   | 10,949,660  
+733    | Dragon Knight III                | 43,615     | 10,949,660   | 10,993,275  
+734    | Dragon Knight IV                 | 43,735     | 10,993,275   | 11,037,010  
+735    | Dragon Knight V                  | 43,860     | 11,037,010   | 11,080,870  
+736    | Dragon Knight VI                 | 43,985     | 11,080,870   | 11,124,855  
+737    | Dragon Knight VII                | 44,110     | 11,124,855   | 11,168,965  
+738    | Dragon Knight VIII               | 44,235     | 11,168,965   | 11,213,200  
+739    | Dragon Knight IX                 | 44,365     | 11,213,200   | 11,257,565  
+740    | Dragon Knight X                  | 44,490     | 11,257,565   | 11,302,055  
+741    | Dragon Slayer I                  | 44,615     | 11,302,055   | 11,346,670  
+742    | Dragon Slayer II                 | 44,740     | 11,346,670   | 11,391,410  
+743    | Dragon Slayer III                | 44,865     | 11,391,410   | 11,436,275  
+744    | Dragon Slayer IV                 | 44,995     | 11,436,275   | 11,481,270  
+745    | Dragon Slayer V                  | 45,120     | 11,481,270   | 11,526,390  
+746    | Dragon Slayer VI                 | 45,250     | 11,526,390   | 11,571,640  
+747    | Dragon Slayer VII                | 45,375     | 11,571,640   | 11,617,015  
+748    | Dragon Slayer VIII               | 45,505     | 11,617,015   | 11,662,520  
+749    | Dragon Slayer IX                 | 45,630     | 11,662,520   | 11,708,150  
+750    | Dragon Slayer X                  | 45,760     | 11,708,150   | 11,753,910  
+751    | Titan Slayer I                   | 45,885     | 11,753,910   | 11,799,795  
+752    | Titan Slayer II                  | 46,015     | 11,799,795   | 11,845,810  
+753    | Titan Slayer III                 | 46,145     | 11,845,810   | 11,891,955  
+754    | Titan Slayer IV                  | 46,275     | 11,891,955   | 11,938,230  
+755    | Titan Slayer V                   | 46,400     | 11,938,230   | 11,984,630  
+756    | Titan Slayer VI                  | 46,530     | 11,984,630   | 12,031,160  
+757    | Titan Slayer VII                 | 46,660     | 12,031,160   | 12,077,820  
+758    | Titan Slayer VIII                | 46,790     | 12,077,820   | 12,124,610  
+759    | Titan Slayer IX                  | 46,920     | 12,124,610   | 12,171,530  
+760    | Titan Slayer X                   | 47,050     | 12,171,530   | 12,218,580  
+761    | Colossus Guard I                 | 47,180     | 12,218,580   | 12,265,760  
+762    | Colossus Guard II                | 47,315     | 12,265,760   | 12,313,075  
+763    | Colossus Guard III               | 47,445     | 12,313,075   | 12,360,520  
+764    | Colossus Guard IV                | 47,575     | 12,360,520   | 12,408,095  
+765    | Colossus Guard V                 | 47,705     | 12,408,095   | 12,455,800  
+766    | Colossus Guard VI                | 47,840     | 12,455,800   | 12,503,640  
+767    | Colossus Guard VII               | 47,970     | 12,503,640   | 12,551,610  
+768    | Colossus Guard VIII              | 48,100     | 12,551,610   | 12,599,710  
+769    | Colossus Guard IX                | 48,235     | 12,599,710   | 12,647,945  
+770    | Colossus Guard X                 | 48,365     | 12,647,945   | 12,696,310  
+771    | Juggernaut I                     | 48,500     | 12,696,310   | 12,744,810  
+772    | Juggernaut II                    | 48,630     | 12,744,810   | 12,793,440  
+773    | Juggernaut III                   | 48,765     | 12,793,440   | 12,842,205  
+774    | Juggernaut IV                    | 48,900     | 12,842,205   | 12,891,105  
+775    | Juggernaut V                     | 49,035     | 12,891,105   | 12,940,140  
+776    | Juggernaut VI                    | 49,165     | 12,940,140   | 12,989,305  
+777    | Juggernaut VII                   | 49,300     | 12,989,305   | 13,038,605  
+778    | Juggernaut VIII                  | 49,435     | 13,038,605   | 13,088,040  
+779    | Juggernaut IX                    | 49,570     | 13,088,040   | 13,137,610  
+780    | Juggernaut X                     | 49,705     | 13,137,610   | 13,187,315  
+781    | Warlord I                        | 49,840     | 13,187,315   | 13,237,155  
+782    | Warlord II                       | 49,975     | 13,237,155   | 13,287,130  
+783    | Warlord III                      | 50,110     | 13,287,130   | 13,337,240  
+784    | Warlord IV                       | 50,245     | 13,337,240   | 13,387,485  
+785    | Warlord V                        | 50,380     | 13,387,485   | 13,437,865  
+786    | Warlord VI                       | 50,520     | 13,437,865   | 13,488,385  
+787    | Warlord VII                      | 50,655     | 13,488,385   | 13,539,040  
+788    | Warlord VIII                     | 50,790     | 13,539,040   | 13,589,830  
+789    | Warlord IX                       | 50,930     | 13,589,830   | 13,640,760  
+790    | Warlord X                        | 51,065     | 13,640,760   | 13,691,825  
+791    | High Commander I                 | 51,205     | 13,691,825   | 13,743,030  
+792    | High Commander II                | 51,340     | 13,743,030   | 13,794,370  
+793    | High Commander III               | 51,480     | 13,794,370   | 13,845,850  
+794    | High Commander IV                | 51,615     | 13,845,850   | 13,897,465  
+795    | High Commander V                 | 51,755     | 13,897,465   | 13,949,220  
+796    | High Commander VI                | 51,895     | 13,949,220   | 14,001,115  
+797    | High Commander VII               | 52,030     | 14,001,115   | 14,053,145  
+798    | High Commander VIII              | 52,170     | 14,053,145   | 14,105,315  
+799    | High Commander IX                | 52,310     | 14,105,315   | 14,157,625  
+800    | High Commander X                 | 52,450     | 14,157,625   | 14,210,075  
+801    | Grand Marshal I                  | 52,590     | 14,210,075   | 14,262,665  
+802    | Grand Marshal II                 | 52,730     | 14,262,665   | 14,315,395  
+803    | Grand Marshal III                | 52,870     | 14,315,395   | 14,368,265  
+804    | Grand Marshal IV                 | 53,010     | 14,368,265   | 14,421,275  
+805    | Grand Marshal V                  | 53,150     | 14,421,275   | 14,474,425  
+806    | Grand Marshal VI                 | 53,290     | 14,474,425   | 14,527,715  
+807    | Grand Marshal VII                | 53,435     | 14,527,715   | 14,581,150  
+808    | Grand Marshal VIII               | 53,575     | 14,581,150   | 14,634,725  
+809    | Grand Marshal IX                 | 53,715     | 14,634,725   | 14,688,440  
+810    | Grand Marshal X                  | 53,860     | 14,688,440   | 14,742,300  
+811    | Vanguard Sovereign I             | 54,000     | 14,742,300   | 14,796,300  
+812    | Vanguard Sovereign II            | 54,140     | 14,796,300   | 14,850,440  
+813    | Vanguard Sovereign III           | 54,285     | 14,850,440   | 14,904,725  
+814    | Vanguard Sovereign IV            | 54,425     | 14,904,725   | 14,959,150  
+815    | Vanguard Sovereign V             | 54,570     | 14,959,150   | 15,013,720  
+816    | Vanguard Sovereign VI            | 54,715     | 15,013,720   | 15,068,435  
+817    | Vanguard Sovereign VII           | 54,855     | 15,068,435   | 15,123,290  
+818    | Vanguard Sovereign VIII          | 55,000     | 15,123,290   | 15,178,290  
+819    | Vanguard Sovereign IX            | 55,145     | 15,178,290   | 15,233,435  
+820    | Vanguard Sovereign X             | 55,290     | 15,233,435   | 15,288,725  
+821    | Hero I                           | 55,435     | 15,288,725   | 15,344,160  
+822    | Hero II                          | 55,580     | 15,344,160   | 15,399,740  
+823    | Hero III                         | 55,725     | 15,399,740   | 15,455,465  
+824    | Hero IV                          | 55,870     | 15,455,465   | 15,511,335  
+825    | Hero V                           | 56,015     | 15,511,335   | 15,567,350  
+826    | Hero VI                          | 56,160     | 15,567,350   | 15,623,510  
+827    | Hero VII                         | 56,305     | 15,623,510   | 15,679,815  
+828    | Hero VIII                        | 56,450     | 15,679,815   | 15,736,265  
+829    | Hero IX                          | 56,600     | 15,736,265   | 15,792,865  
+830    | Hero X                           | 56,745     | 15,792,865   | 15,849,610  
+831    | Veteran Hero I                   | 56,890     | 15,849,610   | 15,906,500  
+832    | Veteran Hero II                  | 57,040     | 15,906,500   | 15,963,540  
+833    | Veteran Hero III                 | 57,185     | 15,963,540   | 16,020,725  
+834    | Veteran Hero IV                  | 57,335     | 16,020,725   | 16,078,060  
+835    | Veteran Hero V                   | 57,480     | 16,078,060   | 16,135,540  
+836    | Veteran Hero VI                  | 57,630     | 16,135,540   | 16,193,170  
+837    | Veteran Hero VII                 | 57,775     | 16,193,170   | 16,250,945  
+838    | Veteran Hero VIII                | 57,925     | 16,250,945   | 16,308,870  
+839    | Veteran Hero IX                  | 58,075     | 16,308,870   | 16,366,945  
+840    | Veteran Hero X                   | 58,225     | 16,366,945   | 16,425,170  
+841    | Apex Champion I                  | 58,370     | 16,425,170   | 16,483,540  
+842    | Apex Champion II                 | 58,520     | 16,483,540   | 16,542,060  
+843    | Apex Champion III                | 58,670     | 16,542,060   | 16,600,730  
+844    | Apex Champion IV                 | 58,820     | 16,600,730   | 16,659,550  
+845    | Apex Champion V                  | 58,970     | 16,659,550   | 16,718,520  
+846    | Apex Champion VI                 | 59,120     | 16,718,520   | 16,777,640  
+847    | Apex Champion VII                | 59,275     | 16,777,640   | 16,836,915  
+848    | Apex Champion VIII               | 59,425     | 16,836,915   | 16,896,340  
+849    | Apex Champion IX                 | 59,575     | 16,896,340   | 16,955,915  
+850    | Apex Champion X                  | 59,725     | 16,955,915   | 17,015,640  
+851    | Grandmaster I                    | 59,880     | 17,015,640   | 17,075,520  
+852    | Grandmaster II                   | 60,030     | 17,075,520   | 17,135,550  
+853    | Grandmaster III                  | 60,180     | 17,135,550   | 17,195,730  
+854    | Grandmaster IV                   | 60,335     | 17,195,730   | 17,256,065  
+855    | Grandmaster V                    | 60,485     | 17,256,065   | 17,316,550  
+856    | Grandmaster VI                   | 60,640     | 17,316,550   | 17,377,190  
+857    | Grandmaster VII                  | 60,795     | 17,377,190   | 17,437,985  
+858    | Grandmaster VIII                 | 60,945     | 17,437,985   | 17,498,930  
+859    | Grandmaster IX                   | 61,100     | 17,498,930   | 17,560,030  
+860    | Grandmaster X                    | 61,255     | 17,560,030   | 17,621,285  
+861    | High Grandmaster I               | 61,410     | 17,621,285   | 17,682,695  
+862    | High Grandmaster II              | 61,560     | 17,682,695   | 17,744,255  
+863    | High Grandmaster III             | 61,715     | 17,744,255   | 17,805,970  
+864    | High Grandmaster IV              | 61,870     | 17,805,970   | 17,867,840  
+865    | High Grandmaster V               | 62,025     | 17,867,840   | 17,929,865  
+866    | High Grandmaster VI              | 62,180     | 17,929,865   | 17,992,045  
+867    | High Grandmaster VII             | 62,335     | 17,992,045   | 18,054,380  
+868    | High Grandmaster VIII            | 62,495     | 18,054,380   | 18,116,875  
+869    | High Grandmaster IX              | 62,650     | 18,116,875   | 18,179,525  
+870    | High Grandmaster X               | 62,805     | 18,179,525   | 18,242,330  
+871    | Mythic Knight I                  | 62,960     | 18,242,330   | 18,305,290  
+872    | Mythic Knight II                 | 63,120     | 18,305,290   | 18,368,410  
+873    | Mythic Knight III                | 63,275     | 18,368,410   | 18,431,685  
+874    | Mythic Knight IV                 | 63,435     | 18,431,685   | 18,495,120  
+875    | Mythic Knight V                  | 63,590     | 18,495,120   | 18,558,710  
+876    | Mythic Knight VI                 | 63,750     | 18,558,710   | 18,622,460  
+877    | Mythic Knight VII                | 63,905     | 18,622,460   | 18,686,365  
+878    | Mythic Knight VIII               | 64,065     | 18,686,365   | 18,750,430  
+879    | Mythic Knight IX                 | 64,225     | 18,750,430   | 18,814,655  
+880    | Mythic Knight X                  | 64,380     | 18,814,655   | 18,879,035  
+881    | Mythic Champion I                | 64,540     | 18,879,035   | 18,943,575  
+882    | Mythic Champion II               | 64,700     | 18,943,575   | 19,008,275  
+883    | Mythic Champion III              | 64,860     | 19,008,275   | 19,073,135  
+884    | Mythic Champion IV               | 65,020     | 19,073,135   | 19,138,155  
+885    | Mythic Champion V                | 65,180     | 19,138,155   | 19,203,335  
+886    | Mythic Champion VI               | 65,340     | 19,203,335   | 19,268,675  
+887    | Mythic Champion VII              | 65,500     | 19,268,675   | 19,334,175  
+888    | Mythic Champion VIII             | 65,660     | 19,334,175   | 19,399,835  
+889    | Mythic Champion IX               | 65,820     | 19,399,835   | 19,465,655  
+890    | Mythic Champion X                | 65,985     | 19,465,655   | 19,531,640  
+891    | Mythic Warlord I                 | 66,145     | 19,531,640   | 19,597,785  
+892    | Mythic Warlord II                | 66,305     | 19,597,785   | 19,664,090  
+893    | Mythic Warlord III               | 66,470     | 19,664,090   | 19,730,560  
+894    | Mythic Warlord IV                | 66,630     | 19,730,560   | 19,797,190  
+895    | Mythic Warlord V                 | 66,795     | 19,797,190   | 19,863,985  
+896    | Mythic Warlord VI                | 66,955     | 19,863,985   | 19,930,940  
+897    | Mythic Warlord VII               | 67,120     | 19,930,940   | 19,998,060  
+898    | Mythic Warlord VIII              | 67,285     | 19,998,060   | 20,065,345  
+899    | Mythic Warlord IX                | 67,445     | 20,065,345   | 20,132,790  
+900    | Mythic Warlord X                 | 67,610     | 20,132,790   | 20,200,400  
+901    | Legend I                         | 67,775     | 20,200,400   | 20,268,175  
+902    | Legend II                        | 67,940     | 20,268,175   | 20,336,115  
+903    | Legend III                       | 68,105     | 20,336,115   | 20,404,220  
+904    | Legend IV                        | 68,270     | 20,404,220   | 20,472,490  
+905    | Legend V                         | 68,435     | 20,472,490   | 20,540,925  
+906    | Legend VI                        | 68,600     | 20,540,925   | 20,609,525  
+907    | Legend VII                       | 68,765     | 20,609,525   | 20,678,290  
+908    | Legend VIII                      | 68,930     | 20,678,290   | 20,747,220  
+909    | Legend IX                        | 69,095     | 20,747,220   | 20,816,315  
+910    | Legend X                         | 69,260     | 20,816,315   | 20,885,575  
+911    | Apex Legend I                    | 69,430     | 20,885,575   | 20,955,005  
+912    | Apex Legend II                   | 69,595     | 20,955,005   | 21,024,600  
+913    | Apex Legend III                  | 69,760     | 21,024,600   | 21,094,360  
+914    | Apex Legend IV                   | 69,930     | 21,094,360   | 21,164,290  
+915    | Apex Legend V                    | 70,095     | 21,164,290   | 21,234,385  
+916    | Apex Legend VI                   | 70,265     | 21,234,385   | 21,304,650  
+917    | Apex Legend VII                  | 70,435     | 21,304,650   | 21,375,085  
+918    | Apex Legend VIII                 | 70,600     | 21,375,085   | 21,445,685  
+919    | Apex Legend IX                   | 70,770     | 21,445,685   | 21,516,455  
+920    | Apex Legend X                    | 70,940     | 21,516,455   | 21,587,395  
+921    | Demigod I                        | 71,110     | 21,587,395   | 21,658,505  
+922    | Demigod II                       | 71,275     | 21,658,505   | 21,729,780  
+923    | Demigod III                      | 71,445     | 21,729,780   | 21,801,225  
+924    | Demigod IV                       | 71,615     | 21,801,225   | 21,872,840  
+925    | Demigod V                        | 71,785     | 21,872,840   | 21,944,625  
+926    | Demigod VI                       | 71,955     | 21,944,625   | 22,016,580  
+927    | Demigod VII                      | 72,130     | 22,016,580   | 22,088,710  
+928    | Demigod VIII                     | 72,300     | 22,088,710   | 22,161,010  
+929    | Demigod IX                       | 72,470     | 22,161,010   | 22,233,480  
+930    | Demigod X                        | 72,640     | 22,233,480   | 22,306,120  
+931    | Immortal I                       | 72,815     | 22,306,120   | 22,378,935  
+932    | Immortal II                      | 72,985     | 22,378,935   | 22,451,920  
+933    | Immortal III                     | 73,155     | 22,451,920   | 22,525,075  
+934    | Immortal IV                      | 73,330     | 22,525,075   | 22,598,405  
+935    | Immortal V                       | 73,500     | 22,598,405   | 22,671,905  
+936    | Immortal VI                      | 73,675     | 22,671,905   | 22,745,580  
+937    | Immortal VII                     | 73,850     | 22,745,580   | 22,819,430  
+938    | Immortal VIII                    | 74,020     | 22,819,430   | 22,893,450  
+939    | Immortal IX                      | 74,195     | 22,893,450   | 22,967,645  
+940    | Immortal X                       | 74,370     | 22,967,645   | 23,042,015  
+941    | Celestial Knight I               | 74,545     | 23,042,015   | 23,116,560  
+942    | Celestial Knight II              | 74,720     | 23,116,560   | 23,191,280  
+943    | Celestial Knight III             | 74,895     | 23,191,280   | 23,266,175  
+944    | Celestial Knight IV              | 75,070     | 23,266,175   | 23,341,245  
+945    | Celestial Knight V               | 75,245     | 23,341,245   | 23,416,490  
+946    | Celestial Knight VI              | 75,420     | 23,416,490   | 23,491,910  
+947    | Celestial Knight VII             | 75,595     | 23,491,910   | 23,567,505  
+948    | Celestial Knight VIII            | 75,770     | 23,567,505   | 23,643,275  
+949    | Celestial Knight IX              | 75,945     | 23,643,275   | 23,719,220  
+950    | Celestial Knight X               | 76,125     | 23,719,220   | 23,795,345  
+951    | Ascendant I                      | 76,300     | 23,795,345   | 23,871,645  
+952    | Ascendant II                     | 76,480     | 23,871,645   | 23,948,125  
+953    | Ascendant III                    | 76,655     | 23,948,125   | 24,024,780  
+954    | Ascendant IV                     | 76,835     | 24,024,780   | 24,101,615  
+955    | Ascendant V                      | 77,010     | 24,101,615   | 24,178,625  
+956    | Ascendant VI                     | 77,190     | 24,178,625   | 24,255,815  
+957    | Ascendant VII                    | 77,365     | 24,255,815   | 24,333,180  
+958    | Ascendant VIII                   | 77,545     | 24,333,180   | 24,410,725  
+959    | Ascendant IX                     | 77,725     | 24,410,725   | 24,488,450  
+960    | Ascendant X                      | 77,905     | 24,488,450   | 24,566,355  
+961    | Transcendent I                   | 78,085     | 24,566,355   | 24,644,440  
+962    | Transcendent II                  | 78,265     | 24,644,440   | 24,722,705  
+963    | Transcendent III                 | 78,445     | 24,722,705   | 24,801,150  
+964    | Transcendent IV                  | 78,625     | 24,801,150   | 24,879,775  
+965    | Transcendent V                   | 78,805     | 24,879,775   | 24,958,580  
+966    | Transcendent VI                  | 78,985     | 24,958,580   | 25,037,565  
+967    | Transcendent VII                 | 79,165     | 25,037,565   | 25,116,730  
+968    | Transcendent VIII                | 79,345     | 25,116,730   | 25,196,075  
+969    | Transcendent IX                  | 79,530     | 25,196,075   | 25,275,605  
+970    | Transcendent X                   | 79,710     | 25,275,605   | 25,355,315  
+971    | Archon I                         | 79,895     | 25,355,315   | 25,435,210  
+972    | Archon II                        | 80,075     | 25,435,210   | 25,515,285  
+973    | Archon III                       | 80,260     | 25,515,285   | 25,595,545  
+974    | Archon IV                        | 80,440     | 25,595,545   | 25,675,985  
+975    | Archon V                         | 80,625     | 25,675,985   | 25,756,610  
+976    | Archon VI                        | 80,805     | 25,756,610   | 25,837,415  
+977    | Archon VII                       | 80,990     | 25,837,415   | 25,918,405  
+978    | Archon VIII                      | 81,175     | 25,918,405   | 25,999,580  
+979    | Archon IX                        | 81,360     | 25,999,580   | 26,080,940  
+980    | Archon X                         | 81,545     | 26,080,940   | 26,162,485  
+981    | Sovereign I                      | 81,730     | 26,162,485   | 26,244,215  
+982    | Sovereign II                     | 81,915     | 26,244,215   | 26,326,130  
+983    | Sovereign III                    | 82,100     | 26,326,130   | 26,408,230  
+984    | Sovereign IV                     | 82,285     | 26,408,230   | 26,490,515  
+985    | Sovereign V                      | 82,470     | 26,490,515   | 26,572,985  
+986    | Sovereign VI                     | 82,655     | 26,572,985   | 26,655,640  
+987    | Sovereign VII                    | 82,845     | 26,655,640   | 26,738,485  
+988    | Sovereign VIII                   | 83,030     | 26,738,485   | 26,821,515  
+989    | Sovereign IX                     | 83,215     | 26,821,515   | 26,904,730  
+990    | Sovereign X                      | 83,405     | 26,904,730   | 26,988,135  
+991    | The Absolute I                   | 83,590     | 26,988,135   | 27,071,725  
+992    | The Absolute II                  | 83,780     | 27,071,725   | 27,155,505  
+993    | The Absolute III                 | 83,965     | 27,155,505   | 27,239,470  
+994    | The Absolute IV                  | 84,155     | 27,239,470   | 27,323,625  
+995    | The Absolute V                   | 84,345     | 27,323,625   | 27,407,970  
+996    | The Absolute VI                  | 84,530     | 27,407,970   | 27,492,500  
+997    | The Absolute VII                 | 84,720     | 27,492,500   | 27,577,220  
+998    | The Absolute VIII                | 84,910     | 27,577,220   | 27,662,130  
+999    | The Absolute IX                  | 85,100     | 27,662,130   | 27,747,230  
+1000   | The Absolute X                   | 85,290     | 27,747,230   | 27,832,520  
+================================================================================
+TOTAL CUMULATIVE XP AT LEVEL 1,000: 27,832,520 XP
+================================================================================

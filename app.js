@@ -2231,6 +2231,7 @@
     }
 
     updateTodayLiveStat();
+    updateLiveXpStat();
     updateTimerPresetUI();
   }
 
@@ -2276,6 +2277,7 @@
       renderTimerDisplay(state.timer.remainingSeconds);
     }
     updateTodayLiveStat();
+    updateLiveXpStat();
 
     if (state.activeTaskName) {
       const nextTitle = `(${formatDigitalTime(state.timer.remainingSeconds)}) ${state.activeTaskName} • StudyArk`;
@@ -2284,6 +2286,112 @@
   }
 
   let activeSessionHasBeenPaused = false;
+
+  function getLiveElapsedSeconds() {
+    if (state.timer.status === 'running' || state.timer.status === 'paused') {
+      return Math.max(0, state.timer.targetSeconds - state.timer.remainingSeconds);
+    }
+    return 0;
+  }
+
+  function getLiveSessionXp() {
+    const elapsedSecs = getLiveElapsedSeconds();
+    if (elapsedSecs <= 0) return 0;
+
+    let flowMult = 1.00;
+    if (elapsedSecs >= 90 * 60) flowMult = 1.35;
+    else if (elapsedSecs >= 60 * 60) flowMult = 1.25;
+    else if (elapsedSecs >= 30 * 60) flowMult = 1.15;
+
+    const pristineMult = !activeSessionHasBeenPaused ? 1.10 : 1.00;
+
+    const streak = state.streak || 0;
+    let streakMult = 1.00;
+    if (streak >= 31) streakMult = 1.20;
+    else if (streak >= 15) streakMult = 1.15;
+    else if (streak >= 8) streakMult = 1.10;
+    else if (streak >= 4) streakMult = 1.05;
+
+    // Real-time continuous accumulation: 10 base XP per 60 seconds (scaled by flow, pristine, and streak)
+    const scaledRate = (10 * flowMult * pristineMult * streakMult) / 60.0;
+    let liveXp = Math.floor(elapsedSecs * scaledRate);
+
+    // Ignition (+100 XP) and milestone sparks kick in once at least 1 full minute (60s) has elapsed
+    if (elapsedSecs >= 60) {
+      const todayStr = getLocalDateString();
+      const todayMins = state.dayActivity[todayStr] || 0;
+      if (todayMins === 0) {
+        liveXp += 100;
+      }
+      const newTotalMins = todayMins + Math.floor(elapsedSecs / 60);
+      if (todayMins < 60 && newTotalMins >= 60) liveXp += 150;
+      if (todayMins < 120 && newTotalMins >= 120) liveXp += 300;
+      if (todayMins < 240 && newTotalMins >= 240) liveXp += 600;
+    }
+
+    return liveXp;
+  }
+
+  function getEffectiveTotalXp() {
+    return Math.max(0, (state.xp || 0) + getLiveSessionXp());
+  }
+
+  function updateLiveXpStat() {
+    const xpEl = document.getElementById('stat-xp');
+    const levelNumEl = document.getElementById('stat-level-num');
+    const levelNameEl = document.getElementById('stat-level-name');
+    const xpFractionEl = document.getElementById('stat-xp-fraction');
+    const xpBarFillEl = document.getElementById('stat-xp-bar-fill');
+    const xpItemEl = document.getElementById('stat-item-xp');
+    if (!xpEl && !levelNumEl && !xpItemEl) return;
+
+    const effectiveXp = getEffectiveTotalXp();
+    const lvlInfo = getLevelInfo(effectiveXp);
+
+    if (xpEl) {
+      const xpText = formatCompactNumber(effectiveXp);
+      if (xpEl.textContent !== xpText) {
+        xpEl.textContent = xpText;
+        xpEl.title = `${Number(effectiveXp).toLocaleString()} XP`;
+      }
+    }
+    if (levelNumEl) {
+      const lvlText = `Lv. ${lvlInfo.level}`;
+      if (levelNumEl.textContent !== lvlText) {
+        levelNumEl.textContent = lvlText;
+      }
+    }
+    if (levelNameEl) {
+      if (levelNameEl.textContent !== lvlInfo.title) {
+        levelNameEl.textContent = lvlInfo.title;
+      }
+    }
+    if (xpFractionEl) {
+      const fractionText = `${formatCompactNumber(lvlInfo.currentLevelXp)} / ${formatCompactNumber(lvlInfo.xpRequired)} XP (${lvlInfo.progressPercent.toFixed(1)}%)`;
+      if (xpFractionEl.textContent !== fractionText) {
+        xpFractionEl.textContent = fractionText;
+      }
+    }
+    if (xpBarFillEl) {
+      const widthText = `${lvlInfo.progressPercent.toFixed(1)}%`;
+      if (xpBarFillEl.style.width !== widthText) {
+        xpBarFillEl.style.width = widthText;
+      }
+    }
+    if (xpItemEl) {
+      const titleText = `Level ${lvlInfo.level}: ${lvlInfo.title} (${lvlInfo.tier})\nCollected: ${lvlInfo.currentLevelXp.toLocaleString()} / ${lvlInfo.xpRequired.toLocaleString()} XP (${lvlInfo.progressPercent.toFixed(1)}%)\nTotal Studied: ${Number(effectiveXp).toLocaleString()} XP`;
+      if (xpItemEl.title !== titleText) {
+        xpItemEl.title = titleText;
+      }
+      xpItemEl.classList.toggle('is-running', state.timer.status === 'running');
+      xpItemEl.classList.toggle('is-paused', state.timer.status === 'paused');
+    }
+
+    const levelsDlg = document.getElementById('levels-dialog');
+    if (levelsDlg && levelsDlg.open) {
+      renderLevelsDialogDOM();
+    }
+  }
 
   function startTimer() {
     lastRenderedSeconds = null;
@@ -4153,7 +4261,7 @@
       const tier = RPG_TIERS[tierIdx] || 'The Absolute';
       const sub = ROMAN_NUMERALS[(lvl - 1) % 10];
       const title = `${tier} ${sub}`;
-      const xpReq = Math.max(300, Math.round((300 + 8 * (lvl - 1) + 0.012 * Math.pow(lvl, 2)) / 5) * 5);
+      const xpReq = Math.max(300, Math.round((300 + 10 * (lvl - 1) + 0.045 * Math.pow(lvl, 2) + 0.00003 * Math.pow(lvl, 3)) / 5) * 5);
       const minXp = cum;
       const maxXp = cum + xpReq;
       cum = maxXp;
@@ -4220,26 +4328,7 @@
       streakEl.title = `${Number(state.streak || 0).toLocaleString()} Day Streak`;
     }
 
-    const lvlInfo = getLevelInfo(state.xp);
-
-    if (xpEl) {
-      xpEl.textContent = formatCompactNumber(state.xp);
-    }
-    if (levelNumEl) {
-      levelNumEl.textContent = `Lv. ${lvlInfo.level}`;
-    }
-    if (levelNameEl) {
-      levelNameEl.textContent = lvlInfo.title;
-    }
-    if (xpFractionEl) {
-      xpFractionEl.textContent = `${formatCompactNumber(lvlInfo.currentLevelXp)} / ${formatCompactNumber(lvlInfo.xpRequired)} XP`;
-    }
-    if (xpBarFillEl) {
-      xpBarFillEl.style.width = `${lvlInfo.progressPercent.toFixed(1)}%`;
-    }
-    if (xpItemEl) {
-      xpItemEl.title = `Level ${lvlInfo.level}: ${lvlInfo.title} (${lvlInfo.tier})\nCollected: ${lvlInfo.currentLevelXp.toLocaleString()} / ${lvlInfo.xpRequired.toLocaleString()} XP (${lvlInfo.progressPercent.toFixed(1)}%)\nTotal Experience: ${Number(state.xp || 0).toLocaleString()} XP`;
-    }
+    updateLiveXpStat();
 
     if (settingTotalFocusEl) {
       settingTotalFocusEl.textContent = formatHoursMinutes(state.totalFocusSeconds);
@@ -5027,7 +5116,8 @@
       shell.classList.toggle('is-catalog-mode', showAllLevelsView);
     }
 
-    const lvlInfo = getLevelInfo(state.xp);
+    const effectiveXp = getEffectiveTotalXp();
+    const lvlInfo = getLevelInfo(effectiveXp);
     const clearDates = calculateLevelClearDates();
 
     // 1. My Journey View Header & Metric cards
@@ -5077,7 +5167,7 @@
       barFillEl.style.width = `${lvlInfo.progressPercent.toFixed(1)}%`;
     }
     if (totalXpEl) {
-      totalXpEl.textContent = `${Number(state.xp || 0).toLocaleString()} XP`;
+      totalXpEl.textContent = `${Number(effectiveXp || 0).toLocaleString()} XP`;
     }
 
     // 2. Feed List and Heading
@@ -5163,7 +5253,7 @@
           subtitle = `Current Level • ${formatCompactNumber(lvlInfo.currentLevelXp)} / ${formatCompactNumber(l.xpRequired)} XP (${remaining} XP to next)`;
           badgeHtml = `<span class="level-badge-status level-badge-current">${lvlInfo.progressPercent.toFixed(0)}%</span>`;
         } else {
-          const diff = Math.max(0, l.minXp - state.xp);
+          const diff = Math.max(0, l.minXp - effectiveXp);
           subtitle = `Unlocks at ${formatCompactNumber(l.minXp)} XP total (${formatCompactNumber(diff)} XP needed)`;
           badgeHtml = `<span class="level-badge-status level-badge-locked">${formatCompactNumber(l.xpRequired)} XP</span>`;
         }
