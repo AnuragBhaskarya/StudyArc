@@ -56,6 +56,23 @@
   let state = loadState();
   const dayDetailsCache = new Map();
 
+  // =========================================================================
+  // ONE-SHOT BOOT / HOME INTRO STATE
+  // The loader is painted by the initial HTML. These flags make sure the
+  // entrance sequence can only run for a real page load (or a successful
+  // sign-in), never for ordinary renders or background state updates.
+  // =========================================================================
+  const APP_LOADER_MIN_VISIBLE_MS = 560;
+  const APP_LOADER_FADE_MS = 450;
+  let appLoaderShownAt = Number(window.__studyArcLoaderShownAt) || performance.now();
+  let homeIntroPlayed = false;
+  let homeIntroRunning = false;
+  let homeIntroGeneration = 0;
+  let homeIntroTimers = new Set();
+  let homeIntroAnimations = [];
+  let homeIntroDialActive = false;
+  let homeIntroDialRaf = null;
+
   // Central high-speed precomputed cache & indices for zero-lag 60/120fps modal opens
   const sessionDataIndex = {
     dirty: true,
@@ -169,7 +186,8 @@
   // SERVER SYNCHRONIZATION & AUTHENTICATION ENGINE
   // =========================================================================
 
-  async function syncWithBackend() {
+  async function syncWithBackend(options = {}) {
+    const suppressAuthDialog = Boolean(options.suppressAuthDialog);
     try {
       const res = await fetch('/api/state');
       if (res.status === 401) {
@@ -177,8 +195,8 @@
         state.user = null;
         document.documentElement.classList.add('unauthenticated-gate');
         updateAuthUI();
-        openAuthDialog('login');
-        return;
+        if (!suppressAuthDialog) openAuthDialog('login');
+        return { authenticated: false, authRequired: true };
       }
 
       if (res.ok) {
@@ -228,15 +246,18 @@
 
           // Start multi-device real-time SSE stream
           initRealtimeTimerSync();
+          return { authenticated: true, authRequired: false };
         }
       }
+      return { authenticated: Boolean(state.authenticated && state.user), authRequired: false };
     } catch (err) {
       console.warn('StudyArc: Backend sync error, using local cache:', err);
+      return { authenticated: Boolean(state.authenticated && state.user), authRequired: false, error: true };
     }
   }
 
-  async function checkAuthAndSync() {
-    await syncWithBackend();
+  async function checkAuthAndSync(options = {}) {
+    return syncWithBackend(options);
   }
 
   async function fetchLatestServerTimer() {
@@ -809,10 +830,12 @@
       if (res.ok && data.success) {
         state.authenticated = true;
         state.user = data.user;
-        document.documentElement.classList.remove('unauthenticated-gate');
+        // Cover the app while the freshly authenticated state is fetched, then
+        // hand over to the same one-shot entrance used on a normal page load.
+        prepareAppLoaderForIntro('Syncing your progress');
         updateAuthUI();
         closeAuthDialog(true);
-        await syncWithBackend();
+        await revealAfterSignIn();
       } else {
         if (errorEl) {
           errorEl.textContent = data.error || 'Invalid username or password.';
@@ -913,10 +936,12 @@
       if (res.ok && data.success) {
         state.authenticated = true;
         state.user = data.user;
-        document.documentElement.classList.remove('unauthenticated-gate');
+        // A new account gets the exact same loader + entrance treatment as a
+        // returning account, once its server state is in place.
+        prepareAppLoaderForIntro('Syncing your progress');
         updateAuthUI();
         closeAuthDialog(true);
-        await syncWithBackend();
+        await revealAfterSignIn();
       } else {
         if (errorEl) {
           errorEl.textContent = data.error || 'Failed to create account.';
@@ -941,6 +966,9 @@
   }
 
   async function handleLogout() {
+    cancelHomeIntro();
+    // A deliberate sign-in after signing out is another allowed entrance.
+    homeIntroPlayed = false;
     if (sioSocket) {
       try { sioSocket.disconnect(); } catch (_) {}
       sioSocket = null;
@@ -1178,7 +1206,11 @@
   let timerArcEl = null;
   let timerBeadGroupEl = null;
 
-  function updateTimerRing(seconds) {
+  function updateTimerRing(seconds, options = {}) {
+    // The one-shot home intro owns the arc while it fills from zero. Timer
+    // ticks and other render paths must not snap it to the live value.
+    if (homeIntroDialActive && !options.intro) return;
+
     if (!timerArcEl || !timerArcEl.isConnected) {
       timerArcEl = document.getElementById('timer-arc');
     }
@@ -1301,6 +1333,7 @@
 
   function selectTimerPreset(targetSeconds) {
     if (isTimerPresetLocked()) return;
+    if (homeIntroDialActive) finishHomeIntroDial();
 
     const target = Math.max(60, Math.min(MAX_TIMER_SECONDS, Math.round(targetSeconds)));
     if (!target) return;
@@ -2030,6 +2063,9 @@
       } catch (e) {}
       if (typeof state !== 'undefined' && state.auraEnabled === false) return;
       if (document.documentElement.classList.contains('aura-disabled')) return;
+      // The aura is deliberately dark during the boot loader and entrance
+      // sequence. It is released by the final intro step.
+      if (document.documentElement.classList.contains('intro-aura-hidden')) return;
       this.isRunning = true;
       for (let i = 0; i < this.animations.length; i++) {
         this.animations[i].play();
@@ -2553,6 +2589,7 @@
 
       // A preset glide must yield cleanly to manual bead adjustments
       cancelTimerPresetAnimation();
+      if (homeIntroDialActive) finishHomeIntroDial();
 
       isDragging = true;
       document.body.classList.add('is-dragging');
@@ -7706,6 +7743,372 @@
   }
 
   // =========================================================================
+  // BOOT LOADER & ONE-SHOT HOME ENTRANCE
+  // =========================================================================
+  function waitMs(ms) {
+    return new Promise((resolve) => setTimeout(resolve, Math.max(0, ms)));
+  }
+
+  function clearLoaderFailsafe() {
+    if (window.__studyArcLoaderFailsafe) {
+      clearTimeout(window.__studyArcLoaderFailsafe);
+      window.__studyArcLoaderFailsafe = null;
+    }
+  }
+
+  function setAppLoaderStatus(message) {
+    const statusEl = document.getElementById('app-loader-status');
+    if (statusEl && message) statusEl.textContent = message;
+  }
+
+  function showAppLoader(message) {
+    const loader = document.getElementById('app-loader');
+    appLoaderShownAt = performance.now();
+    if (message) setAppLoaderStatus(message);
+    document.documentElement.classList.add('app-booting');
+    document.body.setAttribute('aria-busy', 'true');
+    if (!loader) return;
+    loader.setAttribute('aria-hidden', 'false');
+    loader.classList.remove('is-hidden');
+    // Flush the re-show so a loader that was previously hidden transitions
+    // back in instead of inheriting the completed hide state.
+    void loader.offsetWidth;
+  }
+
+  function prepareAppLoaderForIntro(message) {
+    document.documentElement.classList.add('intro-aura-hidden');
+    matrixStreamEngine?.stop();
+    showAppLoader(message);
+  }
+
+  function hideAppLoader() {
+    document.documentElement.classList.remove('app-booting');
+    document.body.removeAttribute('aria-busy');
+    const loader = document.getElementById('app-loader');
+    if (loader) {
+      loader.classList.add('is-hidden');
+      loader.setAttribute('aria-hidden', 'true');
+    }
+    clearLoaderFailsafe();
+    return waitMs(APP_LOADER_FADE_MS);
+  }
+
+  async function waitForLoaderMinimum() {
+    const elapsed = performance.now() - appLoaderShownAt;
+    const remaining = APP_LOADER_MIN_VISIBLE_MS - elapsed;
+    if (remaining > 0) await waitMs(remaining);
+  }
+
+  async function waitForFonts(maxWait = 700) {
+    try {
+      if (document.fonts && document.fonts.ready) {
+        await Promise.race([document.fonts.ready, waitMs(maxWait)]);
+      }
+    } catch (e) {}
+  }
+
+  function isIntroItemVisible(el) {
+    if (!el || el.classList.contains('hidden') || el.closest('.hidden')) return false;
+    const styles = getComputedStyle(el);
+    if (styles.display === 'none') return false;
+    // Note: do not test visibility here. During boot the whole app shell is
+    // visibility:hidden (inherited), but that state is removed in the same
+    // frame the intro begins. Layout boxes still exist, so getClientRects()
+    // remains the reliable "does this element occupy space?" check.
+    return (el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0);
+  }
+
+  function getHeaderIntroItems() {
+    const nodes = document.querySelectorAll(
+      '.app-header .mobile-brand, .app-header .header-preset-pill, .app-header #header-topic-pill, .app-header #btn-header-auth, .app-header #btn-profile'
+    );
+    return Array.from(nodes).filter(isIntroItemVisible);
+  }
+
+  function runIntroAnimation(element, keyframes, options) {
+    if (!element || typeof element.animate !== 'function') return null;
+    const animation = element.animate(keyframes, options);
+    homeIntroAnimations.push(animation);
+
+    const forget = () => {
+      const index = homeIntroAnimations.indexOf(animation);
+      if (index !== -1) homeIntroAnimations.splice(index, 1);
+    };
+
+    animation.finished.then(() => {
+      forget();
+      // Cleaning up a finished fill-mode animation lets normal hover and
+      // settings transitions resume with no lingering inline animation style.
+      try { animation.cancel(); } catch (e) {}
+    }).catch(forget);
+
+    return animation;
+  }
+
+  function clearHomeIntroTimers() {
+    homeIntroTimers.forEach((timer) => clearTimeout(timer));
+    homeIntroTimers.clear();
+  }
+
+  function scheduleHomeIntroStep(fn, delay) {
+    const timer = setTimeout(() => {
+      homeIntroTimers.delete(timer);
+      fn();
+    }, Math.max(0, delay));
+    homeIntroTimers.add(timer);
+    return timer;
+  }
+
+  function finishHomeIntroDial() {
+    if (homeIntroDialRaf !== null) {
+      cancelAnimationFrame(homeIntroDialRaf);
+      homeIntroDialRaf = null;
+    }
+    homeIntroDialActive = false;
+    document.body.classList.remove('is-intro-dial');
+    updateTimerRing(state.timer.remainingSeconds);
+  }
+
+  function startHomeIntroDial(generation) {
+    if (generation !== homeIntroGeneration || !homeIntroRunning) return;
+
+    const targetSeconds = Math.max(0, Number(state.timer.remainingSeconds) || 0);
+    const duration = 1150;
+    const startedAt = performance.now();
+
+    const step = (now) => {
+      if (generation !== homeIntroGeneration) return;
+      const progress = Math.min(1, (now - startedAt) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      updateTimerRing(targetSeconds * eased, { intro: true });
+
+      if (progress < 1) {
+        homeIntroDialRaf = requestAnimationFrame(step);
+      } else {
+        homeIntroDialRaf = null;
+        finishHomeIntroDial();
+      }
+    };
+
+    homeIntroDialRaf = requestAnimationFrame(step);
+  }
+
+  function resetHeatmapIntroReveal() {
+    if (!heatmapState.activeBlocks.size) return;
+    heatmapState.activeBlocks.forEach((block) => setHeatmapBlockRevealed(block, false));
+    const trackEl = document.getElementById('heatmap-track');
+    if (trackEl) void trackEl.offsetWidth;
+  }
+
+  function replayHeatmapIntroReveal() {
+    if (!heatmapState.activeBlocks.size) return;
+    const trackEl = document.getElementById('heatmap-track');
+    if (trackEl) void trackEl.offsetWidth;
+    updateHeatmapRevealState();
+  }
+
+  function cancelHomeIntro() {
+    homeIntroGeneration += 1;
+    clearHomeIntroTimers();
+
+    homeIntroAnimations.forEach((animation) => {
+      try { animation.cancel(); } catch (e) {}
+    });
+    homeIntroAnimations = [];
+
+    if (homeIntroDialRaf !== null) {
+      cancelAnimationFrame(homeIntroDialRaf);
+      homeIntroDialRaf = null;
+    }
+
+    homeIntroDialActive = false;
+    document.body.classList.remove('is-intro-dial');
+    homeIntroRunning = false;
+    document.documentElement.classList.remove('intro-aura-hidden');
+
+    updateTimerRing(state.timer.remainingSeconds);
+    updateHeatmapRevealState();
+
+    if (state.authenticated && state.auraEnabled !== false) {
+      matrixStreamEngine?.start();
+    }
+  }
+
+  async function loadAppDataForReveal() {
+    document.body.setAttribute('aria-busy', 'true');
+
+    // `/api/state` carries the full dashboard payload. The live timer fetch is
+    // kicked off alongside it so the dial lands on the current server value.
+    const loadTask = Promise.allSettled([
+      checkAuthAndSync({ suppressAuthDialog: true }),
+      fetchLatestServerTimer()
+    ]);
+
+    // A stalled backend must never trap the app behind the loader forever.
+    await Promise.race([loadTask, waitMs(10000)]);
+    await waitForLoaderMinimum();
+    await waitForFonts(700);
+
+    // One final coherent paint using whatever state actually arrived.
+    renderAll();
+    updateAuthUI();
+  }
+
+  async function finishLoaderForAuthGate() {
+    document.documentElement.classList.remove('intro-aura-hidden');
+    if (state.auraEnabled !== false) matrixStreamEngine?.start();
+    await hideAppLoader();
+    if (!state.authenticated || !state.user) openAuthDialog('login');
+  }
+
+  async function revealAfterSignIn() {
+    try {
+      await loadAppDataForReveal();
+      if (state.authenticated && state.user) {
+        updateAuthUI();
+        playHomeIntro();
+      } else {
+        await finishLoaderForAuthGate();
+      }
+    } catch (err) {
+      console.warn('StudyArc: Sign-in reveal failed, showing available data:', err);
+      cancelHomeIntro();
+      await finishLoaderForAuthGate();
+    }
+  }
+
+  function playHomeIntro() {
+    if (!state.authenticated || !state.user) return;
+    if (homeIntroRunning || homeIntroPlayed) {
+      // A repeat call must never replay the sequence, but it must still not
+      // leave a loader covering the app if one was shown for a sign-in.
+      hideAppLoader();
+      return;
+    }
+
+    const reducedMotion = (() => {
+      try {
+        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      } catch (e) {
+        return false;
+      }
+    })();
+
+    homeIntroRunning = true;
+    homeIntroPlayed = true;
+    const generation = ++homeIntroGeneration;
+
+    try {
+      if (reducedMotion) {
+        document.documentElement.classList.remove('intro-aura-hidden');
+        if (state.auraEnabled !== false) matrixStreamEngine?.start();
+        hideAppLoader();
+        homeIntroRunning = false;
+        return;
+      }
+
+      // Arm the initial visual state before the loader is removed so nothing
+      // flashes at its final position for a frame.
+      resetHeatmapIntroReveal();
+      homeIntroDialActive = true;
+      document.body.classList.add('is-intro-dial');
+      updateTimerRing(0, { intro: true });
+
+      const timeline = {
+        headerStart: 320,
+        headerStep: 50,
+        headerDuration: 430,
+        dialStart: 390,
+        statsStart: 1240,
+        statsStep: 145,
+        statsDuration: 480,
+        heatmapStart: 2040,
+        heatmapDuration: 680,
+        heatmapCells: 2120,
+        auraStart: 2760
+      };
+
+      const headerItems = getHeaderIntroItems();
+      headerItems.forEach((el, index) => {
+        runIntroAnimation(el, [
+          { opacity: 0, transform: 'translate3d(0, -14px, 0)' },
+          { opacity: 1, transform: 'translate3d(0, 0, 0)' }
+        ], {
+          duration: timeline.headerDuration,
+          delay: timeline.headerStart + index * timeline.headerStep,
+          easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+          fill: 'both'
+        });
+      });
+
+      const statItems = [
+        document.getElementById('stat-item-xp'),
+        document.getElementById('stat-item-streak') || document.getElementById('stat-streak')?.closest('.stat-item'),
+        document.getElementById('stat-item-today'),
+        document.getElementById('stat-item-total')
+      ].filter(isIntroItemVisible);
+
+      statItems.forEach((el, index) => {
+        runIntroAnimation(el, [
+          { opacity: 0, transform: 'translate3d(0, 10px, 0) scale3d(0.84, 0.84, 1)' },
+          { opacity: 1, transform: 'translate3d(0, -1px, 0) scale3d(1.035, 1.035, 1)', offset: 0.66 },
+          { opacity: 1, transform: 'translate3d(0, 0, 0) scale3d(1, 1, 1)' }
+        ], {
+          duration: timeline.statsDuration,
+          delay: timeline.statsStart + index * timeline.statsStep,
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          fill: 'both'
+        });
+      });
+
+      // Fill the XP meter with the XP pill that owns it.
+      const xpBarFillEl = document.getElementById('stat-xp-bar-fill');
+      if (xpBarFillEl) {
+        const targetWidth = xpBarFillEl.style.width || `${xpBarFillEl.getBoundingClientRect().width}px`;
+        runIntroAnimation(xpBarFillEl, [
+          { width: '0%' },
+          { width: targetWidth }
+        ], {
+          duration: 780,
+          delay: timeline.statsStart + 180,
+          easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+          fill: 'both'
+        });
+      }
+
+      const heatmapCard = document.querySelector('.heatmap-card');
+      runIntroAnimation(heatmapCard, [
+        { opacity: 0, transform: 'translate3d(0, 10px, 0)' },
+        { opacity: 1, transform: 'translate3d(0, 0, 0)' }
+      ], {
+        duration: timeline.heatmapDuration,
+        delay: timeline.heatmapStart,
+        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        fill: 'both'
+      });
+
+      scheduleHomeIntroStep(() => startHomeIntroDial(generation), timeline.dialStart);
+      scheduleHomeIntroStep(() => replayHeatmapIntroReveal(), timeline.heatmapCells);
+      scheduleHomeIntroStep(() => {
+        if (generation !== homeIntroGeneration) return;
+        // Final beat: let the ambient tile field fade up only after every
+        // dashboard element has finished arriving.
+        document.documentElement.classList.remove('intro-aura-hidden');
+        if (state.auraEnabled !== false) matrixStreamEngine?.start();
+      }, timeline.auraStart);
+      scheduleHomeIntroStep(() => {
+        if (generation === homeIntroGeneration) homeIntroRunning = false;
+      }, timeline.auraStart + 1400);
+    } catch (err) {
+      console.warn('StudyArc: Home intro could not complete, revealing final state:', err);
+      cancelHomeIntro();
+    } finally {
+      // The loader must always disappear, even if one intro animation failed.
+      hideAppLoader();
+    }
+  }
+
+  // =========================================================================
   // BOOTSTRAP (Safe for both pre-parsed and async/cached script execution)
   // =========================================================================
   let appBootstrapped = false;
@@ -7713,25 +8116,35 @@
     if (appBootstrapped) return;
     appBootstrapped = true;
 
-    initLenis();
-    initEvents();
-    initMatrixStream();
-    renderAll();
-    applyAuraPreference();
+    try {
+      document.documentElement.classList.add('app-booting', 'intro-aura-hidden');
+      document.body.setAttribute('aria-busy', 'true');
 
-    // If user is not authenticated, greet them immediately with the Neon Green Sign-In modal
-    if (!state.authenticated || !state.user) {
-      document.documentElement.classList.add('unauthenticated-gate');
-      openAuthDialog('login');
-    } else {
-      document.documentElement.classList.remove('unauthenticated-gate');
+      initLenis();
+      initEvents();
+      initMatrixStream();
+      applyAuraPreference();
+      // The aura waits for the entrance sequence, even if a preference sync
+      // calls applyAuraPreference() while the loader is still up.
+      matrixStreamEngine?.stop();
+      renderAll();
+
+      // Do not open the auth dialog from inside the initial state sync; the
+      // loader stays opaque until we know whether home or sign-in comes next.
+      await loadAppDataForReveal();
+
+      if (state.authenticated && state.user) {
+        updateAuthUI();
+        closeAuthDialog(true);
+        playHomeIntro();
+      } else {
+        await finishLoaderForAuthGate();
+      }
+    } catch (err) {
+      console.warn('StudyArc: Boot sequence failed, revealing cached app:', err);
+      cancelHomeIntro();
+      await finishLoaderForAuthGate();
     }
-
-    // Immediately fetch real-time server timer state in <5ms from RAM cache
-    fetchLatestServerTimer();
-
-    // Full authentication and state sync (subjects, history, stats)
-    await checkAuthAndSync();
   }
 
   if (document.readyState === 'loading') {
