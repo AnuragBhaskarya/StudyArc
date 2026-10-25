@@ -2389,7 +2389,7 @@
 
     const levelsDlg = document.getElementById('levels-dialog');
     if (levelsDlg && levelsDlg.open) {
-      renderLevelsDialogDOM();
+      updateLevelsDialogLiveMetrics();
     }
   }
 
@@ -4344,7 +4344,7 @@
 
     const levelsDlg = document.getElementById('levels-dialog');
     if (levelsDlg && levelsDlg.open) {
-      renderLevelsDialogDOM();
+      updateLevelsDialogLiveMetrics();
     }
 
     const historyDlg = document.getElementById('sessions-history-dialog');
@@ -4760,6 +4760,7 @@
       try { activeLevelsScroller.destroy(); } catch (e) {}
       activeLevelsScroller = null;
     }
+    lastRenderedLevelInDialog = null;
 
     // 2. Halt and reset smooth scrolling (Lenis) momentum immediately
     if (typeof levelsLenis !== 'undefined' && levelsLenis) {
@@ -5107,6 +5108,92 @@
     }
   }
 
+  let lastRenderedLevelInDialog = null;
+
+  function updateLevelsDialogLiveMetrics() {
+    const dialog = document.getElementById('levels-dialog');
+    if (!dialog || !dialog.open) return;
+
+    const effectiveXp = getEffectiveTotalXp();
+    const lvlInfo = getLevelInfo(effectiveXp);
+
+    // If level actually changed while the modal was open (real level-up or reset), rebuild list
+    if (lastRenderedLevelInDialog !== null && lastRenderedLevelInDialog !== lvlInfo.level) {
+      lastRenderedLevelInDialog = lvlInfo.level;
+      renderLevelsDialogDOM();
+      return;
+    }
+    lastRenderedLevelInDialog = lvlInfo.level;
+
+    // Fast, flicker-free DOM update of metric pills and progress bar (0 animation resets!)
+    const titleEl = document.getElementById('levels-dialog-title');
+    const badgeEl = document.getElementById('levels-dialog-badge');
+    if (titleEl && !showAllLevelsView) {
+      const titleText = `Level ${lvlInfo.level} — ${lvlInfo.title}`;
+      if (titleEl.textContent !== titleText) titleEl.textContent = titleText;
+    }
+    if (badgeEl && !showAllLevelsView) {
+      const badgeText = `Tier ${lvlInfo.tierIndex}: ${lvlInfo.tier}`;
+      if (badgeEl.textContent !== badgeText) badgeEl.textContent = badgeText;
+    }
+
+    const pillLevel = document.getElementById('levels-pill-level');
+    const pillTier = document.getElementById('levels-pill-tier');
+    const pillNext = document.getElementById('levels-pill-next');
+
+    if (pillLevel) {
+      const lvlText = `Lv. ${lvlInfo.level}`;
+      if (pillLevel.textContent !== lvlText) pillLevel.textContent = lvlText;
+    }
+    if (pillTier) {
+      if (pillTier.textContent !== lvlInfo.tier) pillTier.textContent = lvlInfo.tier;
+    }
+    if (pillNext) {
+      const nextText = lvlInfo.isMax ? 'Max Rank' : `${formatCompactNumber(Math.max(0, lvlInfo.xpRequired - lvlInfo.currentLevelXp))} XP`;
+      if (pillNext.textContent !== nextText) pillNext.textContent = nextText;
+    }
+
+    const progressFractionEl = document.getElementById('levels-progress-fraction');
+    const progressPercentEl = document.getElementById('levels-progress-percent');
+    const barFillEl = document.getElementById('levels-bar-fill');
+    const totalXpEl = document.getElementById('levels-total-xp');
+
+    if (progressFractionEl) {
+      const fracText = `${formatCompactNumber(lvlInfo.currentLevelXp)} / ${formatCompactNumber(lvlInfo.xpRequired)} XP (${lvlInfo.progressPercent.toFixed(1)}%)`;
+      if (progressFractionEl.textContent !== fracText) progressFractionEl.textContent = fracText;
+    }
+    if (progressPercentEl) {
+      const pctText = lvlInfo.isMax ? 'MAX' : `${lvlInfo.progressPercent.toFixed(0)}%`;
+      if (progressPercentEl.textContent !== pctText) progressPercentEl.textContent = pctText;
+    }
+    if (barFillEl) {
+      const wText = `${lvlInfo.progressPercent.toFixed(1)}%`;
+      if (barFillEl.style.width !== wText) barFillEl.style.width = wText;
+    }
+    if (totalXpEl) {
+      const xpText = `${Number(effectiveXp || 0).toLocaleString()} XP`;
+      if (totalXpEl.textContent !== xpText) totalXpEl.textContent = xpText;
+    }
+
+    // Also update the current level card in the virtual scroller if currently mounted
+    const currentCard = document.querySelector('.level-card[data-current-level="true"], .level-card.is-current');
+    if (currentCard) {
+      const remaining = Math.max(0, lvlInfo.xpRequired - lvlInfo.currentLevelXp);
+      const subEl = currentCard.querySelector('.level-item-subtitle, .level-subtitle');
+      if (subEl) {
+        const currentSub = showAllLevelsView
+          ? `Requires +${formatCompactNumber(lvlInfo.xpRequired)} XP • Total: ${formatCompactNumber(lvlInfo.maxXp)} XP`
+          : `Current Level • ${formatCompactNumber(lvlInfo.currentLevelXp)} / ${formatCompactNumber(lvlInfo.xpRequired)} XP (${remaining} XP to next)`;
+        if (subEl.textContent !== currentSub) subEl.textContent = currentSub;
+      }
+      const badgeStatusEl = currentCard.querySelector('.level-badge-status');
+      if (badgeStatusEl && !showAllLevelsView) {
+        const currentBadge = `${lvlInfo.progressPercent.toFixed(0)}%`;
+        if (badgeStatusEl.textContent !== currentBadge) badgeStatusEl.textContent = currentBadge;
+      }
+    }
+  }
+
   function renderLevelsDialogDOM() {
     const dialog = document.getElementById('levels-dialog');
     if (!dialog) return;
@@ -5118,6 +5205,7 @@
 
     const effectiveXp = getEffectiveTotalXp();
     const lvlInfo = getLevelInfo(effectiveXp);
+    lastRenderedLevelInDialog = lvlInfo.level;
     const clearDates = calculateLevelClearDates();
 
     // 1. My Journey View Header & Metric cards
