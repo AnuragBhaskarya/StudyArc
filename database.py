@@ -79,8 +79,9 @@ class DBContext:
     Unified database context manager supporting both local SQLite
     and production cloud PostgreSQL (Supabase / Neon) with thread-safe pooling.
     """
-    def __init__(self):
+    def __init__(self, autocommit=False):
         self.is_pg = is_postgres()
+        self.autocommit = autocommit
         if self.is_pg:
             pg_pool = get_pg_pool()
             conn = pg_pool.getconn()
@@ -90,7 +91,7 @@ class DBContext:
                 except Exception:
                     pass
                 conn = pg_pool.getconn()
-            conn.autocommit = True
+            conn.autocommit = self.autocommit
             self.conn = conn
         else:
             self.conn = sqlite3.connect(DB_PATH, timeout=10.0)
@@ -104,8 +105,17 @@ class DBContext:
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.is_pg:
             try:
-                if exc_type is not None and not getattr(self.conn, 'autocommit', False):
+                if exc_type is not None:
+                    if not getattr(self.conn, 'autocommit', False):
+                        self.conn.rollback()
+                else:
+                    if not getattr(self.conn, 'autocommit', False):
+                        self.conn.commit()
+            except Exception:
+                try:
                     self.conn.rollback()
+                except Exception:
+                    pass
             finally:
                 get_pg_pool().putconn(self.conn)
         else:
@@ -235,7 +245,7 @@ def init_db():
                 CREATE TABLE IF NOT EXISTS sessions (
                     id SERIAL PRIMARY KEY,
                     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                    subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+                    subject_id INTEGER REFERENCES subjects(id) ON DELETE SET NULL,
                     subject_name VARCHAR(255) NOT NULL,
                     duration_minutes INTEGER NOT NULL,
                     date VARCHAR(32) NOT NULL,
@@ -261,7 +271,15 @@ def init_db():
             if not cur.fetchone():
                 ctx.execute("ALTER TABLE sessions ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE")
 
+            try:
+                ctx.execute("ALTER TABLE sessions ALTER COLUMN subject_id DROP NOT NULL")
+                ctx.execute("ALTER TABLE sessions DROP CONSTRAINT IF EXISTS sessions_subject_id_fkey")
+                ctx.execute("ALTER TABLE sessions ADD CONSTRAINT sessions_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE SET NULL")
+            except Exception:
+                pass
+
             ctx.execute("ALTER TABLE subjects DROP CONSTRAINT IF EXISTS subjects_name_key")
+            ctx.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_lower_username ON users (LOWER(username))")
             ctx.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_subjects_user_name ON subjects (user_id, LOWER(name))")
             ctx.execute("CREATE INDEX IF NOT EXISTS idx_sessions_user_date ON sessions (user_id, date)")
             ctx.execute("CREATE INDEX IF NOT EXISTS idx_sessions_user_ts ON sessions (user_id, timestamp DESC)")
@@ -322,7 +340,7 @@ def init_db():
                 CREATE TABLE IF NOT EXISTS sessions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                    subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+                    subject_id INTEGER REFERENCES subjects(id) ON DELETE SET NULL,
                     subject_name TEXT NOT NULL,
                     duration_minutes INTEGER NOT NULL,
                     date TEXT NOT NULL,
@@ -341,8 +359,35 @@ def init_db():
 
             cur = ctx.execute("PRAGMA table_info(sessions)")
             cols = [r['name'] for r in cur.fetchall()]
-            if 'user_id' not in cols:
-                ctx.execute("ALTER TABLE sessions ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE")
+            # SQLite automatic migration: decouple sessions from subject ON DELETE CASCADE
+            try:
+                cur = ctx.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='sessions'")
+                row = cur.fetchone()
+                if row and 'ON DELETE CASCADE' in row['sql'] and 'subject_id' in row['sql']:
+                    ctx.execute("PRAGMA foreign_keys = OFF")
+                    ctx.execute("""
+                        CREATE TABLE sessions_v2 (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                            subject_id INTEGER REFERENCES subjects(id) ON DELETE SET NULL,
+                            subject_name TEXT NOT NULL,
+                            duration_minutes INTEGER NOT NULL,
+                            date TEXT NOT NULL,
+                            timestamp BIGINT NOT NULL,
+                            start_time TEXT,
+                            end_time TEXT,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """)
+                    ctx.execute("INSERT INTO sessions_v2 SELECT * FROM sessions")
+                    ctx.execute("DROP TABLE sessions")
+                    ctx.execute("ALTER TABLE sessions_v2 RENAME TO sessions")
+                    ctx.execute("CREATE INDEX IF NOT EXISTS idx_sessions_user_date ON sessions (user_id, date)")
+                    ctx.execute("CREATE INDEX IF NOT EXISTS idx_sessions_user_ts ON sessions (user_id, timestamp DESC)")
+                    ctx.execute("CREATE INDEX IF NOT EXISTS idx_sessions_user_subject ON sessions (user_id, subject_id)")
+                    ctx.execute("PRAGMA foreign_keys = ON")
+            except Exception as e:
+                print(f"[DB SQLite Migration] sessions constraint notice: {e}")
 
             ctx.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_subjects_user_name ON subjects (user_id, LOWER(name))")
             ctx.execute("CREATE INDEX IF NOT EXISTS idx_sessions_user_date ON sessions (user_id, date)")
@@ -577,6 +622,7 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
                 started_at = EXCLUDED.started_at,
                 updated_at = EXCLUDED.updated_at,
                 sequence = EXCLUDED.sequence
+            WHERE EXCLUDED.sequence >= user_timer_state.sequence
         """ if ctx.is_pg else """
             INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at, sequence)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -588,6 +634,7 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
                 started_at = excluded.started_at,
                 updated_at = excluded.updated_at,
                 sequence = excluded.sequence
+            WHERE excluded.sequence >= user_timer_state.sequence
         """, (user_id, new_status, new_target, new_remaining, new_task, new_started_at, now_ms, new_sequence))
 
     return {
@@ -653,8 +700,15 @@ def add_or_get_subject(user_id, name, color=None):
         return {'id': new_id, 'name': clean_name, 'color': color}
 
 def add_session(user_id, subject_name, duration_minutes, date_str=None, timestamp_ms=None, start_time=None, end_time=None):
-    if duration_minutes < 1:
-        duration_minutes = 1
+    try:
+        duration_minutes = int(duration_minutes)
+    except (ValueError, TypeError):
+        duration_minutes = 25
+    duration_minutes = max(1, min(duration_minutes, 1440))
+
+    clean_subj_name = str(subject_name or '').strip()[:200]
+    if not clean_subj_name:
+        clean_subj_name = 'Focus Session'
 
     now = datetime.now()
     if not date_str:
@@ -670,7 +724,7 @@ def add_session(user_id, subject_name, duration_minutes, date_str=None, timestam
     if not end_time:
         end_time = end_dt.strftime('%I:%M %p').lstrip('0')
 
-    subj = add_or_get_subject(user_id, subject_name)
+    subj = add_or_get_subject(user_id, clean_subj_name)
 
     with get_connection() as ctx:
         session_id = ctx.execute_insert("""
@@ -838,8 +892,18 @@ def get_daily_activity(user_id):
         rows = [dict(r) for r in cur.fetchall()]
         return {r['date']: int(r['total_minutes']) for r in rows}
 
-def get_stats(user_id):
-    today_str = datetime.now().strftime('%Y-%m-%d')
+def get_stats(user_id, client_date=None):
+    if client_date and isinstance(client_date, str) and len(client_date) == 10:
+        try:
+            current_date_obj = datetime.strptime(client_date, '%Y-%m-%d').date()
+            today_str = client_date
+        except Exception:
+            current_date_obj = datetime.now().date()
+            today_str = current_date_obj.strftime('%Y-%m-%d')
+    else:
+        current_date_obj = datetime.now().date()
+        today_str = current_date_obj.strftime('%Y-%m-%d')
+
     with get_connection() as ctx:
         cur = ctx.execute("SELECT COALESCE(SUM(duration_minutes), 0) FROM sessions WHERE user_id = ?", (user_id,))
         total_focus_minutes = int(fetch_scalar(cur.fetchone()) or 0)
@@ -860,7 +924,7 @@ def get_stats(user_id):
         """, (user_id,))
         active_dates = {dict(row)['date'] for row in cur.fetchall()}
 
-    current_check = datetime.now().date()
+    current_check = current_date_obj
     if today_str not in active_dates:
         current_check -= timedelta(days=1)
 
@@ -877,14 +941,23 @@ def get_stats(user_id):
         'todayFocusMinutes': today_focus_minutes
     }
 
-def get_full_state(user_id):
+def get_full_state(user_id, client_date=None):
     """
     High-performance state aggregation. Loads timer, subjects, sessions,
     and daily activity in a SINGLE database round trip, computing gamification
     metrics in-memory for instant page loading.
     """
     now_ms = int(datetime.now().timestamp() * 1000)
-    today_str = datetime.now().strftime('%Y-%m-%d')
+    if client_date and isinstance(client_date, str) and len(client_date) == 10:
+        try:
+            current_date_obj = datetime.strptime(client_date, '%Y-%m-%d').date()
+            today_str = client_date
+        except Exception:
+            current_date_obj = datetime.now().date()
+            today_str = current_date_obj.strftime('%Y-%m-%d')
+    else:
+        current_date_obj = datetime.now().date()
+        today_str = current_date_obj.strftime('%Y-%m-%d')
 
     with get_connection() as ctx:
         if ctx.is_pg:
@@ -1041,7 +1114,7 @@ def get_full_state(user_id):
     today_focus_mins = day_act.get(today_str, 0)
 
     active_dates = {d for d, mins in day_act.items() if mins > 0}
-    current_check = datetime.now().date()
+    current_check = current_date_obj
     if today_str not in active_dates:
         current_check -= timedelta(days=1)
     streak = 0

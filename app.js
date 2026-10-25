@@ -194,7 +194,10 @@
     const suppressAuthDialog = Boolean(options.suppressAuthDialog);
     const seq = currentAuthSequence;
     try {
-      const res = await fetch('/api/state');
+      const localDate = getLocalDateString();
+      const res = await fetch(`/api/state?date=${encodeURIComponent(localDate)}`, {
+        headers: { 'X-Client-Date': localDate }
+      });
       if (seq !== currentAuthSequence) {
         return { stale: true, authenticated: Boolean(state.authenticated && state.user) };
       }
@@ -6982,9 +6985,13 @@
     }
 
     // 6. Fire backend deletion in the background (non-blocking)
-    fetch(`/api/sessions/${encodeURIComponent(sessionId)}`, {
+    const clientDate = getLocalDateString();
+    fetch(`/api/sessions/${encodeURIComponent(sessionId)}?date=${encodeURIComponent(clientDate)}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' }
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Client-Date': clientDate
+      }
     }).then(async (res) => {
       if (res.ok) {
         const backendPayload = await res.json();

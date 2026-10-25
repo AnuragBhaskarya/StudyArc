@@ -563,7 +563,8 @@ def get_state(user_id):
     Uses hot in-memory timer state for sub-millisecond real-time accuracy.
     """
     try:
-        data = database.get_full_state(user_id)
+        client_date = request.args.get('date') or request.headers.get('X-Client-Date')
+        data = database.get_full_state(user_id, client_date=client_date)
         hot_timer = get_hot_timer_state(user_id)
         if hot_timer:
             data['timer'] = hot_timer
@@ -667,12 +668,15 @@ def handle_sessions(user_id):
     # Automatically update persistent timer state back to idle upon session save & broadcast to all WebSockets
     trigger_timer_update(user_id, 'complete')
 
+    client_date = date_str or request.headers.get('X-Client-Date')
+    state = database.get_full_state(user_id, client_date=client_date)
+
     return jsonify({
         'success': True,
         'session': new_session,
-        'stats': database.get_stats(user_id),
-        'dayActivity': database.get_daily_activity(user_id),
-        'subjects': database.get_subjects(user_id)
+        'stats': state['stats'],
+        'dayActivity': state['dayActivity'],
+        'subjects': state['subjects']
     })
 
 @app.route('/api/sessions/<session_id>', methods=['DELETE', 'POST'])
@@ -684,16 +688,18 @@ def delete_session_endpoint(user_id, session_id):
         return jsonify({'success': False, 'error': 'Session not found'}), 404
 
     date_str = deleted.get('date')
+    client_date = request.args.get('date') or request.headers.get('X-Client-Date') or date_str
     day_details = database.get_day_details(user_id, date_str) if date_str else None
+    state = database.get_full_state(user_id, client_date=client_date)
 
     return jsonify({
         'success': True,
         'deletedSession': deleted,
         'dayDetails': day_details,
-        'stats': database.get_stats(user_id),
-        'dayActivity': database.get_daily_activity(user_id),
-        'subjects': database.get_subjects(user_id),
-        'sessions': database.get_sessions(user_id)
+        'stats': state['stats'],
+        'dayActivity': state['dayActivity'],
+        'subjects': state['subjects'],
+        'sessions': state['sessions']
     })
 
 @app.route('/api/day/<date_str>', methods=['GET'])
@@ -713,19 +719,22 @@ def get_activity(user_id):
 @app.route('/api/stats', methods=['GET'])
 @auth_required
 def get_stats(user_id):
-    return jsonify(database.get_stats(user_id))
+    client_date = request.args.get('date') or request.headers.get('X-Client-Date')
+    return jsonify(database.get_stats(user_id, client_date=client_date))
 
 @app.route('/api/reset', methods=['POST'])
 @auth_required
 def reset_data(user_id):
     database.reset_database(user_id)
     timer_state = trigger_timer_update(user_id, 'reset', target_seconds=5400)
+    client_date = request.args.get('date') or request.headers.get('X-Client-Date')
+    state = database.get_full_state(user_id, client_date=client_date)
     return jsonify({
         'success': True,
-        'stats': database.get_stats(user_id),
-        'dayActivity': database.get_daily_activity(user_id),
-        'subjects': database.get_subjects(user_id),
-        'sessions': database.get_sessions(user_id),
+        'stats': state['stats'],
+        'dayActivity': state['dayActivity'],
+        'subjects': state['subjects'],
+        'sessions': state['sessions'],
         'timer': timer_state
     })
 
