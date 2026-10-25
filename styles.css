@@ -282,6 +282,155 @@ html.intro-aura-hidden .ambient-aura-container {
   .ambient-aura-container {
     transition: none;
   }
+
+  body.is-home-intro .timer-svg,
+  body.is-home-intro #timer-digits,
+  body.is-home-intro #timer-state-dot,
+  body.is-home-intro .app-header .mobile-brand,
+  body.is-home-intro .app-header .header-preset-pill,
+  body.is-home-intro .app-header .header-topic-pill,
+  body.is-home-intro .app-header #btn-profile,
+  body.is-home-intro #stat-item-xp,
+  body.is-home-intro #stat-item-streak,
+  body.is-home-intro #stat-item-today,
+  body.is-home-intro #stat-item-total,
+  body.is-home-intro #stat-xp-bar-fill,
+  body.is-home-intro .heatmap-card {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   HOME INTRO ENTRANCE ANIMATIONS (PURE COMPOSITOR CSS)
+   - Operates on the GPU compositor via transform + opacity (zero JS overhead).
+   - Each group is staggered with a deliberate slight delay.
+   - Removed cleanly once the sequence finishes.
+   ========================================================================== */
+
+/* Group 1: Dial Scale & Fade */
+body.is-home-intro .timer-svg {
+  animation: homeIntroDialScale 440ms cubic-bezier(0.16, 1, 0.3, 1) 40ms both;
+}
+
+/* Group 2: Dial Numbers Ultra-Smooth Slide Up */
+body.is-home-intro #timer-digits,
+body.is-home-intro #timer-state-dot {
+  animation: homeIntroDigitsSlide 480ms cubic-bezier(0.22, 1, 0.36, 1) 440ms both;
+}
+
+/* Group 3: Header Items (Deliberate Stagger) */
+body.is-home-intro .app-header .mobile-brand {
+  animation: homeIntroHeaderItem 380ms cubic-bezier(0.16, 1, 0.3, 1) 960ms both;
+}
+body.is-home-intro .app-header .header-preset-pill:nth-of-type(1) {
+  animation: homeIntroHeaderItem 380ms cubic-bezier(0.16, 1, 0.3, 1) 1010ms both;
+}
+body.is-home-intro .app-header .header-preset-pill:nth-of-type(2) {
+  animation: homeIntroHeaderItem 380ms cubic-bezier(0.16, 1, 0.3, 1) 1060ms both;
+}
+body.is-home-intro .app-header .header-preset-pill:nth-of-type(3) {
+  animation: homeIntroHeaderItem 380ms cubic-bezier(0.16, 1, 0.3, 1) 1110ms both;
+}
+body.is-home-intro .app-header .header-preset-pill:nth-of-type(4) {
+  animation: homeIntroHeaderItem 380ms cubic-bezier(0.16, 1, 0.3, 1) 1160ms both;
+}
+body.is-home-intro .app-header .header-topic-pill {
+  animation: homeIntroHeaderItem 380ms cubic-bezier(0.16, 1, 0.3, 1) 1200ms both;
+}
+body.is-home-intro .app-header #btn-profile {
+  animation: homeIntroHeaderItem 380ms cubic-bezier(0.16, 1, 0.3, 1) 1220ms both;
+}
+
+/* Group 4: Stats Pills (Staggered Pop with Overshoot) */
+body.is-home-intro #stat-item-xp {
+  animation: homeIntroStatPop 460ms cubic-bezier(0.22, 1, 0.36, 1) 1080ms both;
+}
+body.is-home-intro #stat-item-streak {
+  animation: homeIntroStatPop 460ms cubic-bezier(0.22, 1, 0.36, 1) 1200ms both;
+}
+body.is-home-intro #stat-item-today {
+  animation: homeIntroStatPop 460ms cubic-bezier(0.22, 1, 0.36, 1) 1320ms both;
+}
+body.is-home-intro #stat-item-total {
+  animation: homeIntroStatPop 460ms cubic-bezier(0.22, 1, 0.36, 1) 1440ms both;
+}
+body.is-home-intro #stat-xp-bar-fill {
+  animation: homeIntroXpFill 700ms cubic-bezier(0.16, 1, 0.3, 1) 1220ms both;
+}
+
+/* Group 5: Heatmap Card Slide */
+body.is-home-intro .heatmap-card {
+  animation: homeIntroHeatmap 480ms cubic-bezier(0.16, 1, 0.3, 1) 1220ms both;
+}
+
+@keyframes homeIntroDialScale {
+  0% {
+    opacity: 0;
+    transform: scale3d(0.86, 0.86, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+@keyframes homeIntroDigitsSlide {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes homeIntroHeaderItem {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -12px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes homeIntroStatPop {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale3d(0.84, 0.84, 1);
+  }
+  66% {
+    opacity: 1;
+    transform: translate3d(0, -1px, 0) scale3d(1.035, 1.035, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+@keyframes homeIntroXpFill {
+  0% {
+    width: 0% !important;
+  }
+}
+
+@keyframes homeIntroHeatmap {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 /* ==========================================================================

@@ -69,7 +69,6 @@
   let homeIntroRunning = false;
   let homeIntroGeneration = 0;
   let homeIntroTimers = new Set();
-  let homeIntroAnimations = [];
   let homeIntroDialActive = false;
   let homeIntroDialRaf = null;
 
@@ -7808,43 +7807,7 @@
     } catch (e) {}
   }
 
-  function isIntroItemVisible(el) {
-    if (!el || el.classList.contains('hidden') || el.closest('.hidden')) return false;
-    const styles = getComputedStyle(el);
-    if (styles.display === 'none') return false;
-    // Note: do not test visibility here. During boot the whole app shell is
-    // visibility:hidden (inherited), but that state is removed in the same
-    // frame the intro begins. Layout boxes still exist, so getClientRects()
-    // remains the reliable "does this element occupy space?" check.
-    return (el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0);
-  }
 
-  function getHeaderIntroItems() {
-    const nodes = document.querySelectorAll(
-      '.app-header .mobile-brand, .app-header .header-preset-pill, .app-header #header-topic-pill, .app-header #btn-header-auth, .app-header #btn-profile'
-    );
-    return Array.from(nodes).filter(isIntroItemVisible);
-  }
-
-  function runIntroAnimation(element, keyframes, options) {
-    if (!element || typeof element.animate !== 'function') return null;
-    const animation = element.animate(keyframes, options);
-    homeIntroAnimations.push(animation);
-
-    const forget = () => {
-      const index = homeIntroAnimations.indexOf(animation);
-      if (index !== -1) homeIntroAnimations.splice(index, 1);
-    };
-
-    animation.finished.then(() => {
-      forget();
-      // Cleaning up a finished fill-mode animation lets normal hover and
-      // settings transitions resume with no lingering inline animation style.
-      try { animation.cancel(); } catch (e) {}
-    }).catch(forget);
-
-    return animation;
-  }
 
   function clearHomeIntroTimers() {
     homeIntroTimers.forEach((timer) => clearTimeout(timer));
@@ -7874,13 +7837,18 @@
     if (generation !== homeIntroGeneration || !homeIntroRunning) return;
 
     const targetSeconds = Math.max(0, Number(state.timer.remainingSeconds) || 0);
-    const duration = 1150;
+    const duration = 1100;
     const startedAt = performance.now();
+
+    // Back ease-out curve: overshoots the target duration slightly (~4.5%)
+    // before settling smoothly onto the exact mark.
+    const s = 1.18;
 
     const step = (now) => {
       if (generation !== homeIntroGeneration) return;
       const progress = Math.min(1, (now - startedAt) / duration);
-      const eased = 1 - Math.pow(1 - progress, 3);
+      const p = progress - 1;
+      const eased = Math.max(0, p * p * ((s + 1) * p + s) + 1);
       updateTimerRing(targetSeconds * eased, { intro: true });
 
       if (progress < 1) {
@@ -7912,18 +7880,13 @@
     homeIntroGeneration += 1;
     clearHomeIntroTimers();
 
-    homeIntroAnimations.forEach((animation) => {
-      try { animation.cancel(); } catch (e) {}
-    });
-    homeIntroAnimations = [];
-
     if (homeIntroDialRaf !== null) {
       cancelAnimationFrame(homeIntroDialRaf);
       homeIntroDialRaf = null;
     }
 
     homeIntroDialActive = false;
-    document.body.classList.remove('is-intro-dial');
+    document.body.classList.remove('is-intro-dial', 'is-home-intro');
     homeIntroRunning = false;
     document.documentElement.classList.remove('intro-aura-hidden');
 
@@ -7981,8 +7944,6 @@
   function playHomeIntro() {
     if (!state.authenticated || !state.user) return;
     if (homeIntroRunning || homeIntroPlayed) {
-      // A repeat call must never replay the sequence, but it must still not
-      // leave a loader covering the app if one was shown for a sign-in.
       hideAppLoader();
       return;
     }
@@ -8008,142 +7969,45 @@
         return;
       }
 
-      // Arm the initial visual state before the loader is removed so nothing
-      // flashes at its final position for a frame.
+      // Arm the initial dial ring at 0 so it animates when its step fires.
+      // Adding `is-home-intro` immediately kicks off the pure CSS compositor
+      // animations with their staggered group delays.
       resetHeatmapIntroReveal();
       homeIntroDialActive = true;
-      document.body.classList.add('is-intro-dial');
+      document.body.classList.add('is-intro-dial', 'is-home-intro');
       updateTimerRing(0, { intro: true });
 
-      const timeline = {
-        dialStart: 40,
-        dialDuration: 440,
-        digitsStart: 480,
-        digitsDuration: 340,
-        parallelStart: 820,
-        headerStep: 48,
-        headerDuration: 400,
-        statsStep: 115,
-        statsDuration: 460,
-        heatmapDuration: 520,
-        circleDuration: 1150,
-        auraStart: 1970
-      };
+      // Staggered Group Orchestration:
+      // Group 1: Dial Scale & Fade (CSS: 40ms - 480ms)
+      // Group 2: Dial Digits Smooth Slide Up (CSS: 440ms - 920ms)
+      // Group 3: Dial Ring Fill with Overshoot (JS: starts at 880ms)
+      scheduleHomeIntroStep(() => startHomeIntroDial(generation), 880);
 
-      // 1. First: the dial comes up with a scale + fade in, smoothly
-      const timerSvgEl = document.getElementById('timer-svg');
-      if (timerSvgEl) {
-        runIntroAnimation(timerSvgEl, [
-          { opacity: 0, transform: 'scale3d(0.85, 0.85, 1)' },
-          { opacity: 1, transform: 'scale3d(1, 1, 1)' }
-        ], {
-          duration: timeline.dialDuration,
-          delay: timeline.dialStart,
-          easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-          fill: 'both'
-        });
-      }
+      // Group 4: Header Items Drop Down (CSS: starts at 960ms)
+      // Group 5: Stats Pills Pop Overshoot (CSS: starts at 1080ms)
+      // Group 6: Heatmap Card Slide (CSS: starts at 1220ms)
+      // Heatmap cascading cells wave reveal (triggers right with heatmap card)
+      scheduleHomeIntroStep(() => replayHeatmapIntroReveal(), 1300);
 
-      // 2. Then: the number inside the dial slides in with fade in
-      const timerDigitsEl = document.getElementById('timer-digits');
-      const timerDotEl = document.getElementById('timer-state-dot');
-      [timerDigitsEl, timerDotEl].filter(Boolean).forEach((el) => {
-        runIntroAnimation(el, [
-          { opacity: 0, transform: 'translate3d(0, 16px, 0)' },
-          { opacity: 1, transform: 'translate3d(0, 0, 0)' }
-        ], {
-          duration: timeline.digitsDuration,
-          delay: timeline.digitsStart,
-          easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-          fill: 'both'
-        });
-      });
-
-      // 3. Then immediately start the dial circle animation, and as soon as it
-      // starts, everything else starts simultaneously in parallel:
-      // - Dial circle fill animation
-      scheduleHomeIntroStep(() => startHomeIntroDial(generation), timeline.parallelStart);
-
-      // - Header pills coming down one by one
-      const headerItems = getHeaderIntroItems();
-      headerItems.forEach((el, index) => {
-        runIntroAnimation(el, [
-          { opacity: 0, transform: 'translate3d(0, -14px, 0)' },
-          { opacity: 1, transform: 'translate3d(0, 0, 0)' }
-        ], {
-          duration: timeline.headerDuration,
-          delay: timeline.parallelStart + index * timeline.headerStep,
-          easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-          fill: 'both'
-        });
-      });
-
-      // - Parallel stats pills coming up one by one with pop
-      const statItems = [
-        document.getElementById('stat-item-xp'),
-        document.getElementById('stat-item-streak') || document.getElementById('stat-streak')?.closest('.stat-item'),
-        document.getElementById('stat-item-today'),
-        document.getElementById('stat-item-total')
-      ].filter(isIntroItemVisible);
-
-      statItems.forEach((el, index) => {
-        runIntroAnimation(el, [
-          { opacity: 0, transform: 'translate3d(0, 10px, 0) scale3d(0.84, 0.84, 1)' },
-          { opacity: 1, transform: 'translate3d(0, -1px, 0) scale3d(1.035, 1.035, 1)', offset: 0.66 },
-          { opacity: 1, transform: 'translate3d(0, 0, 0) scale3d(1, 1, 1)' }
-        ], {
-          duration: timeline.statsDuration,
-          delay: timeline.parallelStart + index * timeline.statsStep,
-          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-          fill: 'both'
-        });
-      });
-
-      // - XP meter fill alongside XP pill
-      const xpBarFillEl = document.getElementById('stat-xp-bar-fill');
-      if (xpBarFillEl) {
-        const targetWidth = xpBarFillEl.style.width || `${xpBarFillEl.getBoundingClientRect().width}px`;
-        runIntroAnimation(xpBarFillEl, [
-          { width: '0%' },
-          { width: targetWidth }
-        ], {
-          duration: 750,
-          delay: timeline.parallelStart + 160,
-          easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-          fill: 'both'
-        });
-      }
-
-      // - Simultaneously the heatmap card and cascading cells
-      const heatmapCard = document.querySelector('.heatmap-card');
-      if (heatmapCard) {
-        runIntroAnimation(heatmapCard, [
-          { opacity: 0, transform: 'translate3d(0, 12px, 0)' },
-          { opacity: 1, transform: 'translate3d(0, 0, 0)' }
-        ], {
-          duration: timeline.heatmapDuration,
-          delay: timeline.parallelStart,
-          easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-          fill: 'both'
-        });
-      }
-      scheduleHomeIntroStep(() => replayHeatmapIntroReveal(), timeline.parallelStart + 70);
-
-      // 4. Finally: ambient aura layer fades in softly
+      // Group 7: Ambient Fluid Aura Soft Fade-in (as all groups land)
       scheduleHomeIntroStep(() => {
         if (generation !== homeIntroGeneration) return;
         document.documentElement.classList.remove('intro-aura-hidden');
         if (state.auraEnabled !== false) matrixStreamEngine?.start();
-      }, timeline.auraStart);
+      }, 1950);
 
+      // Cleanup: remove intro class once pure CSS animations complete
       scheduleHomeIntroStep(() => {
-        if (generation === homeIntroGeneration) homeIntroRunning = false;
-      }, timeline.auraStart + 1350);
+        if (generation === homeIntroGeneration) {
+          document.body.classList.remove('is-home-intro');
+          homeIntroRunning = false;
+        }
+      }, 2700);
     } catch (err) {
       console.warn('StudyArc: Home intro could not complete, revealing final state:', err);
       cancelHomeIntro();
     } finally {
-      // The loader must always disappear, even if one intro animation failed.
+      // The loader must always disappear, even if an unexpected exception occurs.
       hideAppLoader();
     }
   }
