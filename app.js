@@ -1565,9 +1565,9 @@
 
       this.isRunning = false;
       this.isHolding = false;
-      this.baseRate = 0.45;
-      this.currentRate = 0.45;
-      this.targetRate = 0.45;
+      this.baseRate = 0.5;
+      this.currentRate = 0.5;
+      this.targetRate = 0.5;
       this.rampRaf = null;
       this.rampLastTime = 0;
       this.animations = [];
@@ -1606,9 +1606,10 @@
       const amber = ['#2E1F09', '#4D330D', '#8C5C15', '#E5A958'];
 
       // Two depths give parallax without multiplying composited layers.
+      // More tiles per viewport = a denser stream at the same GPU layer cost.
       const layers = [
-        { duration: 26, count: isMobile ? 8 : 9, minW: 5, maxW: 8, opacity: 0.55 },
-        { duration: 16, count: isMobile ? 8 : 11, minW: 7.5, maxW: 12, opacity: 0.85 }
+        { duration: 20, count: isMobile ? 14 : 18, minW: 5, maxW: 8, opacity: 0.55 },
+        { duration: 12, count: isMobile ? 20 : 26, minW: 7.5, maxW: 12, opacity: 0.85 }
       ];
 
       layers.forEach((spec) => {
@@ -1701,7 +1702,7 @@
     }
 
     setTimerStatus(status) {
-      this.baseRate = status === 'running' ? 1 : 0.45;
+      this.baseRate = status === 'running' ? 1.1 : 0.5;
       this.container?.classList.toggle('is-amber', status !== 'running');
 
       if (this.isHolding) return;
@@ -1721,8 +1722,8 @@
           this.container?.classList.add('is-boosting');
         }
         const p = Math.min(1, Math.max(0, progress));
-        // Starts with a real, visible boost and climbs quickly to ~12.5x.
-        this.targetRate = 2.4 + Math.pow(p, 0.72) * 10.1;
+        // Starts with a real, visible boost and climbs quickly to ~16x.
+        this.targetRate = 2.8 + Math.pow(p, 0.68) * 13.2;
         this.startRamp();
       } else if (this.isHolding) {
         this.isHolding = false;
