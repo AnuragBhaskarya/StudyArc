@@ -1204,29 +1204,11 @@
 
   // =========================================================================
   // HEADER QUICK-DURATION PRESETS (25m / 1h / 2h / 3h)
-  // Clicking a pill glides the rim & bead to the new duration, then opens
-  // the normal task-prompt dialog so a session can be named and started.
+  // Clicking a pill applies the duration and immediately opens the normal
+  // task-prompt dialog so a session can be named and started.
   // =========================================================================
-  const TIMER_PRESET_ANIM_MS = 480;
-  let presetAnimationRaf = null;
-  let presetAnimationToken = 0;
-
   function isTimerPresetLocked() {
     return Boolean(state.activeTaskName) || state.timer.status === 'running' || state.timer.status === 'paused';
-  }
-
-  function cancelTimerPresetAnimation() {
-    presetAnimationToken += 1;
-    document.body.classList.remove('is-preset-animating');
-
-    if (presetAnimationRaf === null) return false;
-
-    cancelAnimationFrame(presetAnimationRaf);
-    presetAnimationRaf = null;
-
-    // Settle the rim & digits on the last committed state
-    renderTimerDisplay(state.timer.remainingSeconds, { duration: 320 });
-    return true;
   }
 
   function updateTimerPresetUI() {
@@ -1251,10 +1233,6 @@
     const target = Math.max(60, Math.min(MAX_TIMER_SECONDS, Math.round(targetSeconds)));
     if (!target) return;
 
-    cancelTimerPresetAnimation();
-
-    const startSeconds = Math.max(0, Number(state.timer.remainingSeconds) || 0);
-
     state.timer.targetSeconds = target;
     state.timer.remainingSeconds = target;
     state.timer.anchorRemainingSeconds = target;
@@ -1267,43 +1245,13 @@
 
     const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    if (prefersReducedMotion || Math.abs(target - startSeconds) < 1) {
-      updateDigitalDisplay(target);
-      updateTimerRing(target);
-      openTaskPromptDialog();
-      return;
-    }
-
-    // Roll the digits toward the new duration while the rim & bead sweep across
-    updateDigitalDisplay(target);
-
-    const token = ++presetAnimationToken;
-    const startTime = performance.now();
-    const delta = target - startSeconds;
-
-    document.body.classList.add('is-preset-animating');
-
-    const stepPresetAnimation = (now) => {
-      if (token !== presetAnimationToken) return;
-
-      const progress = Math.min(1, (now - startTime) / TIMER_PRESET_ANIM_MS);
-      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-
-      updateTimerRing(startSeconds + delta * eased);
-
-      if (progress >= 1) {
-        presetAnimationRaf = null;
-        document.body.classList.remove('is-preset-animating');
-        updateTimerRing(target);
-        updateDigitalDisplay(target);
-        openTaskPromptDialog();
-        return;
-      }
-
-      presetAnimationRaf = requestAnimationFrame(stepPresetAnimation);
-    };
-
-    presetAnimationRaf = requestAnimationFrame(stepPresetAnimation);
+    // Commit the visual duration immediately. The header preset must open the
+    // task prompt inside the original tap: iOS only raises the on-screen
+    // keyboard for focus() that happens in the same user gesture. The old
+    // 480ms rim glide pushed openTaskPromptDialog() outside that window.
+    updateDigitalDisplay(target, prefersReducedMotion);
+    updateTimerRing(target);
+    openTaskPromptDialog();
   }
 
   function initHeaderPresets() {
@@ -2011,9 +1959,9 @@
   }
 
   function renderTimer() {
-    // While a preset glide, hold drain, or zero-hold reset is playing, other
-    // render paths must not snap the display before the animation finishes.
-    if (presetAnimationRaf === null && !resetVisualActive && !isCenterPadHolding) {
+    // While a hold drain or zero-hold reset is playing, other render paths
+    // must not snap the display before the animation finishes.
+    if (!resetVisualActive && !isCenterPadHolding) {
       renderTimerDisplay(state.timer.remainingSeconds);
     }
 
@@ -2122,7 +2070,7 @@
   }
 
   function renderTimerTick() {
-    if (presetAnimationRaf === null && !resetVisualActive && !isCenterPadHolding) {
+    if (!resetVisualActive && !isCenterPadHolding) {
       renderTimerDisplay(state.timer.remainingSeconds);
     }
     updateTodayLiveStat();
@@ -2492,9 +2440,6 @@
         return;
       }
 
-      // A preset glide must yield cleanly to manual bead adjustments
-      cancelTimerPresetAnimation();
-
       isDragging = true;
       document.body.classList.add('is-dragging');
       beadGroup.classList.add('dragging');
@@ -2669,7 +2614,6 @@
     pad.addEventListener('pointerdown', (e) => {
       if (e.button && e.button !== 0) return; // Only primary mouse button or touch
       if (resetVisualActive) return;
-      cancelTimerPresetAnimation();
       isPointerDown = true;
       isDraining = false;
       holdCompleted = false;
@@ -2768,9 +2712,6 @@
     const durationPill = document.getElementById('task-prompt-duration');
     const chipsContainer = document.getElementById('task-suggestions-chips');
     if (!modal) return;
-
-    // Any in-flight preset glide is already committed to state; settle it before prompting
-    cancelTimerPresetAnimation();
 
     // Deselect any active text selection across document
     if (window.getSelection) {
@@ -5026,7 +4967,6 @@
   // =========================================================================
   // SESSIONS HISTORY & ARCHIVE CHRONICLE MODAL DIALOG
   // =========================================================================
-  let historyLenis = null;
   let activeHistoryCleanup = null;
   let activeHistoryScroller = null;
 
@@ -5043,18 +4983,7 @@
       activeHistoryCleanup = null;
     }
 
-    // 2. Halt and reset smooth scrolling (Lenis) momentum immediately
-    if (typeof historyLenis !== 'undefined' && historyLenis) {
-      try {
-        historyLenis.stop();
-        historyLenis.scrollTo(0, { immediate: true, force: true });
-        historyLenis.scroll = 0;
-        historyLenis.targetScroll = 0;
-        historyLenis.velocity = 0;
-      } catch (e) {}
-    }
-
-    // 3. Reset DOM container scroll positions
+    // 2. Reset DOM container scroll positions
     if (feedList) {
       feedList.scrollTop = 0;
       feedList.scrollLeft = 0;
@@ -5227,23 +5156,15 @@
 
       this.rafId = null;
       this.onScroll = this.onScroll.bind(this);
+      // Native scrolling only: the feed is a standard overflow container, so
+      // wheel/touch input is never intercepted by (or dependent on) Lenis.
       this.container.addEventListener('scroll', this.onScroll, { passive: true });
-
-      if (typeof historyLenis !== 'undefined' && historyLenis) {
-        this.lenisHandler = () => {
-          this.updateWindow(false);
-        };
-        historyLenis.on('scroll', this.lenisHandler);
-      }
 
       this.updateWindow(true);
     }
 
     destroy() {
       this.container.removeEventListener('scroll', this.onScroll);
-      if (typeof historyLenis !== 'undefined' && historyLenis && this.lenisHandler) {
-        try { historyLenis.off('scroll', this.lenisHandler); } catch (e) {}
-      }
       if (this.pinnedHeader && this.pinnedHeaderClickHandler) {
         this.pinnedHeader.removeEventListener('click', this.pinnedHeaderClickHandler);
       }
@@ -5974,18 +5895,8 @@
       activeSelectedDate = targetDate;
       const targetOffset = activeHistoryScroller.itemOffsets[targetIdx];
 
-      if (typeof historyLenis !== 'undefined' && historyLenis) {
-        historyLenis.scrollTo(targetOffset, {
-          duration: 0.85,
-          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-          onComplete: () => {
-            flashDateHeader(targetDate);
-          }
-        });
-      } else {
-        activeHistoryScroller.container.scrollTo({ top: targetOffset, behavior: 'smooth' });
-        setTimeout(() => flashDateHeader(targetDate), 400);
-      }
+      activeHistoryScroller.container.scrollTo({ top: targetOffset, behavior: 'smooth' });
+      setTimeout(() => flashDateHeader(targetDate), 400);
     }
   }
 
@@ -6236,9 +6147,6 @@
         const dialog = document.getElementById('sessions-history-dialog');
         if (dialog && dialog.open && (differs || !activeHistoryScroller)) {
           renderHistoryDialogDOM();
-          if (typeof historyLenis !== 'undefined' && historyLenis) {
-            historyLenis.resize();
-          }
         }
       }
     } catch (e) {
@@ -6290,7 +6198,6 @@
     }
 
     globalLenis?.stop();
-    initShellLenis();
 
     // 2. Reset container and render fresh while dialog is open and visible
     resetHistoryContainer(true);
@@ -6310,13 +6217,6 @@
         `;
       }
     }
-
-    if (typeof historyLenis !== 'undefined' && historyLenis) {
-      historyLenis.scrollTo(0, { immediate: true, force: true });
-      historyLenis.resize();
-      historyLenis.start();
-    }
-    setTimeout(() => { historyLenis?.resize(); }, 40);
 
     // 3. The initial /api/state payload already contains the archive, so the
     // modal never waits on the network. Only refresh stale data in idle time.
@@ -6501,21 +6401,6 @@
       animateInitial: animateEntrance || !hadActiveScroller,
       initialScrollTop: previousScrollTop
     });
-
-    initShellLenis();
-    if (typeof historyLenis !== 'undefined' && historyLenis) {
-      historyLenis.resize();
-      // Re-sync Lenis with the restored native scroll offset, otherwise its
-      // internal momentum state can snap the feed back to a stale position.
-      const restoredScrollTop = feedList.scrollTop || 0;
-      historyLenis.scroll = restoredScrollTop;
-      historyLenis.targetScroll = restoredScrollTop;
-      historyLenis.velocity = 0;
-      historyLenis.start();
-    }
-    setTimeout(() => {
-      historyLenis?.resize();
-    }, 40);
   }
 
   function refreshOpenHistoryDialog(options = {}) {
@@ -6986,9 +6871,11 @@
       lastTouchEndTime = now;
     }, { passive: false });
 
-    // 4. Prevent vertical document scroll, bounce, and rubberbanding on mobile
+    // 4. Prevent vertical document scroll, bounce, and rubberbanding on mobile.
+    // Any open dialog exposes native touch scrolling for its inner feeds
+    // (session history, day detail, levels, calendar) instead of blocking it.
     document.addEventListener('touchmove', (e) => {
-      if (e.target && e.target.closest && e.target.closest('#view-settings, .panel-inner, .day-detail-dialog, .heatmap-scroll-area')) {
+      if (e.target && e.target.closest && e.target.closest('dialog[open], #view-settings, .panel-inner, .heatmap-scroll-area')) {
         return;
       }
       e.preventDefault();
@@ -7550,13 +7437,13 @@
   let dayLenis = null;
 
   // Dialog Lenis instances share a single RAF driver that only runs while a
-  // dialog is actually open. Previously each of the three instances kept its
-  // own autoRaf loop alive forever, even with every dialog closed.
+  // dialog is actually open. Previously each of the instances kept its own
+  // autoRaf loop alive forever, even with every dialog closed.
   let dialogLenisRafId = null;
 
   function startDialogLenisLoop() {
     if (dialogLenisRafId !== null) return;
-    [levelsLenis, dayLenis, typeof historyLenis !== 'undefined' ? historyLenis : null]
+    [levelsLenis, dayLenis]
       .forEach((lenis) => { if (lenis) lenis.time = 0; });
 
     const tick = (timestamp) => {
@@ -7566,7 +7453,6 @@
       }
       if (levelsLenis) levelsLenis.raf(timestamp);
       if (dayLenis) dayLenis.raf(timestamp);
-      if (typeof historyLenis !== 'undefined' && historyLenis) historyLenis.raf(timestamp);
       dialogLenisRafId = requestAnimationFrame(tick);
     };
     dialogLenisRafId = requestAnimationFrame(tick);
@@ -7658,24 +7544,9 @@
       }
     }
 
-    const historyFeed = document.getElementById('history-feed-list');
-    if (historyFeed && !historyLenis) {
-      try {
-        historyLenis = new Lenis({
-          wrapper: historyFeed,
-          content: historyFeed,
-          eventsTarget: historyFeed,
-          autoRaf: false,
-          autoResize: false,
-          smoothWheel: true,
-          duration: 0.85,
-          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        });
-        window.historyLenis = historyLenis;
-      } catch (e) {
-        console.warn('StudyArc: Error initializing historyLenis:', e);
-      }
-    }
+    // The sessions-history feed intentionally has no Lenis instance. It is a
+    // native overflow container driven by wheel/touch, which keeps scrolling
+    // reliable even when the shared dialog RAF loop is stopped.
   }
 
   // =========================================================================

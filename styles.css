@@ -578,7 +578,6 @@ html.unauthenticated-gate .header-presets {
 
 .is-dragging .timer-arc,
 .is-holding .timer-arc,
-body.is-preset-animating .timer-arc,
 body.is-reset-returning .timer-arc {
   transition: none !important;
 }
@@ -4709,6 +4708,8 @@ input:checked + .switch-slider:before {
   max-height: 520px;
   padding: 4px 4px 8px 4px !important;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
   transform: translateZ(0);
   will-change: transform;
 }
