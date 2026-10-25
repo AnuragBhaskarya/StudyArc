@@ -321,7 +321,7 @@ def get_hot_timer_state(user_id):
         USER_TIMER_HOT_CACHE[user_id] = state
         return dict(state)
 
-def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=None, remaining_seconds=None):
+def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=None, remaining_seconds=None, origin_client_id=None):
     """
     Unified routine for all timer modifications across the entire application:
     Updates RAM state in 0.01ms, increments monotonic sequence (1, 2, 3...),
@@ -352,11 +352,18 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
             new_task = active_task_name
 
     elif action == 'pause':
-        if current.get('status') == 'running' and current.get('startedAt'):
-            elapsed = (now_ms - int(current['startedAt'])) / 1000.0
-            new_remaining = max(0, int(current.get('remainingSeconds', 5400) - elapsed))
-        elif remaining_seconds is not None:
-            new_remaining = int(remaining_seconds)
+        client_rem = int(remaining_seconds) if remaining_seconds is not None else None
+        if client_rem is not None and current.get('status') == 'running' and current.get('startedAt'):
+            server_elapsed = (now_ms - int(current['startedAt'])) / 1000.0
+            server_calc = max(0, int(current.get('remainingSeconds', 5400) - server_elapsed))
+            # Client-authoritative visual pause guard: honor client's exact visual second
+            # if within 5s network latency slack window to eliminate pause-time rollback
+            if abs(client_rem - server_calc) <= 5:
+                new_remaining = client_rem
+            else:
+                new_remaining = server_calc
+        elif client_rem is not None:
+            new_remaining = client_rem
         else:
             new_remaining = int(current.get('remainingSeconds', 5400))
         new_status = 'paused'
@@ -402,6 +409,7 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
         'sequence': new_seq,
         'version': new_seq,
         'hasCompleted': False,
+        'originClientId': origin_client_id,
         'serverTime': now_ms
     }
 
@@ -495,7 +503,8 @@ def sio_timer_action(data):
         action,
         target_seconds=data.get('target_seconds') or data.get('targetSeconds'),
         active_task_name=data.get('active_task_name') or data.get('activeTaskName'),
-        remaining_seconds=data.get('remaining_seconds') or data.get('remainingSeconds')
+        remaining_seconds=data.get('remaining_seconds') or data.get('remainingSeconds'),
+        origin_client_id=data.get('origin_client_id') or data.get('originClientId')
     )
 
 @app.route('/api/timer/live', methods=['GET'])
@@ -541,6 +550,7 @@ def timer_action_route(user_id):
     target_seconds = data.get('target_seconds') or data.get('targetSeconds')
     remaining_seconds = data.get('remaining_seconds') or data.get('remainingSeconds')
     active_task_name = data.get('active_task_name') or data.get('activeTaskName')
+    origin_client_id = data.get('origin_client_id') or data.get('originClientId')
 
     try:
         new_state = trigger_timer_update(
@@ -548,7 +558,8 @@ def timer_action_route(user_id):
             action,
             target_seconds=target_seconds,
             active_task_name=active_task_name,
-            remaining_seconds=remaining_seconds
+            remaining_seconds=remaining_seconds,
+            origin_client_id=origin_client_id
         )
         resp = jsonify({'success': True, 'timer': new_state})
         resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'

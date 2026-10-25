@@ -307,8 +307,11 @@
   // =========================================================================
 
   let sioSocket = null;
+  const myClientId = 'c_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   let serverClockOffset = 0;        // (serverTime - clientWallClock) in ms
+  let bestRtt = Infinity;           // Lowest RTT sample seen (Cristian's Algorithm)
   let lastAppliedSequence = 0;      // Monotonic server sequence counter
+  let lastRenderedSeconds = null;   // Monotonic display guard for running countdown
 
   // 1. Same-device multi-tab instantaneous 0ms sync via BroadcastChannel
   let timerBroadcastChannel = null;
@@ -362,21 +365,20 @@
 
     sioSocket.on('connect', () => {
       console.log('StudyArk: Socket.IO connected via', sioSocket.io.engine.transport.name);
-      // Measure clock offset immediately
+      // Measure clock offset immediately with spaced burst to lock in minimum RTT
       sendSocketPing();
+      setTimeout(sendSocketPing, 400);
+      setTimeout(sendSocketPing, 1000);
 
       // Socket.IO upgrades polling→websocket automatically, log it
       sioSocket.io.engine.on('upgrade', (transport) => {
         console.log('StudyArk: Transport upgraded to', transport.name);
+        sendSocketPing();
       });
     });
 
     // Server sends initial full state on connect
     sioSocket.on('timer_init', (data) => {
-      if (data && data.serverTime) {
-        const measuredOffset = data.serverTime - Date.now();
-        if (serverClockOffset === 0) serverClockOffset = measuredOffset;
-      }
       if (data && data.timer) {
         applyLiveServerTimer(data.timer, false);
         broadcastLocalTimer(data.timer);
@@ -385,10 +387,6 @@
 
     // Real-time timer updates from any device
     sioSocket.on('timer_update', (data) => {
-      if (data && data.serverTime) {
-        const measuredOffset = data.serverTime - Date.now();
-        if (serverClockOffset === 0) serverClockOffset = measuredOffset;
-      }
       if (data && data.timer) {
         applyLiveServerTimer(data.timer, false);
         broadcastLocalTimer(data.timer);
@@ -404,15 +402,20 @@
       applyAuraPreference();
     });
 
-    // Clock offset measurement response
+    // Clock offset measurement response (Cristian's algorithm with min-RTT filter)
     sioSocket.on('pong_server', (data) => {
       if (data && data.clientTime && data.serverTime) {
         const now = Date.now();
         const rtt = Math.max(1, now - data.clientTime);
         const measuredOffset = data.serverTime - (data.clientTime + rtt / 2);
-        serverClockOffset = (serverClockOffset === 0)
-          ? measuredOffset
-          : (0.75 * serverClockOffset + 0.25 * measuredOffset);
+
+        // Samples with lower RTT experience less network queuing jitter and deliver mathematically superior precision
+        if (rtt <= bestRtt || serverClockOffset === 0) {
+          bestRtt = rtt;
+          serverClockOffset = measuredOffset;
+        } else if (rtt < bestRtt * 1.5) {
+          serverClockOffset = 0.85 * serverClockOffset + 0.15 * measuredOffset;
+        }
       }
     });
 
@@ -454,6 +457,7 @@
    */
   function recalculateRemainingSeconds() {
     if (state.timer.status !== 'running') {
+      lastRenderedSeconds = null;
       return state.timer.remainingSeconds;
     }
     const anchorServerTime = state.timer.anchorServerTime;
@@ -465,7 +469,15 @@
 
     const estimatedServerNow = Date.now() + serverClockOffset;
     const elapsed = Math.max(0, (estimatedServerNow - anchorServerTime) / 1000);
-    const calculated = Math.max(0, anchorRemaining - elapsed);
+    let calculated = Math.max(0, anchorRemaining - elapsed);
+
+    // Monotonic display guard: during running countdown, the timer can NEVER tick upwards due to network jitter
+    if (lastRenderedSeconds !== null && calculated > lastRenderedSeconds) {
+      calculated = lastRenderedSeconds;
+    } else {
+      lastRenderedSeconds = calculated;
+    }
+
     state.timer.remainingSeconds = calculated;
     return calculated;
   }
@@ -486,6 +498,13 @@
 
     if (seq > lastAppliedSequence) {
       lastAppliedSequence = seq;
+    }
+
+    // Echo suppression for the originating client:
+    // If this update was initiated by this client instance, our local state is already authoritative.
+    // Overwriting it with a network-delayed echo causes jitter and time-travel jumps.
+    if (!isDirectResponse && serverTimer.originClientId && serverTimer.originClientId === myClientId) {
+      return;
     }
 
     // The reset echo arrives while the local 0:00 -> target transition is
@@ -616,6 +635,7 @@
       target_seconds: state.timer.targetSeconds,
       remaining_seconds: Math.round(state.timer.remainingSeconds),
       active_task_name: state.activeTaskName,
+      origin_client_id: myClientId,
       ...extraPayload
     };
 
@@ -626,7 +646,8 @@
       remainingSeconds: Math.round(state.timer.remainingSeconds),
       activeTaskName: state.activeTaskName,
       startedAt: state.timer.anchorServerTime || (Date.now() + serverClockOffset),
-      sequence: lastAppliedSequence + 1
+      sequence: lastAppliedSequence + 1,
+      originClientId: myClientId
     });
 
     // 1. Instant Socket.IO emit (<1ms)
@@ -2263,6 +2284,7 @@
   }
 
   function startTimer() {
+    lastRenderedSeconds = null;
     initAudio();
     playChime('start');
 
@@ -2284,6 +2306,7 @@
   }
 
   function resumeTimer() {
+    lastRenderedSeconds = null;
     initAudio();
     playChime('start');
 
@@ -2305,6 +2328,7 @@
   }
 
   function pauseTimer() {
+    lastRenderedSeconds = null;
     state.timer.status = 'paused';
     state.timer.anchorServerTime = null;
     state.timer.lastTickTime = null;
