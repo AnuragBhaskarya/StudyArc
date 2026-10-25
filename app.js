@@ -1204,11 +1204,83 @@
 
   // =========================================================================
   // HEADER QUICK-DURATION PRESETS (25m / 1h / 2h / 3h)
-  // Clicking a pill applies the duration and immediately opens the normal
-  // task-prompt dialog so a session can be named and started.
+  // Clicking a pill glides the rim & bead to the new duration, then opens
+  // the normal task-prompt dialog so a session can be named and started.
   // =========================================================================
+  const TIMER_PRESET_ANIM_MS = 480;
+  let presetAnimationRaf = null;
+  let presetAnimationToken = 0;
+  let pendingPromptKeyboardInput = null;
+
+  function isIosLikeDevice() {
+    const ua = navigator.userAgent || '';
+    if (/iPad|iPhone|iPod/.test(ua)) return true;
+    // iPadOS 13+ reports itself as desktop Mac but reports touch points.
+    return navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1;
+  }
+
+  // iOS only raises the keyboard for focus() that happens inside the original
+  // tap. The preset animation delays the prompt by 480ms, so prime the
+  // keyboard synchronously and keep it up until the real prompt input takes
+  // focus. The keyboard therefore starts rising during the rim glide and is
+  // fully up by the time the prompt appears.
+  function primePromptKeyboard() {
+    if (pendingPromptKeyboardInput) {
+      try {
+        pendingPromptKeyboardInput.focus({ preventScroll: true });
+      } catch (_) {
+        pendingPromptKeyboardInput.focus();
+      }
+      return;
+    }
+    if (!isIosLikeDevice()) return;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.setAttribute('aria-hidden', 'true');
+    input.setAttribute('tabindex', '-1');
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('autocorrect', 'off');
+    input.setAttribute('autocapitalize', 'off');
+    input.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;padding:0;margin:0;border:0;outline:none;opacity:0;font-size:16px;caret-color:transparent;pointer-events:none;';
+    document.body.appendChild(input);
+    pendingPromptKeyboardInput = input;
+
+    try {
+      input.focus({ preventScroll: true });
+    } catch (_) {
+      input.focus();
+    }
+  }
+
+  function dismissPendingPromptKeyboard(blur) {
+    const input = pendingPromptKeyboardInput;
+    if (!input) return;
+    pendingPromptKeyboardInput = null;
+    if (blur) {
+      try { input.blur(); } catch (_) {}
+    }
+    // Let the real prompt input finish taking focus before removing the primer.
+    setTimeout(() => input.remove(), 400);
+  }
+
   function isTimerPresetLocked() {
     return Boolean(state.activeTaskName) || state.timer.status === 'running' || state.timer.status === 'paused';
+  }
+
+  function cancelTimerPresetAnimation(dismissKeyboard = true) {
+    presetAnimationToken += 1;
+    document.body.classList.remove('is-preset-animating');
+    if (dismissKeyboard) dismissPendingPromptKeyboard(true);
+
+    if (presetAnimationRaf === null) return false;
+
+    cancelAnimationFrame(presetAnimationRaf);
+    presetAnimationRaf = null;
+
+    // Settle the rim & digits on the last committed state
+    renderTimerDisplay(state.timer.remainingSeconds, { duration: 320 });
+    return true;
   }
 
   function updateTimerPresetUI() {
@@ -1233,6 +1305,10 @@
     const target = Math.max(60, Math.min(MAX_TIMER_SECONDS, Math.round(targetSeconds)));
     if (!target) return;
 
+    cancelTimerPresetAnimation(false);
+
+    const startSeconds = Math.max(0, Number(state.timer.remainingSeconds) || 0);
+
     state.timer.targetSeconds = target;
     state.timer.remainingSeconds = target;
     state.timer.anchorRemainingSeconds = target;
@@ -1245,13 +1321,48 @@
 
     const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Commit the visual duration immediately. The header preset must open the
-    // task prompt inside the original tap: iOS only raises the on-screen
-    // keyboard for focus() that happens in the same user gesture. The old
-    // 480ms rim glide pushed openTaskPromptDialog() outside that window.
-    updateDigitalDisplay(target, prefersReducedMotion);
-    updateTimerRing(target);
-    openTaskPromptDialog();
+    if (prefersReducedMotion || Math.abs(target - startSeconds) < 1) {
+      updateDigitalDisplay(target);
+      updateTimerRing(target);
+      openTaskPromptDialog();
+      return;
+    }
+
+    // iOS will only raise the keyboard for focus() inside the tap, so open the
+    // keyboard now and let it settle while the rim glides. The task prompt then
+    // opens when the animation lands, with the keyboard already up.
+    primePromptKeyboard();
+
+    // Roll the digits toward the new duration while the rim & bead sweep across
+    updateDigitalDisplay(target);
+
+    const token = ++presetAnimationToken;
+    const startTime = performance.now();
+    const delta = target - startSeconds;
+
+    document.body.classList.add('is-preset-animating');
+
+    const stepPresetAnimation = (now) => {
+      if (token !== presetAnimationToken) return;
+
+      const progress = Math.min(1, (now - startTime) / TIMER_PRESET_ANIM_MS);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+
+      updateTimerRing(startSeconds + delta * eased);
+
+      if (progress >= 1) {
+        presetAnimationRaf = null;
+        document.body.classList.remove('is-preset-animating');
+        updateTimerRing(target);
+        updateDigitalDisplay(target);
+        openTaskPromptDialog();
+        return;
+      }
+
+      presetAnimationRaf = requestAnimationFrame(stepPresetAnimation);
+    };
+
+    presetAnimationRaf = requestAnimationFrame(stepPresetAnimation);
   }
 
   function initHeaderPresets() {
@@ -1959,9 +2070,9 @@
   }
 
   function renderTimer() {
-    // While a hold drain or zero-hold reset is playing, other render paths
-    // must not snap the display before the animation finishes.
-    if (!resetVisualActive && !isCenterPadHolding) {
+    // While a preset glide, hold drain, or zero-hold reset is playing, other
+    // render paths must not snap the display before the animation finishes.
+    if (presetAnimationRaf === null && !resetVisualActive && !isCenterPadHolding) {
       renderTimerDisplay(state.timer.remainingSeconds);
     }
 
@@ -2070,7 +2181,7 @@
   }
 
   function renderTimerTick() {
-    if (!resetVisualActive && !isCenterPadHolding) {
+    if (presetAnimationRaf === null && !resetVisualActive && !isCenterPadHolding) {
       renderTimerDisplay(state.timer.remainingSeconds);
     }
     updateTodayLiveStat();
@@ -2440,6 +2551,9 @@
         return;
       }
 
+      // A preset glide must yield cleanly to manual bead adjustments
+      cancelTimerPresetAnimation();
+
       isDragging = true;
       document.body.classList.add('is-dragging');
       beadGroup.classList.add('dragging');
@@ -2614,6 +2728,7 @@
     pad.addEventListener('pointerdown', (e) => {
       if (e.button && e.button !== 0) return; // Only primary mouse button or touch
       if (resetVisualActive) return;
+      cancelTimerPresetAnimation();
       isPointerDown = true;
       isDraining = false;
       holdCompleted = false;
@@ -2796,6 +2911,8 @@
       requestAnimationFrame(() => {
         input.focus();
       });
+      // The real input now owns focus; let the iOS keyboard primer go.
+      dismissPendingPromptKeyboard(false);
     }
   }
 

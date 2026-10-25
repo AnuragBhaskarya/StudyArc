@@ -578,6 +578,7 @@ html.unauthenticated-gate .header-presets {
 
 .is-dragging .timer-arc,
 .is-holding .timer-arc,
+body.is-preset-animating .timer-arc,
 body.is-reset-returning .timer-arc {
   transition: none !important;
 }
