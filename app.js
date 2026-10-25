@@ -2766,6 +2766,7 @@
       if (e.button && e.button !== 0) return; // Only primary mouse button or touch
       if (resetVisualActive) return;
       cancelTimerPresetAnimation();
+      if (homeIntroDialActive) finishHomeIntroDial();
       isPointerDown = true;
       isDraining = false;
       holdCompleted = false;
@@ -8015,19 +8016,55 @@
       updateTimerRing(0, { intro: true });
 
       const timeline = {
-        headerStart: 320,
-        headerStep: 50,
-        headerDuration: 430,
-        dialStart: 390,
-        statsStart: 1240,
-        statsStep: 145,
-        statsDuration: 480,
-        heatmapStart: 2040,
-        heatmapDuration: 680,
-        heatmapCells: 2120,
-        auraStart: 2760
+        dialStart: 40,
+        dialDuration: 440,
+        digitsStart: 480,
+        digitsDuration: 340,
+        parallelStart: 820,
+        headerStep: 48,
+        headerDuration: 400,
+        statsStep: 115,
+        statsDuration: 460,
+        heatmapDuration: 520,
+        circleDuration: 1150,
+        auraStart: 1970
       };
 
+      // 1. First: the dial comes up with a scale + fade in, smoothly
+      const timerSvgEl = document.getElementById('timer-svg');
+      if (timerSvgEl) {
+        runIntroAnimation(timerSvgEl, [
+          { opacity: 0, transform: 'scale3d(0.85, 0.85, 1)' },
+          { opacity: 1, transform: 'scale3d(1, 1, 1)' }
+        ], {
+          duration: timeline.dialDuration,
+          delay: timeline.dialStart,
+          easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+          fill: 'both'
+        });
+      }
+
+      // 2. Then: the number inside the dial slides in with fade in
+      const timerDigitsEl = document.getElementById('timer-digits');
+      const timerDotEl = document.getElementById('timer-state-dot');
+      [timerDigitsEl, timerDotEl].filter(Boolean).forEach((el) => {
+        runIntroAnimation(el, [
+          { opacity: 0, transform: 'translate3d(0, 16px, 0)' },
+          { opacity: 1, transform: 'translate3d(0, 0, 0)' }
+        ], {
+          duration: timeline.digitsDuration,
+          delay: timeline.digitsStart,
+          easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+          fill: 'both'
+        });
+      });
+
+      // 3. Then immediately start the dial circle animation, and as soon as it
+      // starts, everything else starts simultaneously in parallel:
+      // - Dial circle fill animation
+      scheduleHomeIntroStep(() => startHomeIntroDial(generation), timeline.parallelStart);
+
+      // - Header pills coming down one by one
       const headerItems = getHeaderIntroItems();
       headerItems.forEach((el, index) => {
         runIntroAnimation(el, [
@@ -8035,12 +8072,13 @@
           { opacity: 1, transform: 'translate3d(0, 0, 0)' }
         ], {
           duration: timeline.headerDuration,
-          delay: timeline.headerStart + index * timeline.headerStep,
+          delay: timeline.parallelStart + index * timeline.headerStep,
           easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
           fill: 'both'
         });
       });
 
+      // - Parallel stats pills coming up one by one with pop
       const statItems = [
         document.getElementById('stat-item-xp'),
         document.getElementById('stat-item-streak') || document.getElementById('stat-streak')?.closest('.stat-item'),
@@ -8055,13 +8093,13 @@
           { opacity: 1, transform: 'translate3d(0, 0, 0) scale3d(1, 1, 1)' }
         ], {
           duration: timeline.statsDuration,
-          delay: timeline.statsStart + index * timeline.statsStep,
+          delay: timeline.parallelStart + index * timeline.statsStep,
           easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
           fill: 'both'
         });
       });
 
-      // Fill the XP meter with the XP pill that owns it.
+      // - XP meter fill alongside XP pill
       const xpBarFillEl = document.getElementById('stat-xp-bar-fill');
       if (xpBarFillEl) {
         const targetWidth = xpBarFillEl.style.width || `${xpBarFillEl.getBoundingClientRect().width}px`;
@@ -8069,36 +8107,38 @@
           { width: '0%' },
           { width: targetWidth }
         ], {
-          duration: 780,
-          delay: timeline.statsStart + 180,
+          duration: 750,
+          delay: timeline.parallelStart + 160,
           easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
           fill: 'both'
         });
       }
 
+      // - Simultaneously the heatmap card and cascading cells
       const heatmapCard = document.querySelector('.heatmap-card');
-      runIntroAnimation(heatmapCard, [
-        { opacity: 0, transform: 'translate3d(0, 10px, 0)' },
-        { opacity: 1, transform: 'translate3d(0, 0, 0)' }
-      ], {
-        duration: timeline.heatmapDuration,
-        delay: timeline.heatmapStart,
-        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-        fill: 'both'
-      });
+      if (heatmapCard) {
+        runIntroAnimation(heatmapCard, [
+          { opacity: 0, transform: 'translate3d(0, 12px, 0)' },
+          { opacity: 1, transform: 'translate3d(0, 0, 0)' }
+        ], {
+          duration: timeline.heatmapDuration,
+          delay: timeline.parallelStart,
+          easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+          fill: 'both'
+        });
+      }
+      scheduleHomeIntroStep(() => replayHeatmapIntroReveal(), timeline.parallelStart + 70);
 
-      scheduleHomeIntroStep(() => startHomeIntroDial(generation), timeline.dialStart);
-      scheduleHomeIntroStep(() => replayHeatmapIntroReveal(), timeline.heatmapCells);
+      // 4. Finally: ambient aura layer fades in softly
       scheduleHomeIntroStep(() => {
         if (generation !== homeIntroGeneration) return;
-        // Final beat: let the ambient tile field fade up only after every
-        // dashboard element has finished arriving.
         document.documentElement.classList.remove('intro-aura-hidden');
         if (state.auraEnabled !== false) matrixStreamEngine?.start();
       }, timeline.auraStart);
+
       scheduleHomeIntroStep(() => {
         if (generation === homeIntroGeneration) homeIntroRunning = false;
-      }, timeline.auraStart + 1400);
+      }, timeline.auraStart + 1350);
     } catch (err) {
       console.warn('StudyArc: Home intro could not complete, revealing final state:', err);
       cancelHomeIntro();

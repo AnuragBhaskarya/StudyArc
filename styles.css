@@ -716,6 +716,7 @@ html.unauthenticated-gate .header-presets {
   -webkit-user-select: none !important;
   user-select: none !important;
   pointer-events: none; /* Let transparent SVG bounds pass clicks through to elements below */
+  transform-origin: center;
 }
 
 .timer-bead-group {
