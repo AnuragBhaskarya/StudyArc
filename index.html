@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=12.20">
+  <link rel="stylesheet" href="styles.css?v=12.21">
   <script>
     (function () {
       try {
@@ -86,12 +86,22 @@
       
       <!-- TOP HEADER (Desktop Avatar / Mobile Branding & Top Bar) -->
       <header class="app-header">
-        <div class="mobile-brand" id="brand-home" title="StudyArc • Focus">
-          <svg class="brand-leaf" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M11.5 20.5A7.5 7.5 0 0 1 10.2 5.6C16.3 4.4 17.9 3.8 20 1.2c1.1 2.1 2.1 4.5 2.1 8.6 0 5.9-5.1 10.7-10.6 10.7Z" fill="currentColor"/>
-            <path d="M1.8 21.6c0-3.2 2-5.7 5.4-6.4 2.6-.5 5.3-2.1 6.3-3.2" stroke="#080B0A" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-          <span class="brand-text">StudyArc</span>
+        <div class="header-left">
+          <div class="mobile-brand" id="brand-home" title="StudyArc • Focus">
+            <svg class="brand-leaf" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11.5 20.5A7.5 7.5 0 0 1 10.2 5.6C16.3 4.4 17.9 3.8 20 1.2c1.1 2.1 2.1 4.5 2.1 8.6 0 5.9-5.1 10.7-10.6 10.7Z" fill="currentColor"/>
+              <path d="M1.8 21.6c0-3.2 2-5.7 5.4-6.4 2.6-.5 5.3-2.1 6.3-3.2" stroke="#080B0A" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <span class="brand-text">StudyArc</span>
+          </div>
+
+          <!-- Quick session-duration presets -->
+          <div class="header-presets" id="header-presets" role="group" aria-label="Quick session duration presets">
+            <button type="button" class="header-preset-pill" data-seconds="1500" title="Set a 25 minute session" aria-pressed="false">25m</button>
+            <button type="button" class="header-preset-pill" data-seconds="3600" title="Set a 1 hour session" aria-pressed="false">1h</button>
+            <button type="button" class="header-preset-pill" data-seconds="7200" title="Set a 2 hour session" aria-pressed="false">2h</button>
+            <button type="button" class="header-preset-pill" data-seconds="10800" title="Set a 3 hour session" aria-pressed="false">3h</button>
+          </div>
         </div>
 
         <div class="header-right">
@@ -183,7 +193,7 @@
               </g>
             </svg>
 
-            <!-- Center Content inside Timer Circle (Tap anywhere to start/pause, Hold 2s to reset) -->
+            <!-- Center Content inside Timer Circle (Tap anywhere to start/pause, Hold 1.2s to reset) -->
             <div class="timer-center-content" id="timer-center-pad" role="button" tabindex="0" aria-label="Timer ready. Tap to start, drag bead to adjust.">
               <div class="timer-digits has-hours" id="timer-digits">
                 <span class="timer-hours-wrap" id="timer-hours-wrap">
@@ -1002,7 +1012,7 @@
   <!-- JAVASCRIPT LOGIC (Local zero-latency assets, resilient against CDN outages and content blockers) -->
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
-  <script src="app.js?v=12.20"></script>
+  <script src="app.js?v=12.21"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

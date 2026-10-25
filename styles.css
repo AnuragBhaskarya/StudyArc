@@ -215,6 +215,86 @@ html.aura-disabled .bg-matrix-canvas {
   color: var(--accent-primary);
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+/* Quick session-duration presets (25m / 1h / 2h / 3h) */
+.header-presets {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+/* Presets only make sense once signed in (avoids crowding the login screen) */
+html.unauthenticated-gate .header-presets {
+  display: none;
+}
+
+.header-preset-pill {
+  height: 22px;
+  padding: 0 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(16, 224, 104, 0.25);
+  background: rgba(16, 224, 104, 0.08);
+  color: var(--accent-primary);
+  font-family: inherit;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+}
+
+.header-preset-pill:hover {
+  background: rgba(16, 224, 104, 0.16);
+  border-color: rgba(16, 224, 104, 0.45);
+  transform: translateY(-1px);
+}
+
+.header-preset-pill:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.header-preset-pill:focus-visible {
+  outline: 2px solid rgba(16, 224, 104, 0.5);
+  outline-offset: 2px;
+}
+
+.header-preset-pill.is-active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #05130B;
+  box-shadow: 0 0 10px rgba(16, 224, 104, 0.35);
+}
+
+.header-preset-pill:disabled {
+  opacity: 0.32;
+  cursor: default;
+  pointer-events: none;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Touch devices: no sticky hover lift on preset pills */
+@media (hover: none), (pointer: coarse) {
+  .header-preset-pill:not(.is-active):hover {
+    background: rgba(16, 224, 104, 0.08);
+    border-color: rgba(16, 224, 104, 0.25);
+    transform: none;
+  }
+}
+
 .header-right {
   display: flex;
   align-items: center;
@@ -452,7 +532,8 @@ html.aura-disabled .bg-matrix-canvas {
 }
 
 .is-dragging .timer-arc,
-.is-holding .timer-arc {
+.is-holding .timer-arc,
+body.is-preset-animating .timer-arc {
   transition: none !important;
 }
 
@@ -2083,6 +2164,21 @@ input:checked + .switch-slider:before {
     display: flex;
     align-items: center;
     gap: 0.55rem;
+  }
+
+  .header-left {
+    gap: 0.55rem;
+    min-width: 0;
+  }
+
+  .header-presets {
+    gap: 0.22rem;
+  }
+
+  .header-preset-pill {
+    height: 20px;
+    padding: 0 0.42rem;
+    font-size: 0.6rem;
   }
 
   .stats-strip {
@@ -4457,6 +4553,16 @@ input:checked + .switch-slider:before {
   }
   .auth-header-row {
     margin-bottom: 1.45rem;
+  }
+
+  .brand-text {
+    font-size: 0.82rem;
+  }
+
+  .header-preset-pill {
+    height: 19px;
+    padding: 0 0.36rem;
+    font-size: 0.56rem;
   }
 }
 

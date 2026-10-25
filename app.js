@@ -1118,6 +1118,124 @@
   }
 
   // =========================================================================
+  // HEADER QUICK-DURATION PRESETS (25m / 1h / 2h / 3h)
+  // Clicking a pill glides the rim & bead to the new duration, then opens
+  // the normal task-prompt dialog so a session can be named and started.
+  // =========================================================================
+  const TIMER_PRESET_ANIM_MS = 480;
+  let presetAnimationRaf = null;
+  let presetAnimationToken = 0;
+
+  function isTimerPresetLocked() {
+    return Boolean(state.activeTaskName) || state.timer.status === 'running' || state.timer.status === 'paused';
+  }
+
+  function cancelTimerPresetAnimation() {
+    presetAnimationToken += 1;
+    document.body.classList.remove('is-preset-animating');
+
+    if (presetAnimationRaf === null) return false;
+
+    cancelAnimationFrame(presetAnimationRaf);
+    presetAnimationRaf = null;
+
+    // Settle the rim & digits on the last committed state
+    renderTimerDisplay(state.timer.remainingSeconds, { duration: 320 });
+    return true;
+  }
+
+  function updateTimerPresetUI() {
+    const group = document.getElementById('header-presets');
+    if (!group) return;
+
+    const locked = isTimerPresetLocked();
+    const target = Math.round(state.timer.targetSeconds || 0);
+
+    group.querySelectorAll('.header-preset-pill').forEach((btn) => {
+      const seconds = Number(btn.dataset.seconds) || 0;
+      const isActive = !locked && seconds === target;
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      btn.disabled = locked;
+    });
+  }
+
+  function selectTimerPreset(targetSeconds) {
+    if (isTimerPresetLocked()) return;
+
+    const target = Math.max(60, Math.min(MAX_TIMER_SECONDS, Math.round(targetSeconds)));
+    if (!target) return;
+
+    cancelTimerPresetAnimation();
+
+    const startSeconds = Math.max(0, Number(state.timer.remainingSeconds) || 0);
+
+    state.timer.targetSeconds = target;
+    state.timer.remainingSeconds = target;
+    state.timer.anchorRemainingSeconds = target;
+    state.timer.anchorServerTime = null;
+    state.timer.lastTickTime = null;
+    state.timer.status = 'idle';
+    saveState();
+    updateTimerPresetUI();
+    syncTimerAction('adjust', { target_seconds: target, remaining_seconds: target });
+
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion || Math.abs(target - startSeconds) < 1) {
+      updateDigitalDisplay(target);
+      updateTimerRing(target);
+      openTaskPromptDialog();
+      return;
+    }
+
+    // Roll the digits toward the new duration while the rim & bead sweep across
+    updateDigitalDisplay(target);
+
+    const token = ++presetAnimationToken;
+    const startTime = performance.now();
+    const delta = target - startSeconds;
+
+    document.body.classList.add('is-preset-animating');
+
+    const stepPresetAnimation = (now) => {
+      if (token !== presetAnimationToken) return;
+
+      const progress = Math.min(1, (now - startTime) / TIMER_PRESET_ANIM_MS);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+
+      updateTimerRing(startSeconds + delta * eased);
+
+      if (progress >= 1) {
+        presetAnimationRaf = null;
+        document.body.classList.remove('is-preset-animating');
+        updateTimerRing(target);
+        updateDigitalDisplay(target);
+        openTaskPromptDialog();
+        return;
+      }
+
+      presetAnimationRaf = requestAnimationFrame(stepPresetAnimation);
+    };
+
+    presetAnimationRaf = requestAnimationFrame(stepPresetAnimation);
+  }
+
+  function initHeaderPresets() {
+    const group = document.getElementById('header-presets');
+    if (!group) return;
+
+    group.addEventListener('click', (e) => {
+      const btn = e.target.closest && e.target.closest('.header-preset-pill');
+      if (!btn || btn.disabled) return;
+      e.preventDefault();
+      selectTimerPreset(Number(btn.dataset.seconds) || 0);
+    });
+
+    updateTimerPresetUI();
+  }
+
+  // =========================================================================
   // CINEMATIC DIAL ENGINE (Zack 3D Depth-of-Field Wheel for numbers)
   // =========================================================================
   const easeInOutQuart = t => t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
@@ -1802,7 +1920,10 @@
   }
 
   function renderTimer() {
-    renderTimerDisplay(state.timer.remainingSeconds);
+    // While a preset transition is gliding the rim, server echoes must not snap it
+    if (presetAnimationRaf === null) {
+      renderTimerDisplay(state.timer.remainingSeconds);
+    }
 
     const timerSection = document.querySelector('.timer-section');
     const centerPad = document.getElementById('timer-center-pad');
@@ -1835,12 +1956,12 @@
       if (isRunning) {
         timerSection?.classList.add('is-running');
         timerSection?.classList.remove('is-paused');
-        centerPad?.setAttribute('aria-label', `Focusing on ${state.activeTaskName}. Tap to pause, hold 2s to save.`);
+        centerPad?.setAttribute('aria-label', `Focusing on ${state.activeTaskName}. Tap to pause, hold 1.2s to save.`);
         document.title = `(${formatDigitalTime(state.timer.remainingSeconds)}) ${state.activeTaskName} • StudyArc`;
       } else if (state.timer.status === 'paused') {
         timerSection?.classList.remove('is-running');
         timerSection?.classList.add('is-paused');
-        centerPad?.setAttribute('aria-label', `Paused on ${state.activeTaskName}. Tap to resume, hold 2s to save.`);
+        centerPad?.setAttribute('aria-label', `Paused on ${state.activeTaskName}. Tap to resume, hold 1.2s to save.`);
         document.title = `Paused (${formatDigitalTime(state.timer.remainingSeconds)}) • StudyArc`;
       } else {
         timerSection?.classList.remove('is-running', 'is-paused');
@@ -1868,6 +1989,7 @@
     }
 
     updateTodayLiveStat();
+    updateTimerPresetUI();
   }
 
   function updateTodayLiveStat() {
@@ -2207,6 +2329,9 @@
         return;
       }
 
+      // A preset glide must yield cleanly to manual bead adjustments
+      cancelTimerPresetAnimation();
+
       isDragging = true;
       document.body.classList.add('is-dragging');
       beadGroup.classList.add('dragging');
@@ -2245,7 +2370,7 @@
   }
 
   // =========================================================================
-  // CENTER TIMER PAD: TAP TO START/PAUSE, 2-SECOND HOLD TO RESET
+  // CENTER TIMER PAD: TAP TO START/PAUSE, 1.2-SECOND HOLD TO RESET
   // =========================================================================
   function initCenterPadInteraction() {
     const pad = document.getElementById('timer-center-pad');
@@ -2253,8 +2378,8 @@
 
     // Grace delay: normal clicks last ~80-160ms. Hold drain activates after 220ms
     const HOLD_DELAY_MS = 220;
-    const TOTAL_HOLD_MS = 2000; // 2.0-second hold period
-    const DRAIN_MS = TOTAL_HOLD_MS - HOLD_DELAY_MS; // 1780ms drain
+    const TOTAL_HOLD_MS = 1200; // 1.2-second hold period
+    const DRAIN_MS = TOTAL_HOLD_MS - HOLD_DELAY_MS; // 980ms drain
 
     let holdRaf = null;
     let holdDelayTimer = null;
@@ -2284,7 +2409,7 @@
       updateDigitalDisplay(visualSeconds);
 
       if (progress >= 1) {
-        // Complete 2-second hold: Trigger Save Progress & Exit!
+        // Complete 1.2-second hold: Trigger Save Progress & Exit!
         holdCompleted = true;
         isDraining = false;
         isCenterPadHolding = false;
@@ -2350,6 +2475,7 @@
 
     pad.addEventListener('pointerdown', (e) => {
       if (e.button && e.button !== 0) return; // Only primary mouse button or touch
+      cancelTimerPresetAnimation();
       isPointerDown = true;
       isDraining = false;
       holdCompleted = false;
@@ -2401,7 +2527,7 @@
         // Clean quick click/tap: toggle Play / Pause / New Task!
         handlePlayPauseAction();
       } else if (wasDraining) {
-        // Held partially (>220ms) but released before 2s: restore display cleanly
+        // Held partially (>220ms) but released before 1.2s: restore display cleanly
         renderTimerDisplay(state.timer.remainingSeconds, { duration: 340 });
         if (state.timer.status === 'running') {
           state.timer.lastTickTime = Date.now();
@@ -2446,6 +2572,9 @@
     const durationPill = document.getElementById('task-prompt-duration');
     const chipsContainer = document.getElementById('task-suggestions-chips');
     if (!modal) return;
+
+    // Any in-flight preset glide is already committed to state; settle it before prompting
+    cancelTimerPresetAnimation();
 
     // Deselect any active text selection across document
     if (window.getSelection) {
@@ -6672,6 +6801,9 @@
     // Interactive Draggable Bead & Central Click-to-Play/Hold-to-Reset Pad
     initBeadDragging();
     initCenterPadInteraction();
+
+    // Header quick-duration preset pills (25m / 1h / 2h / 3h)
+    initHeaderPresets();
 
     // Heatmap Period Navigation
     const prevBtn = document.getElementById('btn-prev-period');
