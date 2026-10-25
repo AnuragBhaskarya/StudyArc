@@ -2821,6 +2821,34 @@
     }
   }
 
+  // iOS keeps fixed elements anchored to the layout viewport even while the
+  // keyboard shrinks the visual viewport. Track the visible viewport so the
+  // prompt stays centered in the space above the keyboard at all times.
+  let taskPromptViewportRaf = null;
+
+  function syncTaskPromptViewport() {
+    const modal = document.getElementById('task-prompt-modal');
+    if (!modal || modal.classList.contains('hidden')) return;
+
+    const vv = window.visualViewport;
+    if (!vv) {
+      modal.style.removeProperty('--task-prompt-vv-top');
+      modal.style.removeProperty('--task-prompt-vv-height');
+      return;
+    }
+
+    modal.style.setProperty('--task-prompt-vv-top', `${Math.max(0, Math.round(vv.offsetTop))}px`);
+    modal.style.setProperty('--task-prompt-vv-height', `${Math.max(1, Math.round(vv.height))}px`);
+  }
+
+  function scheduleTaskPromptViewportSync() {
+    if (taskPromptViewportRaf !== null) return;
+    taskPromptViewportRaf = requestAnimationFrame(() => {
+      taskPromptViewportRaf = null;
+      syncTaskPromptViewport();
+    });
+  }
+
   function openTaskPromptDialog() {
     const modal = document.getElementById('task-prompt-modal');
     const input = document.getElementById('input-task-name');
@@ -2900,6 +2928,7 @@
 
     // Open the simple fixed overlay modal
     modal.classList.remove('hidden');
+    syncTaskPromptViewport();
 
     // Automatically trigger on-screen mobile keyboard by focusing synchronously within user gesture
     if (input) {
@@ -2910,6 +2939,7 @@
       } catch (_) {}
       requestAnimationFrame(() => {
         input.focus();
+        syncTaskPromptViewport();
       });
       // The real input now owns focus; let the iOS keyboard primer go.
       dismissPendingPromptKeyboard(false);
@@ -7357,6 +7387,15 @@
         startTaskSession(input ? input.value : '');
       });
     }
+
+    // Keep the task prompt centered in the visible area while the iOS
+    // keyboard opens, closes, or the page pans.
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', scheduleTaskPromptViewportSync, { passive: true });
+      window.visualViewport.addEventListener('scroll', scheduleTaskPromptViewportSync, { passive: true });
+    }
+    window.addEventListener('resize', scheduleTaskPromptViewportSync, { passive: true });
+    window.addEventListener('orientationchange', scheduleTaskPromptViewportSync, { passive: true });
 
     // Task Prompt Dialog Cancel Button
     const btnCancelTask = document.getElementById('btn-cancel-task');

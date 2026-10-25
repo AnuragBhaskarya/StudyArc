@@ -3771,14 +3771,18 @@ input:checked + .switch-slider:before {
    ========================================================================== */
 .modal-overlay {
   position: fixed;
-  inset: 0;
+  top: var(--task-prompt-vv-top, 0px);
+  left: 0;
+  right: 0;
+  height: var(--task-prompt-vv-height, 100dvh);
   z-index: 1000;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: calc(clamp(36px, 8dvh, 72px) + env(safe-area-inset-top, 0px)) calc(1rem + env(safe-area-inset-right, 0px)) calc(1rem + env(safe-area-inset-bottom, 0px)) calc(1rem + env(safe-area-inset-left, 0px));
+  padding: calc(1rem + env(safe-area-inset-top, 0px)) calc(1rem + env(safe-area-inset-right, 0px)) calc(1rem + env(safe-area-inset-bottom, 0px)) calc(1rem + env(safe-area-inset-left, 0px));
   box-sizing: border-box;
   overscroll-behavior: contain;
+  overflow: hidden;
 }
 
 .modal-backdrop {
@@ -3813,18 +3817,22 @@ input:checked + .switch-slider:before {
   margin: 0 auto;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.05), 0 0 30px -10px rgba(16, 224, 104, 0.15);
   outline: none;
-  overflow: hidden;
-  animation: modal-overlay-pop 160ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  max-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  animation: task-prompt-slide-up 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
 }
 
-@keyframes modal-overlay-pop {
+/* Slide up from the bottom edge and fade in when the prompt opens. */
+@keyframes task-prompt-slide-up {
   0% {
     opacity: 0;
-    transform: translateY(-6px) scale(0.97);
+    transform: translate3d(0, 22px, 0) scale(0.985);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
