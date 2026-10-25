@@ -14,7 +14,7 @@ from flask_socketio import SocketIO, emit, join_room, disconnect
 from werkzeug.security import generate_password_hash, check_password_hash
 import database
 
-app = Flask(__name__, static_folder='.', static_url_path='')
+app = Flask(__name__, static_folder=None)
 socketio = SocketIO(app, cors_allowed_origins='*', async_mode='gevent', ping_timeout=30, ping_interval=10)
 
 # Secret key configuration for cryptographic session signing
@@ -106,6 +106,20 @@ def favicon_root():
 
 @app.route('/<path:filename>')
 def static_files(filename):
+    # Security guard: never serve sensitive files, hidden dotfiles, source scripts, or databases
+    safe_extensions = ('.js', '.css', '.html', '.webmanifest', '.json', '.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico', '.woff', '.woff2', '.ttf')
+    # Reject dotfiles or path traversal attempts
+    parts = filename.replace('\\', '/').split('/')
+    if any(p.startswith('.') for p in parts):
+        return jsonify({'error': 'Not found'}), 404
+
+    lower_fn = filename.lower()
+    if lower_fn.endswith(('.py', '.pyc', '.db', '.sqlite', '.sqlite3', '.env', '.yaml', '.yml', '.md', '.txt', '.conf')):
+        return jsonify({'error': 'Not found'}), 404
+
+    if not lower_fn.endswith(safe_extensions):
+        return jsonify({'error': 'Not found'}), 404
+
     resp = make_response(send_from_directory('.', filename))
     if filename.endswith(('.js', '.html', '.css', '.webmanifest')):
         resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
@@ -127,9 +141,9 @@ def api_levels():
 @app.route('/api/auth/register', methods=['POST'])
 def auth_register():
     data = request.get_json(force=True, silent=True) or {}
-    username = (data.get('username') or '').strip()
-    password = data.get('password') or ''
-    confirm_password = data.get('confirm_password') or data.get('confirmPassword') or ''
+    username = str(data.get('username') or '').strip()
+    password = str(data.get('password') or '')
+    confirm_password = str(data.get('confirm_password') or data.get('confirmPassword') or '')
 
     if not username:
         return jsonify({'success': False, 'error': 'Username is required'}), 400
@@ -176,8 +190,8 @@ def auth_register():
 @app.route('/api/auth/login', methods=['POST'])
 def auth_login():
     data = request.get_json(force=True, silent=True) or {}
-    username = (data.get('username') or '').strip()
-    password = data.get('password') or ''
+    username = str(data.get('username') or '').strip()
+    password = str(data.get('password') or '')
 
     if not username or not password:
         return jsonify({'success': False, 'error': 'Username and password are required'}), 400
@@ -282,7 +296,7 @@ def get_hot_timer_state(user_id):
                     state['currentRemaining'] = max(0.0, calc_rem)
                     state['hasCompleted'] = False
             else:
-                state['currentRemaining'] = state.get('remainingSeconds', 3600)
+                state['currentRemaining'] = state.get('remainingSeconds', 5400)
             state['serverTime'] = now_ms
             return state
 
@@ -372,7 +386,7 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
 
     elif action == 'complete':
         new_status = 'idle'
-        new_target = int(target_seconds) if target_seconds else 5400
+        new_target = int(target_seconds) if target_seconds else int(current.get('targetSeconds', 5400))
         new_remaining = new_target
         new_started_at = None
         new_task = None
@@ -426,7 +440,7 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
 # =========================================================================
 
 @socketio.on('connect')
-def sio_connect():
+def sio_connect(auth=None):
     user_id = session.get('user_id')
     if not user_id:
         disconnect()
@@ -448,8 +462,9 @@ def sio_connect():
 @socketio.on('ping_server')
 def sio_ping(data):
     """Clock offset measurement for anchor time calculations."""
+    client_time = data.get('clientTime') if isinstance(data, dict) else None
     emit('pong_server', {
-        'clientTime': data.get('clientTime') if data else None,
+        'clientTime': client_time,
         'serverTime': int(time.time() * 1000)
     })
 
@@ -470,9 +485,9 @@ def sio_get_state():
 def sio_timer_action(data):
     """Handles all timer actions: start, pause, resume, reset, adjust, complete."""
     user_id = session.get('user_id')
-    if not user_id:
+    if not user_id or not isinstance(data, dict):
         return
-    action = data.get('action') if data else None
+    action = data.get('action')
     if not action:
         return
     trigger_timer_update(
@@ -631,8 +646,8 @@ def handle_subjects(user_id):
         return jsonify(database.get_subjects(user_id))
 
     data = request.get_json(force=True, silent=True) or {}
-    name = data.get('name', '').strip()
-    color = data.get('color', '#10E068')
+    name = str(data.get('name') or '').strip()[:100]
+    color = str(data.get('color') or '#10E068')[:32]
     if not name:
         return jsonify({'error': 'Subject name is required'}), 400
 
@@ -643,7 +658,10 @@ def handle_subjects(user_id):
 @auth_required
 def handle_sessions(user_id):
     if request.method == 'GET':
-        limit = int(request.args.get('limit', 5000))
+        try:
+            limit = int(request.args.get('limit', 5000))
+        except (ValueError, TypeError):
+            limit = 5000
         return jsonify(database.get_sessions(user_id, limit=limit))
 
     if request.method == 'DELETE':
@@ -654,10 +672,16 @@ def handle_sessions(user_id):
         return delete_session_endpoint(user_id, session_id)
 
     data = request.get_json(force=True, silent=True) or {}
-    subject_name = data.get('subject_name') or data.get('subject') or 'Focus Session'
-    duration_minutes = int(data.get('duration_minutes') or data.get('durationMinutes') or 25)
+    subject_name = str(data.get('subject_name') or data.get('subject') or 'Focus Session').strip()[:200]
+    try:
+        duration_minutes = int(data.get('duration_minutes') or data.get('durationMinutes') or 25)
+    except (ValueError, TypeError):
+        duration_minutes = 25
     date_str = data.get('date')
-    timestamp_ms = data.get('timestamp')
+    try:
+        timestamp_ms = int(data.get('timestamp')) if data.get('timestamp') is not None else None
+    except (ValueError, TypeError):
+        timestamp_ms = None
     start_time = data.get('start_time') or data.get('startTime')
     end_time = data.get('end_time') or data.get('endTime')
 

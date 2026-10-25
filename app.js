@@ -1144,7 +1144,7 @@
       if (AudioCtx) audioContext = new AudioCtx();
     }
     if (audioContext && audioContext.state === 'suspended') {
-      audioContext.resume();
+      audioContext.resume().catch(() => {});
     }
   }
 

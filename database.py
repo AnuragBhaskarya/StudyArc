@@ -117,7 +117,13 @@ class DBContext:
                 except Exception:
                     pass
             finally:
-                get_pg_pool().putconn(self.conn)
+                try:
+                    if getattr(self.conn, 'closed', 0) != 0:
+                        get_pg_pool().putconn(self.conn, close=True)
+                    else:
+                        get_pg_pool().putconn(self.conn)
+                except Exception:
+                    pass
         else:
             if exc_type is None:
                 self.conn.commit()
@@ -145,7 +151,7 @@ class DBContext:
                 except Exception:
                     pass
                 self.conn = get_pg_pool().getconn()
-                self.conn.autocommit = True
+                self.conn.autocommit = self.autocommit
                 cur = self.conn.cursor()
                 cur.execute(sql_pg, params)
                 return cur
@@ -172,7 +178,7 @@ class DBContext:
                 except Exception:
                     pass
                 self.conn = get_pg_pool().getconn()
-                self.conn.autocommit = True
+                self.conn.autocommit = self.autocommit
                 cur = self.conn.cursor()
                 cur.execute(sql_pg, params)
                 res = cur.fetchone()
@@ -605,7 +611,7 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
 
         elif action == 'complete':
             new_status = 'idle'
-            new_target = int(target_seconds) if target_seconds else 5400
+            new_target = int(target_seconds) if target_seconds else current.get('targetSeconds', 5400)
             new_remaining = new_target
             new_started_at = None
             new_task = None
@@ -965,7 +971,7 @@ def get_full_state(user_id, client_date=None):
                 SELECT json_build_object(
                     'timer', (
                         SELECT row_to_json(t) FROM (
-                            SELECT status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at 
+                            SELECT status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at, sequence 
                             FROM user_timer_state WHERE user_id = %s
                         ) t
                     ),
@@ -1069,7 +1075,9 @@ def get_full_state(user_id, client_date=None):
         'remainingSeconds': remaining_secs,
         'activeTaskName': timer_raw.get('active_task_name'),
         'startedAt': started_at,
-        'hasCompleted': has_completed
+        'hasCompleted': has_completed,
+        'sequence': int(timer_raw.get('sequence') or 1),
+        'version': int(timer_raw.get('sequence') or 1)
     }
 
     # 2. Process Subjects
@@ -1149,5 +1157,5 @@ def reset_database(user_id):
                 "INSERT INTO subjects (user_id, name, color) VALUES (?, ?, ?)",
                 (user_id, s_name, s_color)
             )
-        # Reset timer
-        update_timer_state(user_id, 'reset', target_seconds=5400)
+    # Reset timer after transaction commits to prevent SQLite lock contention
+    update_timer_state(user_id, 'reset', target_seconds=5400)
