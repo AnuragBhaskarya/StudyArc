@@ -201,6 +201,10 @@
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
+          const wasGated = document.documentElement.classList.contains('unauthenticated-gate');
+          if (wasGated) {
+            prepareAppLoaderForIntro('Syncing your progress', { immediate: true });
+          }
           state.authenticated = true;
           state.user = data.user || null;
           document.documentElement.classList.remove('unauthenticated-gate');
@@ -245,6 +249,9 @@
 
           // Start multi-device real-time SSE stream
           initRealtimeTimerSync();
+          if (wasGated) {
+            revealAfterSignIn();
+          }
           return { authenticated: true, authRequired: false };
         }
       }
@@ -829,9 +836,12 @@
       if (res.ok && data.success) {
         state.authenticated = true;
         state.user = data.user;
+        saveState();
+        homeIntroPlayed = false;
+        homeIntroRunning = false;
         // Cover the app while the freshly authenticated state is fetched, then
         // hand over to the same one-shot entrance used on a normal page load.
-        prepareAppLoaderForIntro('Syncing your progress');
+        prepareAppLoaderForIntro('Syncing your progress', { immediate: true });
         updateAuthUI();
         closeAuthDialog(true);
         await revealAfterSignIn();
@@ -935,9 +945,12 @@
       if (res.ok && data.success) {
         state.authenticated = true;
         state.user = data.user;
+        saveState();
+        homeIntroPlayed = false;
+        homeIntroRunning = false;
         // A new account gets the exact same loader + entrance treatment as a
         // returning account, once its server state is in place.
-        prepareAppLoaderForIntro('Syncing your progress');
+        prepareAppLoaderForIntro('Syncing your progress', { immediate: true });
         updateAuthUI();
         closeAuthDialog(true);
         await revealAfterSignIn();
@@ -997,7 +1010,11 @@
       localStorage.removeItem(STORAGE_KEY);
     } catch (_) {}
     saveState();
-    renderAll();
+    matrixStreamEngine?.stop();
+    document.documentElement.classList.add('unauthenticated-gate', 'intro-aura-hidden');
+    document.documentElement.classList.remove('app-booting');
+    clearLoaderFailsafe();
+    hideAppLoader({ immediate: true });
     updateAuthUI();
     switchView('focus');
     openAuthDialog('login');
@@ -7669,6 +7686,12 @@
     if (document.querySelector('dialog[open]')) return;
     document.documentElement.classList.remove('modal-open');
     stopDialogLenisLoop();
+    if (document.documentElement.classList.contains('intro-aura-hidden') ||
+        document.documentElement.classList.contains('unauthenticated-gate') ||
+        !state.authenticated || !state.user) {
+      matrixStreamEngine?.stop();
+      return;
+    }
     if (state.auraEnabled !== false) {
       matrixStreamEngine?.start();
     }
@@ -7679,7 +7702,10 @@
     document.documentElement.classList.toggle('aura-disabled', !enabled);
     const auraToggle = document.getElementById('setting-aura-enabled');
     if (auraToggle) auraToggle.checked = enabled;
-    if (!enabled) {
+    if (!enabled ||
+        document.documentElement.classList.contains('intro-aura-hidden') ||
+        document.documentElement.classList.contains('unauthenticated-gate') ||
+        !state.authenticated || !state.user) {
       matrixStreamEngine?.stop();
     } else {
       matrixStreamEngine?.start();
@@ -7761,7 +7787,7 @@
     if (statusEl && message) statusEl.textContent = message;
   }
 
-  function showAppLoader(message) {
+  function showAppLoader(message, options = {}) {
     const loader = document.getElementById('app-loader');
     appLoaderShownAt = performance.now();
     if (message) setAppLoaderStatus(message);
@@ -7769,27 +7795,45 @@
     document.body.setAttribute('aria-busy', 'true');
     if (!loader) return;
     loader.setAttribute('aria-hidden', 'false');
-    loader.classList.remove('is-hidden');
-    // Flush the re-show so a loader that was previously hidden transitions
-    // back in instead of inheriting the completed hide state.
-    void loader.offsetWidth;
+    if (options && options.immediate) {
+      loader.style.transition = 'none';
+      loader.classList.remove('is-hidden');
+      loader.style.opacity = '1';
+      loader.style.visibility = 'visible';
+      void loader.offsetWidth;
+      loader.style.transition = '';
+    } else {
+      loader.classList.remove('is-hidden');
+      void loader.offsetWidth;
+    }
   }
 
-  function prepareAppLoaderForIntro(message) {
+  function prepareAppLoaderForIntro(message, options = {}) {
     document.documentElement.classList.add('intro-aura-hidden');
     matrixStreamEngine?.stop();
-    showAppLoader(message);
+    showAppLoader(message, options);
   }
 
-  function hideAppLoader() {
+  function hideAppLoader(options = {}) {
     document.documentElement.classList.remove('app-booting');
     document.body.removeAttribute('aria-busy');
     const loader = document.getElementById('app-loader');
-    if (loader) {
+    clearLoaderFailsafe();
+    if (!loader) return Promise.resolve();
+
+    if (options && options.immediate) {
+      loader.style.transition = 'none';
       loader.classList.add('is-hidden');
       loader.setAttribute('aria-hidden', 'true');
+      loader.style.opacity = '0';
+      loader.style.visibility = 'hidden';
+      void loader.offsetWidth;
+      loader.style.transition = '';
+      return Promise.resolve();
     }
-    clearLoaderFailsafe();
+
+    loader.classList.add('is-hidden');
+    loader.setAttribute('aria-hidden', 'true');
     return waitMs(APP_LOADER_FADE_MS);
   }
 
@@ -7919,10 +7963,11 @@
   }
 
   async function finishLoaderForAuthGate() {
-    document.documentElement.classList.remove('intro-aura-hidden');
-    if (state.auraEnabled !== false) matrixStreamEngine?.start();
-    await hideAppLoader();
+    document.documentElement.classList.add('unauthenticated-gate', 'intro-aura-hidden');
+    document.documentElement.classList.remove('app-booting');
+    matrixStreamEngine?.stop();
     if (!state.authenticated || !state.user) openAuthDialog('login');
+    await hideAppLoader({ immediate: true });
   }
 
   async function revealAfterSignIn() {
@@ -8021,20 +8066,37 @@
     appBootstrapped = true;
 
     try {
-      document.documentElement.classList.add('app-booting', 'intro-aura-hidden');
-      document.body.setAttribute('aria-busy', 'true');
-
       initLenis();
       initEvents();
       initMatrixStream();
       applyAuraPreference();
-      // The aura waits for the entrance sequence, even if a preference sync
-      // calls applyAuraPreference() while the loader is still up.
       matrixStreamEngine?.stop();
+
+      // FAST-PATH: If unauthenticated in cached state, load sign-in modal instantly
+      // without loading background homescreen elements, tiles, dial, or aura.
+      if (!state.authenticated || !state.user) {
+        document.documentElement.classList.add('unauthenticated-gate', 'intro-aura-hidden');
+        document.documentElement.classList.remove('app-booting');
+        clearLoaderFailsafe();
+        hideAppLoader({ immediate: true });
+        openAuthDialog('login');
+
+        // Silently verify if a valid session cookie exists on server
+        checkAuthAndSync({ suppressAuthDialog: true }).then((res) => {
+          if (res && res.authenticated) {
+            prepareAppLoaderForIntro('Syncing your progress', { immediate: true });
+            updateAuthUI();
+            closeAuthDialog(true);
+            revealAfterSignIn();
+          }
+        }).catch(() => {});
+        return;
+      }
+
+      document.documentElement.classList.add('app-booting', 'intro-aura-hidden');
+      document.body.setAttribute('aria-busy', 'true');
       renderAll();
 
-      // Do not open the auth dialog from inside the initial state sync; the
-      // loader stays opaque until we know whether home or sign-in comes next.
       await loadAppDataForReveal();
 
       if (state.authenticated && state.user) {

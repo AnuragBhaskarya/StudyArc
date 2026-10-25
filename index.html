@@ -52,34 +52,43 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=12.34">
+  <link rel="stylesheet" href="styles.css?v=12.35">
   <script>
     (function () {
-      // Keep the app hidden behind the loader until the first state sync has
-      // settled. The failsafe prevents a broken app.js from trapping users on
-      // the loading screen forever.
-      document.documentElement.classList.add('app-booting', 'intro-aura-hidden');
-      window.__studyArcLoaderShownAt = performance.now();
-      window.__studyArcLoaderFailsafe = window.setTimeout(function () {
-        document.documentElement.classList.remove('app-booting', 'intro-aura-hidden');
-        var loader = document.getElementById('app-loader');
-        if (loader) {
-          loader.classList.add('is-hidden');
-          loader.setAttribute('aria-hidden', 'true');
-        }
-      }, 15000);
-
+      var isAuth = false;
+      var auraOff = false;
       try {
         var s = localStorage.getItem('studyarc_store_v1');
         var parsed = s ? JSON.parse(s) : null;
-        if (!parsed || !parsed.authenticated) {
-          document.documentElement.classList.add('unauthenticated-gate');
+        if (parsed && parsed.authenticated && parsed.user) {
+          isAuth = true;
         }
         if (parsed && parsed.auraEnabled === false) {
-          document.documentElement.classList.add('aura-disabled');
+          auraOff = true;
         }
-      } catch (e) {
-        document.documentElement.classList.add('unauthenticated-gate');
+      } catch (e) {}
+
+      if (isAuth) {
+        // Keep the app hidden behind the loader until the first state sync has
+        // settled. The failsafe prevents a broken app.js from trapping users on
+        // the loading screen forever.
+        document.documentElement.classList.add('app-booting', 'intro-aura-hidden');
+        window.__studyArcLoaderShownAt = performance.now();
+        window.__studyArcLoaderFailsafe = window.setTimeout(function () {
+          document.documentElement.classList.remove('app-booting', 'intro-aura-hidden');
+          var loader = document.getElementById('app-loader');
+          if (loader) {
+            loader.classList.add('is-hidden');
+            loader.setAttribute('aria-hidden', 'true');
+          }
+        }, 15000);
+      } else {
+        // Unauthenticated gate: load sign-in instantly without rendering loader or homescreen
+        document.documentElement.classList.add('unauthenticated-gate', 'intro-aura-hidden');
+      }
+
+      if (auraOff) {
+        document.documentElement.classList.add('aura-disabled');
       }
     })();
   </script>
@@ -1043,7 +1052,7 @@
   <!-- JAVASCRIPT LOGIC (Local zero-latency assets, resilient against CDN outages and content blockers) -->
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
-  <script src="app.js?v=12.34"></script>
+  <script src="app.js?v=12.35"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

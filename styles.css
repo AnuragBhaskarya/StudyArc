@@ -4520,12 +4520,26 @@ input:checked + .switch-slider:before {
 /* ==========================================================================
    AUTHENTICATION MODAL DIALOG (Neon Green 3D Flippable Modal)
    ========================================================================== */
-.unauthenticated-gate .app-layout {
-  filter: blur(14px);
-  opacity: 0.15;
-  pointer-events: none;
-  user-select: none;
-  transition: filter 0.4s ease, opacity 0.4s ease;
+html.unauthenticated-gate .app-header,
+html.unauthenticated-gate .view-panel,
+html.unauthenticated-gate .ambient-aura-container {
+  display: none !important;
+}
+
+html.unauthenticated-gate .app-layout {
+  filter: none !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+html.unauthenticated-gate:not(.app-booting) .app-loader {
+  display: none !important;
+}
+
+html.unauthenticated-gate .auth-dialog::backdrop {
+  background: #070B09;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .auth-dialog {
