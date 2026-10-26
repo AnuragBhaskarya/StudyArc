@@ -901,19 +901,31 @@ def delete_session(user_id, session_id):
         ctx.execute("DELETE FROM sessions WHERE id = ? AND user_id = ?", (session_id, user_id))
         return deleted
 
-def get_sessions(user_id, limit=5000):
+def get_sessions(user_id, limit=None):
     with get_connection() as ctx:
-        cur = ctx.execute("""
-            SELECT sess.id, sess.subject_id, sess.subject_name, s.color, 
-                   sess.duration_minutes, sess.date, sess.timestamp,
-                   sess.start_time, sess.end_time,
-                   COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp
-            FROM sessions sess
-            LEFT JOIN subjects s ON sess.subject_id = s.id
-            WHERE sess.user_id = ?
-            ORDER BY sess.timestamp DESC
-            LIMIT ?
-        """, (user_id, limit))
+        if limit is not None:
+            cur = ctx.execute("""
+                SELECT sess.id, sess.subject_id, sess.subject_name, s.color, 
+                       sess.duration_minutes, sess.date, sess.timestamp,
+                       sess.start_time, sess.end_time,
+                       COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp
+                FROM sessions sess
+                LEFT JOIN subjects s ON sess.subject_id = s.id
+                WHERE sess.user_id = ?
+                ORDER BY sess.timestamp DESC
+                LIMIT ?
+            """, (user_id, limit))
+        else:
+            cur = ctx.execute("""
+                SELECT sess.id, sess.subject_id, sess.subject_name, s.color, 
+                       sess.duration_minutes, sess.date, sess.timestamp,
+                       sess.start_time, sess.end_time,
+                       COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp
+                FROM sessions sess
+                LEFT JOIN subjects s ON sess.subject_id = s.id
+                WHERE sess.user_id = ?
+                ORDER BY sess.timestamp DESC
+            """, (user_id,))
 
         rows = [dict(r) for r in cur.fetchall()]
         result = []
@@ -1120,7 +1132,6 @@ def get_full_state(user_id, client_date=None):
                             LEFT JOIN subjects s ON sess.subject_id = s.id
                             WHERE sess.user_id = %s
                             ORDER BY sess.timestamp DESC
-                            LIMIT 5000
                         ) sess_row
                     ),
                     'total_xp', (
@@ -1154,7 +1165,7 @@ def get_full_state(user_id, client_date=None):
             cur_sess = ctx.execute("""
                 SELECT sess.id, sess.subject_id, sess.subject_name, s.color, sess.duration_minutes, sess.date, sess.timestamp, sess.start_time, sess.end_time, COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp
                 FROM sessions sess LEFT JOIN subjects s ON sess.subject_id = s.id
-                WHERE sess.user_id = ? ORDER BY sess.timestamp DESC LIMIT 5000
+                WHERE sess.user_id = ? ORDER BY sess.timestamp DESC
             """, (user_id,))
             sess_rows = [dict(r) for r in cur_sess.fetchall()]
             cur_xp = ctx.execute("SELECT COALESCE(SUM(COALESCE(NULLIF(xp, 0), duration_minutes * 10)), 0) FROM sessions WHERE user_id = ?", (user_id,))

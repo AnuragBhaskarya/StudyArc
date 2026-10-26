@@ -151,9 +151,26 @@
           anchorRemainingSeconds: persistentState.timer.targetSeconds
         });
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(persistentState));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(persistentState));
+      } catch (storageErr) {
+        // Fallback if localStorage quota is exceeded on very large accounts (e.g. 5,000+ sessions):
+        // Keep the most recent 1,500 sessions locally for offline fast-start; server maintains complete history.
+        if (persistentState.sessions && persistentState.sessions.length > 1500) {
+          try {
+            const fallbackState = Object.assign({}, persistentState, {
+              sessions: persistentState.sessions.slice(0, 1500)
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(fallbackState));
+          } catch (innerErr) {
+            console.warn('StudyArk: Could not save trimmed state to localStorage:', innerErr);
+          }
+        } else {
+          console.warn('StudyArk: Could not save to localStorage:', storageErr);
+        }
+      }
     } catch (e) {
-      console.warn('StudyArk: Could not save to localStorage:', e);
+      console.warn('StudyArk: Could not prepare state for saveState:', e);
     }
   }
 
@@ -6718,7 +6735,7 @@
 
     historyArchiveRefreshPending = true;
     try {
-      const res = await fetch('/api/sessions?limit=5000');
+      const res = await fetch('/api/sessions');
       if (res.ok) {
         const data = await res.json();
         const incoming = Array.isArray(data) ? data : (data.sessions || []);
