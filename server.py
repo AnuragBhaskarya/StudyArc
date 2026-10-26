@@ -610,6 +610,7 @@ def get_state(user_id):
                 'username': user_name or 'User'
             },
             'preferences': data.get('preferences') or {'auraEnabled': True},
+            'userCreatedAt': data.get('userCreatedAt'),
             'subjects': data['subjects'],
             'sessions': data['sessions'],
             'dayActivity': data['dayActivity'],

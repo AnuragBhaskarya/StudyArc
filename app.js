@@ -48,9 +48,10 @@
     soundEnabled: true,
     auraEnabled: true,
 
-    // User Authentication
+    // User Authentication & Profile
     user: null,
-    authenticated: false
+    authenticated: false,
+    userCreatedAt: null
   };
 
   let state = loadState();
@@ -239,6 +240,7 @@
         if (data.success) {
           state.authenticated = true;
           state.user = data.user || null;
+          state.userCreatedAt = data.userCreatedAt || state.userCreatedAt || null;
           document.documentElement.classList.remove('unauthenticated-gate');
           closeAuthDialog(true);
           state.subjects = data.subjects || [];
@@ -1047,6 +1049,7 @@
     }
     state.authenticated = false;
     state.user = null;
+    state.userCreatedAt = null;
     state.sessions = [];
     dayDetailsCache.clear();
     invalidateSessionIndex();
@@ -3566,8 +3569,18 @@
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth();
 
-    // Show the current year plus at least the previous year, even for a new account.
-    let earliestYear = currentYear - 1;
+    // Earliest year defaults to current year
+    let earliestYear = currentYear;
+
+    // 1. Anchor to user's registration/opening year so their timeline is preserved even with 0 study sessions
+    if (state.userCreatedAt) {
+      const createdYear = parseInt(String(state.userCreatedAt).slice(0, 4), 10);
+      if (!isNaN(createdYear) && createdYear < earliestYear) {
+        earliestYear = createdYear;
+      }
+    }
+
+    // 2. Expand backwards to any older study sessions (supports infinite years of studying)
     const activity = state.dayActivity;
     if (activity) {
       const keys = Object.keys(activity);

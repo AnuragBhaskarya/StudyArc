@@ -1148,9 +1148,13 @@ def get_full_state(user_id, client_date=None):
                     'preferences', (
                         SELECT json_build_object('auraEnabled', COALESCE(aura_enabled, TRUE))
                         FROM users WHERE id = %s
+                    ),
+                    'user_created_at', (
+                        SELECT to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS')
+                        FROM users WHERE id = %s
                     )
                 ) AS full_state
-            """, (user_id, user_id, user_id, user_id, user_id, user_id, user_id))
+            """, (user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id))
             data = cur.fetchone()['full_state']
         else:
             # SQLite fallback: fetch with single connection
@@ -1172,18 +1176,23 @@ def get_full_state(user_id, client_date=None):
             total_xp = int(fetch_scalar(cur_xp.fetchone()) or 0)
             cur_act = ctx.execute("SELECT date, SUM(duration_minutes) as total_minutes FROM sessions WHERE user_id = ? GROUP BY date ORDER BY date ASC", (user_id,))
             act_dict = {r['date']: int(r['total_minutes']) for r in cur_act.fetchall()}
-            cur_pref = ctx.execute("SELECT aura_enabled FROM users WHERE id = ?", (user_id,))
+            cur_pref = ctx.execute("SELECT aura_enabled, created_at FROM users WHERE id = ?", (user_id,))
             pref_row = cur_pref.fetchone()
             aura_enabled = True
-            if pref_row is not None and pref_row['aura_enabled'] is not None:
-                aura_enabled = bool(pref_row['aura_enabled'])
+            user_created_at = None
+            if pref_row is not None:
+                if pref_row['aura_enabled'] is not None:
+                    aura_enabled = bool(pref_row['aura_enabled'])
+                if pref_row['created_at'] is not None:
+                    user_created_at = str(pref_row['created_at'])
             data = {
                 'timer': dict(t_row) if t_row else None,
                 'subjects': sub_rows,
                 'sessions': sess_rows,
                 'total_xp': total_xp,
                 'activity': act_dict,
-                'preferences': {'auraEnabled': aura_enabled}
+                'preferences': {'auraEnabled': aura_enabled},
+                'user_created_at': user_created_at
             }
 
     # 1. Process Timer State
@@ -1291,7 +1300,8 @@ def get_full_state(user_id, client_date=None):
         'dayActivity': day_act,
         'stats': stats_res,
         'timer': timer_res,
-        'preferences': data.get('preferences') or {'auraEnabled': True}
+        'preferences': data.get('preferences') or {'auraEnabled': True},
+        'userCreatedAt': str(data.get('user_created_at')) if data.get('user_created_at') else None
     }
 
 def reset_database(user_id):
