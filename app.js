@@ -33,8 +33,8 @@
     sessions: [],
 
     // Heatmap View
-    viewedYear: 2026,
-    viewedMonth: 9, // October
+    viewedYear: new Date().getFullYear(),
+    viewedMonth: new Date().getMonth(),
 
     // Focus Subjects (Loaded from SQLite database)
     subjects: [],
@@ -5852,15 +5852,24 @@
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
   ];
-  let currentCalYear = 2026;
-  let currentCalMonth = 9; // 0-indexed (9 = Oct)
+  let currentCalYear = new Date().getFullYear();
+  let currentCalMonth = new Date().getMonth(); // 0-indexed
   let activeSelectedDate = '';
+
+  function isCalendarAtMaxMonth(year = currentCalYear, month = currentCalMonth) {
+    const now = new Date();
+    const liveYear = now.getFullYear();
+    const liveMonth = now.getMonth();
+    if (year > liveYear) return true;
+    if (year === liveYear && month >= liveMonth) return true;
+    return false;
+  }
 
   // Dial picker state
   const DIAL_ITEM_HEIGHT = 40;
   let dialYearsList = [];
-  let pendingDialMonth = 9;
-  let pendingDialYear = 2026;
+  let pendingDialMonth = new Date().getMonth();
+  let pendingDialYear = new Date().getFullYear();
   let isDialViewOpen = false;
   let isMonthTransitioning = false;
   let isMonthDragging = false;
@@ -5890,10 +5899,11 @@
     // 2. Actual active day cells
     for (let day = 1; day <= daysInMonth; day++) {
       const cellDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const daySessions = sessionDataIndex.byDate.get(cellDateStr) || [];
-      const hasSessions = daySessions.length > 0;
+      const isFuture = cellDateStr > todayStr;
+      const daySessions = !isFuture ? (sessionDataIndex.byDate.get(cellDateStr) || []) : [];
+      const hasSessions = !isFuture && daySessions.length > 0;
       const isToday = cellDateStr === todayStr;
-      const isActive = isCurrent && (cellDateStr === activeSelectedDate);
+      const isActive = isCurrent && !isFuture && (cellDateStr === activeSelectedDate);
 
       let dayMins = 0;
       for (let j = 0; j < daySessions.length; j++) {
@@ -5903,19 +5913,22 @@
       monthSessionCount += daySessions.length;
 
       const cell = document.createElement('div');
-      cell.className = `history-cal-day ${hasSessions ? 'has-sessions' : ''} ${isToday ? 'is-today' : ''} ${isActive ? 'is-active-day' : ''}`;
+      cell.className = `history-cal-day ${hasSessions ? 'has-sessions' : ''} ${isToday ? 'is-today' : ''} ${isActive ? 'is-active-day' : ''} ${isFuture ? 'is-future' : ''}`;
       cell.setAttribute('data-date', cellDateStr);
 
       let inner = `<span>${day}</span>`;
       if (hasSessions) {
         inner += `<span class="history-cal-day-dot" aria-hidden="true"></span>`;
         cell.title = `${daySessions.length} ${daySessions.length === 1 ? 'session' : 'sessions'} • ${dayMins} mins focus (Click to jump)`;
+      } else if (isFuture) {
+        cell.title = `Future date`;
+        cell.setAttribute('aria-disabled', 'true');
       } else {
         cell.title = `No sessions recorded`;
       }
       cell.innerHTML = inner;
 
-      if (isCurrent) {
+      if (isCurrent && !isFuture) {
         cell.addEventListener('click', (e) => {
           if (wasDraggingMonth) {
             e.stopPropagation();
@@ -5945,6 +5958,7 @@
     const titleEl = document.getElementById('history-calendar-title');
     const monthSessionsEl = document.getElementById('history-cal-month-sessions');
     const monthTimeEl = document.getElementById('history-cal-month-time');
+    const nextBtn = document.getElementById('history-cal-next-month');
 
     if (titleEl) {
       titleEl.textContent = `${CAL_MONTH_NAMES_SHORT[currentCalMonth]} ${currentCalYear}`;
@@ -5954,6 +5968,18 @@
     }
     if (monthTimeEl) {
       monthTimeEl.textContent = `${formatHoursMinutes(stats.totalMins * 60)} focus`;
+    }
+
+    if (nextBtn) {
+      const atMax = isCalendarAtMaxMonth();
+      nextBtn.disabled = atMax;
+      if (atMax) {
+        nextBtn.classList.add('is-disabled');
+        nextBtn.setAttribute('aria-disabled', 'true');
+      } else {
+        nextBtn.classList.remove('is-disabled');
+        nextBtn.removeAttribute('aria-disabled');
+      }
     }
   }
 
@@ -5985,19 +6011,28 @@
     }
 
     if (gridNext) {
-      let nMonth = currentCalMonth + 1;
-      let nYear = currentCalYear;
-      if (nMonth > 11) {
-        nMonth = 0;
-        nYear++;
+      if (isCalendarAtMaxMonth()) {
+        gridNext.innerHTML = '';
+      } else {
+        let nMonth = currentCalMonth + 1;
+        let nYear = currentCalYear;
+        if (nMonth > 11) {
+          nMonth = 0;
+          nYear++;
+        }
+        renderMonthDaysInto(nYear, nMonth, gridNext, false);
       }
-      renderMonthDaysInto(nYear, nMonth, gridNext, false);
     }
   }
 
   function finishCalendarMonthSwipe(direction) {
     const track = document.getElementById('history-cal-track');
     if (!track) return;
+
+    if (direction === 1 && isCalendarAtMaxMonth()) {
+      // Cannot swipe into future months: snap back cleanly to current month
+      direction = 0;
+    }
 
     isMonthTransitioning = true;
     track.classList.add('animating');
@@ -6021,10 +6056,12 @@
       track.classList.remove('animating');
 
       if (direction === 1) {
-        currentCalMonth++;
-        if (currentCalMonth > 11) {
-          currentCalMonth = 0;
-          currentCalYear++;
+        if (!isCalendarAtMaxMonth()) {
+          currentCalMonth++;
+          if (currentCalMonth > 11) {
+            currentCalMonth = 0;
+            currentCalYear++;
+          }
         }
       } else if (direction === -1) {
         currentCalMonth--;
@@ -6046,14 +6083,17 @@
 
   function navigateCalendarMonth(delta) {
     if (isMonthTransitioning || isMonthDragging) return;
+    if (delta > 0 && isCalendarAtMaxMonth()) return;
     finishCalendarMonthSwipe(delta);
   }
 
   let monthDrumWheel = null;
   let yearDrumWheel = null;
+  let dialDrumsInitialized = false;
 
   function createDialDrumWheel({ drumEl, wheelEl, count, onSelect }) {
     const ITEM_HEIGHT = 40;
+    let wheelCount = count;
     let currentIndex = 0;
     let currentY = 0;
     let isDragging = false;
@@ -6074,7 +6114,7 @@
     }
 
     function setIndex(index, animated = true) {
-      const clamped = Math.max(0, Math.min(count - 1, index));
+      const clamped = Math.max(0, Math.min(wheelCount - 1, index));
       currentIndex = clamped;
       currentY = -clamped * ITEM_HEIGHT;
 
@@ -6097,6 +6137,15 @@
       }
     }
 
+    function updateCount(newCount) {
+      wheelCount = Math.max(1, newCount);
+      if (currentIndex >= wheelCount) {
+        setIndex(wheelCount - 1, false);
+      } else {
+        updateVisuals(currentIndex);
+      }
+    }
+
     function onPointerDown(e) {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       isDragging = true;
@@ -6116,7 +6165,7 @@
       let targetY = startDragY + dy;
 
       // Soft rubber banding beyond edges
-      const minY = -(count - 1) * ITEM_HEIGHT;
+      const minY = -(wheelCount - 1) * ITEM_HEIGHT;
       const maxY = 0;
       if (targetY > maxY) {
         targetY = maxY + (targetY - maxY) * 0.3;
@@ -6127,7 +6176,7 @@
       currentY = targetY;
       wheelEl.style.transform = `translate3d(0, ${currentY}px, 0)`;
 
-      const liveIdx = Math.max(0, Math.min(count - 1, Math.round(-currentY / ITEM_HEIGHT)));
+      const liveIdx = Math.max(0, Math.min(wheelCount - 1, Math.round(-currentY / ITEM_HEIGHT)));
       updateVisuals(liveIdx);
     }
 
@@ -6143,7 +6192,7 @@
       // Flick momentum projection
       let projectedY = currentY + velocity * 130;
       let snapIndex = Math.round(-projectedY / ITEM_HEIGHT);
-      snapIndex = Math.max(0, Math.min(count - 1, snapIndex));
+      snapIndex = Math.max(0, Math.min(wheelCount - 1, snapIndex));
 
       setIndex(snapIndex, true);
     }
@@ -6172,15 +6221,44 @@
       const item = e.target.closest('.history-cal-drum-item');
       if (!item) return;
       const idx = parseInt(item.getAttribute('data-idx'), 10);
-      if (!isNaN(idx)) {
+      if (!isNaN(idx) && idx < wheelCount) {
         setIndex(idx, true);
       }
     });
 
     return {
       setIndex,
+      updateCount,
       getIndex: () => currentIndex
     };
+  }
+
+  function syncDialMonthLimit() {
+    const now = new Date();
+    const liveYear = now.getFullYear();
+    const liveMonth = now.getMonth();
+    const monthWheel = document.getElementById('history-cal-drum-wheel-month');
+    if (!monthWheel) return;
+
+    const maxAllowedMonth = (pendingDialYear >= liveYear) ? liveMonth : 11;
+    const items = monthWheel.querySelectorAll('.history-cal-drum-item');
+    items.forEach((it) => {
+      const idx = parseInt(it.getAttribute('data-idx'), 10);
+      if (idx > maxAllowedMonth) {
+        it.style.display = 'none';
+        it.classList.remove('is-selected');
+      } else {
+        it.style.display = '';
+      }
+    });
+
+    if (monthDrumWheel) {
+      monthDrumWheel.updateCount(maxAllowedMonth + 1);
+      if (pendingDialMonth > maxAllowedMonth) {
+        pendingDialMonth = maxAllowedMonth;
+        monthDrumWheel.setIndex(maxAllowedMonth, true);
+      }
+    }
   }
 
   function buildDialDrums() {
@@ -6190,46 +6268,65 @@
     const yearWheel = document.getElementById('history-cal-drum-wheel-year');
     if (!monthDrum || !yearDrum || !monthWheel || !yearWheel) return;
 
-    // 1. Month drum items
-    let mHtml = '';
-    CAL_MONTH_NAMES_SHORT.forEach((m, idx) => {
-      mHtml += `<div class="history-cal-drum-item" data-idx="${idx}">${m}</div>`;
-    });
-    monthWheel.innerHTML = mHtml;
-
-    // 2. Year drum items: from 2000 to currentYear
     const currentYearMax = new Date().getFullYear();
     dialYearsList = [];
     for (let y = 2000; y <= currentYearMax; y++) {
       dialYearsList.push(y);
     }
 
-    let yHtml = '';
-    dialYearsList.forEach((yr, idx) => {
-      yHtml += `<div class="history-cal-drum-item" data-idx="${idx}">${yr}</div>`;
-    });
-    yearWheel.innerHTML = yHtml;
+    if (!dialDrumsInitialized) {
+      dialDrumsInitialized = true;
 
-    // Attach transform-based controllers
-    monthDrumWheel = createDialDrumWheel({
-      drumEl: monthDrum,
-      wheelEl: monthWheel,
-      count: 12,
-      onSelect: (idx) => {
-        pendingDialMonth = idx;
-      }
-    });
+      // 1. Month drum items (Jan..Dec)
+      let mHtml = '';
+      CAL_MONTH_NAMES_SHORT.forEach((m, idx) => {
+        mHtml += `<div class="history-cal-drum-item" data-idx="${idx}">${m}</div>`;
+      });
+      monthWheel.innerHTML = mHtml;
 
-    yearDrumWheel = createDialDrumWheel({
-      drumEl: yearDrum,
-      wheelEl: yearWheel,
-      count: dialYearsList.length,
-      onSelect: (idx) => {
-        if (dialYearsList[idx] !== undefined) {
-          pendingDialYear = dialYearsList[idx];
+      // 2. Year drum items: from 2000 to currentYearMax
+      let yHtml = '';
+      dialYearsList.forEach((yr, idx) => {
+        yHtml += `<div class="history-cal-drum-item" data-idx="${idx}">${yr}</div>`;
+      });
+      yearWheel.innerHTML = yHtml;
+
+      // Attach transform-based controllers
+      monthDrumWheel = createDialDrumWheel({
+        drumEl: monthDrum,
+        wheelEl: monthWheel,
+        count: 12,
+        onSelect: (idx) => {
+          pendingDialMonth = idx;
+        }
+      });
+
+      yearDrumWheel = createDialDrumWheel({
+        drumEl: yearDrum,
+        wheelEl: yearWheel,
+        count: dialYearsList.length,
+        onSelect: (idx) => {
+          if (dialYearsList[idx] !== undefined) {
+            pendingDialYear = dialYearsList[idx];
+            syncDialMonthLimit();
+          }
+        }
+      });
+    } else {
+      // If already initialized and year count changed
+      if (dialYearsList.length !== yearWheel.children.length) {
+        let yHtml = '';
+        dialYearsList.forEach((yr, idx) => {
+          yHtml += `<div class="history-cal-drum-item" data-idx="${idx}">${yr}</div>`;
+        });
+        yearWheel.innerHTML = yHtml;
+        if (yearDrumWheel) {
+          yearDrumWheel.updateCount(dialYearsList.length);
         }
       }
-    });
+    }
+
+    syncDialMonthLimit();
   }
 
   function openCalendarDialView() {
@@ -6239,23 +6336,35 @@
     if (!dialView) return;
 
     isDialViewOpen = true;
+    const now = new Date();
+    const liveYear = now.getFullYear();
+    const liveMonth = now.getMonth();
+
+    if (currentCalYear > liveYear) {
+      currentCalYear = liveYear;
+      currentCalMonth = liveMonth;
+    } else if (currentCalYear === liveYear && currentCalMonth > liveMonth) {
+      currentCalMonth = liveMonth;
+    }
+
     pendingDialMonth = currentCalMonth;
     pendingDialYear = currentCalYear;
 
     buildDialDrums();
+    syncDialMonthLimit();
 
     if (mainView) mainView.style.display = 'none';
     dialView.style.display = 'flex';
     if (shell) shell.classList.add('is-dial-open');
 
-    // Immediately set wheel positions to currentCalMonth and currentCalYear without delay
-    if (monthDrumWheel) {
-      monthDrumWheel.setIndex(currentCalMonth, false);
-    }
+    // Immediately set wheel positions to pendingDialYear and pendingDialMonth without delay
     if (yearDrumWheel) {
-      const yIdx = dialYearsList.indexOf(currentCalYear);
+      const yIdx = dialYearsList.indexOf(pendingDialYear);
       const targetIdx = yIdx >= 0 ? yIdx : dialYearsList.length - 1;
       yearDrumWheel.setIndex(targetIdx, false);
+    }
+    if (monthDrumWheel) {
+      monthDrumWheel.setIndex(pendingDialMonth, false);
     }
   }
 
@@ -6268,9 +6377,16 @@
     isDialViewOpen = false;
 
     if (applyChanges) {
-      if (monthDrumWheel) pendingDialMonth = monthDrumWheel.getIndex();
+      const now = new Date();
+      const liveYear = now.getFullYear();
+      const liveMonth = now.getMonth();
+
       if (yearDrumWheel && dialYearsList[yearDrumWheel.getIndex()] !== undefined) {
-        pendingDialYear = dialYearsList[yearDrumWheel.getIndex()];
+        pendingDialYear = Math.min(liveYear, dialYearsList[yearDrumWheel.getIndex()]);
+      }
+      if (monthDrumWheel) {
+        const maxM = (pendingDialYear >= liveYear) ? liveMonth : 11;
+        pendingDialMonth = Math.min(maxM, monthDrumWheel.getIndex());
       }
       currentCalMonth = pendingDialMonth;
       currentCalYear = pendingDialYear;
@@ -6308,9 +6424,14 @@
       }
     }
 
+    const now = new Date();
+    if (targetDate > now) {
+      targetDate = now;
+    }
+
     currentCalYear = targetDate.getFullYear();
     currentCalMonth = targetDate.getMonth();
-    activeSelectedDate = initialDateStr || getLocalDateString(targetDate);
+    activeSelectedDate = (initialDateStr && initialDateStr <= getLocalDateString(now)) ? initialDateStr : getLocalDateString(targetDate);
 
     dialog.classList.remove('is-closing');
     if (typeof dialog.showModal === 'function' && !dialog.open) {
@@ -6473,7 +6594,10 @@
 
         // 1:1 real-time finger tracking with soft rubber-banding beyond 1 screen width
         let dampedDiffX = diffX;
-        if (diffX > viewportWidth) {
+        const atMax = isCalendarAtMaxMonth();
+        if (atMax && diffX < 0) {
+          dampedDiffX = diffX * 0.15; // Firm resistance when attempting to drag into future
+        } else if (diffX > viewportWidth) {
           dampedDiffX = viewportWidth + (diffX - viewportWidth) * 0.35;
         } else if (diffX < -viewportWidth) {
           dampedDiffX = -viewportWidth + (diffX + viewportWidth) * 0.35;
@@ -6500,8 +6624,8 @@
       const threshold = viewportWidth * 0.22;
 
       if (diffX < -threshold || velocity < -0.38) {
-        // Swipe left -> Next Month
-        finishCalendarMonthSwipe(1);
+        // Swipe left -> Next Month (blocked if at max month)
+        finishCalendarMonthSwipe(isCalendarAtMaxMonth() ? 0 : 1);
       } else if (diffX > threshold || velocity > 0.38) {
         // Swipe right -> Prev Month
         finishCalendarMonthSwipe(-1);
@@ -6525,6 +6649,7 @@
     viewport.addEventListener('wheel', (e) => {
       if (isMonthTransitioning || isMonthDragging) return;
       if (Math.abs(e.deltaX) > 28 && Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        if (e.deltaX > 0 && isCalendarAtMaxMonth()) return;
         e.preventDefault();
         e.stopPropagation();
         clearTimeout(wheelTimer);
@@ -7301,10 +7426,82 @@
   }
 
   // =========================================================================
+  // LIVE TEMPORAL DRIFT & CALENDAR/HEATMAP ROLLOVER MONITOR
+  // Detects midnight (day rollover) and new month arrivals in real-time,
+  // automatically regenerating the heatmap for new months, moving today's
+  // highlight, updating stats, and unlocking live calendar bounds.
+  // =========================================================================
+  let liveMonitorDateStr = getLocalDateString();
+  let liveMonitorMonth = new Date().getMonth();
+  let liveMonitorYear = new Date().getFullYear();
+  let liveMonitorInterval = null;
+
+  function checkLiveTimeRollover() {
+    const now = new Date();
+    const currentDateStr = getLocalDateString(now);
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const monthChanged = (currentMonth !== liveMonitorMonth || currentYear !== liveMonitorYear);
+    const dayChanged = (currentDateStr !== liveMonitorDateStr);
+
+    if (!monthChanged && !dayChanged) return;
+
+    liveMonitorDateStr = currentDateStr;
+    liveMonitorMonth = currentMonth;
+    liveMonitorYear = currentYear;
+
+    // 1. Heatmap live update:
+    // If month changed, new month arrived -> rebuild heatmap so the new month block is generated!
+    // If only day changed, update today's highlighted cell in the heatmap ring.
+    if (monthChanged) {
+      renderHeatmap(true);
+    } else {
+      updateHeatmapCells();
+    }
+
+    // 2. Stats & streak live update for today
+    renderStats();
+    updateTodayLiveStat();
+
+    // 3. Calendar live update:
+    // Update live calendar bounds (unlocking newly arrived month/day)
+    const calDialog = document.getElementById('history-calendar-dialog');
+    if (calDialog && calDialog.open) {
+      if (isDialViewOpen) {
+        buildDialDrums();
+        syncDialMonthLimit();
+      } else {
+        renderHistoryCalendarGrid();
+      }
+    }
+  }
+
+  function initLiveTimeTicker() {
+    if (liveMonitorInterval) return;
+    liveMonitorDateStr = getLocalDateString();
+    liveMonitorMonth = new Date().getMonth();
+    liveMonitorYear = new Date().getFullYear();
+
+    // Check every 5 seconds for smooth, reliable midnight and month roll
+    liveMonitorInterval = setInterval(checkLiveTimeRollover, 5000);
+
+    // Immediate check whenever user returns to the tab (e.g. computer woke up from sleep next day/month)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        checkLiveTimeRollover();
+      }
+    });
+
+    window.addEventListener('focus', checkLiveTimeRollover);
+  }
+
+  // =========================================================================
   // EVENT LISTENERS & SETUP
   // =========================================================================
   function initEvents() {
     initConfirmDialog();
+    initLiveTimeTicker();
 
     // Disable accidental mobile long-press text selection across the website (excluding text inputs)
     document.addEventListener('selectstart', (e) => {

@@ -5596,6 +5596,18 @@ html.unauthenticated-gate .auth-dialog::backdrop {
   transform: scale(1.06);
 }
 
+.history-cal-nav-btn:disabled,
+.history-cal-nav-btn.is-disabled {
+  opacity: 0.22;
+  pointer-events: none;
+  cursor: not-allowed;
+  transform: none;
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #475569;
+  box-shadow: none;
+}
+
 .history-cal-title-btn {
   display: inline-flex;
   align-items: center;
@@ -5943,6 +5955,15 @@ html.unauthenticated-gate .auth-dialog::backdrop {
   background: transparent;
   border-color: transparent;
   opacity: 0;
+}
+
+.history-cal-day.is-future {
+  opacity: 0.22;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  color: #334155 !important;
+  background: transparent !important;
+  border-color: transparent !important;
 }
 
 .history-cal-day.has-sessions {
