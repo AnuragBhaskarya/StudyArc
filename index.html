@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=12.46">
+  <link rel="stylesheet" href="styles.css?v=12.47">
   <script>
     (function () {
       var isAuth = false;
@@ -506,20 +506,20 @@
           <!-- 3 Minimal Highlight Metric Cards -->
           <div class="day-summary-strip" aria-label="Day Summary Metrics">
             <!-- Total Time -->
-            <div class="day-pill" title="Total Focus Time">
-              <span class="day-pill-emoji" aria-hidden="true">⏱️</span>
+            <div class="day-pill">
+              <span class="day-pill-label">Total Time</span>
               <span class="day-pill-value" id="day-pill-time">0m</span>
             </div>
 
             <!-- Total Sessions -->
-            <div class="day-pill" title="Total Sessions">
-              <span class="day-pill-emoji" aria-hidden="true">🎯</span>
+            <div class="day-pill">
+              <span class="day-pill-label">Sessions</span>
               <span class="day-pill-value" id="day-pill-sessions">0</span>
             </div>
 
             <!-- Total XP Gained -->
-            <div class="day-pill day-pill-xp" title="XP Gained">
-              <span class="day-pill-emoji" aria-hidden="true">⚡</span>
+            <div class="day-pill day-pill-xp">
+              <span class="day-pill-label">XP Gained</span>
               <span class="day-pill-value" id="day-pill-xp">+0 XP</span>
             </div>
           </div>
@@ -559,22 +559,22 @@
 
           <!-- Scrollable Body Content -->
           <div class="session-dialog-body" id="session-dialog-body" data-lenis-prevent>
-            <!-- 4 Highlight Metric Cards -->
-            <div class="day-summary-strip session-summary-strip" aria-label="Session Summary Metrics">
-              <div class="day-pill session-pill" title="Active Focus Time">
-                <span class="day-pill-emoji" aria-hidden="true">⏱️</span>
+            <!-- 4 Highlight Metric Cards (Strictly 4 in 1 Single Row) -->
+            <div class="session-summary-strip" aria-label="Session Summary Metrics">
+              <div class="day-pill session-pill">
+                <span class="day-pill-label">Focus Time</span>
                 <span class="day-pill-value session-focus-val" id="session-pill-focus">0m</span>
               </div>
-              <div class="day-pill session-pill session-pill-break" title="Break Time">
-                <span class="day-pill-emoji" aria-hidden="true">☕</span>
+              <div class="day-pill session-pill session-pill-break">
+                <span class="day-pill-label">Break Time</span>
                 <span class="day-pill-value session-break-val" id="session-pill-break">0m</span>
               </div>
-              <div class="day-pill session-pill" title="Pauses Taken">
-                <span class="day-pill-emoji" aria-hidden="true">⏸️</span>
+              <div class="day-pill session-pill">
+                <span class="day-pill-label">Pauses</span>
                 <span class="day-pill-value" id="session-pill-pauses">0</span>
               </div>
-              <div class="day-pill session-pill day-pill-xp" title="XP Earned">
-                <span class="day-pill-emoji" aria-hidden="true">⚡</span>
+              <div class="day-pill session-pill day-pill-xp">
+                <span class="day-pill-label">XP Gained</span>
                 <span class="day-pill-value" id="session-pill-xp">+0 XP</span>
               </div>
             </div>
@@ -753,16 +753,16 @@
 
           <!-- 3 Highlight Metric Cards Strip (Emerald Green Theme) -->
           <div class="day-summary-strip history-summary-strip" aria-label="Sessions History Summary Metrics">
-            <div class="day-pill history-pill" title="Total Focus Time">
-              <span class="day-pill-emoji" aria-hidden="true">⏱️</span>
+            <div class="day-pill history-pill">
+              <span class="day-pill-label">Total Focus</span>
               <span class="day-pill-value" id="history-pill-total-time">0h 0m</span>
             </div>
-            <div class="day-pill history-pill" title="Total Sessions">
-              <span class="day-pill-emoji" aria-hidden="true">🎯</span>
+            <div class="day-pill history-pill">
+              <span class="day-pill-label">Total Sessions</span>
               <span class="day-pill-value" id="history-pill-sessions-count">0</span>
             </div>
-            <div class="day-pill history-pill day-pill-xp" title="Active Days">
-              <span class="day-pill-emoji" aria-hidden="true">📅</span>
+            <div class="day-pill history-pill day-pill-xp">
+              <span class="day-pill-label">Active Days</span>
               <span class="day-pill-value" id="history-pill-days-count">0</span>
             </div>
           </div>
@@ -1163,7 +1163,7 @@
   <!-- JAVASCRIPT LOGIC (Local zero-latency assets, resilient against CDN outages and content blockers) -->
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
-  <script src="app.js?v=12.46"></script>
+  <script src="app.js?v=12.47"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

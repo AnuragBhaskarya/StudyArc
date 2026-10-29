@@ -2957,17 +2957,29 @@ input:checked + .switch-slider:before {
   border-radius: 4px;
 }
 
-/* Metric pills */
+/* Metric pills for Session Detail Modal — strictly 4 columns in 1 single row */
 .session-summary-strip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.3rem;
-  margin-bottom: 0;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0.35rem;
+  margin-bottom: 0.45rem;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .session-pill {
-  padding: 0.18rem 0.25rem;
+  padding: 0.32rem 0.2rem;
+  text-align: center;
+  min-width: 0;
+}
+
+.session-pill .day-pill-label {
+  font-size: 0.5rem;
+  letter-spacing: 0.04em;
+}
+
+.session-pill .day-pill-value {
+  font-size: 0.82rem;
 }
 
 .session-focus-val {
@@ -2979,12 +2991,12 @@ input:checked + .switch-slider:before {
 }
 
 .session-pill-break {
-  border-color: rgba(245, 158, 11, 0.25);
-  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.22);
+  background: rgba(245, 158, 11, 0.05);
 }
 
 .session-pill-break:hover {
-  background: rgba(245, 158, 11, 0.14);
+  background: rgba(245, 158, 11, 0.1);
   border-color: rgba(245, 158, 11, 0.35);
 }
 
@@ -3591,7 +3603,7 @@ input:checked + .switch-slider:before {
   height: 14px;
 }
 
-/* Highlight Metric Pills (Ultra-compact inline badges with emojis) */
+/* The 3 Highlight Metric Cards Strip */
 .day-summary-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3601,39 +3613,47 @@ input:checked + .switch-slider:before {
 }
 
 .day-pill {
-  background: rgba(16, 224, 104, 0.05);
-  border: 1px solid rgba(16, 224, 104, 0.16);
-  border-radius: 5px;
-  padding: 0.18rem 0.3rem;
-  display: inline-flex;
-  flex-direction: row;
+  background: rgba(7, 21, 14, 0.6);
+  border: 1px solid rgba(16, 224, 104, 0.12);
+  border-radius: 8px;
+  padding: 0.35rem 0.45rem;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.22rem;
+  text-align: center;
+  gap: 0.1rem;
   transition: all 140ms ease;
   min-width: 0;
-  white-space: nowrap;
   box-sizing: border-box;
 }
 
 .day-pill:hover {
-  background: rgba(16, 224, 104, 0.09);
-  border-color: rgba(16, 224, 104, 0.28);
+  background: rgba(16, 224, 104, 0.08);
+  border-color: rgba(16, 224, 104, 0.25);
 }
 
-.day-pill-emoji {
-  font-size: 0.7rem;
-  line-height: 1;
-  flex-shrink: 0;
-  display: inline-block;
+.day-pill-label {
+  font-size: 0.52rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
 }
 
 .day-pill-value {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.84rem;
+  font-weight: 700;
   color: #ffffff;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   font-feature-settings: "tnum" on;
+  text-align: center;
+  width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
