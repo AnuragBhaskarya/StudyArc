@@ -43,6 +43,7 @@
     activeTaskName: null,
     activeTaskStartTime: null,
     activeTaskTargetSeconds: null,
+    activeSessionIntervals: [],
 
     // Preferences
     soundEnabled: true,
@@ -56,6 +57,7 @@
 
   let state = loadState();
   const dayDetailsCache = new Map();
+  const sessionLookupCache = new Map();
 
   // =========================================================================
   // ONE-SHOT BOOT / HOME INTRO STATE
@@ -574,6 +576,7 @@
       state.activeTaskName = null;
       state.activeTaskStartTime = null;
       state.activeTaskTargetSeconds = null;
+      state.activeSessionIntervals = [];
       if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
       saveState();
       renderTimer();
@@ -590,6 +593,12 @@
       state.timer.anchorServerTime = null;
       state.timer.lastTickTime = null;
       state.activeTaskTargetSeconds = state.timer.targetSeconds;
+      if (serverTimer.sessionStartedAt) {
+        state.activeTaskStartTime = serverTimer.sessionStartedAt;
+      }
+      if (Array.isArray(serverTimer.intervals)) {
+        state.activeSessionIntervals = serverTimer.intervals;
+      }
       if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
@@ -611,6 +620,7 @@
       state.activeTaskName = null;
       state.activeTaskStartTime = null;
       state.activeTaskTargetSeconds = null;
+      state.activeSessionIntervals = [];
       if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
@@ -631,6 +641,12 @@
       state.timer.anchorServerTime = serverTimer.startedAt ? Number(serverTimer.startedAt) : (Date.now() + serverClockOffset);
       state.timer.lastTickTime = Date.now();
       state.activeTaskTargetSeconds = state.timer.targetSeconds;
+      if (serverTimer.sessionStartedAt) {
+        state.activeTaskStartTime = serverTimer.sessionStartedAt;
+      }
+      if (Array.isArray(serverTimer.intervals)) {
+        state.activeSessionIntervals = serverTimer.intervals;
+      }
 
       // A +30m adjustment raises the remaining anchor. Clear the monotonic
       // guard so the received jump is not clamped back to the old countdown.
@@ -2670,10 +2686,18 @@
     playChime('start');
     activeSessionHasBeenPaused = false;
 
+    const now = Date.now();
+    if (!state.activeTaskStartTime) {
+      state.activeTaskStartTime = now;
+    }
+    if (!state.activeSessionIntervals || state.activeSessionIntervals.length === 0) {
+      state.activeSessionIntervals = [{ type: 'focus', start: now, end: null }];
+    }
+
     state.timer.status = 'running';
     state.timer.anchorRemainingSeconds = state.timer.remainingSeconds;
-    state.timer.anchorServerTime = Date.now() + serverClockOffset;
-    state.timer.lastTickTime = Date.now();
+    state.timer.anchorServerTime = now + serverClockOffset;
+    state.timer.lastTickTime = now;
     saveState();
 
     if (!timerInterval) {
@@ -2683,7 +2707,9 @@
     syncTimerAction('start', {
       target_seconds: state.timer.targetSeconds,
       remaining_seconds: Math.round(state.timer.remainingSeconds),
-      active_task_name: state.activeTaskName
+      active_task_name: state.activeTaskName,
+      session_started_at: state.activeTaskStartTime,
+      intervals: state.activeSessionIntervals
     });
   }
 
@@ -2692,10 +2718,25 @@
     initAudio();
     playChime('start');
 
+    const now = Date.now();
+    if (!state.activeTaskStartTime) {
+      state.activeTaskStartTime = now;
+    }
+    if (!state.activeSessionIntervals) {
+      state.activeSessionIntervals = [];
+    }
+    if (state.activeSessionIntervals.length > 0) {
+      const last = state.activeSessionIntervals[state.activeSessionIntervals.length - 1];
+      if (last.end === null) {
+        last.end = now;
+      }
+    }
+    state.activeSessionIntervals.push({ type: 'focus', start: now, end: null });
+
     state.timer.status = 'running';
     state.timer.anchorRemainingSeconds = state.timer.remainingSeconds;
-    state.timer.anchorServerTime = Date.now() + serverClockOffset;
-    state.timer.lastTickTime = Date.now();
+    state.timer.anchorServerTime = now + serverClockOffset;
+    state.timer.lastTickTime = now;
     saveState();
 
     if (!timerInterval) {
@@ -2705,13 +2746,34 @@
     syncTimerAction('resume', {
       target_seconds: state.timer.targetSeconds,
       remaining_seconds: Math.round(state.timer.remainingSeconds),
-      active_task_name: state.activeTaskName
+      active_task_name: state.activeTaskName,
+      session_started_at: state.activeTaskStartTime,
+      intervals: state.activeSessionIntervals
     });
   }
 
   function pauseTimer() {
     lastRenderedSeconds = null;
     activeSessionHasBeenPaused = true;
+
+    const now = Date.now();
+    if (!state.activeSessionIntervals) {
+      state.activeSessionIntervals = [];
+    }
+    if (state.activeSessionIntervals.length > 0) {
+      const last = state.activeSessionIntervals[state.activeSessionIntervals.length - 1];
+      if (last.end === null) {
+        last.end = now;
+      }
+    } else {
+      state.activeSessionIntervals.push({
+        type: 'focus',
+        start: state.activeTaskStartTime || now,
+        end: now
+      });
+    }
+    state.activeSessionIntervals.push({ type: 'break', start: now, end: null });
+
     state.timer.status = 'paused';
     state.timer.anchorServerTime = null;
     state.timer.lastTickTime = null;
@@ -2723,7 +2785,9 @@
     }
     renderTimer();
     syncTimerAction('pause', {
-      remaining_seconds: Math.round(state.timer.remainingSeconds)
+      remaining_seconds: Math.round(state.timer.remainingSeconds),
+      session_started_at: state.activeTaskStartTime,
+      intervals: state.activeSessionIntervals
     });
   }
 
@@ -2799,9 +2863,18 @@
     const todayStr = getLocalDateString();
     const subj = subjectName || state.activeTaskName || (state.subjects && state.subjects.length > 0 ? state.subjects[0].name : 'Focus Session');
     const now = Date.now();
-    const startMs = options.startTime || state.activeTaskStartTime || (now - minutesCompleted * 60000);
-    const startD = new Date(startMs);
-    const endD = new Date(now);
+    const sessionStartMs = Number(options.sessionStartMs || options.startTime || state.activeTaskStartTime) || (now - minutesCompleted * 60000);
+    const sessionEndMs = Number(options.sessionEndMs || options.endTime || now);
+    const breakMinutes = Number(options.breakMinutes || 0);
+    const timeline = options.timeline || [{
+      type: 'focus',
+      start: sessionStartMs,
+      end: sessionEndMs,
+      duration: minutesCompleted * 60
+    }];
+
+    const startD = new Date(sessionStartMs);
+    const endD = new Date(sessionEndMs);
     const startStr = formatTime(startD);
     const endStr = formatTime(endD);
     const timeRangeStr = `${startStr} – ${endStr}`;
@@ -2813,17 +2886,22 @@
     state.totalFocusSeconds += minutesCompleted * 60;
     state.dayActivity[todayStr] = (state.dayActivity[todayStr] || 0) + minutesCompleted;
 
-    state.sessions.unshift({
+    const sessionObj = {
       id: 'sess_' + now,
       date: todayStr,
       durationMinutes: minutesCompleted,
       subject: subj,
-      timestamp: now,
+      timestamp: sessionEndMs,
       startTime: startStr,
       endTime: endStr,
       timeRange: timeRangeStr,
-      xp: earnedXp
-    });
+      xp: earnedXp,
+      sessionStartMs: sessionStartMs,
+      sessionEndMs: sessionEndMs,
+      breakMinutes: breakMinutes,
+      timeline: timeline
+    };
+    state.sessions.unshift(sessionObj);
     dayDetailsCache.delete(todayStr);
     invalidateSessionIndex();
 
@@ -2843,10 +2921,14 @@
           subject_name: subj,
           duration_minutes: minutesCompleted,
           date: todayStr,
-          timestamp: now,
+          timestamp: sessionEndMs,
           start_time: startStr,
           end_time: endStr,
-          unpaused: unpaused
+          unpaused: unpaused,
+          session_start_ms: sessionStartMs,
+          session_end_ms: sessionEndMs,
+          break_minutes: breakMinutes,
+          timeline: timeline
         })
       });
       if (res.ok) {
@@ -2858,6 +2940,18 @@
               opt.id = data.session.id;
               if (data.session.xp != null) {
                 opt.xp = data.session.xp;
+              }
+              if (data.session.sessionStartMs != null) {
+                opt.sessionStartMs = data.session.sessionStartMs;
+              }
+              if (data.session.sessionEndMs != null) {
+                opt.sessionEndMs = data.session.sessionEndMs;
+              }
+              if (data.session.breakMinutes != null) {
+                opt.breakMinutes = data.session.breakMinutes;
+              }
+              if (data.session.timeline != null) {
+                opt.timeline = data.session.timeline;
               }
               invalidateSessionIndex();
             }
@@ -2920,7 +3014,35 @@
 
     const prevLevel = getLevelInfo(state.xp).level;
     const taskName = state.activeTaskName || 'Focus Session';
-    const sessionStartTime = state.activeTaskStartTime;
+    const now = Date.now();
+    const sessionStartTime = state.activeTaskStartTime || (state.activeSessionIntervals && state.activeSessionIntervals[0]?.start) || (now - minutesCompleted * 60000);
+    const sessionEndTime = now;
+
+    const finalizedIntervals = (state.activeSessionIntervals || []).slice();
+    if (finalizedIntervals.length > 0) {
+      const last = finalizedIntervals[finalizedIntervals.length - 1];
+      if (last.end === null) {
+        last.end = sessionEndTime;
+      }
+    } else if (minutesCompleted > 0) {
+      finalizedIntervals.push({
+        type: 'focus',
+        start: sessionStartTime,
+        end: sessionEndTime,
+        duration: minutesCompleted * 60
+      });
+    }
+
+    let totalBreakSecs = 0;
+    finalizedIntervals.forEach(int => {
+      if (int.start && int.end) {
+        int.duration = Math.max(0, Math.round((int.end - int.start) / 1000));
+        if (int.type === 'break') {
+          totalBreakSecs += int.duration;
+        }
+      }
+    });
+    const breakMinutes = Math.round(totalBreakSecs / 60);
 
     // Send the session to the server immediately, but keep all heavy local
     // persistence for after the zero-hold + refill animation.
@@ -2929,6 +3051,11 @@
         render: false,
         persist: false,
         startTime: sessionStartTime,
+        endTime: sessionEndTime,
+        sessionStartMs: sessionStartTime,
+        sessionEndMs: sessionEndTime,
+        breakMinutes: breakMinutes,
+        timeline: finalizedIntervals,
         deferUIDelay: false,
         unpaused: !activeSessionHasBeenPaused
       });
@@ -2950,6 +3077,7 @@
         state.activeTaskName = null;
         state.activeTaskStartTime = null;
         state.activeTaskTargetSeconds = null;
+        state.activeSessionIntervals = [];
 
         state.timer.targetSeconds = resetDuration;
         state.timer.remainingSeconds = resetDuration;
@@ -3195,12 +3323,40 @@
 
         if (navigator.vibrate) navigator.vibrate([40, 50, 40]);
 
+        const now = Date.now();
         const taskName = state.activeTaskName || 'Focus Session';
         const targetSecs = state.activeTaskTargetSeconds || state.timer.targetSeconds || DEFAULT_TIMER_SECONDS;
         const elapsedStudy = Math.max(0, targetSecs - holdStartRemaining);
         const minutesLogged = elapsedStudy >= 60 ? Math.round(elapsedStudy / 60) : 0;
-        const sessionStartTime = state.activeTaskStartTime;
+        const sessionStartTime = state.activeTaskStartTime || (state.activeSessionIntervals && state.activeSessionIntervals[0]?.start) || (now - minutesLogged * 60000);
+        const sessionEndTime = now;
         const hadActiveTask = Boolean(state.activeTaskName);
+
+        const finalizedIntervals = (state.activeSessionIntervals || []).slice();
+        if (finalizedIntervals.length > 0) {
+          const last = finalizedIntervals[finalizedIntervals.length - 1];
+          if (last.end === null) {
+            last.end = sessionEndTime;
+          }
+        } else if (minutesLogged > 0) {
+          finalizedIntervals.push({
+            type: 'focus',
+            start: sessionStartTime,
+            end: sessionEndTime,
+            duration: minutesLogged * 60
+          });
+        }
+
+        let totalBreakSecs = 0;
+        finalizedIntervals.forEach(int => {
+          if (int.start && int.end) {
+            int.duration = Math.max(0, Math.round((int.end - int.start) / 1000));
+            if (int.type === 'break') {
+              totalBreakSecs += int.duration;
+            }
+          }
+        });
+        const breakMinutes = Math.round(totalBreakSecs / 60);
 
         beginTimerResetReturn(DEFAULT_TIMER_SECONDS, {
           zeroHoldMs: RESET_ZERO_HOLD_MS,
@@ -3212,7 +3368,13 @@
                 render: false,
                 persist: false,
                 startTime: sessionStartTime,
-                deferUIDelay: false
+                endTime: sessionEndTime,
+                sessionStartMs: sessionStartTime,
+                sessionEndMs: sessionEndTime,
+                breakMinutes: breakMinutes,
+                timeline: finalizedIntervals,
+                deferUIDelay: false,
+                unpaused: !activeSessionHasBeenPaused
               });
             }
 
@@ -3223,6 +3385,7 @@
             state.activeTaskName = null;
             state.activeTaskStartTime = null;
             state.activeTaskTargetSeconds = null;
+            state.activeSessionIntervals = [];
 
             // Reset timer back to fixed 1:30:00 default in stopped/paused state
             state.timer.targetSeconds = DEFAULT_TIMER_SECONDS;
@@ -3548,6 +3711,7 @@
 
     state.activeTaskName = cleanName;
     state.activeTaskStartTime = Date.now();
+    state.activeSessionIntervals = [{ type: 'focus', start: state.activeTaskStartTime, end: null }];
     state.activeTaskTargetSeconds = state.timer.targetSeconds;
     state.timer.remainingSeconds = state.timer.targetSeconds;
     saveState();
@@ -4850,8 +5014,11 @@
           </div>
         `;
       } else {
+        orderedSessions.forEach(s => {
+          if (s && s.id) sessionLookupCache.set(String(s.id), s);
+        });
         listEl.innerHTML = orderedSessions.map(s => `
-          <div class="day-session-card" data-session-id="${escapeHtml(s.id)}" data-duration="${s.durationMinutes}" data-xp="${s.xp != null ? s.xp : (s.durationMinutes * 10)}">
+          <div class="day-session-card" data-session-id="${escapeHtml(s.id)}" data-date="${escapeHtml(dayData.date)}" data-duration="${s.durationMinutes}" data-xp="${s.xp != null ? s.xp : (s.durationMinutes * 10)}">
             <div class="day-session-left">
               <div class="day-session-timeline">
                 <span class="day-session-track-line"></span>
@@ -4921,6 +5088,281 @@
         <div class="day-session-skeleton"></div>
         <div class="day-session-skeleton" style="opacity: 0.6;"></div>
       `;
+    }
+  }
+
+  function openSessionDetailDialog(sessionId, fallbackSession = null) {
+    const dialog = document.getElementById('session-detail-dialog');
+    if (!dialog) return;
+
+    // 1. Locate session
+    let s = sessionLookupCache.get(String(sessionId));
+    if (!s) {
+      s = (state.sessions || []).find(item => String(item.id) === String(sessionId));
+    }
+    if (!s && fallbackSession) {
+      s = fallbackSession;
+    }
+    if (!s) {
+      // Check dayDetailsCache
+      for (const day of dayDetailsCache.values()) {
+        if (day && Array.isArray(day.sessions)) {
+          const match = day.sessions.find(item => String(item.id) === String(sessionId));
+          if (match) {
+            s = match;
+            break;
+          }
+        }
+      }
+    }
+    if (!s) {
+      console.warn('StudyArk: Session detail not found for id:', sessionId);
+      return;
+    }
+    sessionLookupCache.set(String(sessionId), s);
+
+    const dur = Number(s.durationMinutes || s.duration_minutes || 0);
+    const breakMins = Number(s.breakMinutes != null ? s.breakMinutes : (s.break_minutes || 0));
+    const xp = s.xp != null ? s.xp : (dur * 10);
+    const subjName = s.subject || s.subject_name || 'Focus Session';
+    const subjColor = s.color || '#10E068';
+    const dateStr = s.date || getLocalDateString();
+    const timeRangeStr = s.timeRange || (s.startTime && s.endTime ? `${s.startTime} – ${s.endTime}` : '');
+
+    const startMs = Number(s.sessionStartMs || s.session_start_ms || (s.timestamp ? (s.timestamp - dur * 60000) : Date.now()));
+    const endMs = Number(s.sessionEndMs || s.session_end_ms || (s.timestamp || Date.now()));
+
+    // Elements
+    const badgeEl = document.getElementById('session-detail-badge');
+    const dateChipEl = document.getElementById('session-detail-date-chip');
+    const titleEl = document.getElementById('session-detail-title');
+    const timeRangeEl = document.getElementById('session-detail-time-range');
+    const focusPillEl = document.getElementById('session-pill-focus');
+    const breakPillEl = document.getElementById('session-pill-break');
+    const pausesPillEl = document.getElementById('session-pill-pauses');
+    const xpPillEl = document.getElementById('session-pill-xp');
+
+    const ratioMetaEl = document.getElementById('session-ratio-meta');
+    const ratioFocusBarEl = document.getElementById('session-ratio-focus-bar');
+    const ratioBreakBarEl = document.getElementById('session-ratio-break-bar');
+
+    const wallSpanEl = document.getElementById('session-graph-wall-span');
+    const graphTrackEl = document.getElementById('session-graph-track');
+    const graphTooltipEl = document.getElementById('session-graph-tooltip');
+    const axisStartEl = document.getElementById('session-axis-start');
+    const axisEndEl = document.getElementById('session-axis-end');
+
+    const intervalsCountEl = document.getElementById('session-intervals-count');
+    const intervalsListEl = document.getElementById('session-intervals-list');
+    const deleteBtn = document.getElementById('btn-delete-session-from-detail');
+    const doneBtn = document.getElementById('btn-done-session-detail');
+    const closeBtn = document.getElementById('btn-close-session-detail');
+
+    // Header info
+    if (badgeEl) {
+      badgeEl.textContent = subjName;
+      badgeEl.style.color = subjColor;
+      badgeEl.style.borderColor = `${subjColor}40`;
+      badgeEl.style.backgroundColor = `${subjColor}15`;
+    }
+    if (dateChipEl) {
+      const isToday = (dateStr === getLocalDateString());
+      dateChipEl.textContent = isToday ? 'Today' : dateStr;
+    }
+    if (titleEl) {
+      titleEl.textContent = s.taskName ? `"${s.taskName}"` : subjName;
+    }
+    if (timeRangeEl) {
+      timeRangeEl.textContent = timeRangeStr || `${formatTime(new Date(startMs))} – ${formatTime(new Date(endMs))}`;
+    }
+
+    // Parse timeline
+    let timeline = [];
+    if (Array.isArray(s.timeline)) {
+      timeline = s.timeline;
+    } else if (typeof s.timeline === 'string') {
+      try { timeline = JSON.parse(s.timeline); } catch (_) { timeline = []; }
+    } else if (s.timeline_json) {
+      try { timeline = JSON.parse(s.timeline_json); } catch (_) { timeline = []; }
+    }
+
+    // Fallback: If no timeline array, synthesize single continuous block
+    if (!timeline || timeline.length === 0) {
+      timeline = [{
+        type: 'focus',
+        start: startMs,
+        end: endMs,
+        duration: dur * 60
+      }];
+    }
+
+    // Calculate break count and segment durations
+    let breaksCount = 0;
+    let computedBreakSeconds = 0;
+    let computedFocusSeconds = 0;
+
+    timeline.forEach(item => {
+      const segStart = Number(item.start || startMs);
+      const segEnd = Number(item.end || endMs);
+      const segDur = Math.max(0, Math.round((segEnd - segStart) / 1000));
+      item._calcDuration = item.duration || segDur;
+      if (item.type === 'break') {
+        breaksCount++;
+        computedBreakSeconds += item._calcDuration;
+      } else {
+        computedFocusSeconds += item._calcDuration;
+      }
+    });
+
+    const displayFocusMins = dur > 0 ? dur : Math.max(1, Math.round(computedFocusSeconds / 60));
+    const displayBreakMins = breakMins > 0 ? breakMins : Math.round(computedBreakSeconds / 60);
+    const totalWallMins = Math.max(displayFocusMins + displayBreakMins, Math.round((endMs - startMs) / 60000));
+
+    // Summary pills
+    if (focusPillEl) focusPillEl.textContent = formatHoursMinutes(displayFocusMins * 60);
+    if (breakPillEl) breakPillEl.textContent = displayBreakMins > 0 ? formatHoursMinutes(displayBreakMins * 60) : '0m';
+    if (pausesPillEl) pausesPillEl.textContent = `${breaksCount} ${breaksCount === 1 ? 'pause' : 'pauses'}`;
+    if (xpPillEl) xpPillEl.textContent = `+${formatCompactNumber(xp)} XP`;
+
+    // Ratio Bar
+    const totalActiveSpan = displayFocusMins + displayBreakMins;
+    const focusPct = totalActiveSpan > 0 ? Math.round((displayFocusMins / totalActiveSpan) * 100) : 100;
+    const breakPct = 100 - focusPct;
+    if (ratioMetaEl) {
+      ratioMetaEl.textContent = displayBreakMins > 0 ? `${focusPct}% Focus • ${breakPct}% Break` : '100% Unbroken Focus';
+    }
+    if (ratioFocusBarEl) ratioFocusBarEl.style.width = `${focusPct}%`;
+    if (ratioBreakBarEl) ratioBreakBarEl.style.width = `${breakPct}%`;
+
+    // Timeline Graph
+    if (wallSpanEl) wallSpanEl.textContent = `Total: ${formatHoursMinutes(totalWallMins * 60)}`;
+    if (axisStartEl) axisStartEl.textContent = formatTime(new Date(startMs));
+    if (axisEndEl) axisEndEl.textContent = formatTime(new Date(endMs));
+
+    if (graphTrackEl) {
+      graphTrackEl.innerHTML = '';
+      const totalSpanMs = Math.max(1, endMs - startMs);
+
+      timeline.forEach((seg, idx) => {
+        const segStart = Number(seg.start || startMs);
+        const segEnd = Number(seg.end || endMs);
+        const segDurationSec = seg._calcDuration || Math.max(0, Math.round((segEnd - segStart) / 1000));
+        const segPct = Math.max(1.5, ((segEnd - segStart) / totalSpanMs) * 100);
+
+        const segEl = document.createElement('div');
+        segEl.className = `graph-segment graph-segment-${seg.type === 'break' ? 'break' : 'focus'}`;
+        segEl.style.width = `${segPct}%`;
+
+        const typeLabel = seg.type === 'break' ? 'Break' : 'Focus';
+        const startStr = formatTime(new Date(segStart));
+        const endStr = formatTime(new Date(segEnd));
+        const durStr = formatHoursMinutes(segDurationSec);
+
+        segEl.setAttribute('data-tooltip', `${typeLabel}: ${startStr} – ${endStr} (${durStr})`);
+
+        segEl.addEventListener('mouseenter', () => {
+          if (!graphTooltipEl) return;
+          graphTooltipEl.textContent = segEl.getAttribute('data-tooltip');
+          graphTooltipEl.classList.remove('hidden');
+          const trackRect = graphTrackEl.getBoundingClientRect();
+          const segRect = segEl.getBoundingClientRect();
+          const leftOffset = segRect.left - trackRect.left + segRect.width / 2;
+          graphTooltipEl.style.left = `${leftOffset}px`;
+        });
+
+        segEl.addEventListener('mouseleave', () => {
+          graphTooltipEl?.classList.add('hidden');
+        });
+
+        graphTrackEl.appendChild(segEl);
+      });
+    }
+
+    // Intervals & Breaks List
+    if (intervalsCountEl) {
+      intervalsCountEl.textContent = `${timeline.length} ${timeline.length === 1 ? 'interval' : 'intervals'}`;
+    }
+    if (intervalsListEl) {
+      if (breaksCount === 0) {
+        intervalsListEl.innerHTML = `
+          <div class="interval-pristine-banner">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <div>
+              <strong>Pristine Flow Session</strong>
+              <div style="font-size: 0.72rem; opacity: 0.8; margin-top: 2px;">Continuous study without any pauses or breaks (+10% Pristine Flow XP earned).</div>
+            </div>
+          </div>
+        `;
+      } else {
+        let breakIdx = 1;
+        intervalsListEl.innerHTML = timeline.map(item => {
+          const isBreak = item.type === 'break';
+          const segStart = Number(item.start || startMs);
+          const segEnd = Number(item.end || endMs);
+          const startStr = formatTime(new Date(segStart));
+          const endStr = formatTime(new Date(segEnd));
+          const durSec = item._calcDuration || Math.max(0, Math.round((segEnd - segStart) / 1000));
+          const durStr = formatHoursMinutes(durSec);
+          const titleLabel = isBreak ? `Break #${breakIdx++} (Paused)` : 'Focus Period';
+
+          return `
+            <div class="interval-row interval-row-${isBreak ? 'break' : 'focus'}">
+              <div class="interval-left">
+                <span class="interval-badge-pill interval-badge-${isBreak ? 'break' : 'focus'}">${isBreak ? 'PAUSE' : 'FOCUS'}</span>
+                <div>
+                  <div style="font-weight: 500;">${titleLabel}</div>
+                  <div class="interval-times">${startStr} – ${endStr}</div>
+                </div>
+              </div>
+              <div class="interval-right">
+                <span class="interval-duration">${durStr}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // Actions
+    if (deleteBtn) {
+      deleteBtn.onclick = async () => {
+        const confirmed = await confirmAction({
+          title: 'Delete this session?',
+          message: `Are you sure you want to delete this ${dur}-minute "${subjName}" session? XP and stats will be adjusted.`,
+          confirmLabel: 'Delete',
+          variant: 'delete'
+        });
+        if (!confirmed) return;
+        dialog.close();
+        deleteSession(s.id, dateStr);
+      };
+    }
+
+    const closeHandler = () => {
+      dialog.close();
+      const dayDlg = document.getElementById('day-detail-dialog');
+      const histDlg = document.getElementById('sessions-history-dialog');
+      if ((!dayDlg || !dayDlg.open) && (!histDlg || !histDlg.open)) {
+        resumeAmbientCanvas();
+      }
+    };
+    if (doneBtn) doneBtn.onclick = closeHandler;
+    if (closeBtn) closeBtn.onclick = closeHandler;
+    dialog.oncancel = (e) => {
+      e.preventDefault();
+      closeHandler();
+    };
+    dialog.onclick = (e) => {
+      if (e.target === dialog) {
+        closeHandler();
+      }
+    };
+
+    pauseAmbientCanvas();
+    if (typeof dialog.showModal === 'function' && !dialog.open) {
+      dialog.showModal();
     }
   }
 
@@ -5877,6 +6319,13 @@
         </button>
       </div>
     `;
+    if (s && s.id) {
+      sessionLookupCache.set(String(s.id), s);
+    }
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.history-session-delete-btn')) return;
+      openSessionDetailDialog(s.id, s);
+    });
     return card;
   }
 
@@ -7492,6 +7941,7 @@
 
   function deleteSession(sessionId, dateStr) {
     if (!sessionId) return;
+    sessionLookupCache.delete(String(sessionId));
 
     // The delete button also carries data-session-id, so scope the selector to
     // actual card elements. Matching the button as a second "card" used to run
@@ -7942,27 +8392,38 @@
       });
     }
 
-    // Day Sessions List: Delete session action via event delegation
+    // Day Sessions List: Delete session action and card inspection via event delegation
     const daySessionsList = document.getElementById('day-sessions-list');
     if (daySessionsList) {
       daySessionsList.addEventListener('click', async (e) => {
         const btn = e.target.closest('.day-session-delete-btn');
-        if (!btn || btn.disabled) return;
-        e.preventDefault();
-        e.stopPropagation();
+        if (btn) {
+          if (btn.disabled) return;
+          e.preventDefault();
+          e.stopPropagation();
 
-        const sessionId = btn.getAttribute('data-session-id');
-        const dateStr = btn.getAttribute('data-date');
-        if (!sessionId) return;
+          const sessionId = btn.getAttribute('data-session-id');
+          const dateStr = btn.getAttribute('data-date');
+          if (!sessionId) return;
 
-        const confirmed = await confirmAction(getSessionDeleteConfirmOptions(btn, dateStr));
-        if (!confirmed) return;
+          const confirmed = await confirmAction(getSessionDeleteConfirmOptions(btn, dateStr));
+          if (!confirmed) return;
 
-        btn.disabled = true;
-        if (typeof btn.blur === 'function') {
-          btn.blur();
+          btn.disabled = true;
+          if (typeof btn.blur === 'function') {
+            btn.blur();
+          }
+          await deleteSession(sessionId, dateStr);
+          return;
         }
-        await deleteSession(sessionId, dateStr);
+
+        const card = e.target.closest('.day-session-card');
+        if (card) {
+          const sessId = card.getAttribute('data-session-id');
+          if (sessId) {
+            openSessionDetailDialog(sessId);
+          }
+        }
       });
     }
 
@@ -8083,27 +8544,38 @@
     }
     initHistoryCalendarEvents();
 
-    // Sessions History Feed: Delete session action via event delegation
+    // Sessions History Feed: Delete session action and card inspection via event delegation
     const historyFeedList = document.getElementById('history-feed-list');
     if (historyFeedList) {
       historyFeedList.addEventListener('click', async (e) => {
         const btn = e.target.closest('.history-session-delete-btn');
-        if (!btn || btn.disabled) return;
-        e.preventDefault();
-        e.stopPropagation();
+        if (btn) {
+          if (btn.disabled) return;
+          e.preventDefault();
+          e.stopPropagation();
 
-        const sessionId = btn.getAttribute('data-session-id');
-        const dateStr = btn.getAttribute('data-date');
-        if (!sessionId) return;
+          const sessionId = btn.getAttribute('data-session-id');
+          const dateStr = btn.getAttribute('data-date');
+          if (!sessionId) return;
 
-        const confirmed = await confirmAction(getSessionDeleteConfirmOptions(btn, dateStr));
-        if (!confirmed) return;
+          const confirmed = await confirmAction(getSessionDeleteConfirmOptions(btn, dateStr));
+          if (!confirmed) return;
 
-        btn.disabled = true;
-        if (typeof btn.blur === 'function') {
-          btn.blur();
+          btn.disabled = true;
+          if (typeof btn.blur === 'function') {
+            btn.blur();
+          }
+          await deleteSession(sessionId, dateStr);
+          return;
         }
-        await deleteSession(sessionId, dateStr);
+
+        const card = e.target.closest('.history-session-card');
+        if (card) {
+          const sessId = card.getAttribute('data-session-id');
+          if (sessId) {
+            openSessionDetailDialog(sessId);
+          }
+        }
       });
     }
 

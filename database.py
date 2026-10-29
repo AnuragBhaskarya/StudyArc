@@ -1,6 +1,7 @@
 import sqlite3
 import os
 import random
+import json
 from datetime import datetime, timedelta, date, time
 
 # Automatically load .env if present (git-ignored, keeping secrets safe)
@@ -232,10 +233,14 @@ def init_db():
                     active_task_name VARCHAR(255),
                     started_at BIGINT,
                     updated_at BIGINT NOT NULL,
-                    sequence BIGINT NOT NULL DEFAULT 1
+                    sequence BIGINT NOT NULL DEFAULT 1,
+                    session_started_at BIGINT,
+                    intervals_json TEXT
                 )
             """)
             ctx.execute("ALTER TABLE user_timer_state ADD COLUMN IF NOT EXISTS sequence BIGINT NOT NULL DEFAULT 1")
+            ctx.execute("ALTER TABLE user_timer_state ADD COLUMN IF NOT EXISTS session_started_at BIGINT")
+            ctx.execute("ALTER TABLE user_timer_state ADD COLUMN IF NOT EXISTS intervals_json TEXT")
 
             # 3. Subjects Table
             ctx.execute("""
@@ -261,6 +266,10 @@ def init_db():
                     start_time VARCHAR(32),
                     end_time VARCHAR(32),
                     xp INTEGER NOT NULL DEFAULT 0,
+                    session_start_ms BIGINT,
+                    session_end_ms BIGINT,
+                    break_minutes INTEGER NOT NULL DEFAULT 0,
+                    timeline_json TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -287,6 +296,11 @@ def init_db():
             if not cur.fetchone():
                 ctx.execute("ALTER TABLE sessions ADD COLUMN xp INTEGER NOT NULL DEFAULT 0")
             ctx.execute("UPDATE sessions SET xp = duration_minutes * 10 WHERE xp IS NULL OR xp = 0")
+
+            ctx.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS session_start_ms BIGINT")
+            ctx.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS session_end_ms BIGINT")
+            ctx.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS break_minutes INTEGER NOT NULL DEFAULT 0")
+            ctx.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS timeline_json TEXT")
 
             try:
                 ctx.execute("ALTER TABLE sessions ALTER COLUMN subject_id DROP NOT NULL")
@@ -334,7 +348,9 @@ def init_db():
                     active_task_name TEXT,
                     started_at INTEGER,
                     updated_at INTEGER NOT NULL,
-                    sequence INTEGER NOT NULL DEFAULT 1
+                    sequence INTEGER NOT NULL DEFAULT 1,
+                    session_started_at INTEGER,
+                    intervals_json TEXT
                 )
             """)
 
@@ -342,6 +358,10 @@ def init_db():
             cols = [r['name'] for r in cur.fetchall()]
             if 'sequence' not in cols:
                 ctx.execute("ALTER TABLE user_timer_state ADD COLUMN sequence INTEGER NOT NULL DEFAULT 1")
+            if 'session_started_at' not in cols:
+                ctx.execute("ALTER TABLE user_timer_state ADD COLUMN session_started_at INTEGER")
+            if 'intervals_json' not in cols:
+                ctx.execute("ALTER TABLE user_timer_state ADD COLUMN intervals_json TEXT")
 
             ctx.execute("""
                 CREATE TABLE IF NOT EXISTS subjects (
@@ -365,6 +385,10 @@ def init_db():
                     start_time TEXT,
                     end_time TEXT,
                     xp INTEGER NOT NULL DEFAULT 0,
+                    session_start_ms INTEGER,
+                    session_end_ms INTEGER,
+                    break_minutes INTEGER NOT NULL DEFAULT 0,
+                    timeline_json TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -379,6 +403,14 @@ def init_db():
             cols = [r['name'] for r in cur.fetchall()]
             if 'xp' not in cols:
                 ctx.execute("ALTER TABLE sessions ADD COLUMN xp INTEGER NOT NULL DEFAULT 0")
+            if 'session_start_ms' not in cols:
+                ctx.execute("ALTER TABLE sessions ADD COLUMN session_start_ms INTEGER")
+            if 'session_end_ms' not in cols:
+                ctx.execute("ALTER TABLE sessions ADD COLUMN session_end_ms INTEGER")
+            if 'break_minutes' not in cols:
+                ctx.execute("ALTER TABLE sessions ADD COLUMN break_minutes INTEGER NOT NULL DEFAULT 0")
+            if 'timeline_json' not in cols:
+                ctx.execute("ALTER TABLE sessions ADD COLUMN timeline_json TEXT")
             ctx.execute("UPDATE sessions SET xp = duration_minutes * 10 WHERE xp IS NULL OR xp = 0")
 
             # SQLite automatic migration: decouple sessions from subject ON DELETE CASCADE
@@ -497,7 +529,7 @@ def get_timer_state(user_id):
     now_ms = int(datetime.now().timestamp() * 1000)
     with get_connection() as ctx:
         cur = ctx.execute("""
-            SELECT status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at, sequence
+            SELECT status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at, sequence, session_started_at, intervals_json
             FROM user_timer_state
             WHERE user_id = ?
         """, (user_id,))
@@ -505,8 +537,8 @@ def get_timer_state(user_id):
 
         if not row:
             ctx.execute("""
-                INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, updated_at, sequence)
-                VALUES (?, 'idle', 5400, 5400, ?, 1)
+                INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, updated_at, sequence, session_started_at, intervals_json)
+                VALUES (?, 'idle', 5400, 5400, ?, 1, NULL, '[]')
             """, (user_id, now_ms))
             return {
                 'status': 'idle',
@@ -514,6 +546,8 @@ def get_timer_state(user_id):
                 'remainingSeconds': 5400,
                 'activeTaskName': None,
                 'startedAt': None,
+                'sessionStartedAt': None,
+                'intervals': [],
                 'hasCompleted': False,
                 'sequence': 1,
                 'version': 1
@@ -524,8 +558,16 @@ def get_timer_state(user_id):
         target_secs = int(state['target_seconds'])
         remaining_secs = int(state['remaining_seconds'])
         started_at = state.get('started_at')
+        session_started_at = state.get('session_started_at')
         active_task = state.get('active_task_name')
         sequence = int(state.get('sequence') or 1)
+        intervals_raw = state.get('intervals_json')
+        intervals = []
+        if intervals_raw:
+            try:
+                intervals = json.loads(intervals_raw)
+            except Exception:
+                intervals = []
         has_completed = False
 
         current_rem = remaining_secs
@@ -538,10 +580,12 @@ def get_timer_state(user_id):
                 status = 'idle'
                 remaining_secs = target_secs
                 started_at = None
+                session_started_at = None
+                intervals = []
                 try:
                     ctx.execute("""
                         UPDATE user_timer_state
-                        SET status = 'idle', remaining_seconds = target_seconds, started_at = NULL, sequence = sequence + 1
+                        SET status = 'idle', remaining_seconds = target_seconds, started_at = NULL, session_started_at = NULL, intervals_json = '[]', sequence = sequence + 1
                         WHERE user_id = ?
                     """, (user_id,))
                 except Exception as e:
@@ -555,12 +599,14 @@ def get_timer_state(user_id):
             'currentRemaining': current_rem,
             'activeTaskName': active_task,
             'startedAt': started_at,
+            'sessionStartedAt': session_started_at,
+            'intervals': intervals,
             'hasCompleted': has_completed,
             'sequence': sequence,
             'version': sequence
         }
 
-def update_timer_state(user_id, action, target_seconds=None, active_task_name=None, remaining_seconds=None, status=None, started_at=None, sequence=None):
+def update_timer_state(user_id, action, target_seconds=None, active_task_name=None, remaining_seconds=None, status=None, started_at=None, sequence=None, session_started_at=None, intervals_json=None):
     now_ms = int(datetime.now().timestamp() * 1000)
 
     # Optimization: if caller already computed state in RAM (e.g. server.py hot cache),
@@ -572,6 +618,11 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
         new_task = active_task_name
         new_started_at = started_at
         new_sequence = int(sequence)
+        new_session_started_at = session_started_at
+        if isinstance(intervals_json, (list, dict)):
+            new_intervals_json = json.dumps(intervals_json)
+        else:
+            new_intervals_json = intervals_json if intervals_json is not None else '[]'
     else:
         current = get_timer_state(user_id)
         new_status = current['status']
@@ -579,6 +630,8 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
         new_remaining = current['remainingSeconds']
         new_task = active_task_name if active_task_name is not None else current['activeTaskName']
         new_started_at = current.get('startedAt')
+        new_session_started_at = current.get('sessionStartedAt')
+        current_intervals = current.get('intervals') or []
         new_sequence = int(current.get('sequence') or 1) + 1
 
         if action == 'start':
@@ -590,6 +643,8 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
             else:
                 new_remaining = new_target
             new_started_at = now_ms
+            new_session_started_at = now_ms
+            current_intervals = [{'type': 'focus', 'start': now_ms, 'end': None}]
             if active_task_name:
                 new_task = active_task_name
 
@@ -603,6 +658,9 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
                 new_remaining = int(current.get('remainingSeconds', 5400))
             new_status = 'paused'
             new_started_at = None
+            if current_intervals and current_intervals[-1].get('end') is None:
+                current_intervals[-1]['end'] = now_ms
+            current_intervals.append({'type': 'break', 'start': now_ms, 'end': None})
 
         elif action == 'resume':
             new_status = 'running'
@@ -611,23 +669,25 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
             else:
                 new_remaining = current.get('remainingSeconds', 5400)
             new_started_at = now_ms
+            if not new_session_started_at:
+                new_session_started_at = now_ms
+            if current_intervals and current_intervals[-1].get('end') is None:
+                current_intervals[-1]['end'] = now_ms
+            current_intervals.append({'type': 'focus', 'start': now_ms, 'end': None})
 
         elif action == 'reset':
             new_status = 'idle'
             new_target = int(target_seconds) if target_seconds else 5400
             new_remaining = new_target
             new_started_at = None
+            new_session_started_at = None
+            current_intervals = []
             new_task = None
 
         elif action == 'adjust':
-            # Keep the persisted fallback consistent with the live server:
-            # active running/paused sessions accept their new remaining time,
-            # while idle adjustments reset the countdown to the new target.
             new_target = max(0, min(MAX_TIMER_SECONDS, int(new_target)))
             client_rem = int(remaining_seconds) if remaining_seconds is not None else None
 
-            # Live session adjustments share the client's 30-minute floor.
-            # Idle preset picks (including 25m) remain unchanged.
             if current['status'] in ('running', 'paused'):
                 new_target = max(MIN_ACTIVE_TIMER_SECONDS, min(MAX_TIMER_SECONDS, int(new_target)))
 
@@ -645,18 +705,24 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
                 new_status = 'idle'
                 new_remaining = new_target
                 new_started_at = None
+                new_session_started_at = None
+                current_intervals = []
 
         elif action == 'complete':
             new_status = 'idle'
             new_target = int(target_seconds) if target_seconds else current.get('targetSeconds', 5400)
             new_remaining = new_target
             new_started_at = None
+            new_session_started_at = None
+            current_intervals = []
             new_task = None
+
+        new_intervals_json = json.dumps(current_intervals)
 
     with get_connection() as ctx:
         ctx.execute("""
-            INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at, sequence)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at, sequence, session_started_at, intervals_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (user_id) DO UPDATE SET
                 status = EXCLUDED.status,
                 target_seconds = EXCLUDED.target_seconds,
@@ -664,11 +730,13 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
                 active_task_name = EXCLUDED.active_task_name,
                 started_at = EXCLUDED.started_at,
                 updated_at = EXCLUDED.updated_at,
-                sequence = EXCLUDED.sequence
+                sequence = EXCLUDED.sequence,
+                session_started_at = EXCLUDED.session_started_at,
+                intervals_json = EXCLUDED.intervals_json
             WHERE EXCLUDED.sequence >= user_timer_state.sequence
         """ if ctx.is_pg else """
-            INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at, sequence)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO user_timer_state (user_id, status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at, sequence, session_started_at, intervals_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(user_id) DO UPDATE SET
                 status = excluded.status,
                 target_seconds = excluded.target_seconds,
@@ -676,9 +744,16 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
                 active_task_name = excluded.active_task_name,
                 started_at = excluded.started_at,
                 updated_at = excluded.updated_at,
-                sequence = excluded.sequence
+                sequence = excluded.sequence,
+                session_started_at = excluded.session_started_at,
+                intervals_json = excluded.intervals_json
             WHERE excluded.sequence >= user_timer_state.sequence
-        """, (user_id, new_status, new_target, new_remaining, new_task, new_started_at, now_ms, new_sequence))
+        """, (user_id, new_status, new_target, new_remaining, new_task, new_started_at, now_ms, new_sequence, new_session_started_at, new_intervals_json))
+
+    try:
+        parsed_intervals = json.loads(new_intervals_json) if new_intervals_json else []
+    except Exception:
+        parsed_intervals = []
 
     return {
         'status': new_status,
@@ -687,6 +762,8 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
         'currentRemaining': new_remaining,
         'activeTaskName': new_task,
         'startedAt': new_started_at,
+        'sessionStartedAt': new_session_started_at,
+        'intervals': parsed_intervals,
         'hasCompleted': False,
         'sequence': new_sequence,
         'version': new_sequence
@@ -832,7 +909,7 @@ def calculate_session_xp(user_id, duration_minutes, date_str=None, unpaused=True
         'bonus_milestone': bonus_milestone
     }
 
-def add_session(user_id, subject_name, duration_minutes, date_str=None, timestamp_ms=None, start_time=None, end_time=None, unpaused=True, xp=None):
+def add_session(user_id, subject_name, duration_minutes, date_str=None, timestamp_ms=None, start_time=None, end_time=None, unpaused=True, xp=None, session_start_ms=None, session_end_ms=None, break_minutes=0, timeline_json=None):
     try:
         duration_minutes = int(duration_minutes)
     except (ValueError, TypeError):
@@ -844,18 +921,60 @@ def add_session(user_id, subject_name, duration_minutes, date_str=None, timestam
         clean_subj_name = 'Focus Session'
 
     now = datetime.now()
-    if not date_str:
-        date_str = now.strftime('%Y-%m-%d')
-    if not timestamp_ms:
-        timestamp_ms = int(now.timestamp() * 1000)
+    now_ms = int(now.timestamp() * 1000)
 
-    end_dt = datetime.fromtimestamp(timestamp_ms / 1000)
-    start_dt = end_dt - timedelta(minutes=duration_minutes)
+    try:
+        session_end_ms = int(session_end_ms) if session_end_ms is not None else (int(timestamp_ms) if timestamp_ms is not None else now_ms)
+    except (ValueError, TypeError):
+        session_end_ms = now_ms
+
+    timestamp_ms = session_end_ms
+
+    try:
+        session_start_ms = int(session_start_ms) if session_start_ms is not None else (session_end_ms - duration_minutes * 60000)
+    except (ValueError, TypeError):
+        session_start_ms = session_end_ms - duration_minutes * 60000
+
+    try:
+        break_minutes = max(0, int(break_minutes or 0))
+    except (ValueError, TypeError):
+        break_minutes = 0
+
+    end_dt = datetime.fromtimestamp(session_end_ms / 1000)
+    start_dt = datetime.fromtimestamp(session_start_ms / 1000)
+
+    if not date_str:
+        date_str = start_dt.strftime('%Y-%m-%d')
 
     if not start_time:
         start_time = start_dt.strftime('%I:%M %p').lstrip('0')
     if not end_time:
         end_time = end_dt.strftime('%I:%M %p').lstrip('0')
+
+    # Normalize timeline
+    if isinstance(timeline_json, (list, dict)):
+        timeline_serialized = json.dumps(timeline_json)
+        timeline_parsed = timeline_json if isinstance(timeline_json, list) else [timeline_json]
+    elif isinstance(timeline_json, str) and timeline_json.strip():
+        try:
+            timeline_parsed = json.loads(timeline_json)
+            timeline_serialized = timeline_json.strip()
+        except Exception:
+            timeline_parsed = [{
+                'type': 'focus',
+                'start': session_start_ms,
+                'end': session_end_ms,
+                'duration': duration_minutes * 60
+            }]
+            timeline_serialized = json.dumps(timeline_parsed)
+    else:
+        timeline_parsed = [{
+            'type': 'focus',
+            'start': session_start_ms,
+            'end': session_end_ms,
+            'duration': duration_minutes * 60
+        }]
+        timeline_serialized = json.dumps(timeline_parsed)
 
     subj = add_or_get_subject(user_id, clean_subj_name)
 
@@ -872,9 +991,9 @@ def add_session(user_id, subject_name, duration_minutes, date_str=None, timestam
 
     with get_connection() as ctx:
         session_id = ctx.execute_insert("""
-            INSERT INTO sessions (user_id, subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time, xp)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (user_id, subj['id'], subj['name'], duration_minutes, date_str, timestamp_ms, start_time, end_time, session_xp))
+            INSERT INTO sessions (user_id, subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time, xp, session_start_ms, session_end_ms, break_minutes, timeline_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (user_id, subj['id'], subj['name'], duration_minutes, date_str, timestamp_ms, start_time, end_time, session_xp, session_start_ms, session_end_ms, break_minutes, timeline_serialized))
 
     return {
         'id': f"sess_{session_id}",
@@ -887,7 +1006,11 @@ def add_session(user_id, subject_name, duration_minutes, date_str=None, timestam
         'startTime': start_time,
         'endTime': end_time,
         'timeRange': f"{start_time} – {end_time}",
-        'xp': session_xp
+        'xp': session_xp,
+        'sessionStartMs': session_start_ms,
+        'sessionEndMs': session_end_ms,
+        'breakMinutes': break_minutes,
+        'timeline': timeline_parsed
     }
 
 def delete_session(user_id, session_id):
@@ -930,7 +1053,8 @@ def get_sessions(user_id, limit=None):
                 SELECT sess.id, sess.subject_id, sess.subject_name, s.color, 
                        sess.duration_minutes, sess.date, sess.timestamp,
                        sess.start_time, sess.end_time,
-                       COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp
+                       COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp,
+                       sess.session_start_ms, sess.session_end_ms, sess.break_minutes, sess.timeline_json
                 FROM sessions sess
                 LEFT JOIN subjects s ON sess.subject_id = s.id
                 WHERE sess.user_id = ?
@@ -942,7 +1066,8 @@ def get_sessions(user_id, limit=None):
                 SELECT sess.id, sess.subject_id, sess.subject_name, s.color, 
                        sess.duration_minutes, sess.date, sess.timestamp,
                        sess.start_time, sess.end_time,
-                       COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp
+                       COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp,
+                       sess.session_start_ms, sess.session_end_ms, sess.break_minutes, sess.timeline_json
                 FROM sessions sess
                 LEFT JOIN subjects s ON sess.subject_id = s.id
                 WHERE sess.user_id = ?
@@ -955,10 +1080,29 @@ def get_sessions(user_id, limit=None):
             duration = int(r['duration_minutes'])
             sess_xp = int(r.get('xp') or (duration * 10))
             ts = int(r['timestamp'])
-            end_dt = datetime.fromtimestamp(ts / 1000)
-            start_dt = end_dt - timedelta(minutes=duration)
-            start_str = r['start_time'] or start_dt.strftime('%I:%M %p').lstrip('0')
-            end_str = r['end_time'] or end_dt.strftime('%I:%M %p').lstrip('0')
+            end_ms = r.get('session_end_ms') or ts
+            start_ms = r.get('session_start_ms')
+            if not start_ms:
+                start_ms = end_ms - (duration * 60000)
+
+            end_dt = datetime.fromtimestamp(end_ms / 1000)
+            start_dt = datetime.fromtimestamp(start_ms / 1000)
+            start_str = r.get('start_time') or start_dt.strftime('%I:%M %p').lstrip('0')
+            end_str = r.get('end_time') or end_dt.strftime('%I:%M %p').lstrip('0')
+
+            timeline_parsed = []
+            if r.get('timeline_json'):
+                try:
+                    timeline_parsed = json.loads(r['timeline_json'])
+                except Exception:
+                    timeline_parsed = []
+            if not timeline_parsed:
+                timeline_parsed = [{
+                    'type': 'focus',
+                    'start': start_ms,
+                    'end': end_ms,
+                    'duration': duration * 60
+                }]
 
             result.append({
                 'id': f"sess_{r['id']}",
@@ -971,7 +1115,11 @@ def get_sessions(user_id, limit=None):
                 'startTime': start_str,
                 'endTime': end_str,
                 'timeRange': f"{start_str} – {end_str}",
-                'xp': sess_xp
+                'xp': sess_xp,
+                'sessionStartMs': start_ms,
+                'sessionEndMs': end_ms,
+                'breakMinutes': int(r.get('break_minutes') or 0),
+                'timeline': timeline_parsed
             })
         return result
 
@@ -981,7 +1129,8 @@ def get_day_details(user_id, date_str):
             SELECT sess.id, sess.subject_id, sess.subject_name, s.color,
                    sess.duration_minutes, sess.date, sess.timestamp,
                    sess.start_time, sess.end_time,
-                   COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp
+                   COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp,
+                   sess.session_start_ms, sess.session_end_ms, sess.break_minutes, sess.timeline_json
             FROM sessions sess
             LEFT JOIN subjects s ON sess.subject_id = s.id
             WHERE sess.user_id = ? AND sess.date = ?
@@ -998,10 +1147,29 @@ def get_day_details(user_id, date_str):
         total_minutes += duration
         total_xp += sess_xp
         ts = int(r['timestamp'])
-        end_dt = datetime.fromtimestamp(ts / 1000)
-        start_dt = end_dt - timedelta(minutes=duration)
-        start_str = r['start_time'] or start_dt.strftime('%I:%M %p').lstrip('0')
-        end_str = r['end_time'] or end_dt.strftime('%I:%M %p').lstrip('0')
+        end_ms = r.get('session_end_ms') or ts
+        start_ms = r.get('session_start_ms')
+        if not start_ms:
+            start_ms = end_ms - (duration * 60000)
+
+        end_dt = datetime.fromtimestamp(end_ms / 1000)
+        start_dt = datetime.fromtimestamp(start_ms / 1000)
+        start_str = r.get('start_time') or start_dt.strftime('%I:%M %p').lstrip('0')
+        end_str = r.get('end_time') or end_dt.strftime('%I:%M %p').lstrip('0')
+
+        timeline_parsed = []
+        if r.get('timeline_json'):
+            try:
+                timeline_parsed = json.loads(r['timeline_json'])
+            except Exception:
+                timeline_parsed = []
+        if not timeline_parsed:
+            timeline_parsed = [{
+                'type': 'focus',
+                'start': start_ms,
+                'end': end_ms,
+                'duration': duration * 60
+            }]
 
         sessions.append({
             'id': f"sess_{r['id']}",
@@ -1014,7 +1182,11 @@ def get_day_details(user_id, date_str):
             'startTime': start_str,
             'endTime': end_str,
             'timeRange': f"{start_str} – {end_str}",
-            'xp': sess_xp
+            'xp': sess_xp,
+            'sessionStartMs': start_ms,
+            'sessionEndMs': end_ms,
+            'breakMinutes': int(r.get('break_minutes') or 0),
+            'timeline': timeline_parsed
         })
 
     total_sessions = len(sessions)
@@ -1133,7 +1305,7 @@ def get_full_state(user_id, client_date=None):
                 SELECT json_build_object(
                     'timer', (
                         SELECT row_to_json(t) FROM (
-                            SELECT status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at, sequence 
+                            SELECT status, target_seconds, remaining_seconds, active_task_name, started_at, updated_at, sequence, session_started_at, intervals_json 
                             FROM user_timer_state WHERE user_id = %s
                         ) t
                     ),
@@ -1149,7 +1321,7 @@ def get_full_state(user_id, client_date=None):
                     ),
                     'sessions', (
                         SELECT COALESCE(json_agg(sess_row), '[]'::json) FROM (
-                            SELECT sess.id, sess.subject_id, sess.subject_name, s.color, sess.duration_minutes, sess.date, sess.timestamp, sess.start_time, sess.end_time, COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10)::int as xp
+                            SELECT sess.id, sess.subject_id, sess.subject_name, s.color, sess.duration_minutes, sess.date, sess.timestamp, sess.start_time, sess.end_time, COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10)::int as xp, sess.session_start_ms, sess.session_end_ms, sess.break_minutes, sess.timeline_json
                             FROM sessions sess
                             LEFT JOIN subjects s ON sess.subject_id = s.id
                             WHERE sess.user_id = %s
@@ -1189,7 +1361,7 @@ def get_full_state(user_id, client_date=None):
             """, (user_id, user_id))
             sub_rows = [dict(r) for r in cur_s.fetchall()]
             cur_sess = ctx.execute("""
-                SELECT sess.id, sess.subject_id, sess.subject_name, s.color, sess.duration_minutes, sess.date, sess.timestamp, sess.start_time, sess.end_time, COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp
+                SELECT sess.id, sess.subject_id, sess.subject_name, s.color, sess.duration_minutes, sess.date, sess.timestamp, sess.start_time, sess.end_time, COALESCE(NULLIF(sess.xp, 0), sess.duration_minutes * 10) as xp, sess.session_start_ms, sess.session_end_ms, sess.break_minutes, sess.timeline_json
                 FROM sessions sess LEFT JOIN subjects s ON sess.subject_id = s.id
                 WHERE sess.user_id = ? ORDER BY sess.timestamp DESC
             """, (user_id,))
@@ -1223,6 +1395,14 @@ def get_full_state(user_id, client_date=None):
     target_secs = int(timer_raw.get('target_seconds', 5400))
     remaining_secs = int(timer_raw.get('remaining_seconds', 5400))
     started_at = timer_raw.get('started_at')
+    session_started_at = timer_raw.get('session_started_at')
+    intervals_raw = timer_raw.get('intervals_json')
+    intervals = []
+    if intervals_raw:
+        try:
+            intervals = json.loads(intervals_raw) if isinstance(intervals_raw, str) else intervals_raw
+        except Exception:
+            intervals = []
     has_completed = False
 
     if status == 'running' and started_at:
@@ -1234,11 +1414,13 @@ def get_full_state(user_id, client_date=None):
             status = 'idle'
             remaining_secs = target_secs
             started_at = None
+            session_started_at = None
+            intervals = []
             try:
                 with get_connection() as c2:
                     c2.execute("""
                         UPDATE user_timer_state
-                        SET status = 'idle', remaining_seconds = target_seconds, started_at = NULL, sequence = sequence + 1
+                        SET status = 'idle', remaining_seconds = target_seconds, started_at = NULL, session_started_at = NULL, intervals_json = '[]', sequence = sequence + 1
                         WHERE user_id = ?
                     """, (user_id,))
             except Exception as e:
@@ -1252,6 +1434,8 @@ def get_full_state(user_id, client_date=None):
         'remainingSeconds': remaining_secs,
         'activeTaskName': timer_raw.get('active_task_name'),
         'startedAt': started_at,
+        'sessionStartedAt': session_started_at,
+        'intervals': intervals,
         'hasCompleted': has_completed,
         'sequence': int(timer_raw.get('sequence') or 1),
         'version': int(timer_raw.get('sequence') or 1)
@@ -1275,10 +1459,31 @@ def get_full_state(user_id, client_date=None):
     for r in (data.get('sessions') or []):
         duration = int(r['duration_minutes'])
         ts = int(r['timestamp'])
-        end_dt = datetime.fromtimestamp(ts / 1000)
-        start_dt = end_dt - timedelta(minutes=duration)
+        end_ms = r.get('session_end_ms') or ts
+        start_ms = r.get('session_start_ms')
+        if not start_ms:
+            start_ms = end_ms - (duration * 60000)
+
+        end_dt = datetime.fromtimestamp(end_ms / 1000)
+        start_dt = datetime.fromtimestamp(start_ms / 1000)
         start_str = r.get('start_time') or start_dt.strftime('%I:%M %p').lstrip('0')
         end_str = r.get('end_time') or end_dt.strftime('%I:%M %p').lstrip('0')
+
+        timeline_parsed = []
+        raw_tl = r.get('timeline_json')
+        if raw_tl:
+            try:
+                timeline_parsed = json.loads(raw_tl) if isinstance(raw_tl, str) else raw_tl
+            except Exception:
+                timeline_parsed = []
+        if not timeline_parsed:
+            timeline_parsed = [{
+                'type': 'focus',
+                'start': start_ms,
+                'end': end_ms,
+                'duration': duration * 60
+            }]
+
         sessions_res.append({
             'id': f"sess_{r['id']}",
             'subject_id': r['subject_id'],
@@ -1290,7 +1495,11 @@ def get_full_state(user_id, client_date=None):
             'startTime': start_str,
             'endTime': end_str,
             'timeRange': f"{start_str} – {end_str}",
-            'xp': int(r.get('xp') or (duration * 10))
+            'xp': int(r.get('xp') or (duration * 10)),
+            'sessionStartMs': start_ms,
+            'sessionEndMs': end_ms,
+            'breakMinutes': int(r.get('break_minutes') or 0),
+            'timeline': timeline_parsed
         })
 
     # 4. Process Activity & Compute Stats in Python (0 extra DB queries!)

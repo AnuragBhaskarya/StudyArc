@@ -315,6 +315,8 @@ def get_hot_timer_state(user_id):
             'currentRemaining': db_state.get('currentRemaining', db_state['remainingSeconds']),
             'activeTaskName': db_state.get('activeTaskName'),
             'startedAt': db_state.get('startedAt'),
+            'sessionStartedAt': db_state.get('sessionStartedAt'),
+            'intervals': db_state.get('intervals', []),
             'updatedAt': now_ms,
             'sequence': seq,
             'version': seq,
@@ -324,7 +326,7 @@ def get_hot_timer_state(user_id):
         USER_TIMER_HOT_CACHE[user_id] = state
         return dict(state)
 
-def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=None, remaining_seconds=None, origin_client_id=None):
+def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=None, remaining_seconds=None, origin_client_id=None, session_started_at=None, intervals=None):
     """
     Unified routine for all timer modifications across the entire application:
     Updates RAM state in 0.01ms, increments monotonic sequence (1, 2, 3...),
@@ -339,6 +341,8 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
     new_remaining = int(current.get('remainingSeconds', 5400))
     new_task = active_task_name if active_task_name is not None else current.get('activeTaskName')
     new_started_at = current.get('startedAt')
+    new_session_started_at = session_started_at if session_started_at is not None else current.get('sessionStartedAt')
+    current_intervals = list(intervals) if intervals is not None else list(current.get('intervals', []))
     current_seq = int(current.get('sequence') or 0)
     new_seq = current_seq + 1
 
@@ -351,6 +355,8 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
         else:
             new_remaining = new_target
         new_started_at = now_ms
+        new_session_started_at = now_ms
+        current_intervals = [{'type': 'focus', 'start': now_ms, 'end': None}]
         if active_task_name:
             new_task = active_task_name
 
@@ -359,8 +365,6 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
         if client_rem is not None and current.get('status') == 'running' and current.get('startedAt'):
             server_elapsed = (now_ms - int(current['startedAt'])) / 1000.0
             server_calc = max(0, int(current.get('remainingSeconds', 5400) - server_elapsed))
-            # Client-authoritative visual pause guard: honor client's exact visual second
-            # if within 5s network latency slack window to eliminate pause-time rollback
             if abs(client_rem - server_calc) <= 5:
                 new_remaining = client_rem
             else:
@@ -372,6 +376,12 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
         new_status = 'paused'
         new_started_at = None
 
+        if current_intervals and current_intervals[-1].get('end') is None:
+            current_intervals[-1]['end'] = now_ms
+        elif not current_intervals:
+            current_intervals.append({'type': 'focus', 'start': current.get('startedAt') or now_ms, 'end': now_ms})
+        current_intervals.append({'type': 'break', 'start': now_ms, 'end': None})
+
     elif action == 'resume':
         new_status = 'running'
         if remaining_seconds is not None:
@@ -379,24 +389,27 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
         else:
             new_remaining = current.get('remainingSeconds', 5400)
         new_started_at = now_ms
+        if not new_session_started_at:
+            new_session_started_at = now_ms
+
+        if current_intervals and current_intervals[-1].get('end') is None:
+            current_intervals[-1]['end'] = now_ms
+        current_intervals.append({'type': 'focus', 'start': now_ms, 'end': None})
 
     elif action == 'reset':
         new_status = 'idle'
         new_target = int(target_seconds) if target_seconds else 5400
         new_remaining = new_target
         new_started_at = None
+        new_session_started_at = None
+        current_intervals = []
         new_task = None
 
     elif action == 'adjust':
-        # Idle preset picks and live -30m/+30m session edits both land here.
-        # For an active session the client sends remaining time with studied
-        # elapsed time already preserved, so target and remaining move together.
         new_target = max(0, min(MAX_TIMER_SECONDS, new_target))
         client_rem = int(remaining_seconds) if remaining_seconds is not None else None
         current_status = current.get('status', 'idle')
 
-        # Live session adjustments share the client's 30-minute floor. Idle
-        # preset picks (including 25m) remain unchanged.
         if current_status in ('running', 'paused'):
             new_target = max(MIN_ACTIVE_TIMER_SECONDS, min(MAX_TIMER_SECONDS, new_target))
 
@@ -404,8 +417,6 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
             if client_rem is None:
                 client_rem = int(round(float(current.get('currentRemaining', current.get('remainingSeconds', new_target)))))
             new_remaining = max(0, min(new_target, MAX_TIMER_SECONDS, client_rem))
-            # Re-anchor at the new remaining time so every device continues
-            # counting down from the adjusted value, not the old start epoch.
             new_started_at = now_ms
         elif current_status == 'paused':
             if client_rem is None:
@@ -416,12 +427,16 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
             new_status = 'idle'
             new_remaining = new_target
             new_started_at = None
+            new_session_started_at = None
+            current_intervals = []
 
     elif action == 'complete':
         new_status = 'idle'
         new_target = int(target_seconds) if target_seconds else int(current.get('targetSeconds', 5400))
         new_remaining = new_target
         new_started_at = None
+        new_session_started_at = None
+        current_intervals = []
         new_task = None
 
     new_state = {
@@ -431,6 +446,8 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
         'currentRemaining': new_remaining,
         'activeTaskName': new_task,
         'startedAt': new_started_at,
+        'sessionStartedAt': new_session_started_at,
+        'intervals': current_intervals,
         'updatedAt': now_ms,
         'sequence': new_seq,
         'version': new_seq,
@@ -458,7 +475,9 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
                 remaining_seconds=new_remaining,
                 status=new_status,
                 started_at=new_started_at,
-                sequence=new_seq
+                sequence=new_seq,
+                session_started_at=new_session_started_at,
+                intervals_json=current_intervals
             )
         except Exception as e:
             print(f"[TimerSync] DB persist warning: {e}")
@@ -530,7 +549,9 @@ def sio_timer_action(data):
         target_seconds=data.get('target_seconds') or data.get('targetSeconds'),
         active_task_name=data.get('active_task_name') or data.get('activeTaskName'),
         remaining_seconds=data.get('remaining_seconds') or data.get('remainingSeconds'),
-        origin_client_id=data.get('origin_client_id') or data.get('originClientId')
+        origin_client_id=data.get('origin_client_id') or data.get('originClientId'),
+        session_started_at=data.get('session_started_at') or data.get('sessionStartedAt'),
+        intervals=data.get('intervals')
     )
 
 @app.route('/api/timer/live', methods=['GET'])
@@ -577,6 +598,8 @@ def timer_action_route(user_id):
     remaining_seconds = data.get('remaining_seconds') or data.get('remainingSeconds')
     active_task_name = data.get('active_task_name') or data.get('activeTaskName')
     origin_client_id = data.get('origin_client_id') or data.get('originClientId')
+    session_started_at = data.get('session_started_at') or data.get('sessionStartedAt')
+    intervals = data.get('intervals')
 
     try:
         new_state = trigger_timer_update(
@@ -585,7 +608,9 @@ def timer_action_route(user_id):
             target_seconds=target_seconds,
             active_task_name=active_task_name,
             remaining_seconds=remaining_seconds,
-            origin_client_id=origin_client_id
+            origin_client_id=origin_client_id,
+            session_started_at=session_started_at,
+            intervals=intervals
         )
         resp = jsonify({'success': True, 'timer': new_state})
         resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
@@ -725,13 +750,19 @@ def handle_sessions(user_id):
         timestamp_ms = None
     start_time = data.get('start_time') or data.get('startTime')
     end_time = data.get('end_time') or data.get('endTime')
+    session_start_ms = data.get('session_start_ms') or data.get('sessionStartMs')
+    session_end_ms = data.get('session_end_ms') or data.get('sessionEndMs')
+    break_minutes = data.get('break_minutes') or data.get('breakMinutes') or 0
+    timeline = data.get('timeline') or data.get('timeline_json') or data.get('timelineJson')
 
     unpaused = bool(data.get('unpaused', True))
     if data.get('has_been_paused') or data.get('hasBeenPaused'):
         unpaused = False
 
     new_session = database.add_session(
-        user_id, subject_name, duration_minutes, date_str, timestamp_ms, start_time, end_time, unpaused=unpaused
+        user_id, subject_name, duration_minutes, date_str, timestamp_ms, start_time, end_time,
+        unpaused=unpaused, session_start_ms=session_start_ms, session_end_ms=session_end_ms,
+        break_minutes=break_minutes, timeline_json=timeline
     )
 
     # Automatically update persistent timer state back to idle upon session save & broadcast to all WebSockets

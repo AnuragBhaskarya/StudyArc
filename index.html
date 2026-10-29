@@ -536,6 +536,111 @@
           </div>
         </div>
       </dialog>
+
+      <!-- SESSION DETAIL & INTERVALS MODAL DIALOG (Opened via clicking any session card in Day Record, Today's Record, or History) -->
+      <dialog id="session-detail-dialog" class="session-detail-dialog day-detail-dialog" closedby="any" aria-labelledby="session-detail-title">
+        <div class="session-dialog-shell day-dialog-shell" id="session-dialog-shell" tabindex="-1">
+          <!-- Header -->
+          <div class="day-dialog-header session-dialog-header">
+            <div class="day-dialog-header-info">
+              <div class="session-dialog-badge-row">
+                <span class="day-dialog-badge session-dialog-badge" id="session-detail-badge">Focus Session</span>
+                <span class="session-detail-date-chip" id="session-detail-date-chip">Today</span>
+              </div>
+              <h2 class="day-dialog-title session-dialog-title" id="session-detail-title">Session Details</h2>
+              <div class="session-detail-time-range" id="session-detail-time-range">--:-- – --:--</div>
+            </div>
+            <button class="day-dialog-close-btn" id="btn-close-session-detail" aria-label="Close Session Details">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Scrollable Body Content -->
+          <div class="session-dialog-body" id="session-dialog-body" data-lenis-prevent>
+            <!-- 4 Highlight Metric Cards -->
+            <div class="day-summary-strip session-summary-strip" aria-label="Session Summary Metrics">
+              <div class="day-pill session-pill">
+                <span class="day-pill-label">Focus Time</span>
+                <span class="day-pill-value session-focus-val" id="session-pill-focus">0m</span>
+              </div>
+              <div class="day-pill session-pill session-pill-break">
+                <span class="day-pill-label">Break Time</span>
+                <span class="day-pill-value session-break-val" id="session-pill-break">0m</span>
+              </div>
+              <div class="day-pill session-pill">
+                <span class="day-pill-label">Pauses</span>
+                <span class="day-pill-value" id="session-pill-pauses">0</span>
+              </div>
+              <div class="day-pill session-pill day-pill-xp">
+                <span class="day-pill-label">XP Gained</span>
+                <span class="day-pill-value" id="session-pill-xp">+0 XP</span>
+              </div>
+            </div>
+
+            <!-- Proportional Ratio Bar (Focus vs Break) -->
+            <div class="session-ratio-section" id="session-ratio-section">
+              <div class="session-ratio-header">
+                <span class="session-ratio-title">Focus vs Break Ratio</span>
+                <span class="session-ratio-meta" id="session-ratio-meta">100% Focus</span>
+              </div>
+              <div class="session-ratio-track" id="session-ratio-track">
+                <div class="session-ratio-focus" id="session-ratio-focus-bar" style="width: 100%;"></div>
+                <div class="session-ratio-break" id="session-ratio-break-bar" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <!-- Interactive Flexible Timeline Graph -->
+            <div class="session-graph-section">
+              <div class="session-graph-header">
+                <span class="session-graph-title">Timeline Graph</span>
+                <span class="session-graph-wall-span" id="session-graph-wall-span">Total: 0m</span>
+              </div>
+              <div class="session-graph-container" id="session-graph-container">
+                <div class="session-graph-track" id="session-graph-track">
+                  <!-- Dynamically populated proportional segments -->
+                </div>
+                <div class="session-graph-tooltip hidden" id="session-graph-tooltip" role="tooltip"></div>
+              </div>
+              <div class="session-graph-axis">
+                <span class="session-axis-start" id="session-axis-start">--:--</span>
+                <span class="session-axis-legend">
+                  <span class="legend-dot legend-focus"></span> Focus
+                  <span class="legend-dot legend-break"></span> Break
+                </span>
+                <span class="session-axis-end" id="session-axis-end">--:--</span>
+              </div>
+            </div>
+
+            <!-- Chronological Intervals & Breaks List -->
+            <div class="session-intervals-section">
+              <div class="session-intervals-header">
+                <span>Intervals & Breaks</span>
+                <span class="session-intervals-count" id="session-intervals-count">1 interval</span>
+              </div>
+              <div class="session-intervals-list" id="session-intervals-list">
+                <!-- Dynamically populated list of focus and break blocks -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer Actions -->
+          <div class="session-dialog-footer">
+            <button type="button" class="session-delete-action-btn" id="btn-delete-session-from-detail" title="Delete this session">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+              <span>Delete Session</span>
+            </button>
+            <button type="button" class="session-close-action-btn" id="btn-done-session-detail">Done</button>
+          </div>
+        </div>
+      </dialog>
  
        <!-- LEVEL & RPG MASTERY MODAL DIALOG (Opened via clicking XP Stats pill) -->
        <dialog id="levels-dialog" class="levels-dialog day-detail-dialog" closedby="any" aria-labelledby="levels-dialog-title">
