@@ -1254,6 +1254,7 @@ def get_day_details(user_id, date_str):
             'sessionStartMs': start_ms,
             'sessionEndMs': end_ms,
             'breakMinutes': int(r.get('break_minutes') or 0),
+            'break_minutes': int(r.get('break_minutes') or 0),
             'timeline': timeline_parsed
         })
 
@@ -1595,6 +1596,7 @@ def get_full_state(user_id, client_date=None):
             'sessionStartMs': start_ms,
             'sessionEndMs': end_ms,
             'breakMinutes': int(r.get('break_minutes') or 0),
+            'break_minutes': int(r.get('break_minutes') or 0),
             'timeline': timeline_parsed
         })
 

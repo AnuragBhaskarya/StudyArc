@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=12.44">
+  <link rel="stylesheet" href="styles.css?v=12.45">
   <script>
     (function () {
       var isAuth = false;
@@ -538,7 +538,7 @@
       </dialog>
 
       <!-- SESSION DETAIL & INTERVALS MODAL DIALOG (Opened via clicking any session card in Day Record, Today's Record, or History) -->
-      <dialog id="session-detail-dialog" class="session-detail-dialog day-detail-dialog" closedby="any" aria-labelledby="session-detail-title">
+      <dialog id="session-detail-dialog" class="session-detail-dialog day-detail-dialog" closedby="any" aria-labelledby="session-detail-badge">
         <div class="session-dialog-shell day-dialog-shell" id="session-dialog-shell" tabindex="-1">
           <!-- Header -->
           <div class="day-dialog-header session-dialog-header">
@@ -547,7 +547,6 @@
                 <span class="day-dialog-badge session-dialog-badge" id="session-detail-badge">Focus Session</span>
                 <span class="session-detail-date-chip" id="session-detail-date-chip">Today</span>
               </div>
-              <h2 class="day-dialog-title session-dialog-title" id="session-detail-title">Session Details</h2>
               <div class="session-detail-time-range" id="session-detail-time-range">--:-- – --:--</div>
             </div>
             <button class="day-dialog-close-btn" id="btn-close-session-detail" aria-label="Close Session Details">
@@ -1164,7 +1163,7 @@
   <!-- JAVASCRIPT LOGIC (Local zero-latency assets, resilient against CDN outages and content blockers) -->
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
-  <script src="app.js?v=12.44"></script>
+  <script src="app.js?v=12.45"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>

@@ -5004,14 +5004,29 @@
           const endD = new Date(ts);
           const startD = new Date(ts - duration * 60000);
           const timeRange = s.timeRange || `${formatTime(startD)} – ${formatTime(endD)}`;
+          let parsedTimeline = s.timeline;
+          if (typeof parsedTimeline === 'string') {
+            try { parsedTimeline = JSON.parse(parsedTimeline); } catch (_) { parsedTimeline = null; }
+          } else if (!parsedTimeline && s.timeline_json) {
+            try { parsedTimeline = typeof s.timeline_json === 'string' ? JSON.parse(s.timeline_json) : s.timeline_json; } catch (_) { parsedTimeline = null; }
+          }
           return {
             id: s.id,
             subject: s.subject || s.subject_name || 'Focus Session',
             color: s.color || '#10E068',
             durationMinutes: duration,
+            duration_minutes: duration,
+            dayMinutes: s.dayMinutes != null ? s.dayMinutes : (s.day_minutes != null ? s.day_minutes : duration),
+            day_minutes: s.dayMinutes != null ? s.dayMinutes : (s.day_minutes != null ? s.day_minutes : duration),
             timeRange: timeRange,
             timestamp: ts,
-            xp: sessXp
+            xp: sessXp,
+            taskName: s.taskName || s.task_name || '',
+            sessionStartMs: s.sessionStartMs || s.session_start_ms || startD.getTime(),
+            sessionEndMs: s.sessionEndMs || s.session_end_ms || ts,
+            breakMinutes: Number(s.breakMinutes != null ? s.breakMinutes : (s.break_minutes || 0)),
+            break_minutes: Number(s.breakMinutes != null ? s.breakMinutes : (s.break_minutes || 0)),
+            timeline: parsedTimeline
           };
         })
       };
@@ -5070,7 +5085,36 @@
         orderedSessions.forEach(s => {
           if (s && s.id) sessionLookupCache.set(String(s.id), s);
         });
-        listEl.innerHTML = orderedSessions.map(s => `
+        listEl.innerHTML = orderedSessions.map(s => {
+          const taskName = s.taskName || s.task_name || '';
+          const taskNote = taskName ? `<span class="day-session-task">"${escapeHtml(taskName)}"</span>` : '';
+          const timeRangeStr = s.timeRange ? `<span class="day-session-timerange">${escapeHtml(s.timeRange)}</span>` : '';
+          const sep = (taskNote && timeRangeStr) ? '<span class="stat-xp-sep" aria-hidden="true">•</span>' : '';
+
+          let breakSecs = 0;
+          let pausesCount = 0;
+          let timeline = s.timeline;
+          if (typeof timeline === 'string') {
+            try { timeline = JSON.parse(timeline); } catch(_) { timeline = []; }
+          }
+          if (Array.isArray(timeline)) {
+            timeline.forEach(item => {
+              if (item.type === 'break' || item.state === 'break') {
+                pausesCount++;
+                const bDur = item.duration || Math.max(0, Math.round(((item.end || item.end_ms) - (item.start || item.start_ms)) / 1000));
+                breakSecs += bDur;
+              }
+            });
+          } else if (s.breakMinutes || s.break_minutes) {
+            breakSecs = Math.round((s.breakMinutes || s.break_minutes) * 60);
+            if (breakSecs > 0) pausesCount = 1;
+          }
+
+          const breakTag = breakSecs > 0
+            ? `<span class="session-card-break-badge" title="${formatDetailedDuration(breakSecs)} break (${pausesCount} ${pausesCount === 1 ? 'pause' : 'pauses'})">☕ ${formatDetailedDuration(breakSecs)}</span>`
+            : '';
+
+          return `
           <div class="day-session-card" data-session-id="${escapeHtml(s.id)}" data-date="${escapeHtml(dayData.date)}" data-duration="${s.durationMinutes}" data-xp="${s.xp != null ? s.xp : (s.durationMinutes * 10)}" data-session-start-ms="${s.sessionStartMs || s.session_start_ms || ''}" data-session-end-ms="${s.sessionEndMs || s.session_end_ms || ''}">
             <div class="day-session-left">
               <div class="day-session-timeline">
@@ -5078,11 +5122,16 @@
                 <span class="day-session-track-node"></span>
               </div>
               <div class="day-session-orb-wrapper">
-                <span class="day-session-orb" style="background-color: ${s.color || '#00ff87'};"></span>
+                <span class="day-session-orb" style="background-color: ${s.color || '#10E068'}; color: ${s.color || '#10E068'};"></span>
               </div>
               <div class="day-session-info">
-                <span class="day-session-subject">${escapeHtml(s.subject)}</span>
-                <span class="day-session-timerange">${escapeHtml(s.timeRange || '')}</span>
+                <span class="day-session-subject">${escapeHtml(s.subject || 'Focus Session')}</span>
+                <div class="day-session-sub-row">
+                  ${taskNote}
+                  ${sep}
+                  ${timeRangeStr}
+                  ${breakTag}
+                </div>
               </div>
             </div>
             <div class="day-session-right">
@@ -5104,7 +5153,8 @@
               </button>
             </div>
           </div>
-        `).join('');
+          `;
+        }).join('');
       }
     }
     initShellLenis();
@@ -5168,6 +5218,18 @@
         }
       }
     }
+    if (fallbackSession && fallbackSession.timeline && (!s || !s.timeline)) {
+      s = Object.assign({}, s || {}, fallbackSession);
+    }
+    if (s && (!s.timeline || s.timeline.length === 0)) {
+      const matchInState = (state.sessions || []).find(item => String(item.id) === String(sessionId));
+      if (matchInState && matchInState.timeline && matchInState.timeline.length > 0) {
+        s = Object.assign({}, s, {
+          timeline: matchInState.timeline,
+          breakMinutes: matchInState.breakMinutes != null ? matchInState.breakMinutes : s.breakMinutes
+        });
+      }
+    }
     if (!s) {
       console.warn('StudyArk: Session detail not found for id:', sessionId);
       return;
@@ -5188,7 +5250,6 @@
     // Elements
     const badgeEl = document.getElementById('session-detail-badge');
     const dateChipEl = document.getElementById('session-detail-date-chip');
-    const titleEl = document.getElementById('session-detail-title');
     const timeRangeEl = document.getElementById('session-detail-time-range');
     const focusPillEl = document.getElementById('session-pill-focus');
     const breakPillEl = document.getElementById('session-pill-break');
@@ -5219,7 +5280,14 @@
     const isOvernight = (startDayStr !== endDayStr);
 
     if (badgeEl) {
-      badgeEl.textContent = subjName;
+      const taskName = s.taskName || s.task_name || '';
+      let badgeText = subjName;
+      if (taskName && taskName !== subjName && subjName !== 'Focus Session') {
+        badgeText = `${subjName} • "${taskName}"`;
+      } else if (taskName && subjName === 'Focus Session') {
+        badgeText = `"${taskName}"`;
+      }
+      badgeEl.textContent = badgeText;
       badgeEl.style.color = subjColor;
       badgeEl.style.borderColor = `${subjColor}40`;
       badgeEl.style.backgroundColor = `${subjColor}15`;
@@ -5231,9 +5299,6 @@
       } else {
         dateChipEl.textContent = isToday ? 'Today' : startDayStr;
       }
-    }
-    if (titleEl) {
-      titleEl.textContent = s.taskName ? `"${s.taskName}"` : subjName;
     }
     if (timeRangeEl) {
       if (isOvernight) {
@@ -5269,17 +5334,24 @@
     let computedFocusSeconds = 0;
 
     timeline.forEach(item => {
-      const segStart = Number(item.start || startMs);
-      const segEnd = Number(item.end || endMs);
+      const itemType = item.type || item.state || 'focus';
+      item.type = itemType;
+      const segStart = Number(item.start || item.start_ms || startMs);
+      const segEnd = Number(item.end || item.end_ms || endMs);
       const segDur = Math.max(0, Math.round((segEnd - segStart) / 1000));
       item._calcDuration = (item.duration != null && item.duration > 0) ? item.duration : segDur;
-      if (item.type === 'break') {
+      if (itemType === 'break') {
         breaksCount++;
         computedBreakSeconds += item._calcDuration;
       } else {
         computedFocusSeconds += item._calcDuration;
       }
     });
+
+    if (computedBreakSeconds === 0 && (s.breakMinutes > 0 || s.break_minutes > 0)) {
+      computedBreakSeconds = Math.round((s.breakMinutes || s.break_minutes) * 60);
+      breaksCount = Math.max(1, breaksCount);
+    }
 
     const activeFocusSec = computedFocusSeconds > 0 ? computedFocusSeconds : (dur * 60);
     const totalActiveSpanSec = activeFocusSec + computedBreakSeconds;
@@ -5310,16 +5382,17 @@
       const totalSpanMs = Math.max(1, endMs - startMs);
 
       timeline.forEach((seg, idx) => {
-        const segStart = Number(seg.start || startMs);
-        const segEnd = Number(seg.end || endMs);
+        const segType = seg.type || seg.state || 'focus';
+        const segStart = Number(seg.start || seg.start_ms || startMs);
+        const segEnd = Number(seg.end || seg.end_ms || endMs);
         const segDurationSec = seg._calcDuration || Math.max(0, Math.round((segEnd - segStart) / 1000));
         const segPct = Math.max(1.5, ((segEnd - segStart) / totalSpanMs) * 100);
 
         const segEl = document.createElement('div');
-        segEl.className = `graph-segment graph-segment-${seg.type === 'break' ? 'break' : 'focus'}`;
+        segEl.className = `graph-segment graph-segment-${segType === 'break' ? 'break' : 'focus'}`;
         segEl.style.width = `${segPct}%`;
 
-        const typeLabel = seg.type === 'break' ? 'Break' : 'Focus';
+        const typeLabel = segType === 'break' ? 'Break' : 'Focus';
         const startStr = formatTime(new Date(segStart));
         const endStr = formatTime(new Date(segEnd));
         const durStr = formatDetailedDuration(segDurationSec);
@@ -5385,9 +5458,10 @@
       } else {
         let breakIdx = 1;
         intervalsListEl.innerHTML = timeline.map(item => {
-          const isBreak = item.type === 'break';
-          const segStart = Number(item.start || startMs);
-          const segEnd = Number(item.end || endMs);
+          const itemType = item.type || item.state || 'focus';
+          const isBreak = itemType === 'break';
+          const segStart = Number(item.start || item.start_ms || startMs);
+          const segEnd = Number(item.end || item.end_ms || endMs);
           const segStartD = new Date(segStart);
           const segEndD = new Date(segEnd);
           const segStartStr = formatTime(segStartD);
@@ -6369,6 +6443,29 @@
     const timeRangeStr = s.timeRange ? `<span class="history-session-timerange">${escapeHtml(s.timeRange)}</span>` : '';
     const sep = (taskNote && timeRangeStr) ? '<span class="stat-xp-sep" aria-hidden="true">•</span>' : '';
 
+    let breakSecs = 0;
+    let pausesCount = 0;
+    let timeline = s.timeline;
+    if (typeof timeline === 'string') {
+      try { timeline = JSON.parse(timeline); } catch(_) { timeline = []; }
+    }
+    if (Array.isArray(timeline)) {
+      timeline.forEach(item => {
+        if (item.type === 'break' || item.state === 'break') {
+          pausesCount++;
+          const bDur = item.duration || Math.max(0, Math.round(((item.end || item.end_ms) - (item.start || item.start_ms)) / 1000));
+          breakSecs += bDur;
+        }
+      });
+    } else if (s.breakMinutes || s.break_minutes) {
+      breakSecs = Math.round((s.breakMinutes || s.break_minutes) * 60);
+      if (breakSecs > 0) pausesCount = 1;
+    }
+
+    const breakTag = breakSecs > 0
+      ? `<span class="session-card-break-badge" title="${formatDetailedDuration(breakSecs)} break (${pausesCount} ${pausesCount === 1 ? 'pause' : 'pauses'})">☕ ${formatDetailedDuration(breakSecs)}</span>`
+      : '';
+
     const card = document.createElement('div');
     card.className = 'history-session-card';
     card.setAttribute('data-session-id', s.id);
@@ -6393,6 +6490,7 @@
             ${taskNote}
             ${sep}
             ${timeRangeStr}
+            ${breakTag}
           </div>
         </div>
       </div>
@@ -8563,7 +8661,12 @@
         if (card) {
           const sessId = card.getAttribute('data-session-id');
           if (sessId) {
-            openSessionDetailDialog(sessId);
+            let sessObj = sessionLookupCache.get(String(sessId));
+            if (!sessObj && currentDialogDate && dayDetailsCache.has(currentDialogDate)) {
+              const d = dayDetailsCache.get(currentDialogDate);
+              sessObj = (d.sessions || []).find(x => String(x.id) === String(sessId));
+            }
+            openSessionDetailDialog(sessId, sessObj);
           }
         }
       });
