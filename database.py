@@ -1024,7 +1024,7 @@ def delete_session(user_id, session_id):
     if isinstance(session_id, str) and session_id.startswith('sess_'):
         session_id = session_id[5:]
     try:
-        session_id = int(session_id)
+        numeric_id_or_ts = int(session_id)
     except (ValueError, TypeError):
         return None
 
@@ -1033,12 +1033,13 @@ def delete_session(user_id, session_id):
             SELECT id, subject_id, subject_name, duration_minutes, date, timestamp,
                    COALESCE(NULLIF(xp, 0), duration_minutes * 10) as xp
             FROM sessions
-            WHERE id = ? AND user_id = ?
-        """, (session_id, user_id))
+            WHERE (id = ? OR timestamp = ?) AND user_id = ?
+        """, (numeric_id_or_ts, numeric_id_or_ts, user_id))
         row = cur.fetchone()
         if not row:
             return None
 
+        actual_db_id = row['id']
         deleted = {
             'id': f"sess_{row['id']}",
             'numeric_id': row['id'],
@@ -1050,7 +1051,7 @@ def delete_session(user_id, session_id):
             'xp': int(row['xp'])
         }
 
-        ctx.execute("DELETE FROM sessions WHERE id = ? AND user_id = ?", (session_id, user_id))
+        ctx.execute("DELETE FROM sessions WHERE id = ? AND user_id = ?", (actual_db_id, user_id))
         return deleted
 
 def get_sessions(user_id, limit=None):

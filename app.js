@@ -5497,8 +5497,13 @@
     // Actions
     if (deleteBtn) {
       deleteBtn.disabled = false;
-      deleteBtn.setAttribute('data-session-id', String(s.id || sessionId));
+      const targetSessionId = String(s.id || sessionId);
+      deleteBtn.setAttribute('data-session-id', targetSessionId);
       deleteBtn.setAttribute('data-date', dateStr);
+      deleteBtn.setAttribute('data-duration', String(dur));
+      deleteBtn.setAttribute('data-xp', String(xp));
+      deleteBtn.setAttribute('data-subject', subjName);
+      deleteBtn.setAttribute('data-timerange', timeRangeStr);
 
       deleteBtn.onclick = async (e) => {
         e.preventDefault();
@@ -5511,7 +5516,11 @@
 
         deleteBtn.disabled = true;
         dialog.close();
-        await deleteSession(String(s.id || sessionId), dateStr);
+        try {
+          await deleteSession(targetSessionId, dateStr);
+        } catch (err) {
+          console.error('StudyArk: Failed to delete session from details dialog:', err);
+        }
       };
     }
 
@@ -8417,6 +8426,41 @@
           saveState();
           renderStats();
           renderHeatmap();
+        }
+      } else {
+        // Fallback POST /api/sessions/<sessionId>/delete in case DELETE method was restricted
+        console.warn(`StudyArk: DELETE /api/sessions returned ${res.status}. Attempting fallback POST deletion...`);
+        const fallbackRes = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}/delete?date=${encodeURIComponent(clientDate)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Client-Date': clientDate
+          }
+        });
+        if (fallbackRes.ok) {
+          const backendPayload = await fallbackRes.json();
+          if (backendPayload && backendPayload.success) {
+            if (backendPayload.stats) {
+              state.streak = backendPayload.stats.streak || 0;
+              state.xp = backendPayload.stats.xp || 0;
+              state.totalFocusSeconds = backendPayload.stats.totalFocusSeconds || 0;
+            }
+            if (backendPayload.dayActivity) {
+              state.dayActivity = backendPayload.dayActivity;
+            }
+            if (backendPayload.subjects) {
+              state.subjects = backendPayload.subjects;
+            }
+            if (backendPayload.sessions) {
+              state.sessions = backendPayload.sessions;
+              invalidateSessionIndex();
+            }
+            saveState();
+            renderStats();
+            renderHeatmap();
+          }
+        } else {
+          console.error(`StudyArk: Fallback deletion also failed (${fallbackRes.status})`);
         }
       }
     }).catch((err) => {
