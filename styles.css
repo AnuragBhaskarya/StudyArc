@@ -2931,38 +2931,23 @@ input:checked + .switch-slider:before {
   border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.session-detail-time-range {
-  font-size: 0.78rem;
-  color: #6ee7b7;
-  font-feature-settings: 'tnum';
-  margin-top: 0.15rem;
-}
-
 .session-dialog-body {
   flex: 1 1 auto;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0.75rem 1.15rem 1rem;
+  overflow: hidden;
+  padding: 0.75rem 1.15rem 0.6rem;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-  -webkit-overflow-scrolling: touch;
-}
-
-.session-dialog-body::-webkit-scrollbar {
-  width: 5px;
-}
-.session-dialog-body::-webkit-scrollbar-thumb {
-  background: rgba(16, 224, 104, 0.2);
-  border-radius: 4px;
+  gap: 0.7rem;
+  min-height: 0;
 }
 
 /* Metric pills for Session Detail Modal — strictly 4 columns in 1 single row */
 .session-summary-strip {
+  flex-shrink: 0;
   display: grid !important;
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   gap: 0.35rem;
-  margin-bottom: 0.45rem;
+  margin-bottom: 0;
   width: 100%;
   box-sizing: border-box;
 }
@@ -3000,8 +2985,9 @@ input:checked + .switch-slider:before {
   border-color: rgba(245, 158, 11, 0.35);
 }
 
-/* Ratio Bar */
+/* Ratio Bar — Fixed / Non-scrolling */
 .session-ratio-section {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -3050,6 +3036,18 @@ input:checked + .switch-slider:before {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(16, 224, 104, 0.12);
+  border-radius: 14px;
+  padding: 0.75rem 0.85rem;
+}
+
+/* Timeline Graph Section — Fixed / Non-scrolling */
+.session-graph-section {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(16, 224, 104, 0.12);
   border-radius: 14px;
@@ -3143,21 +3141,50 @@ input:checked + .switch-slider:before {
   border-right: 1px solid rgba(0, 0, 0, 0.35);
 }
 
+/* Tooltip: floats above graph, with anchored pointer caret that connects to hovered interval */
 .session-graph-tooltip {
   position: absolute;
-  top: -34px;
+  top: -38px;
   transform: translateX(-50%);
-  background: #0d2116;
+  background: #091a11;
   border: 1px solid #10E068;
-  color: #fff;
-  font-size: 0.7rem;
-  padding: 0.25rem 0.55rem;
-  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 550;
+  padding: 0.28rem 0.65rem;
+  border-radius: 7px;
   pointer-events: none;
   white-space: nowrap;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
-  z-index: 10;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.85), 0 0 10px rgba(16, 224, 104, 0.25);
+  z-index: 1000;
   transition: opacity 120ms ease;
+}
+
+.session-graph-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: var(--tooltip-pointer-x, 50%);
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #10E068;
+}
+
+.session-graph-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: var(--tooltip-pointer-x, 50%);
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #091a11;
+  z-index: 1;
 }
 
 .session-graph-axis {
@@ -3193,14 +3220,19 @@ input:checked + .switch-slider:before {
   box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
 }
 
-/* Intervals & Breaks List */
+/* Intervals & Breaks List (The ONLY scrollable section in the modal) */
 .session-intervals-section {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  min-height: 0;
+  overflow: hidden;
+  margin-top: 0.15rem;
 }
 
 .session-intervals-header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3218,9 +3250,24 @@ input:checked + .switch-slider:before {
 }
 
 .session-intervals-list {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  padding-right: 0.25rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.session-intervals-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.session-intervals-list::-webkit-scrollbar-thumb {
+  background: rgba(16, 224, 104, 0.22);
+  border-radius: 4px;
 }
 
 .interval-row {
@@ -3309,24 +3356,15 @@ input:checked + .switch-slider:before {
   flex-shrink: 0;
 }
 
-.session-delete-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: transparent;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  color: #ef4444;
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 0.45rem 0.75rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 140ms ease;
+.session-dialog-footer .session-detail-delete-btn {
+  width: 32px;
+  height: 32px;
+  opacity: 0.8;
 }
 
-.session-delete-action-btn:hover {
-  background: rgba(239, 68, 68, 0.14);
-  border-color: #ef4444;
+.session-dialog-footer .session-detail-delete-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .session-close-action-btn {

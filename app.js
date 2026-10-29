@@ -5226,7 +5226,6 @@
     // Elements
     const badgeEl = document.getElementById('session-detail-badge');
     const dateChipEl = document.getElementById('session-detail-date-chip');
-    const timeRangeEl = document.getElementById('session-detail-time-range');
     const focusPillEl = document.getElementById('session-pill-focus');
     const breakPillEl = document.getElementById('session-pill-break');
     const pausesPillEl = document.getElementById('session-pill-pauses');
@@ -5274,13 +5273,6 @@
         dateChipEl.textContent = `${formatShortDate(startD)} → ${formatShortDate(endD)} (+1d)`;
       } else {
         dateChipEl.textContent = isToday ? 'Today' : startDayStr;
-      }
-    }
-    if (timeRangeEl) {
-      if (isOvernight) {
-        timeRangeEl.textContent = `${formatTime(startD)} – ${formatTime(endD)} (+1d)`;
-      } else {
-        timeRangeEl.textContent = timeRangeStr || `${formatTime(startD)} – ${formatTime(endD)}`;
       }
     }
 
@@ -5387,21 +5379,44 @@
 
         segEl.setAttribute('data-tooltip', `${typeLabel}: ${startStr} – ${endStr} (${durStr})`);
 
-        segEl.addEventListener('mouseenter', () => {
+        const updateTooltipPosition = (clientX) => {
           if (!graphTooltipEl) return;
           graphTooltipEl.textContent = segEl.getAttribute('data-tooltip');
           graphTooltipEl.classList.remove('hidden');
-          const trackRect = graphTrackEl.getBoundingClientRect();
+
+          const container = graphTrackEl.parentElement || graphTrackEl;
+          const containerRect = container.getBoundingClientRect();
           const segRect = segEl.getBoundingClientRect();
-          const leftOffset = segRect.left - trackRect.left + segRect.width / 2;
-          graphTooltipEl.style.left = `${leftOffset}px`;
-        });
+
+          const targetX = clientX != null
+            ? Math.max(segRect.left + 2, Math.min(segRect.right - 2, clientX)) - containerRect.left
+            : (segRect.left + segRect.width / 2) - containerRect.left;
+
+          const tooltipWidth = graphTooltipEl.offsetWidth || 150;
+          const halfWidth = tooltipWidth / 2;
+          const minLeft = halfWidth + 8;
+          const maxLeft = Math.max(minLeft, containerRect.width - halfWidth - 8);
+          const clampedLeft = Math.max(minLeft, Math.min(maxLeft, targetX));
+
+          graphTooltipEl.style.left = `${clampedLeft}px`;
+
+          const pointerOffset = targetX - clampedLeft;
+          const pointerX = Math.max(12, Math.min(tooltipWidth - 12, halfWidth + pointerOffset));
+          graphTooltipEl.style.setProperty('--tooltip-pointer-x', `${pointerX}px`);
+        };
+
+        segEl.addEventListener('mouseenter', (e) => updateTooltipPosition(e.clientX));
+        segEl.addEventListener('mousemove', (e) => updateTooltipPosition(e.clientX));
 
         segEl.addEventListener('mouseleave', () => {
           graphTooltipEl?.classList.add('hidden');
         });
 
         graphTrackEl.appendChild(segEl);
+      });
+
+      graphTrackEl.addEventListener('mouseleave', () => {
+        graphTooltipEl?.classList.add('hidden');
       });
 
       // Overnight midnight marker
@@ -5481,16 +5496,22 @@
 
     // Actions
     if (deleteBtn) {
-      deleteBtn.onclick = async () => {
-        const confirmed = await confirmAction({
-          title: 'Delete this session?',
-          message: `Are you sure you want to delete this ${dur}-minute "${subjName}" session? XP and stats will be adjusted.`,
-          confirmLabel: 'Delete',
-          variant: 'delete'
-        });
+      deleteBtn.disabled = false;
+      deleteBtn.setAttribute('data-session-id', String(s.id || sessionId));
+      deleteBtn.setAttribute('data-date', dateStr);
+
+      deleteBtn.onclick = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (deleteBtn.disabled) return;
+
+        const confirmOptions = getSessionDeleteConfirmOptions(s, dateStr);
+        const confirmed = await confirmAction(confirmOptions);
         if (!confirmed) return;
+
+        deleteBtn.disabled = true;
         dialog.close();
-        deleteSession(s.id, dateStr);
+        await deleteSession(String(s.id || sessionId), dateStr);
       };
     }
 
@@ -8074,14 +8095,31 @@
     });
   }
 
-  function getSessionDeleteConfirmOptions(btn, dateStr) {
-    const card = btn.closest('.day-session-card, .history-session-card');
-    const duration = parseInt(card?.getAttribute('data-duration') || '', 10) || 0;
-    const subject = card?.querySelector('.day-session-subject, .history-session-subject')?.textContent?.trim() || '';
-    const taskNote = card?.querySelector('.history-session-task')?.textContent?.trim() || '';
-    const timeRange = card?.querySelector('.day-session-timerange, .history-session-timerange')?.textContent?.trim() || '';
-    const xpText = card?.querySelector('.day-session-xp, .history-session-xp')?.textContent?.trim() || '';
-    const xpVal = parseInt(card?.getAttribute('data-xp') || '', 10) || (duration * 10);
+  function getSessionDeleteConfirmOptions(btnOrData, dateStr) {
+    let duration = 0;
+    let subject = '';
+    let taskNote = '';
+    let timeRange = '';
+    let xpText = '';
+    let xpVal = 0;
+
+    if (btnOrData instanceof Element) {
+      const card = btnOrData.closest('.day-session-card, .history-session-card');
+      duration = parseInt(card?.getAttribute('data-duration') || btnOrData.getAttribute('data-duration') || '', 10) || 0;
+      subject = card?.querySelector('.day-session-subject, .history-session-subject')?.textContent?.trim() || btnOrData.getAttribute('data-subject') || '';
+      taskNote = card?.querySelector('.history-session-task, .day-session-task')?.textContent?.trim() || '';
+      timeRange = card?.querySelector('.day-session-timerange, .history-session-timerange')?.textContent?.trim() || btnOrData.getAttribute('data-timerange') || '';
+      xpText = card?.querySelector('.day-session-xp, .history-session-xp')?.textContent?.trim() || '';
+      xpVal = parseInt(card?.getAttribute('data-xp') || btnOrData.getAttribute('data-xp') || '', 10) || (duration * 10);
+    } else if (btnOrData && typeof btnOrData === 'object') {
+      duration = Number(btnOrData.durationMinutes || btnOrData.duration_minutes || btnOrData.duration || 0);
+      subject = btnOrData.subject || btnOrData.subject_name || '';
+      taskNote = btnOrData.taskName || btnOrData.task_name || '';
+      timeRange = btnOrData.timeRange || (btnOrData.startTime && btnOrData.endTime ? `${btnOrData.startTime} – ${btnOrData.endTime}` : '');
+      xpVal = btnOrData.xp != null ? btnOrData.xp : (duration * 10);
+      xpText = `+${formatCompactNumber(xpVal)} XP`;
+    }
+
     const dateLabel = dateStr ? formatDayDateHeader(dateStr) : '';
 
     return {
@@ -8098,7 +8136,8 @@
   }
 
   function deleteSession(sessionId, dateStr) {
-    if (!sessionId) return;
+    if (!sessionId) return Promise.resolve();
+    const cachedSession = sessionLookupCache.get(String(sessionId)) || null;
     sessionLookupCache.delete(String(sessionId));
 
     // The delete button also carries data-session-id, so scope the selector to
@@ -8109,7 +8148,7 @@
     )).filter(el => el.getAttribute('data-session-id') === String(sessionId));
     const cardEl = targetCards[0] || null;
 
-    // 1. Identify session duration from client state or card dataset
+    // 1. Identify session duration from client state, card dataset, or cachedSession
     const idx = (state.sessions || []).findIndex(s =>
       s.id === sessionId ||
       String(s.id) === String(sessionId) ||
@@ -8136,6 +8175,12 @@
       sessionXp = parseInt(cardEl.dataset.xp || '0', 10) || (duration * 10);
       sessionStartMs = cardEl.dataset.sessionStartMs ? parseInt(cardEl.dataset.sessionStartMs, 10) : null;
       sessionEndMs = cardEl.dataset.sessionEndMs ? parseInt(cardEl.dataset.sessionEndMs, 10) : null;
+    } else if (cachedSession) {
+      duration = Number(cachedSession.durationMinutes || cachedSession.duration_minutes || 0);
+      sessionXp = cachedSession.xp != null ? cachedSession.xp : (duration * 10);
+      sessionStartMs = cachedSession.sessionStartMs || cachedSession.session_start_ms || null;
+      sessionEndMs = cachedSession.sessionEndMs || cachedSession.session_end_ms || null;
+      sessionDate = cachedSession.date || dateStr;
     }
 
     // 2. Update day activity and gamification stats immediately
@@ -8331,11 +8376,20 @@
         });
         setTimeout(finishDismiss, 350);
       });
+    } else {
+      const dayDlg = document.getElementById('day-detail-dialog');
+      if (dayDlg && dayDlg.open && currentDialogDate) {
+        renderDayDetails(currentDialogDate);
+      }
+      const histDlg = document.getElementById('sessions-history-dialog');
+      if (histDlg && histDlg.open) {
+        renderHistoryDialogDOM();
+      }
     }
 
-    // 6. Fire backend deletion in the background (non-blocking)
+    // 6. Fire backend deletion in the background
     const clientDate = getLocalDateString();
-    fetch(`/api/sessions/${encodeURIComponent(sessionId)}?date=${encodeURIComponent(clientDate)}`, {
+    return fetch(`/api/sessions/${encodeURIComponent(sessionId)}?date=${encodeURIComponent(clientDate)}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
