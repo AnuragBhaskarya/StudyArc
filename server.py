@@ -18,6 +18,7 @@ app = Flask(__name__, static_folder=None)
 socketio = SocketIO(app, cors_allowed_origins='*', async_mode='gevent', ping_timeout=30, ping_interval=10)
 
 MAX_TIMER_SECONDS = 3 * 3600  # Hard ceiling for a focus session (3 hours)
+MIN_ACTIVE_TIMER_SECONDS = 30 * 60  # Live sessions never drop below 30 minutes
 
 # Secret key configuration for cryptographic session signing
 app.secret_key = os.environ.get('SECRET_KEY', 'studyark-production-super-secret-key-change-me')
@@ -393,6 +394,11 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
         new_target = max(0, min(MAX_TIMER_SECONDS, new_target))
         client_rem = int(remaining_seconds) if remaining_seconds is not None else None
         current_status = current.get('status', 'idle')
+
+        # Live session adjustments share the client's 30-minute floor. Idle
+        # preset picks (including 25m) remain unchanged.
+        if current_status in ('running', 'paused'):
+            new_target = max(MIN_ACTIVE_TIMER_SECONDS, min(MAX_TIMER_SECONDS, new_target))
 
         if current_status == 'running':
             if client_rem is None:

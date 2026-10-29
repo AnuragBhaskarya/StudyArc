@@ -1261,6 +1261,7 @@
   let timerInterval = null;
   let isCenterPadHolding = false;
   const MAX_TIMER_SECONDS = 3 * 3600; // 10,800s (3 hours)
+  const MIN_ACTIVE_SESSION_SECONDS = 30 * 60; // Live sessions never drop below 30m
   const RADIUS = 172;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // ~1080.7078px
 
@@ -1480,6 +1481,8 @@
     const locked = isTimerPresetLocked();
     const sessionMode = isTimerSessionActive();
     const target = Math.round(state.timer.targetSeconds || 0);
+    const currentRemaining = Math.max(0, Number(state.timer.remainingSeconds) || 0);
+    const elapsedSeconds = Math.max(0, target - currentRemaining);
 
     idleGroup?.querySelectorAll('.header-preset-pill').forEach((btn) => {
       const seconds = Number(btn.dataset.seconds) || 0;
@@ -1493,16 +1496,24 @@
     sessionGroup?.querySelectorAll('.header-adjust-pill').forEach((btn) => {
       const delta = Number(btn.dataset.adjustSeconds) || 0;
       const atMax = delta > 0 && target >= MAX_TIMER_SECONDS;
-      const atMin = delta < 0 && target <= 0;
-      btn.disabled = !canAdjust || atMax || atMin;
+      const atMin = delta < 0 && target <= MIN_ACTIVE_SESSION_SECONDS;
+      const nextTarget = delta < 0
+        ? Math.max(MIN_ACTIVE_SESSION_SECONDS, target - Math.abs(delta))
+        : Math.min(MAX_TIMER_SECONDS, target + delta);
+      // A reduction must never consume all studied time, because that would
+      // end the session. Keep the button inert when it cannot be safe.
+      const wouldEnd = delta < 0 && nextTarget - elapsedSeconds <= 0;
+      btn.disabled = !canAdjust || atMax || atMin || wouldEnd;
 
       if (atMax) {
         btn.title = 'Maximum session length is 3 hours';
       } else if (atMin) {
-        btn.title = 'Minimum session length is 0 minutes';
+        btn.title = 'Minimum session length is 30 minutes';
+      } else if (wouldEnd) {
+        btn.title = 'Not enough remaining time to reduce by 30 minutes';
       } else {
         const verb = delta > 0 ? 'Extend' : 'Reduce';
-        const bound = delta > 0 ? 'max 3 hours' : 'min 0';
+        const bound = delta > 0 ? 'max 3 hours' : 'min 30 minutes';
         btn.title = `${verb} this session by 30 minutes (${bound})`;
       }
     });
@@ -1559,8 +1570,18 @@
       ? Math.max(0, recalculateRemainingSeconds())
       : Math.max(0, Number(state.timer.remainingSeconds) || 0);
 
-    // Move the target duration by exactly 30 minutes, bounded to 0..3 hours.
-    const nextTarget = Math.max(0, Math.min(MAX_TIMER_SECONDS, currentTarget + deltaSeconds));
+    // Live sessions have a hard 30-minute floor. A session that is already at
+    // or below 30m cannot be reduced further (it can still be extended).
+    if (deltaSeconds < 0 && currentTarget <= MIN_ACTIVE_SESSION_SECONDS) {
+      restartAdjustButtonFeedback(sourceButton);
+      return;
+    }
+
+    // Move the target duration in exact 30-minute steps, bounded to 30m..3h.
+    // A reduction never increases the target when the floor is reached.
+    const nextTarget = deltaSeconds < 0
+      ? Math.max(MIN_ACTIVE_SESSION_SECONDS, currentTarget + deltaSeconds)
+      : Math.min(MAX_TIMER_SECONDS, currentTarget + deltaSeconds);
 
     if (nextTarget === currentTarget) {
       // Already at the hard bound: keep the tap tactile without touching time.
@@ -1574,13 +1595,9 @@
     const nextRemaining = nextTarget - elapsedSeconds;
 
     if (nextRemaining <= 0) {
-      // Reducing past everything already studied ends the session now. The
-      // actual studied time is logged; under one minute is discarded.
-      completeSession({
-        elapsedSeconds,
-        resetSeconds: DEFAULT_TIMER_SECONDS,
-        endedEarly: true
-      });
+      // Reduction would consume all studied time and end the session. Live
+      // adjustments must never complete a session, so leave it untouched.
+      restartAdjustButtonFeedback(sourceButton);
       return;
     }
 
@@ -2870,7 +2887,7 @@
     }
   }
 
-  function completeSession(options = {}) {
+  function completeSession() {
     if (resetVisualActive) return;
 
     const targetDuration = Math.max(
@@ -2878,9 +2895,9 @@
       Number(state.activeTaskTargetSeconds || state.timer.targetSeconds) || DEFAULT_TIMER_SECONDS
     );
     const remainingBefore = Math.max(0, Number(state.timer.remainingSeconds) || 0);
-    const elapsedSeconds = options.elapsedSeconds != null
-      ? Math.max(0, Number(options.elapsedSeconds) || 0)
-      : Math.max(0, targetDuration - remainingBefore);
+    // The target can be adjusted mid-session, so count when the timer actually
+    // reached zero instead of assuming the original presentation duration.
+    const elapsedSeconds = Math.max(0, targetDuration - remainingBefore);
 
     // Strict 1-minute rule: a completed session logs actual studied time, and
     // anything under 60 seconds is discarded instead of being rounded up.
@@ -2889,12 +2906,10 @@
       : 0;
 
     // Natural completion keeps the finished duration as the next idle target.
-    // Reducing a live session to zero returns to the calm 1:30 default instead.
     const resetDuration = Math.max(
       60,
-      Math.min(MAX_TIMER_SECONDS, Math.round(Number(options.resetSeconds) || targetDuration))
+      Math.min(MAX_TIMER_SECONDS, Math.round(targetDuration))
     );
-    const endedEarly = Boolean(options.endedEarly);
 
     state.timer.remainingSeconds = 0;
     if (timerInterval) {
@@ -2953,8 +2968,6 @@
           const streakBonus = Math.max(0, state.streak || 0);
           spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
           scheduleSessionUIUpdate(140);
-        } else if (endedEarly) {
-          spawnFlyingPill('Session Ended');
         }
       }
     });

@@ -22,6 +22,7 @@ if os.path.exists(env_file):
 DATABASE_URL = os.environ.get('DATABASE_URL')
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'study_tracker.db')
 MAX_TIMER_SECONDS = 3 * 3600  # Hard ceiling for a focus session (3 hours)
+MIN_ACTIVE_TIMER_SECONDS = 30 * 60  # Live sessions never drop below 30 minutes
 
 try:
     import psycopg2
@@ -624,6 +625,11 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
             # while idle adjustments reset the countdown to the new target.
             new_target = max(0, min(MAX_TIMER_SECONDS, int(new_target)))
             client_rem = int(remaining_seconds) if remaining_seconds is not None else None
+
+            # Live session adjustments share the client's 30-minute floor.
+            # Idle preset picks (including 25m) remain unchanged.
+            if current['status'] in ('running', 'paused'):
+                new_target = max(MIN_ACTIVE_TIMER_SECONDS, min(MAX_TIMER_SECONDS, int(new_target)))
 
             if current['status'] == 'running':
                 if client_rem is None:
