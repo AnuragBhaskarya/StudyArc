@@ -5091,29 +5091,6 @@
           const timeRangeStr = s.timeRange ? `<span class="day-session-timerange">${escapeHtml(s.timeRange)}</span>` : '';
           const sep = (taskNote && timeRangeStr) ? '<span class="stat-xp-sep" aria-hidden="true">•</span>' : '';
 
-          let breakSecs = 0;
-          let pausesCount = 0;
-          let timeline = s.timeline;
-          if (typeof timeline === 'string') {
-            try { timeline = JSON.parse(timeline); } catch(_) { timeline = []; }
-          }
-          if (Array.isArray(timeline)) {
-            timeline.forEach(item => {
-              if (item.type === 'break' || item.state === 'break') {
-                pausesCount++;
-                const bDur = item.duration || Math.max(0, Math.round(((item.end || item.end_ms) - (item.start || item.start_ms)) / 1000));
-                breakSecs += bDur;
-              }
-            });
-          } else if (s.breakMinutes || s.break_minutes) {
-            breakSecs = Math.round((s.breakMinutes || s.break_minutes) * 60);
-            if (breakSecs > 0) pausesCount = 1;
-          }
-
-          const breakTag = breakSecs > 0
-            ? `<span class="session-card-break-badge" title="${formatDetailedDuration(breakSecs)} break (${pausesCount} ${pausesCount === 1 ? 'pause' : 'pauses'})">☕ ${formatDetailedDuration(breakSecs)}</span>`
-            : '';
-
           return `
           <div class="day-session-card" data-session-id="${escapeHtml(s.id)}" data-date="${escapeHtml(dayData.date)}" data-duration="${s.durationMinutes}" data-xp="${s.xp != null ? s.xp : (s.durationMinutes * 10)}" data-session-start-ms="${s.sessionStartMs || s.session_start_ms || ''}" data-session-end-ms="${s.sessionEndMs || s.session_end_ms || ''}">
             <div class="day-session-left">
@@ -5130,7 +5107,6 @@
                   ${taskNote}
                   ${sep}
                   ${timeRangeStr}
-                  ${breakTag}
                 </div>
               </div>
             </div>
@@ -5358,10 +5334,22 @@
     const wallSpanSec = Math.max(totalActiveSpanSec, Math.round((endMs - startMs) / 1000));
 
     // Summary pills with precise seconds formatting
-    if (focusPillEl) focusPillEl.textContent = formatDetailedDuration(activeFocusSec);
-    if (breakPillEl) breakPillEl.textContent = computedBreakSeconds > 0 ? formatDetailedDuration(computedBreakSeconds) : '0m';
-    if (pausesPillEl) pausesPillEl.textContent = `${breaksCount} ${breaksCount === 1 ? 'pause' : 'pauses'}`;
-    if (xpPillEl) xpPillEl.textContent = `+${formatCompactNumber(xp)} XP`;
+    if (focusPillEl) {
+      focusPillEl.textContent = formatDetailedDuration(activeFocusSec);
+      if (focusPillEl.parentElement) focusPillEl.parentElement.title = `Focus: ${formatDetailedDuration(activeFocusSec)}`;
+    }
+    if (breakPillEl) {
+      breakPillEl.textContent = computedBreakSeconds > 0 ? formatDetailedDuration(computedBreakSeconds) : '0m';
+      if (breakPillEl.parentElement) breakPillEl.parentElement.title = `Break: ${computedBreakSeconds > 0 ? formatDetailedDuration(computedBreakSeconds) : '0m'}`;
+    }
+    if (pausesPillEl) {
+      pausesPillEl.textContent = breaksCount;
+      if (pausesPillEl.parentElement) pausesPillEl.parentElement.title = `${breaksCount} ${breaksCount === 1 ? 'pause' : 'pauses'} taken`;
+    }
+    if (xpPillEl) {
+      xpPillEl.textContent = `+${formatCompactNumber(xp)} XP`;
+      if (xpPillEl.parentElement) xpPillEl.parentElement.title = `XP Earned: +${formatCompactNumber(xp)} XP`;
+    }
 
     // Ratio Bar
     const focusPct = totalActiveSpanSec > 0 ? Math.round((activeFocusSec / totalActiveSpanSec) * 100) : 100;
@@ -6443,29 +6431,6 @@
     const timeRangeStr = s.timeRange ? `<span class="history-session-timerange">${escapeHtml(s.timeRange)}</span>` : '';
     const sep = (taskNote && timeRangeStr) ? '<span class="stat-xp-sep" aria-hidden="true">•</span>' : '';
 
-    let breakSecs = 0;
-    let pausesCount = 0;
-    let timeline = s.timeline;
-    if (typeof timeline === 'string') {
-      try { timeline = JSON.parse(timeline); } catch(_) { timeline = []; }
-    }
-    if (Array.isArray(timeline)) {
-      timeline.forEach(item => {
-        if (item.type === 'break' || item.state === 'break') {
-          pausesCount++;
-          const bDur = item.duration || Math.max(0, Math.round(((item.end || item.end_ms) - (item.start || item.start_ms)) / 1000));
-          breakSecs += bDur;
-        }
-      });
-    } else if (s.breakMinutes || s.break_minutes) {
-      breakSecs = Math.round((s.breakMinutes || s.break_minutes) * 60);
-      if (breakSecs > 0) pausesCount = 1;
-    }
-
-    const breakTag = breakSecs > 0
-      ? `<span class="session-card-break-badge" title="${formatDetailedDuration(breakSecs)} break (${pausesCount} ${pausesCount === 1 ? 'pause' : 'pauses'})">☕ ${formatDetailedDuration(breakSecs)}</span>`
-      : '';
-
     const card = document.createElement('div');
     card.className = 'history-session-card';
     card.setAttribute('data-session-id', s.id);
@@ -6490,7 +6455,6 @@
             ${taskNote}
             ${sep}
             ${timeRangeStr}
-            ${breakTag}
           </div>
         </div>
       </div>
