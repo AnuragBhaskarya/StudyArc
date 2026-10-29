@@ -2314,9 +2314,15 @@
     return 0;
   }
 
+  // Sessions shorter than one minute are discarded on reset (same strict rule
+  // used by the Today's Focus pill and logSession()). Never show live XP for a
+  // session that cannot be persisted yet: it would jump back to the saved value
+  // the moment the discarded session is cleared.
+  const LIVE_XP_MIN_SESSION_SECONDS = 60;
+
   function getLiveSessionXp() {
     const elapsedSecs = getLiveElapsedSeconds();
-    if (elapsedSecs <= 0) return 0;
+    if (elapsedSecs < LIVE_XP_MIN_SESSION_SECONDS) return 0;
 
     let flowMult = 1.00;
     if (elapsedSecs >= 90 * 60) flowMult = 1.35;
@@ -2336,18 +2342,16 @@
     const scaledRate = (10 * flowMult * pristineMult * streakMult) / 60.0;
     let liveXp = Math.floor(elapsedSecs * scaledRate);
 
-    // Ignition (+100 XP) and milestone sparks kick in once at least 1 full minute (60s) has elapsed
-    if (elapsedSecs >= 60) {
-      const todayStr = getLocalDateString();
-      const todayMins = state.dayActivity[todayStr] || 0;
-      if (todayMins === 0) {
-        liveXp += 100;
-      }
-      const newTotalMins = todayMins + Math.floor(elapsedSecs / 60);
-      if (todayMins < 60 && newTotalMins >= 60) liveXp += 150;
-      if (todayMins < 120 && newTotalMins >= 120) liveXp += 300;
-      if (todayMins < 240 && newTotalMins >= 240) liveXp += 600;
+    // Ignition (+100 XP) and milestone sparks kick in at the one-minute mark
+    const todayStr = getLocalDateString();
+    const todayMins = state.dayActivity[todayStr] || 0;
+    if (todayMins === 0) {
+      liveXp += 100;
     }
+    const newTotalMins = todayMins + Math.floor(elapsedSecs / 60);
+    if (todayMins < 60 && newTotalMins >= 60) liveXp += 150;
+    if (todayMins < 120 && newTotalMins >= 120) liveXp += 300;
+    if (todayMins < 240 && newTotalMins >= 240) liveXp += 600;
 
     return liveXp;
   }
