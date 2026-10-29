@@ -3076,11 +3076,38 @@ input:checked + .switch-slider:before {
   transition: filter 120ms ease, opacity 120ms ease;
   cursor: pointer;
   flex-shrink: 0;
+  min-width: 3px;
 }
 
 .graph-segment:hover {
   filter: brightness(1.25);
   z-index: 2;
+}
+
+.session-graph-midnight-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: repeating-linear-gradient(to bottom, #a78bfa, #a78bfa 4px, transparent 4px, transparent 8px);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.session-graph-midnight-badge {
+  position: absolute;
+  top: -20px;
+  transform: translateX(-50%);
+  background: rgba(167, 139, 250, 0.2);
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  color: #c4b5fd;
+  font-size: 0.65rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  pointer-events: none;
+  white-space: nowrap;
+  font-feature-settings: 'tnum';
+  z-index: 6;
 }
 
 .graph-segment-focus {

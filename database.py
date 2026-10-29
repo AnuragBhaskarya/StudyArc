@@ -943,13 +943,20 @@ def add_session(user_id, subject_name, duration_minutes, date_str=None, timestam
     end_dt = datetime.fromtimestamp(session_end_ms / 1000)
     start_dt = datetime.fromtimestamp(session_start_ms / 1000)
 
+    start_date_str = start_dt.strftime('%Y-%m-%d')
+    end_date_str = end_dt.strftime('%Y-%m-%d')
+    is_overnight = (start_date_str != end_date_str)
+
     if not date_str:
-        date_str = start_dt.strftime('%Y-%m-%d')
+        date_str = start_date_str
 
     if not start_time:
         start_time = start_dt.strftime('%I:%M %p').lstrip('0')
     if not end_time:
-        end_time = end_dt.strftime('%I:%M %p').lstrip('0')
+        base_end = end_dt.strftime('%I:%M %p').lstrip('0')
+        end_time = f"{base_end} (+1d)" if is_overnight else base_end
+    elif is_overnight and '(+' not in end_time and '(-' not in end_time:
+        end_time = f"{end_time} (+1d)"
 
     # Normalize timeline
     if isinstance(timeline_json, (list, dict)):
@@ -1124,6 +1131,17 @@ def get_sessions(user_id, limit=None):
         return result
 
 def get_day_details(user_id, date_str):
+    try:
+        dt = datetime.strptime(date_str, '%Y-%m-%d')
+        day_start_ms = int(datetime(dt.year, dt.month, dt.day, 0, 0, 0).timestamp() * 1000)
+        day_end_ms = int(datetime(dt.year, dt.month, dt.day, 23, 59, 59, 999).timestamp() * 1000)
+        formatted_date = dt.strftime('%A, %B %d, %Y')
+    except Exception:
+        dt = datetime.now()
+        day_start_ms = 0
+        day_end_ms = int(dt.timestamp() * 1000) + 86400000
+        formatted_date = date_str
+
     with get_connection() as ctx:
         cur = ctx.execute("""
             SELECT sess.id, sess.subject_id, sess.subject_name, s.color,
@@ -1133,9 +1151,14 @@ def get_day_details(user_id, date_str):
                    sess.session_start_ms, sess.session_end_ms, sess.break_minutes, sess.timeline_json
             FROM sessions sess
             LEFT JOIN subjects s ON sess.subject_id = s.id
-            WHERE sess.user_id = ? AND sess.date = ?
+            WHERE sess.user_id = ? AND (
+                sess.date = ?
+                OR (sess.session_start_ms IS NOT NULL AND sess.session_end_ms IS NOT NULL AND (
+                    sess.session_start_ms <= ? AND sess.session_end_ms >= ?
+                ))
+            )
             ORDER BY sess.timestamp DESC
-        """, (user_id, date_str))
+        """, (user_id, date_str, day_end_ms, day_start_ms))
         rows = [dict(r) for r in cur.fetchall()]
 
     sessions = []
@@ -1144,18 +1167,60 @@ def get_day_details(user_id, date_str):
     for r in rows:
         duration = int(r['duration_minutes'])
         sess_xp = int(r.get('xp') or (duration * 10))
-        total_minutes += duration
-        total_xp += sess_xp
         ts = int(r['timestamp'])
         end_ms = r.get('session_end_ms') or ts
         start_ms = r.get('session_start_ms')
         if not start_ms:
             start_ms = end_ms - (duration * 60000)
 
-        end_dt = datetime.fromtimestamp(end_ms / 1000)
         start_dt = datetime.fromtimestamp(start_ms / 1000)
-        start_str = r.get('start_time') or start_dt.strftime('%I:%M %p').lstrip('0')
-        end_str = r.get('end_time') or end_dt.strftime('%I:%M %p').lstrip('0')
+        end_dt = datetime.fromtimestamp(end_ms / 1000)
+        start_date_str = start_dt.strftime('%Y-%m-%d')
+        end_date_str = end_dt.strftime('%Y-%m-%d')
+        recorded_date = r.get('date') or start_date_str
+        is_overnight = (start_date_str != end_date_str)
+
+        day_minutes = duration
+        if is_overnight:
+            midnight_dt = datetime(end_dt.year, end_dt.month, end_dt.day, 0, 0, 0)
+            midnight_ms = int(midnight_dt.timestamp() * 1000)
+            total_span = max(1, end_ms - start_ms)
+            span_day1 = max(0, midnight_ms - start_ms)
+            if total_span > 0:
+                day1_mins = max(1, round(duration * (span_day1 / total_span)))
+                day2_mins = max(1, duration - day1_mins)
+            else:
+                day1_mins = max(1, duration // 2)
+                day2_mins = max(1, duration - day1_mins)
+
+            if date_str == start_date_str:
+                day_minutes = day1_mins
+            elif date_str == end_date_str:
+                day_minutes = day2_mins
+
+        total_minutes += day_minutes
+        total_xp += sess_xp
+
+        clean_start = (r.get('start_time') or start_dt.strftime('%I:%M %p').lstrip('0')).replace(' (-1d)', '').replace(' (+1d)', '').strip()
+        clean_end = (r.get('end_time') or end_dt.strftime('%I:%M %p').lstrip('0')).replace(' (+1d)', '').replace(' (-1d)', '').strip()
+
+        if is_overnight:
+            if date_str == start_date_str:
+                time_range_display = f"{clean_start} – {clean_end} (+1d)"
+                start_str = clean_start
+                end_str = f"{clean_end} (+1d)"
+            elif date_str == end_date_str:
+                time_range_display = f"{clean_start} (-1d) – {clean_end}"
+                start_str = f"{clean_start} (-1d)"
+                end_str = clean_end
+            else:
+                time_range_display = f"{clean_start} – {clean_end}"
+                start_str = clean_start
+                end_str = clean_end
+        else:
+            time_range_display = f"{clean_start} – {clean_end}"
+            start_str = clean_start
+            end_str = clean_end
 
         timeline_parsed = []
         if r.get('timeline_json'):
@@ -1174,14 +1239,17 @@ def get_day_details(user_id, date_str):
         sessions.append({
             'id': f"sess_{r['id']}",
             'subject_id': r['subject_id'],
-            'subject': r['subject_name'],
+            'subject': r['subject_name'] or 'Focus Session',
             'color': r['color'] or '#10E068',
             'durationMinutes': duration,
-            'date': r['date'],
+            'duration_minutes': duration,
+            'dayMinutes': day_minutes,
+            'day_minutes': day_minutes,
+            'date': recorded_date,
             'timestamp': ts,
             'startTime': start_str,
             'endTime': end_str,
-            'timeRange': f"{start_str} – {end_str}",
+            'timeRange': time_range_display,
             'xp': sess_xp,
             'sessionStartMs': start_ms,
             'sessionEndMs': end_ms,
@@ -1191,12 +1259,6 @@ def get_day_details(user_id, date_str):
 
     total_sessions = len(sessions)
     avg_minutes = round(total_minutes / total_sessions, 1) if total_sessions > 0 else 0
-
-    try:
-        dt = datetime.strptime(date_str, '%Y-%m-%d')
-        formatted_date = dt.strftime('%A, %B %d, %Y')
-    except Exception:
-        formatted_date = date_str
 
     today_str = datetime.now().strftime('%Y-%m-%d')
     is_today = (date_str == today_str)
@@ -1220,14 +1282,50 @@ def get_day_details(user_id, date_str):
 def get_daily_activity(user_id):
     with get_connection() as ctx:
         cur = ctx.execute("""
-            SELECT date, SUM(duration_minutes) as total_minutes
+            SELECT id, date, duration_minutes, session_start_ms, session_end_ms
             FROM sessions
             WHERE user_id = ?
-            GROUP BY date
-            ORDER BY date ASC
+            ORDER BY timestamp ASC
         """, (user_id,))
         rows = [dict(r) for r in cur.fetchall()]
-        return {r['date']: int(r['total_minutes']) for r in rows}
+
+    activity = {}
+    for r in rows:
+        dur = int(r.get('duration_minutes') or 0)
+        start_ms = r.get('session_start_ms')
+        end_ms = r.get('session_end_ms')
+        date_str = r.get('date')
+
+        if start_ms and end_ms and end_ms > start_ms:
+            start_dt = datetime.fromtimestamp(start_ms / 1000)
+            end_dt = datetime.fromtimestamp(end_ms / 1000)
+            s_date = start_dt.strftime('%Y-%m-%d')
+            e_date = end_dt.strftime('%Y-%m-%d')
+
+            if s_date != e_date:
+                midnight_dt = datetime(end_dt.year, end_dt.month, end_dt.day, 0, 0, 0)
+                midnight_ms = int(midnight_dt.timestamp() * 1000)
+
+                total_span = end_ms - start_ms
+                span_day1 = max(0, midnight_ms - start_ms)
+                if total_span > 0:
+                    day1_mins = max(1, round(dur * (span_day1 / total_span)))
+                    day2_mins = max(1, dur - day1_mins)
+                else:
+                    day1_mins = max(1, dur // 2)
+                    day2_mins = max(1, dur - day1_mins)
+
+                activity[s_date] = activity.get(s_date, 0) + day1_mins
+                activity[e_date] = activity.get(e_date, 0) + day2_mins
+                continue
+
+        if not date_str and start_ms:
+            date_str = datetime.fromtimestamp(start_ms / 1000).strftime('%Y-%m-%d')
+        if not date_str:
+            date_str = datetime.now().strftime('%Y-%m-%d')
+        activity[date_str] = activity.get(date_str, 0) + dur
+
+    return activity
 
 def get_stats(user_id, client_date=None):
     if client_date and isinstance(client_date, str) and len(client_date) == 10:
@@ -1245,24 +1343,12 @@ def get_stats(user_id, client_date=None):
         cur = ctx.execute("SELECT COALESCE(SUM(duration_minutes), 0) FROM sessions WHERE user_id = ?", (user_id,))
         total_focus_minutes = int(fetch_scalar(cur.fetchone()) or 0)
 
-        cur = ctx.execute(
-            "SELECT COALESCE(SUM(duration_minutes), 0) FROM sessions WHERE user_id = ? AND date = ?",
-            (user_id, today_str)
-        )
-        today_focus_minutes = int(fetch_scalar(cur.fetchone()) or 0)
-
         cur = ctx.execute("SELECT COALESCE(SUM(COALESCE(NULLIF(xp, 0), duration_minutes * 10)), 0) FROM sessions WHERE user_id = ?", (user_id,))
         total_xp = int(fetch_scalar(cur.fetchone()) or 0)
 
-        cur = ctx.execute("""
-            SELECT date, SUM(duration_minutes) as mins
-            FROM sessions
-            WHERE user_id = ?
-            GROUP BY date
-            HAVING SUM(duration_minutes) > 0
-            ORDER BY date DESC
-        """, (user_id,))
-        active_dates = {dict(row)['date'] for row in cur.fetchall()}
+    daily_act = get_daily_activity(user_id)
+    today_focus_minutes = int(daily_act.get(today_str, 0))
+    active_dates = {d for d, mins in daily_act.items() if mins > 0}
 
     current_check = current_date_obj
     if today_str not in active_dates:
@@ -1484,6 +1570,16 @@ def get_full_state(user_id, client_date=None):
                 'duration': duration * 60
             }]
 
+        start_dt = datetime.fromtimestamp(start_ms / 1000)
+        end_dt = datetime.fromtimestamp(end_ms / 1000)
+        start_date_str = start_dt.strftime('%Y-%m-%d')
+        end_date_str = end_dt.strftime('%Y-%m-%d')
+        is_overnight = (start_date_str != end_date_str)
+        if is_overnight and '(+' not in end_str and '(-' not in end_str:
+            time_range_str = f"{start_str} – {end_str} (+1d)"
+        else:
+            time_range_str = f"{start_str} – {end_str}"
+
         sessions_res.append({
             'id': f"sess_{r['id']}",
             'subject_id': r['subject_id'],
@@ -1494,7 +1590,7 @@ def get_full_state(user_id, client_date=None):
             'timestamp': ts,
             'startTime': start_str,
             'endTime': end_str,
-            'timeRange': f"{start_str} – {end_str}",
+            'timeRange': time_range_str,
             'xp': int(r.get('xp') or (duration * 10)),
             'sessionStartMs': start_ms,
             'sessionEndMs': end_ms,
@@ -1502,8 +1598,42 @@ def get_full_state(user_id, client_date=None):
             'timeline': timeline_parsed
         })
 
-    # 4. Process Activity & Compute Stats in Python (0 extra DB queries!)
-    day_act = {k: int(v) for k, v in (data.get('activity') or {}).items()}
+    # 4. Process Activity & Compute Stats in Python with Midnight-Crossing Split
+    day_act = {}
+    for r in (data.get('sessions') or []):
+        dur = int(r.get('duration_minutes') or 0)
+        start_ms = r.get('session_start_ms')
+        end_ms = r.get('session_end_ms')
+        rec_date = r.get('date')
+
+        if start_ms and end_ms and end_ms > start_ms:
+            start_dt = datetime.fromtimestamp(start_ms / 1000)
+            end_dt = datetime.fromtimestamp(end_ms / 1000)
+            s_date = start_dt.strftime('%Y-%m-%d')
+            e_date = end_dt.strftime('%Y-%m-%d')
+
+            if s_date != e_date:
+                midnight_dt = datetime(end_dt.year, end_dt.month, end_dt.day, 0, 0, 0)
+                midnight_ms = int(midnight_dt.timestamp() * 1000)
+                total_span = end_ms - start_ms
+                span_day1 = max(0, midnight_ms - start_ms)
+                if total_span > 0:
+                    day1_mins = max(1, round(dur * (span_day1 / total_span)))
+                    day2_mins = max(1, dur - day1_mins)
+                else:
+                    day1_mins = max(1, dur // 2)
+                    day2_mins = max(1, dur - day1_mins)
+
+                day_act[s_date] = day_act.get(s_date, 0) + day1_mins
+                day_act[e_date] = day_act.get(e_date, 0) + day2_mins
+                continue
+
+        if not rec_date and start_ms:
+            rec_date = datetime.fromtimestamp(start_ms / 1000).strftime('%Y-%m-%d')
+        if not rec_date:
+            rec_date = datetime.now().strftime('%Y-%m-%d')
+        day_act[rec_date] = day_act.get(rec_date, 0) + dur
+
     tot_focus_mins = sum(day_act.values())
     today_focus_mins = day_act.get(today_str, 0)
     total_xp = int(data['total_xp']) if data.get('total_xp') is not None else (tot_focus_mins * 10)

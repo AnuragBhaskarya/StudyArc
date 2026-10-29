@@ -1131,6 +1131,29 @@
     return `${h}h ${m}m`;
   }
 
+  function formatDetailedDuration(totalSecs) {
+    const s = Math.max(0, Math.round(Number(totalSecs) || 0));
+    if (s === 0) return '0m';
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    const remS = s % 60;
+    if (s < 3600) {
+      return remS > 0 ? `${m}m ${remS}s` : `${m}m`;
+    }
+    const h = Math.floor(s / 3600);
+    const remM = Math.floor((s % 3600) / 60);
+    if (remM === 0 && remS === 0) return `${h}h`;
+    if (remS === 0) return `${h}h ${remM}m`;
+    if (remM === 0) return `${h}h ${remS}s`;
+    return `${h}h ${remM}m ${remS}s`;
+  }
+
+  function formatShortDate(d) {
+    if (!(d instanceof Date) || isNaN(d)) return '';
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[d.getMonth()]} ${d.getDate()}`;
+  }
+
   function formatCompactNumber(num) {
     if (num === null || num === undefined || isNaN(num)) return '0';
     const val = Number(num);
@@ -2875,20 +2898,51 @@
 
     const startD = new Date(sessionStartMs);
     const endD = new Date(sessionEndMs);
+    const startDateStr = getLocalDateString(startD);
+    const endDateStr = getLocalDateString(endD);
+    const isOvernight = (startDateStr !== endDateStr);
+
     const startStr = formatTime(startD);
-    const endStr = formatTime(endD);
+    let endStr = formatTime(endD);
+    if (isOvernight) {
+      endStr += ' (+1d)';
+    }
     const timeRangeStr = `${startStr} – ${endStr}`;
     const unpaused = options.unpaused !== false;
     const earnedXp = estimateSessionXp(minutesCompleted, unpaused);
 
-    // Optimistic local update
+    // Optimistic local update with midnight split
     state.xp += earnedXp;
     state.totalFocusSeconds += minutesCompleted * 60;
-    state.dayActivity[todayStr] = (state.dayActivity[todayStr] || 0) + minutesCompleted;
+
+    let day1Mins = minutesCompleted;
+    let day2Mins = 0;
+
+    if (isOvernight) {
+      const midnightD = new Date(startD);
+      midnightD.setHours(24, 0, 0, 0);
+      const midnightMs = midnightD.getTime();
+      const totalSpan = Math.max(1, sessionEndMs - sessionStartMs);
+      const spanDay1 = Math.max(0, midnightMs - sessionStartMs);
+      if (totalSpan > 0) {
+        day1Mins = Math.max(1, Math.round(minutesCompleted * (spanDay1 / totalSpan)));
+        day2Mins = Math.max(1, minutesCompleted - day1Mins);
+      } else {
+        day1Mins = Math.max(1, Math.floor(minutesCompleted / 2));
+        day2Mins = Math.max(1, minutesCompleted - day1Mins);
+      }
+      state.dayActivity[startDateStr] = (state.dayActivity[startDateStr] || 0) + day1Mins;
+      state.dayActivity[endDateStr] = (state.dayActivity[endDateStr] || 0) + day2Mins;
+      dayDetailsCache.delete(startDateStr);
+      dayDetailsCache.delete(endDateStr);
+    } else {
+      state.dayActivity[startDateStr] = (state.dayActivity[startDateStr] || 0) + minutesCompleted;
+      dayDetailsCache.delete(startDateStr);
+    }
 
     const sessionObj = {
       id: 'sess_' + now,
-      date: todayStr,
+      date: startDateStr,
       durationMinutes: minutesCompleted,
       subject: subj,
       timestamp: sessionEndMs,
@@ -2902,7 +2956,6 @@
       timeline: timeline
     };
     state.sessions.unshift(sessionObj);
-    dayDetailsCache.delete(todayStr);
     invalidateSessionIndex();
 
     updateStreak();
@@ -2920,7 +2973,7 @@
         body: JSON.stringify({
           subject_name: subj,
           duration_minutes: minutesCompleted,
-          date: todayStr,
+          date: startDateStr,
           timestamp: sessionEndMs,
           start_time: startStr,
           end_time: endStr,
@@ -5018,7 +5071,7 @@
           if (s && s.id) sessionLookupCache.set(String(s.id), s);
         });
         listEl.innerHTML = orderedSessions.map(s => `
-          <div class="day-session-card" data-session-id="${escapeHtml(s.id)}" data-date="${escapeHtml(dayData.date)}" data-duration="${s.durationMinutes}" data-xp="${s.xp != null ? s.xp : (s.durationMinutes * 10)}">
+          <div class="day-session-card" data-session-id="${escapeHtml(s.id)}" data-date="${escapeHtml(dayData.date)}" data-duration="${s.durationMinutes}" data-xp="${s.xp != null ? s.xp : (s.durationMinutes * 10)}" data-session-start-ms="${s.sessionStartMs || s.session_start_ms || ''}" data-session-end-ms="${s.sessionEndMs || s.session_end_ms || ''}">
             <div class="day-session-left">
               <div class="day-session-timeline">
                 <span class="day-session-track-line"></span>
@@ -5159,6 +5212,12 @@
     const closeBtn = document.getElementById('btn-close-session-detail');
 
     // Header info
+    const startD = new Date(startMs);
+    const endD = new Date(endMs);
+    const startDayStr = getLocalDateString(startD);
+    const endDayStr = getLocalDateString(endD);
+    const isOvernight = (startDayStr !== endDayStr);
+
     if (badgeEl) {
       badgeEl.textContent = subjName;
       badgeEl.style.color = subjColor;
@@ -5166,14 +5225,22 @@
       badgeEl.style.backgroundColor = `${subjColor}15`;
     }
     if (dateChipEl) {
-      const isToday = (dateStr === getLocalDateString());
-      dateChipEl.textContent = isToday ? 'Today' : dateStr;
+      const isToday = (startDayStr === getLocalDateString());
+      if (isOvernight) {
+        dateChipEl.textContent = `${formatShortDate(startD)} → ${formatShortDate(endD)} (+1d)`;
+      } else {
+        dateChipEl.textContent = isToday ? 'Today' : startDayStr;
+      }
     }
     if (titleEl) {
       titleEl.textContent = s.taskName ? `"${s.taskName}"` : subjName;
     }
     if (timeRangeEl) {
-      timeRangeEl.textContent = timeRangeStr || `${formatTime(new Date(startMs))} – ${formatTime(new Date(endMs))}`;
+      if (isOvernight) {
+        timeRangeEl.textContent = `${formatTime(startD)} – ${formatTime(endD)} (+1d)`;
+      } else {
+        timeRangeEl.textContent = timeRangeStr || `${formatTime(startD)} – ${formatTime(endD)}`;
+      }
     }
 
     // Parse timeline
@@ -5196,7 +5263,7 @@
       }];
     }
 
-    // Calculate break count and segment durations
+    // Calculate break count and segment durations in exact seconds
     let breaksCount = 0;
     let computedBreakSeconds = 0;
     let computedFocusSeconds = 0;
@@ -5205,7 +5272,7 @@
       const segStart = Number(item.start || startMs);
       const segEnd = Number(item.end || endMs);
       const segDur = Math.max(0, Math.round((segEnd - segStart) / 1000));
-      item._calcDuration = item.duration || segDur;
+      item._calcDuration = (item.duration != null && item.duration > 0) ? item.duration : segDur;
       if (item.type === 'break') {
         breaksCount++;
         computedBreakSeconds += item._calcDuration;
@@ -5214,30 +5281,29 @@
       }
     });
 
-    const displayFocusMins = dur > 0 ? dur : Math.max(1, Math.round(computedFocusSeconds / 60));
-    const displayBreakMins = breakMins > 0 ? breakMins : Math.round(computedBreakSeconds / 60);
-    const totalWallMins = Math.max(displayFocusMins + displayBreakMins, Math.round((endMs - startMs) / 60000));
+    const activeFocusSec = computedFocusSeconds > 0 ? computedFocusSeconds : (dur * 60);
+    const totalActiveSpanSec = activeFocusSec + computedBreakSeconds;
+    const wallSpanSec = Math.max(totalActiveSpanSec, Math.round((endMs - startMs) / 1000));
 
-    // Summary pills
-    if (focusPillEl) focusPillEl.textContent = formatHoursMinutes(displayFocusMins * 60);
-    if (breakPillEl) breakPillEl.textContent = displayBreakMins > 0 ? formatHoursMinutes(displayBreakMins * 60) : '0m';
+    // Summary pills with precise seconds formatting
+    if (focusPillEl) focusPillEl.textContent = formatDetailedDuration(activeFocusSec);
+    if (breakPillEl) breakPillEl.textContent = computedBreakSeconds > 0 ? formatDetailedDuration(computedBreakSeconds) : '0m';
     if (pausesPillEl) pausesPillEl.textContent = `${breaksCount} ${breaksCount === 1 ? 'pause' : 'pauses'}`;
     if (xpPillEl) xpPillEl.textContent = `+${formatCompactNumber(xp)} XP`;
 
     // Ratio Bar
-    const totalActiveSpan = displayFocusMins + displayBreakMins;
-    const focusPct = totalActiveSpan > 0 ? Math.round((displayFocusMins / totalActiveSpan) * 100) : 100;
+    const focusPct = totalActiveSpanSec > 0 ? Math.round((activeFocusSec / totalActiveSpanSec) * 100) : 100;
     const breakPct = 100 - focusPct;
     if (ratioMetaEl) {
-      ratioMetaEl.textContent = displayBreakMins > 0 ? `${focusPct}% Focus • ${breakPct}% Break` : '100% Unbroken Focus';
+      ratioMetaEl.textContent = computedBreakSeconds > 0 ? `${focusPct}% Focus • ${breakPct}% Break` : '100% Unbroken Focus';
     }
     if (ratioFocusBarEl) ratioFocusBarEl.style.width = `${focusPct}%`;
     if (ratioBreakBarEl) ratioBreakBarEl.style.width = `${breakPct}%`;
 
     // Timeline Graph
-    if (wallSpanEl) wallSpanEl.textContent = `Total: ${formatHoursMinutes(totalWallMins * 60)}`;
-    if (axisStartEl) axisStartEl.textContent = formatTime(new Date(startMs));
-    if (axisEndEl) axisEndEl.textContent = formatTime(new Date(endMs));
+    if (wallSpanEl) wallSpanEl.textContent = `Total: ${formatDetailedDuration(wallSpanSec)}`;
+    if (axisStartEl) axisStartEl.textContent = formatTime(startD);
+    if (axisEndEl) axisEndEl.textContent = isOvernight ? `${formatTime(endD)} (+1d)` : formatTime(endD);
 
     if (graphTrackEl) {
       graphTrackEl.innerHTML = '';
@@ -5256,7 +5322,7 @@
         const typeLabel = seg.type === 'break' ? 'Break' : 'Focus';
         const startStr = formatTime(new Date(segStart));
         const endStr = formatTime(new Date(segEnd));
-        const durStr = formatHoursMinutes(segDurationSec);
+        const durStr = formatDetailedDuration(segDurationSec);
 
         segEl.setAttribute('data-tooltip', `${typeLabel}: ${startStr} – ${endStr} (${durStr})`);
 
@@ -5276,6 +5342,27 @@
 
         graphTrackEl.appendChild(segEl);
       });
+
+      // Overnight midnight marker
+      if (isOvernight) {
+        const midnightD = new Date(startD);
+        midnightD.setHours(24, 0, 0, 0);
+        const midnightMs = midnightD.getTime();
+        if (midnightMs > startMs && midnightMs < endMs) {
+          const midnightPct = Math.max(0, Math.min(100, ((midnightMs - startMs) / totalSpanMs) * 100));
+          const lineEl = document.createElement('div');
+          lineEl.className = 'session-graph-midnight-line';
+          lineEl.style.left = `${midnightPct}%`;
+          lineEl.setAttribute('title', 'Midnight Day Boundary (12:00 AM)');
+          graphTrackEl.appendChild(lineEl);
+
+          const mBadgeEl = document.createElement('div');
+          mBadgeEl.className = 'session-graph-midnight-badge';
+          mBadgeEl.style.left = `${midnightPct}%`;
+          mBadgeEl.textContent = '12:00 AM';
+          graphTrackEl.appendChild(mBadgeEl);
+        }
+      }
     }
 
     // Intervals & Breaks List
@@ -5301,10 +5388,15 @@
           const isBreak = item.type === 'break';
           const segStart = Number(item.start || startMs);
           const segEnd = Number(item.end || endMs);
-          const startStr = formatTime(new Date(segStart));
-          const endStr = formatTime(new Date(segEnd));
+          const segStartD = new Date(segStart);
+          const segEndD = new Date(segEnd);
+          const segStartStr = formatTime(segStartD);
+          let segEndStr = formatTime(segEndD);
+          if (isOvernight && getLocalDateString(segEndD) !== startDayStr) {
+            segEndStr += ' (+1d)';
+          }
           const durSec = item._calcDuration || Math.max(0, Math.round((segEnd - segStart) / 1000));
-          const durStr = formatHoursMinutes(durSec);
+          const durStr = formatDetailedDuration(durSec);
           const titleLabel = isBreak ? `Break #${breakIdx++} (Paused)` : 'Focus Period';
 
           return `
@@ -5313,7 +5405,7 @@
                 <span class="interval-badge-pill interval-badge-${isBreak ? 'break' : 'focus'}">${isBreak ? 'PAUSE' : 'FOCUS'}</span>
                 <div>
                   <div style="font-weight: 500;">${titleLabel}</div>
-                  <div class="interval-times">${startStr} – ${endStr}</div>
+                  <div class="interval-times">${segStartStr} – ${segEndStr}</div>
                 </div>
               </div>
               <div class="interval-right">
@@ -6283,6 +6375,8 @@
     card.setAttribute('data-date', s.date || '');
     card.setAttribute('data-duration', dur);
     card.setAttribute('data-xp', xp);
+    if (s.sessionStartMs || s.session_start_ms) card.setAttribute('data-session-start-ms', s.sessionStartMs || s.session_start_ms);
+    if (s.sessionEndMs || s.session_end_ms) card.setAttribute('data-session-end-ms', s.sessionEndMs || s.session_end_ms);
 
     card.innerHTML = `
       <div class="history-session-left">
@@ -7962,21 +8056,65 @@
     );
     let duration = 0;
     let sessionXp = 0;
+    let sessionStartMs = null;
+    let sessionEndMs = null;
+    let sessionDate = dateStr;
+
     if (idx !== -1) {
-      duration = state.sessions[idx].durationMinutes || state.sessions[idx].duration_minutes || 0;
-      sessionXp = state.sessions[idx].xp != null ? state.sessions[idx].xp : (duration * 10);
+      const sess = state.sessions[idx];
+      duration = sess.durationMinutes || sess.duration_minutes || 0;
+      sessionXp = sess.xp != null ? sess.xp : (duration * 10);
+      sessionStartMs = sess.sessionStartMs || sess.session_start_ms || null;
+      sessionEndMs = sess.sessionEndMs || sess.session_end_ms || null;
+      sessionDate = sess.date || dateStr;
       state.sessions.splice(idx, 1);
       invalidateSessionIndex();
     } else if (cardEl) {
       duration = parseInt(cardEl.dataset.duration || cardEl.querySelector('.day-session-duration')?.textContent || '0', 10) || 0;
       sessionXp = parseInt(cardEl.dataset.xp || '0', 10) || (duration * 10);
+      sessionStartMs = cardEl.dataset.sessionStartMs ? parseInt(cardEl.dataset.sessionStartMs, 10) : null;
+      sessionEndMs = cardEl.dataset.sessionEndMs ? parseInt(cardEl.dataset.sessionEndMs, 10) : null;
     }
 
     // 2. Update day activity and gamification stats immediately
-    if (dateStr && state.dayActivity && state.dayActivity[dateStr] !== undefined) {
-      state.dayActivity[dateStr] = Math.max(0, state.dayActivity[dateStr] - duration);
-      if (state.dayActivity[dateStr] === 0) {
-        delete state.dayActivity[dateStr];
+    let isOvernight = false;
+    let sDate = sessionDate;
+    let eDate = sessionDate;
+    let day1Mins = duration;
+    let day2Mins = 0;
+
+    if (sessionStartMs && sessionEndMs) {
+      sDate = formatDateLocal(new Date(sessionStartMs));
+      eDate = formatDateLocal(new Date(sessionEndMs));
+      if (sDate !== eDate) {
+        isOvernight = true;
+        const eD = new Date(sessionEndMs);
+        const midnightMs = new Date(eD.getFullYear(), eD.getMonth(), eD.getDate(), 0, 0, 0, 0).getTime();
+        const d1Wall = Math.max(0, (midnightMs - sessionStartMs) / 1000);
+        const d2Wall = Math.max(0, (sessionEndMs - midnightMs) / 1000);
+        const totalWall = d1Wall + d2Wall;
+        if (totalWall > 0) {
+          day1Mins = Math.round(duration * (d1Wall / totalWall));
+          day2Mins = Math.max(0, duration - day1Mins);
+        }
+      }
+    }
+
+    if (state.dayActivity) {
+      if (isOvernight) {
+        if (sDate && state.dayActivity[sDate] !== undefined) {
+          state.dayActivity[sDate] = Math.max(0, state.dayActivity[sDate] - day1Mins);
+          if (state.dayActivity[sDate] === 0) delete state.dayActivity[sDate];
+        }
+        if (eDate && state.dayActivity[eDate] !== undefined) {
+          state.dayActivity[eDate] = Math.max(0, state.dayActivity[eDate] - day2Mins);
+          if (state.dayActivity[eDate] === 0) delete state.dayActivity[eDate];
+        }
+      } else if (dateStr && state.dayActivity[dateStr] !== undefined) {
+        state.dayActivity[dateStr] = Math.max(0, state.dayActivity[dateStr] - duration);
+        if (state.dayActivity[dateStr] === 0) {
+          delete state.dayActivity[dateStr];
+        }
       }
     }
     state.xp = Math.max(0, (state.xp || 0) - sessionXp);
@@ -7984,27 +8122,29 @@
     updateStreak();
 
     // 3. Update or invalidate dayDetailsCache
-    if (dateStr && dayDetailsCache.has(dateStr)) {
-      const cached = dayDetailsCache.get(dateStr);
-      if (cached && Array.isArray(cached.sessions)) {
-        cached.sessions = cached.sessions.filter(s =>
-          s.id !== sessionId && String(s.id) !== String(sessionId) &&
-          s.id !== ('sess_' + sessionId) && ('sess_' + s.id) !== String(sessionId)
-        );
-        cached.totalMinutes = Math.max(0, (cached.totalMinutes || 0) - duration);
-        cached.totalSessions = cached.sessions.length;
-        cached.avgFocusMinutes = cached.totalSessions > 0 ? Math.round(cached.totalMinutes / cached.totalSessions) : 0;
-        const hrs = Math.floor(cached.totalMinutes / 60);
-        const mins = cached.totalMinutes % 60;
-        cached.totalTimeFormatted = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
-        cached.totalXp = cached.sessions.reduce((acc, s) => acc + (s.xp != null ? s.xp : ((s.durationMinutes || 0) * 10)), 0);
-        dayDetailsCache.set(dateStr, cached);
-      } else {
-        dayDetailsCache.delete(dateStr);
+    const targetDates = isOvernight ? [sDate, eDate].filter(Boolean) : (dateStr ? [dateStr] : []);
+    targetDates.forEach(dStr => {
+      if (dayDetailsCache.has(dStr)) {
+        const cached = dayDetailsCache.get(dStr);
+        if (cached && Array.isArray(cached.sessions)) {
+          const deductMins = (isOvernight && dStr === eDate) ? day2Mins : (isOvernight && dStr === sDate ? day1Mins : duration);
+          cached.sessions = cached.sessions.filter(s =>
+            s.id !== sessionId && String(s.id) !== String(sessionId) &&
+            s.id !== ('sess_' + sessionId) && ('sess_' + s.id) !== String(sessionId)
+          );
+          cached.totalMinutes = Math.max(0, (cached.totalMinutes || 0) - deductMins);
+          cached.totalSessions = cached.sessions.length;
+          cached.avgFocusMinutes = cached.totalSessions > 0 ? Math.round(cached.totalMinutes / cached.totalSessions) : 0;
+          const hrs = Math.floor(cached.totalMinutes / 60);
+          const mins = cached.totalMinutes % 60;
+          cached.totalTimeFormatted = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+          cached.totalXp = cached.sessions.reduce((acc, s) => acc + (s.xp != null ? s.xp : ((s.durationMinutes || 0) * 10)), 0);
+          dayDetailsCache.set(dStr, cached);
+        } else {
+          dayDetailsCache.delete(dStr);
+        }
       }
-    } else if (dateStr) {
-      dayDetailsCache.delete(dateStr);
-    }
+    });
 
     // 4. Update open modal pills and count synchronously
     const timeEl = document.getElementById('day-pill-time');
