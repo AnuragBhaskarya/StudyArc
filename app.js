@@ -5365,6 +5365,7 @@
       dialog.showModal();
     }
   }
+  window.openSessionDetailDialog = openSessionDetailDialog;
 
   async function openDayDialog(dateStr) {
     const dialog = document.getElementById('day-detail-dialog');
@@ -5426,6 +5427,7 @@
       renderDayDialogDOM(dayData);
     }
   }
+  window.openDayDialog = openDayDialog;
 
   function closeDayDialog() {
     currentDialogDate = null;
