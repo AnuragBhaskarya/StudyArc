@@ -589,6 +589,7 @@
       state.timer.anchorRemainingSeconds = state.timer.remainingSeconds;
       state.timer.anchorServerTime = null;
       state.timer.lastTickTime = null;
+      state.activeTaskTargetSeconds = state.timer.targetSeconds;
       if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
@@ -631,6 +632,9 @@
       state.timer.lastTickTime = Date.now();
       state.activeTaskTargetSeconds = state.timer.targetSeconds;
 
+      // A +30m adjustment raises the remaining anchor. Clear the monotonic
+      // guard so the received jump is not clamped back to the old countdown.
+      lastRenderedSeconds = null;
       recalculateRemainingSeconds();
 
       if (!timerInterval) {
@@ -1318,6 +1322,9 @@
   let presetAnimationRaf = null;
   let presetAnimationToken = 0;
   let pendingPromptKeyboardInput = null;
+  let timerAdjustmentFeedbackTimer = null;
+  let headerPresetResizeObserver = null;
+  let headerPresetSwapTimer = null;
 
   function isIosLikeDevice() {
     const ua = navigator.userAgent || '';
@@ -1371,8 +1378,12 @@
     setTimeout(() => input.remove(), 400);
   }
 
-  function isTimerPresetLocked() {
+  function isTimerSessionActive() {
     return Boolean(state.activeTaskName) || state.timer.status === 'running' || state.timer.status === 'paused';
+  }
+
+  function isTimerPresetLocked() {
+    return isTimerSessionActive();
   }
 
   function cancelTimerPresetAnimation(dismissKeyboard = true) {
@@ -1390,19 +1401,212 @@
     return true;
   }
 
+  function getHeaderPresetParts() {
+    return {
+      group: document.getElementById('header-presets'),
+      idleGroup: document.getElementById('header-preset-idle'),
+      sessionGroup: document.getElementById('header-preset-session')
+    };
+  }
+
+  function measureHeaderPresetWidth() {
+    const { group, idleGroup, sessionGroup } = getHeaderPresetParts();
+    if (!group || !idleGroup || !sessionGroup) return 0;
+    const activeGroup = group.classList.contains('is-session-mode') ? sessionGroup : idleGroup;
+    // offsetWidth ignores the crossfade scale, so the swap measures the real
+    // layout width instead of the shrunken mid-animation bounds.
+    return Math.ceil(activeGroup.offsetWidth || activeGroup.scrollWidth || 0);
+  }
+
+  function applyHeaderPresetWidth() {
+    const { group } = getHeaderPresetParts();
+    if (!group) return;
+    const width = measureHeaderPresetWidth();
+    if (width > 0) group.style.width = `${width}px`;
+  }
+
+  function settleHeaderPresetWidth() {
+    const { group } = getHeaderPresetParts();
+    if (!group) return;
+    group.classList.add('is-settling');
+    applyHeaderPresetWidth();
+    void group.offsetWidth;
+    group.classList.remove('is-settling');
+  }
+
+  function updateHeaderPresetMode() {
+    const { group, idleGroup, sessionGroup } = getHeaderPresetParts();
+    if (!group || !idleGroup || !sessionGroup) return;
+
+    const sessionMode = isTimerSessionActive();
+    const changed = group.classList.contains('is-session-mode') !== sessionMode;
+
+    if (changed) {
+      group.classList.toggle('is-session-mode', sessionMode);
+
+      // One-shot entrance animation for the two live adjusters. Removing the
+      // class afterwards keeps later feedback bumps from re-triggering it.
+      group.classList.add('is-swapping-in');
+      clearTimeout(headerPresetSwapTimer);
+      headerPresetSwapTimer = setTimeout(() => {
+        headerPresetSwapTimer = null;
+        group.classList.remove('is-swapping-in');
+      }, 900);
+    }
+    group.dataset.mode = sessionMode ? 'session' : 'idle';
+
+    // Keep the inactive group out of the tab order and accessibility tree.
+    idleGroup.setAttribute('aria-hidden', sessionMode ? 'true' : 'false');
+    sessionGroup.setAttribute('aria-hidden', sessionMode ? 'false' : 'true');
+    idleGroup.inert = sessionMode;
+    sessionGroup.inert = !sessionMode;
+
+    if (!group.classList.contains('is-preset-ready')) {
+      // First paint: lock in the idle width without animating from zero.
+      group.classList.add('is-preset-ready');
+      settleHeaderPresetWidth();
+      return;
+    }
+
+    // The group class change and width change land in the same task, so the
+    // browser animates the container while both pill groups crossfade.
+    applyHeaderPresetWidth();
+  }
+
   function updateTimerPresetUI() {
-    const group = document.getElementById('header-presets');
+    const { group, idleGroup, sessionGroup } = getHeaderPresetParts();
     if (!group) return;
 
     const locked = isTimerPresetLocked();
+    const sessionMode = isTimerSessionActive();
     const target = Math.round(state.timer.targetSeconds || 0);
 
-    group.querySelectorAll('.header-preset-pill').forEach((btn) => {
+    idleGroup?.querySelectorAll('.header-preset-pill').forEach((btn) => {
       const seconds = Number(btn.dataset.seconds) || 0;
       const isActive = !locked && seconds === target;
       btn.classList.toggle('is-active', isActive);
       btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       btn.disabled = locked;
+    });
+
+    const canAdjust = sessionMode && !resetVisualActive && !isCenterPadHolding;
+    sessionGroup?.querySelectorAll('.header-adjust-pill').forEach((btn) => {
+      const delta = Number(btn.dataset.adjustSeconds) || 0;
+      const atMax = delta > 0 && target >= MAX_TIMER_SECONDS;
+      const atMin = delta < 0 && target <= 0;
+      btn.disabled = !canAdjust || atMax || atMin;
+
+      if (atMax) {
+        btn.title = 'Maximum session length is 3 hours';
+      } else if (atMin) {
+        btn.title = 'Minimum session length is 0 minutes';
+      } else {
+        const verb = delta > 0 ? 'Extend' : 'Reduce';
+        const bound = delta > 0 ? 'max 3 hours' : 'min 0';
+        btn.title = `${verb} this session by 30 minutes (${bound})`;
+      }
+    });
+
+    updateHeaderPresetMode();
+  }
+
+  function restartAdjustButtonFeedback(button) {
+    if (!button) return;
+
+    // If the entrance animation is still active, retire it before swapping in
+    // the bump animation so removing .is-bumped cannot restart the entrance.
+    const group = document.getElementById('header-presets');
+    if (group?.classList.contains('is-swapping-in')) {
+      group.classList.remove('is-swapping-in');
+      clearTimeout(headerPresetSwapTimer);
+      headerPresetSwapTimer = null;
+    }
+
+    button.classList.remove('is-bumped');
+    void button.offsetWidth;
+    button.classList.add('is-bumped');
+    clearTimeout(button._adjustFeedbackTimer);
+    button._adjustFeedbackTimer = setTimeout(() => {
+      button.classList.remove('is-bumped');
+      button._adjustFeedbackTimer = null;
+    }, 560);
+  }
+
+  function flashTimerAdjustment(deltaSeconds, sourceButton) {
+    document.body.classList.remove('is-timer-adjusting', 'is-timer-adjusting-up', 'is-timer-adjusting-down');
+    void document.body.offsetWidth;
+    document.body.classList.add(
+      'is-timer-adjusting',
+      deltaSeconds > 0 ? 'is-timer-adjusting-up' : 'is-timer-adjusting-down'
+    );
+
+    clearTimeout(timerAdjustmentFeedbackTimer);
+    timerAdjustmentFeedbackTimer = setTimeout(() => {
+      timerAdjustmentFeedbackTimer = null;
+      document.body.classList.remove('is-timer-adjusting', 'is-timer-adjusting-up', 'is-timer-adjusting-down');
+    }, 560);
+
+    restartAdjustButtonFeedback(sourceButton);
+  }
+
+  function adjustActiveSession(deltaSeconds, sourceButton = null) {
+    if (!deltaSeconds || !isTimerSessionActive()) return;
+    if (resetVisualActive || isCenterPadHolding || presetAnimationRaf !== null) return;
+
+    const isRunning = state.timer.status === 'running';
+    const currentTarget = Math.max(0, Math.round(Number(state.timer.targetSeconds) || 0));
+    const currentRemaining = isRunning
+      ? Math.max(0, recalculateRemainingSeconds())
+      : Math.max(0, Number(state.timer.remainingSeconds) || 0);
+
+    // Move the target duration by exactly 30 minutes, bounded to 0..3 hours.
+    const nextTarget = Math.max(0, Math.min(MAX_TIMER_SECONDS, currentTarget + deltaSeconds));
+
+    if (nextTarget === currentTarget) {
+      // Already at the hard bound: keep the tap tactile without touching time.
+      restartAdjustButtonFeedback(sourceButton);
+      return;
+    }
+
+    // Studied time is immutable while extending/reducing. Target and remaining
+    // move together, so the live elapsed clock and earned XP never jump.
+    const elapsedSeconds = Math.max(0, currentTarget - currentRemaining);
+    const nextRemaining = nextTarget - elapsedSeconds;
+
+    if (nextRemaining <= 0) {
+      // Reducing past everything already studied ends the session now. The
+      // actual studied time is logged; under one minute is discarded.
+      completeSession({
+        elapsedSeconds,
+        resetSeconds: DEFAULT_TIMER_SECONDS,
+        endedEarly: true
+      });
+      return;
+    }
+
+    const serverNow = Date.now() + serverClockOffset;
+
+    state.timer.targetSeconds = nextTarget;
+    state.activeTaskTargetSeconds = nextTarget;
+    state.timer.remainingSeconds = nextRemaining;
+    state.timer.anchorRemainingSeconds = nextRemaining;
+    state.timer.anchorServerTime = isRunning ? serverNow : null;
+    state.timer.lastTickTime = isRunning ? Date.now() : null;
+
+    if (isRunning) {
+      // Remaining time just jumped upward. Clear the monotonic guard so the
+      // next countdown calculation is allowed to follow the new anchor.
+      lastRenderedSeconds = null;
+    }
+
+    saveState();
+    flashTimerAdjustment(deltaSeconds, sourceButton);
+    renderTimer();
+
+    syncTimerAction('adjust', {
+      target_seconds: nextTarget,
+      remaining_seconds: Math.round(nextRemaining),
+      active_task_name: state.activeTaskName
     });
   }
 
@@ -1474,14 +1678,40 @@
   }
 
   function initHeaderPresets() {
-    const group = document.getElementById('header-presets');
+    const { group, idleGroup, sessionGroup } = getHeaderPresetParts();
     if (!group) return;
 
     group.addEventListener('click', (e) => {
-      const btn = e.target.closest && e.target.closest('.header-preset-pill');
+      if (!e.target.closest) return;
+
+      const adjustBtn = e.target.closest('.header-adjust-pill');
+      if (adjustBtn) {
+        if (adjustBtn.disabled) return;
+        e.preventDefault();
+        adjustActiveSession(Number(adjustBtn.dataset.adjustSeconds) || 0, adjustBtn);
+        return;
+      }
+
+      const btn = e.target.closest('.header-preset-pill');
       if (!btn || btn.disabled) return;
       e.preventDefault();
       selectTimerPreset(Number(btn.dataset.seconds) || 0);
+    });
+
+    // Pill sizes change with the responsive breakpoints and once the web font
+    // settles. Keep the animated container exactly as wide as the active set.
+    if (typeof ResizeObserver === 'function' && idleGroup && sessionGroup) {
+      headerPresetResizeObserver = new ResizeObserver(() => {
+        const { group: currentGroup } = getHeaderPresetParts();
+        if (!currentGroup || !currentGroup.classList.contains('is-preset-ready')) return;
+        settleHeaderPresetWidth();
+      });
+      headerPresetResizeObserver.observe(idleGroup);
+      headerPresetResizeObserver.observe(sessionGroup);
+    }
+
+    window.addEventListener('resize', () => {
+      if (group.classList.contains('is-preset-ready')) settleHeaderPresetWidth();
     });
 
     updateTimerPresetUI();
@@ -2640,8 +2870,31 @@
     }
   }
 
-  function completeSession() {
+  function completeSession(options = {}) {
     if (resetVisualActive) return;
+
+    const targetDuration = Math.max(
+      60,
+      Number(state.activeTaskTargetSeconds || state.timer.targetSeconds) || DEFAULT_TIMER_SECONDS
+    );
+    const remainingBefore = Math.max(0, Number(state.timer.remainingSeconds) || 0);
+    const elapsedSeconds = options.elapsedSeconds != null
+      ? Math.max(0, Number(options.elapsedSeconds) || 0)
+      : Math.max(0, targetDuration - remainingBefore);
+
+    // Strict 1-minute rule: a completed session logs actual studied time, and
+    // anything under 60 seconds is discarded instead of being rounded up.
+    const minutesCompleted = elapsedSeconds >= 60
+      ? Math.max(1, Math.round(elapsedSeconds / 60))
+      : 0;
+
+    // Natural completion keeps the finished duration as the next idle target.
+    // Reducing a live session to zero returns to the calm 1:30 default instead.
+    const resetDuration = Math.max(
+      60,
+      Math.min(MAX_TIMER_SECONDS, Math.round(Number(options.resetSeconds) || targetDuration))
+    );
+    const endedEarly = Boolean(options.endedEarly);
 
     state.timer.remainingSeconds = 0;
     if (timerInterval) {
@@ -2652,30 +2905,27 @@
 
     const prevLevel = getLevelInfo(state.xp).level;
     const taskName = state.activeTaskName || 'Focus Session';
-    const targetDuration = Math.max(
-      60,
-      Number(state.activeTaskTargetSeconds || state.timer.targetSeconds) || DEFAULT_TIMER_SECONDS
-    );
-    const minutesCompleted = Math.max(1, Math.round(targetDuration / 60));
     const sessionStartTime = state.activeTaskStartTime;
 
     // Send the session to the server immediately, but keep all heavy local
     // persistence for after the zero-hold + refill animation.
-    logSession(minutesCompleted, taskName, {
-      render: false,
-      persist: false,
-      startTime: sessionStartTime,
-      deferUIDelay: false,
-      unpaused: !activeSessionHasBeenPaused
-    });
+    if (minutesCompleted > 0) {
+      logSession(minutesCompleted, taskName, {
+        render: false,
+        persist: false,
+        startTime: sessionStartTime,
+        deferUIDelay: false,
+        unpaused: !activeSessionHasBeenPaused
+      });
+    }
 
-    beginTimerResetReturn(targetDuration, {
+    beginTimerResetReturn(resetDuration, {
       zeroHoldMs: 460,
       returnMs: 520,
       onCommit: () => {
         const newLevelInfo = getLevelInfo(state.xp);
 
-        if (newLevelInfo.level > prevLevel) {
+        if (minutesCompleted > 0 && newLevelInfo.level > prevLevel) {
           setTimeout(() => {
             spawnFlyingPill(`🎉 Lv. ${newLevelInfo.level}!`, { extraClass: 'pill-xp', lane: 'center' });
             showToast(`Level Up! Reached Level ${newLevelInfo.level}: ${newLevelInfo.title}! ✨`);
@@ -2686,9 +2936,9 @@
         state.activeTaskStartTime = null;
         state.activeTaskTargetSeconds = null;
 
-        state.timer.targetSeconds = targetDuration;
-        state.timer.remainingSeconds = targetDuration;
-        state.timer.anchorRemainingSeconds = targetDuration;
+        state.timer.targetSeconds = resetDuration;
+        state.timer.remainingSeconds = resetDuration;
+        state.timer.anchorRemainingSeconds = resetDuration;
         state.timer.anchorServerTime = null;
         state.timer.lastTickTime = null;
         state.timer.status = 'idle';
@@ -2696,12 +2946,16 @@
         // Timer UI classes/title refresh now; the rim/digits are owned by the
         // reset refill animation until it completes.
         renderTimer();
-        syncTimerAction('complete', { target_seconds: targetDuration });
+        syncTimerAction('complete', { target_seconds: resetDuration });
       },
       onComplete: () => {
-        const streakBonus = Math.max(0, state.streak || 0);
-        spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
-        scheduleSessionUIUpdate(140);
+        if (minutesCompleted > 0) {
+          const streakBonus = Math.max(0, state.streak || 0);
+          spawnRewardPills(minutesCompleted, minutesCompleted, streakBonus);
+          scheduleSessionUIUpdate(140);
+        } else if (endedEarly) {
+          spawnFlyingPill('Session Ended');
+        }
       }
     });
   }

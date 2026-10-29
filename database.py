@@ -21,6 +21,7 @@ if os.path.exists(env_file):
 # Cloud PostgreSQL (Supabase / Neon / Render Postgres) support
 DATABASE_URL = os.environ.get('DATABASE_URL')
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'study_tracker.db')
+MAX_TIMER_SECONDS = 3 * 3600  # Hard ceiling for a focus session (3 hours)
 
 try:
     import psycopg2
@@ -618,9 +619,24 @@ def update_timer_state(user_id, action, target_seconds=None, active_task_name=No
             new_task = None
 
         elif action == 'adjust':
-            if target_seconds:
-                new_target = int(target_seconds)
-            if current['status'] in ('idle', 'paused'):
+            # Keep the persisted fallback consistent with the live server:
+            # active running/paused sessions accept their new remaining time,
+            # while idle adjustments reset the countdown to the new target.
+            new_target = max(0, min(MAX_TIMER_SECONDS, int(new_target)))
+            client_rem = int(remaining_seconds) if remaining_seconds is not None else None
+
+            if current['status'] == 'running':
+                if client_rem is None:
+                    client_rem = max(0, int(current.get('remainingSeconds', new_target)))
+                new_remaining = max(0, min(new_target, MAX_TIMER_SECONDS, client_rem))
+                new_started_at = now_ms
+            elif current['status'] == 'paused':
+                if client_rem is None:
+                    client_rem = max(0, int(current.get('remainingSeconds', new_target)))
+                new_remaining = max(0, min(new_target, MAX_TIMER_SECONDS, client_rem))
+                new_started_at = None
+            else:
+                new_status = 'idle'
                 new_remaining = new_target
                 new_started_at = None
 

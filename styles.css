@@ -326,16 +326,16 @@ body.is-home-intro #timer-state-dot {
 body.is-home-intro .app-header .mobile-brand {
   animation: homeIntroHeaderItem 380ms cubic-bezier(0.16, 1, 0.3, 1) 1120ms both;
 }
-body.is-home-intro .app-header .header-preset-pill:nth-of-type(1) {
+body.is-home-intro .app-header .header-preset-group--idle .header-preset-pill:nth-of-type(1) {
   animation: homeIntroHeaderItem 380ms cubic-bezier(0.16, 1, 0.3, 1) 1170ms both;
 }
-body.is-home-intro .app-header .header-preset-pill:nth-of-type(2) {
+body.is-home-intro .app-header .header-preset-group--idle .header-preset-pill:nth-of-type(2) {
   animation: homeIntroHeaderItem 380ms cubic-bezier(0.16, 1, 0.3, 1) 1220ms both;
 }
-body.is-home-intro .app-header .header-preset-pill:nth-of-type(3) {
+body.is-home-intro .app-header .header-preset-group--idle .header-preset-pill:nth-of-type(3) {
   animation: homeIntroHeaderItem 380ms cubic-bezier(0.16, 1, 0.3, 1) 1270ms both;
 }
-body.is-home-intro .app-header .header-preset-pill:nth-of-type(4) {
+body.is-home-intro .app-header .header-preset-group--idle .header-preset-pill:nth-of-type(4) {
   animation: homeIntroHeaderItem 380ms cubic-bezier(0.16, 1, 0.3, 1) 1320ms both;
 }
 body.is-home-intro .app-header .header-topic-pill {
@@ -599,17 +599,74 @@ html.aura-disabled .bg-matrix-stream {
   min-width: 0;
 }
 
-/* Quick session-duration presets (25m / 1h / 2h / 3h) */
+/* Header duration controls:
+   idle presets (25m / 1h / 2h / 3h) morph into live session adjusters. */
 .header-presets {
-  display: flex;
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
   flex-shrink: 0;
+  height: 22px;
+  width: auto;
+}
+
+/* Width transition is enabled only after the first non-animated measurement. */
+.header-presets.is-preset-ready {
+  transition: width 440ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: width;
+}
+
+.header-presets.is-settling {
+  transition: none !important;
 }
 
 /* Presets only make sense once signed in (avoids crowding the login screen) */
 html.unauthenticated-gate .header-presets {
   display: none;
+}
+
+.header-preset-group {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: max-content;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(0, calc(-50% + 9px), 0) scale(0.78);
+  transform-origin: left center;
+  filter: blur(3px);
+  transition:
+    opacity 200ms ease,
+    transform 440ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 320ms ease;
+}
+
+.header-preset-group--idle {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(0, -50%, 0) scale(1);
+  filter: blur(0);
+  transition-delay: 70ms;
+}
+
+.header-presets.is-session-mode .header-preset-group--idle {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(0, calc(-50% - 9px), 0) scale(0.72);
+  filter: blur(4px);
+  transition-delay: 0ms;
+}
+
+.header-presets.is-session-mode .header-preset-group--session {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(0, -50%, 0) scale(1);
+  filter: blur(0);
+  transition-delay: 80ms;
 }
 
 .header-preset-pill {
@@ -663,12 +720,127 @@ html.unauthenticated-gate .header-presets {
   box-shadow: none;
 }
 
+/* Live-session ±30m controls */
+.header-adjust-pill {
+  position: relative;
+  min-width: 3.05rem;
+  gap: 0;
+  padding: 0 0.5rem;
+  overflow: visible;
+  font-variant-numeric: tabular-nums;
+}
+
+.header-adjust-sign {
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  transform: translateY(-0.5px);
+}
+
+.header-adjust-value {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.015em;
+  line-height: 1;
+}
+
+.header-adjust-pill--minus {
+  color: #F0BD76;
+  border-color: rgba(229, 169, 88, 0.28);
+  background: rgba(229, 169, 88, 0.09);
+}
+
+.header-adjust-pill--minus:hover {
+  color: #FFD79A;
+  background: rgba(229, 169, 88, 0.17);
+  border-color: rgba(229, 169, 88, 0.48);
+  box-shadow: 0 0 12px rgba(229, 169, 88, 0.18);
+}
+
+.header-adjust-pill--plus:hover {
+  box-shadow: 0 0 12px rgba(16, 224, 104, 0.2);
+}
+
+/* A tiny +30m / −30m burst rises out of the tapped pill. */
+.header-adjust-pill::after {
+  content: attr(data-feedback);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: currentColor;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.header-adjust-pill.is-bumped::after {
+  animation: headerAdjustFeedback 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* The two live buttons spring in after the preset row has cleared. */
+.header-presets.is-session-mode.is-swapping-in .header-adjust-pill {
+  animation: headerAdjustPillIn 620ms cubic-bezier(0.16, 1, 0.3, 1) 70ms backwards;
+}
+
+.header-presets.is-session-mode.is-swapping-in .header-adjust-pill--plus {
+  animation-delay: 130ms;
+}
+
+.header-presets.is-session-mode .header-adjust-pill.is-bumped {
+  animation: headerAdjustPillBump 460ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes headerAdjustPillIn {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 7px, 0) scale(0.55);
+    box-shadow: 0 0 0 rgba(16, 224, 104, 0);
+  }
+  62% {
+    opacity: 1;
+    transform: translate3d(0, -1px, 0) scale(1.07);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes headerAdjustPillBump {
+  0% { transform: scale(1); }
+  30% { transform: scale(0.9); }
+  64% { transform: scale(1.09); }
+  100% { transform: scale(1); }
+}
+
+@keyframes headerAdjustFeedback {
+  0% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -185%) scale(0.78);
+  }
+}
+
 /* Touch devices: no sticky hover lift on preset pills */
 @media (hover: none), (pointer: coarse) {
   .header-preset-pill:not(.is-active):hover {
     background: rgba(16, 224, 104, 0.08);
     border-color: rgba(16, 224, 104, 0.25);
     transform: none;
+  }
+
+  .header-preset-pill.header-adjust-pill--minus:hover {
+    background: rgba(229, 169, 88, 0.09);
+    border-color: rgba(229, 169, 88, 0.28);
+    box-shadow: none;
   }
 }
 
@@ -1001,6 +1173,66 @@ body.is-dragging .bead-touch-target {
   filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9));
   pointer-events: none;
   transition: transform 120ms ease;
+}
+
+/* Live ±30m adjustment: the rim sweeps to its new position instead of snapping.
+   Only active for the short feedback window so normal 250ms ticks stay crisp. */
+body.is-timer-adjusting .timer-arc {
+  transition: stroke-dashoffset 480ms cubic-bezier(0.22, 1, 0.36, 1), stroke 260ms ease;
+}
+
+body.is-timer-adjusting .timer-bead,
+body.is-timer-adjusting .timer-bead-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+body.is-timer-adjusting .timer-bead {
+  animation: timerBeadAdjust 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.is-timer-adjusting .timer-bead-glow {
+  animation: timerBeadGlowAdjust 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.is-timer-adjusting-up .timer-bead {
+  filter: drop-shadow(0 0 14px rgba(16, 224, 104, 0.95));
+}
+
+@keyframes timerBeadAdjust {
+  0% { transform: scale(1); }
+  34% { transform: scale(1.38); }
+  100% { transform: scale(1); }
+}
+
+@keyframes timerBeadGlowAdjust {
+  0% { transform: scale(1); }
+  34% { transform: scale(1.55); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-presets,
+  .header-preset-group {
+    transition-duration: 1ms !important;
+  }
+
+  .header-adjust-pill {
+    animation: none !important;
+  }
+
+  .header-adjust-pill::after {
+    display: none;
+  }
+
+  body.is-timer-adjusting .timer-arc {
+    transition-duration: 1ms !important;
+  }
+
+  body.is-timer-adjusting .timer-bead,
+  body.is-timer-adjusting .timer-bead-glow {
+    animation: none !important;
+  }
 }
 
 .timer-section.is-running .timer-bead-glow {
@@ -2547,7 +2779,7 @@ input:checked + .switch-slider:before {
     min-width: 0;
   }
 
-  .header-presets {
+  .header-preset-group {
     gap: 0.22rem;
   }
 
@@ -2555,6 +2787,11 @@ input:checked + .switch-slider:before {
     height: 20px;
     padding: 0 0.42rem;
     font-size: 0.6rem;
+  }
+
+  .header-adjust-pill {
+    min-width: 2.72rem;
+    padding: 0 0.42rem;
   }
 
   .stats-strip {
@@ -4961,6 +5198,19 @@ html.unauthenticated-gate .auth-dialog::backdrop {
     height: 19px;
     padding: 0 0.36rem;
     font-size: 0.56rem;
+  }
+
+  .header-adjust-pill {
+    min-width: 2.4rem;
+    padding: 0 0.34rem;
+  }
+
+  .header-adjust-sign {
+    font-size: 0.64rem;
+  }
+
+  .header-adjust-value {
+    font-size: 0.55rem;
   }
 }
 

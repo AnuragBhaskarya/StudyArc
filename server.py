@@ -17,6 +17,8 @@ import database
 app = Flask(__name__, static_folder=None)
 socketio = SocketIO(app, cors_allowed_origins='*', async_mode='gevent', ping_timeout=30, ping_interval=10)
 
+MAX_TIMER_SECONDS = 3 * 3600  # Hard ceiling for a focus session (3 hours)
+
 # Secret key configuration for cryptographic session signing
 app.secret_key = os.environ.get('SECRET_KEY', 'studyark-production-super-secret-key-change-me')
 app.config['SESSION_COOKIE_HTTPONLY'] = True
@@ -385,9 +387,27 @@ def trigger_timer_update(user_id, action, target_seconds=None, active_task_name=
         new_task = None
 
     elif action == 'adjust':
-        if target_seconds:
-            new_target = int(target_seconds)
-        if current.get('status') in ('idle', 'paused'):
+        # Idle preset picks and live -30m/+30m session edits both land here.
+        # For an active session the client sends remaining time with studied
+        # elapsed time already preserved, so target and remaining move together.
+        new_target = max(0, min(MAX_TIMER_SECONDS, new_target))
+        client_rem = int(remaining_seconds) if remaining_seconds is not None else None
+        current_status = current.get('status', 'idle')
+
+        if current_status == 'running':
+            if client_rem is None:
+                client_rem = int(round(float(current.get('currentRemaining', current.get('remainingSeconds', new_target)))))
+            new_remaining = max(0, min(new_target, MAX_TIMER_SECONDS, client_rem))
+            # Re-anchor at the new remaining time so every device continues
+            # counting down from the adjusted value, not the old start epoch.
+            new_started_at = now_ms
+        elif current_status == 'paused':
+            if client_rem is None:
+                client_rem = int(current.get('remainingSeconds', new_target))
+            new_remaining = max(0, min(new_target, MAX_TIMER_SECONDS, client_rem))
+            new_started_at = None
+        else:
+            new_status = 'idle'
             new_remaining = new_target
             new_started_at = None
 

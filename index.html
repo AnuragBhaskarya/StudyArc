@@ -52,7 +52,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=DynaPuff:wght@700&family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Titan+One&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=12.39">
+  <link rel="stylesheet" href="styles.css?v=12.40">
   <script>
     (function () {
       var isAuth = false;
@@ -132,12 +132,22 @@
             <span class="brand-text">StudyArk</span>
           </div>
 
-          <!-- Quick session-duration presets -->
-          <div class="header-presets" id="header-presets" role="group" aria-label="Quick session duration presets">
-            <button type="button" class="header-preset-pill" data-seconds="1500" title="Set a 25 minute session" aria-pressed="false">25m</button>
-            <button type="button" class="header-preset-pill" data-seconds="3600" title="Set a 1 hour session" aria-pressed="false">1h</button>
-            <button type="button" class="header-preset-pill" data-seconds="7200" title="Set a 2 hour session" aria-pressed="false">2h</button>
-            <button type="button" class="header-preset-pill" data-seconds="10800" title="Set a 3 hour session" aria-pressed="false">3h</button>
+          <!-- Quick session-duration presets (idle) → live session adjuster (active) -->
+          <div class="header-presets" id="header-presets" data-mode="idle">
+            <div class="header-preset-group header-preset-group--idle" id="header-preset-idle" role="group" aria-label="Quick session duration presets">
+              <button type="button" class="header-preset-pill" data-seconds="1500" title="Set a 25 minute session" aria-pressed="false">25m</button>
+              <button type="button" class="header-preset-pill" data-seconds="3600" title="Set a 1 hour session" aria-pressed="false">1h</button>
+              <button type="button" class="header-preset-pill" data-seconds="7200" title="Set a 2 hour session" aria-pressed="false">2h</button>
+              <button type="button" class="header-preset-pill" data-seconds="10800" title="Set a 3 hour session" aria-pressed="false">3h</button>
+            </div>
+            <div class="header-preset-group header-preset-group--session" id="header-preset-session" role="group" aria-label="Adjust active session duration" aria-hidden="true">
+              <button type="button" class="header-preset-pill header-adjust-pill header-adjust-pill--minus" data-adjust-seconds="-1800" data-feedback="−30m" title="Reduce this session by 30 minutes" aria-label="Reduce this session by 30 minutes" disabled>
+                <span class="header-adjust-sign" aria-hidden="true">−</span><span class="header-adjust-value" aria-hidden="true">30m</span>
+              </button>
+              <button type="button" class="header-preset-pill header-adjust-pill header-adjust-pill--plus" data-adjust-seconds="1800" data-feedback="+30m" title="Extend this session by 30 minutes" aria-label="Extend this session by 30 minutes" disabled>
+                <span class="header-adjust-sign" aria-hidden="true">+</span><span class="header-adjust-value" aria-hidden="true">30m</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1049,7 +1059,7 @@
   <!-- JAVASCRIPT LOGIC (Local zero-latency assets, resilient against CDN outages and content blockers) -->
   <script src="assets/socket.io.min.js"></script>
   <script src="assets/lenis.min.js"></script>
-  <script src="app.js?v=12.39"></script>
+  <script src="app.js?v=12.40"></script>
 
   <!-- SERVICE WORKER REGISTRATION (PWA Offline & Mobile Support) -->
   <script>
