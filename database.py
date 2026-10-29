@@ -985,7 +985,7 @@ def get_day_details(user_id, date_str):
             FROM sessions sess
             LEFT JOIN subjects s ON sess.subject_id = s.id
             WHERE sess.user_id = ? AND sess.date = ?
-            ORDER BY sess.timestamp ASC
+            ORDER BY sess.timestamp DESC
         """, (user_id, date_str))
         rows = [dict(r) for r in cur.fetchall()]
 

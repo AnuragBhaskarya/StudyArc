@@ -4769,7 +4769,7 @@
       const mins = matchingMins % 60;
       const formattedTotal = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
 
-      const sortedMatching = matching.slice().sort((a, b) => (a._ts || a.timestamp || 0) - (b._ts || b.timestamp || 0));
+      const sortedMatching = matching.slice().sort((a, b) => (b._ts || b.timestamp || 0) - (a._ts || a.timestamp || 0));
 
       const fullData = {
         date: dateStr,
@@ -4793,6 +4793,7 @@
             color: s.color || '#10E068',
             durationMinutes: duration,
             timeRange: timeRange,
+            timestamp: ts,
             xp: sessXp
           };
         })
@@ -4826,7 +4827,14 @@
     }
 
     if (listEl) {
-      if (!dayData.sessions || dayData.sessions.length === 0) {
+      // Defensive newest-first ordering: older cached/API payloads may arrive
+      // in chronological order even though the modal should lead with the
+      // most recent session card.
+      const orderedSessions = Array.isArray(dayData.sessions)
+        ? dayData.sessions.slice().sort((a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0))
+        : [];
+
+      if (orderedSessions.length === 0) {
         listEl.innerHTML = `
           <div class="day-empty-state">
             <div class="day-empty-icon">
@@ -4842,7 +4850,7 @@
           </div>
         `;
       } else {
-        listEl.innerHTML = dayData.sessions.map(s => `
+        listEl.innerHTML = orderedSessions.map(s => `
           <div class="day-session-card" data-session-id="${escapeHtml(s.id)}" data-duration="${s.durationMinutes}" data-xp="${s.xp != null ? s.xp : (s.durationMinutes * 10)}">
             <div class="day-session-left">
               <div class="day-session-timeline">
@@ -7150,7 +7158,7 @@
     }
     const allSessions = sessionDataIndex.sortedDesc;
 
-    // Group sessions by date using insertion order (descending dates)
+    // Group sessions by date, then render dates newest-first.
     const dateMap = new Map();
     for (let i = 0; i < allSessions.length; i++) {
       const s = allSessions[i];
@@ -7175,7 +7183,11 @@
     const virtualItems = [];
     const dateHeaderIndices = {};
 
-    for (const [dateStr, daySessions] of dateMap.entries()) {
+    const orderedDateKeys = Array.from(dateMap.keys()).sort((a, b) => String(b).localeCompare(String(a)));
+    for (const dateStr of orderedDateKeys) {
+      const daySessions = (dateMap.get(dateStr) || [])
+        .slice()
+        .sort((a, b) => (b._ts || b.timestamp || 0) - (a._ts || a.timestamp || 0));
       const fullDateStr = formatDayDateHeader(dateStr);
       let dayTotalMins = 0;
       for (let j = 0; j < daySessions.length; j++) {
