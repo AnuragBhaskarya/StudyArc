@@ -1109,6 +1109,10 @@
     return `${y}-${m}-${d}`;
   }
 
+  function formatDateLocal(dateObj = new Date()) {
+    return getLocalDateString(dateObj);
+  }
+
   function formatDigitalTime(totalSecs) {
     const safeSecs = Math.max(0, Math.floor(totalSecs));
     const hrs = Math.floor(safeSecs / 3600);
@@ -8146,24 +8150,28 @@
 
   function deleteSession(sessionId, dateStr) {
     if (!sessionId) return Promise.resolve();
-    const cachedSession = sessionLookupCache.get(String(sessionId)) || null;
+    const rawId = String(sessionId).replace(/^sess_/, '');
+    const cachedSession = sessionLookupCache.get(String(sessionId)) || sessionLookupCache.get(rawId) || null;
     sessionLookupCache.delete(String(sessionId));
+    sessionLookupCache.delete(rawId);
 
     // The delete button also carries data-session-id, so scope the selector to
     // actual card elements. Matching the button as a second "card" used to run
     // the dismiss animation twice and rebuild the history feed twice.
     const targetCards = Array.from(document.querySelectorAll(
       '.day-session-card[data-session-id], .history-session-card[data-session-id]'
-    )).filter(el => el.getAttribute('data-session-id') === String(sessionId));
+    )).filter(el => {
+      const cardId = String(el.getAttribute('data-session-id') || '').replace(/^sess_/, '');
+      return cardId === rawId || (cachedSession && cachedSession.timestamp && cardId === String(cachedSession.timestamp));
+    });
     const cardEl = targetCards[0] || null;
 
     // 1. Identify session duration from client state, card dataset, or cachedSession
-    const idx = (state.sessions || []).findIndex(s =>
-      s.id === sessionId ||
-      String(s.id) === String(sessionId) ||
-      s.id === ('sess_' + sessionId) ||
-      ('sess_' + s.id) === String(sessionId)
-    );
+    const idx = (state.sessions || []).findIndex(s => {
+      const sId = String(s.id || '').replace(/^sess_/, '');
+      const sTs = s.timestamp ? String(s.timestamp) : '';
+      return sId === rawId || sTs === rawId;
+    });
     let duration = 0;
     let sessionXp = 0;
     let sessionStartMs = null;
@@ -8200,8 +8208,8 @@
     let day2Mins = 0;
 
     if (sessionStartMs && sessionEndMs) {
-      sDate = formatDateLocal(new Date(sessionStartMs));
-      eDate = formatDateLocal(new Date(sessionEndMs));
+      sDate = getLocalDateString(new Date(sessionStartMs));
+      eDate = getLocalDateString(new Date(sessionEndMs));
       if (sDate !== eDate) {
         isOvernight = true;
         const eD = new Date(sessionEndMs);
@@ -8244,10 +8252,11 @@
         const cached = dayDetailsCache.get(dStr);
         if (cached && Array.isArray(cached.sessions)) {
           const deductMins = (isOvernight && dStr === eDate) ? day2Mins : (isOvernight && dStr === sDate ? day1Mins : duration);
-          cached.sessions = cached.sessions.filter(s =>
-            s.id !== sessionId && String(s.id) !== String(sessionId) &&
-            s.id !== ('sess_' + sessionId) && ('sess_' + s.id) !== String(sessionId)
-          );
+          cached.sessions = cached.sessions.filter(s => {
+            const sId = String(s.id || '').replace(/^sess_/, '');
+            const sTs = s.timestamp ? String(s.timestamp) : '';
+            return sId !== rawId && sTs !== rawId;
+          });
           cached.totalMinutes = Math.max(0, (cached.totalMinutes || 0) - deductMins);
           cached.totalSessions = cached.sessions.length;
           cached.avgFocusMinutes = cached.totalSessions > 0 ? Math.round(cached.totalMinutes / cached.totalSessions) : 0;
@@ -8423,9 +8432,13 @@
             state.sessions = backendPayload.sessions;
             invalidateSessionIndex();
           }
+          if (backendPayload.dayDetails && backendPayload.dayDetails.date) {
+            dayDetailsCache.set(backendPayload.dayDetails.date, backendPayload.dayDetails);
+          }
           saveState();
           renderStats();
           renderHeatmap();
+          updateTodayLiveStat();
         }
       } else {
         // Fallback POST /api/sessions/<sessionId>/delete in case DELETE method was restricted
@@ -8455,9 +8468,13 @@
               state.sessions = backendPayload.sessions;
               invalidateSessionIndex();
             }
+            if (backendPayload.dayDetails && backendPayload.dayDetails.date) {
+              dayDetailsCache.set(backendPayload.dayDetails.date, backendPayload.dayDetails);
+            }
             saveState();
             renderStats();
             renderHeatmap();
+            updateTodayLiveStat();
           }
         } else {
           console.error(`StudyArk: Fallback deletion also failed (${fallbackRes.status})`);

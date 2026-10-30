@@ -1024,7 +1024,7 @@ def delete_session(user_id, session_id):
     if isinstance(session_id, str) and session_id.startswith('sess_'):
         session_id = session_id[5:]
     try:
-        numeric_id_or_ts = int(session_id)
+        numeric_id_or_ts = int(float(session_id))
     except (ValueError, TypeError):
         return None
 
@@ -1033,8 +1033,8 @@ def delete_session(user_id, session_id):
             SELECT id, subject_id, subject_name, duration_minutes, date, timestamp,
                    COALESCE(NULLIF(xp, 0), duration_minutes * 10) as xp
             FROM sessions
-            WHERE (id = ? OR timestamp = ?) AND user_id = ?
-        """, (numeric_id_or_ts, numeric_id_or_ts, user_id))
+            WHERE (id = ? OR timestamp = ? OR session_start_ms = ? OR session_end_ms = ?) AND user_id = ?
+        """, (numeric_id_or_ts, numeric_id_or_ts, numeric_id_or_ts, numeric_id_or_ts, user_id))
         row = cur.fetchone()
         if not row:
             return None
