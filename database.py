@@ -897,21 +897,13 @@ def calculate_session_xp(user_id, duration_minutes, date_str=None, unpaused=True
     # First session of the day & Milestone bonuses
     bonus_first = 0
     bonus_milestone = 0
+    today_mins = int(stats.get('todayFocusMinutes') or 0)
     with get_connection() as ctx:
         cur = ctx.execute(
-            "SELECT COALESCE(SUM(duration_minutes), 0) as today_mins, COUNT(id) as today_count FROM sessions WHERE user_id = ? AND date = ?",
+            "SELECT COUNT(id) FROM sessions WHERE user_id = ? AND date = ?",
             (user_id, date_str)
         )
-        row = cur.fetchone()
-        today_mins = 0
-        today_count = 0
-        if row:
-            if isinstance(row, dict) or hasattr(row, 'keys'):
-                today_mins = int(row['today_mins'] or 0)
-                today_count = int(row['today_count'] or 0)
-            else:
-                today_mins = int(row[0] or 0)
-                today_count = int(row[1] or 0)
+        today_count = int(fetch_scalar(cur.fetchone()) or 0)
 
         if today_count == 0:
             bonus_first = 100
