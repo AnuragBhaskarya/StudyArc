@@ -935,6 +935,32 @@ def calculate_session_xp(user_id, duration_minutes, date_str=None, unpaused=True
         'bonus_milestone': bonus_milestone
     }
 
+def split_overnight_minutes(duration_minutes, start_time_str):
+    """
+    Computes exact proportional minutes for overnight sessions crossing local midnight.
+    Parses local start_time (e.g. '11:45 PM') to determine minutes elapsed before midnight,
+    ensuring timezone-agnostic consistency with client-side calculations without server UTC bias.
+    """
+    dur = max(1, int(duration_minutes or 0))
+    if start_time_str:
+        try:
+            clean = str(start_time_str).replace('(-1d)', '').replace('(+1d)', '').strip()
+            for fmt in ('%I:%M %p', '%I:%M%p', '%H:%M'):
+                try:
+                    t = datetime.strptime(clean, fmt).time()
+                    mins_before_midnight = (24 * 60) - (t.hour * 60 + t.minute)
+                    if 0 < mins_before_midnight < dur:
+                        day1 = mins_before_midnight
+                        day2 = dur - day1
+                        return max(1, day1), max(1, day2)
+                    break
+                except ValueError:
+                    pass
+        except Exception:
+            pass
+    day1 = max(1, dur // 2)
+    return day1, max(1, dur - day1)
+
 def add_session(user_id, subject_name, duration_minutes, date_str=None, timestamp_ms=None, start_time=None, end_time=None, unpaused=True, xp=None, session_start_ms=None, session_end_ms=None, break_minutes=0, timeline_json=None):
     try:
         duration_minutes = int(duration_minutes)
@@ -1176,10 +1202,10 @@ def get_day_details(user_id, date_str):
             LEFT JOIN subjects s ON sess.subject_id = s.id
             WHERE sess.user_id = ? AND (
                 sess.date = ?
-                OR (sess.date = ? AND sess.end_time LIKE '%(+1d)%')
+                OR (sess.date = ? AND sess.end_time LIKE ?)
             )
             ORDER BY sess.timestamp DESC
-        """, (user_id, date_str, prev_date_str))
+        """, (user_id, date_str, prev_date_str, '%(+1d)%'))
         rows = [dict(r) for r in cur.fetchall()]
 
     sessions = []
@@ -1197,19 +1223,22 @@ def get_day_details(user_id, date_str):
         end_time_raw = str(r.get('end_time') or '')
         is_overnight = '(+1d)' in end_time_raw
         recorded_date = r.get('date') or date_str
-
         day_minutes = duration
+        day_xp = sess_xp
         if is_overnight:
-            day1_mins = max(1, duration // 2)
-            day2_mins = max(1, duration - day1_mins)
+            day1_mins, day2_mins = split_overnight_minutes(duration, r.get('start_time'))
+            day1_xp = max(1, round(sess_xp * (day1_mins / max(1, duration))))
+            day2_xp = max(1, sess_xp - day1_xp)
 
             if date_str == recorded_date:
                 day_minutes = day1_mins
+                day_xp = day1_xp
             else:
                 day_minutes = day2_mins
+                day_xp = day2_xp
 
         total_minutes += day_minutes
-        total_xp += sess_xp
+        total_xp += day_xp
 
         clean_start = (r.get('start_time') or '').replace(' (-1d)', '').replace(' (+1d)', '').strip()
         clean_end = end_time_raw.replace(' (+1d)', '').replace(' (-1d)', '').strip()
@@ -1289,7 +1318,7 @@ def get_day_details(user_id, date_str):
 def get_daily_activity(user_id):
     with get_connection() as ctx:
         cur = ctx.execute("""
-            SELECT id, date, duration_minutes, session_start_ms, session_end_ms, end_time
+            SELECT id, date, duration_minutes, session_start_ms, session_end_ms, start_time, end_time
             FROM sessions
             WHERE user_id = ?
             ORDER BY timestamp ASC
@@ -1311,8 +1340,7 @@ def get_daily_activity(user_id):
                 s_date = start_d.strftime('%Y-%m-%d')
                 e_date = next_d.strftime('%Y-%m-%d')
 
-                day1_mins = max(1, dur // 2)
-                day2_mins = max(1, dur - day1_mins)
+                day1_mins, day2_mins = split_overnight_minutes(dur, r.get('start_time'))
 
                 activity[s_date] = activity.get(s_date, 0) + day1_mins
                 activity[e_date] = activity.get(e_date, 0) + day2_mins
@@ -1608,8 +1636,7 @@ def get_full_state(user_id, client_date=None):
                 s_date = start_d.strftime('%Y-%m-%d')
                 e_date = next_d.strftime('%Y-%m-%d')
 
-                day1_mins = max(1, dur // 2)
-                day2_mins = max(1, dur - day1_mins)
+                day1_mins, day2_mins = split_overnight_minutes(dur, r.get('start_time'))
 
                 day_act[s_date] = day_act.get(s_date, 0) + day1_mins
                 day_act[e_date] = day_act.get(e_date, 0) + day2_mins

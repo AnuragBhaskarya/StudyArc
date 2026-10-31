@@ -8223,6 +8223,22 @@
         }
       }
     }
+    if (!isOvernight) {
+      const eStr = (cachedSession && cachedSession.endTime) || (idx !== -1 && state.sessions[idx] && state.sessions[idx].endTime) || '';
+      if (eStr.includes('(+1d)')) {
+        isOvernight = true;
+        sDate = sessionDate;
+        try {
+          const dObj = new Date(sessionDate + 'T00:00:00');
+          dObj.setDate(dObj.getDate() + 1);
+          eDate = getLocalDateString(dObj);
+        } catch (_) {
+          eDate = sessionDate;
+        }
+        day1Mins = Math.max(1, Math.floor(duration / 2));
+        day2Mins = Math.max(1, duration - day1Mins);
+      }
+    }
 
     if (state.dayActivity) {
       if (isOvernight) {
