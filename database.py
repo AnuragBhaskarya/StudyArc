@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import re
 import random
 import json
 from datetime import datetime, timedelta, date, time
@@ -68,10 +69,22 @@ def get_pg_pool():
                 "psycopg2 is not installed. Please run 'pip install psycopg2-binary' "
                 "to use PostgreSQL with DATABASE_URL."
             )
+        import time as _time
         from psycopg2 import pool
-        _pg_pool = pool.ThreadedConnectionPool(
+
+        class ResilientConnectionPool(pool.ThreadedConnectionPool):
+            def getconn(self, key=None):
+                for attempt in range(25):
+                    try:
+                        return super().getconn(key=key)
+                    except pool.PoolError:
+                        if attempt == 24:
+                            raise
+                        _time.sleep(0.1)
+
+        _pg_pool = ResilientConnectionPool(
             minconn=1,
-            maxconn=10,
+            maxconn=20,
             dsn=get_clean_database_url(),
             cursor_factory=RealDictCursor
         )
@@ -399,25 +412,11 @@ def init_db():
             if 'user_id' not in cols:
                 ctx.execute("ALTER TABLE subjects ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE")
 
-            cur = ctx.execute("PRAGMA table_info(sessions)")
-            cols = [r['name'] for r in cur.fetchall()]
-            if 'xp' not in cols:
-                ctx.execute("ALTER TABLE sessions ADD COLUMN xp INTEGER NOT NULL DEFAULT 0")
-            if 'session_start_ms' not in cols:
-                ctx.execute("ALTER TABLE sessions ADD COLUMN session_start_ms INTEGER")
-            if 'session_end_ms' not in cols:
-                ctx.execute("ALTER TABLE sessions ADD COLUMN session_end_ms INTEGER")
-            if 'break_minutes' not in cols:
-                ctx.execute("ALTER TABLE sessions ADD COLUMN break_minutes INTEGER NOT NULL DEFAULT 0")
-            if 'timeline_json' not in cols:
-                ctx.execute("ALTER TABLE sessions ADD COLUMN timeline_json TEXT")
-            ctx.execute("UPDATE sessions SET xp = duration_minutes * 10 WHERE xp IS NULL OR xp = 0")
-
             # SQLite automatic migration: decouple sessions from subject ON DELETE CASCADE
             try:
                 cur = ctx.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='sessions'")
                 row = cur.fetchone()
-                if row and 'ON DELETE CASCADE' in row['sql'] and 'subject_id' in row['sql']:
+                if row and row['sql'] and re.search(r'subject_id\s+INTEGER\s+REFERENCES\s+subjects\s*\([^)]*\)\s*ON\s+DELETE\s+CASCADE', row['sql'], re.IGNORECASE):
                     ctx.execute("PRAGMA foreign_keys = OFF")
                     ctx.execute("""
                         CREATE TABLE sessions_v2 (
@@ -431,10 +430,23 @@ def init_db():
                             start_time TEXT,
                             end_time TEXT,
                             xp INTEGER NOT NULL DEFAULT 0,
+                            session_start_ms INTEGER,
+                            session_end_ms INTEGER,
+                            break_minutes INTEGER NOT NULL DEFAULT 0,
+                            timeline_json TEXT,
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                         )
                     """)
-                    ctx.execute("INSERT INTO sessions_v2 (id, user_id, subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time, xp, created_at) SELECT id, user_id, subject_id, subject_name, duration_minutes, date, timestamp, start_time, end_time, COALESCE(NULLIF(xp, 0), duration_minutes * 10), created_at FROM sessions")
+                    ctx.execute("""
+                        INSERT INTO sessions_v2 (
+                            id, user_id, subject_id, subject_name, duration_minutes, date, timestamp,
+                            start_time, end_time, xp, session_start_ms, session_end_ms, break_minutes, timeline_json, created_at
+                        )
+                        SELECT id, user_id, subject_id, subject_name, duration_minutes, date, timestamp,
+                               start_time, end_time, COALESCE(NULLIF(xp, 0), duration_minutes * 10),
+                               session_start_ms, session_end_ms, COALESCE(break_minutes, 0), timeline_json, created_at
+                        FROM sessions
+                    """)
                     ctx.execute("DROP TABLE sessions")
                     ctx.execute("ALTER TABLE sessions_v2 RENAME TO sessions")
                     ctx.execute("CREATE INDEX IF NOT EXISTS idx_sessions_user_date ON sessions (user_id, date)")
@@ -443,6 +455,20 @@ def init_db():
                     ctx.execute("PRAGMA foreign_keys = ON")
             except Exception as e:
                 print(f"[DB SQLite Migration] sessions constraint notice: {e}")
+
+            cur = ctx.execute("PRAGMA table_info(sessions)")
+            cols = [r['name'] for r in cur.fetchall()]
+            if 'xp' not in cols:
+                ctx.execute("ALTER TABLE sessions ADD COLUMN xp INTEGER NOT NULL DEFAULT 0")
+            if 'session_start_ms' not in cols:
+                ctx.execute("ALTER TABLE sessions ADD COLUMN session_start_ms INTEGER")
+            if 'session_end_ms' not in cols:
+                ctx.execute("ALTER TABLE sessions ADD COLUMN session_end_ms INTEGER")
+            if 'break_minutes' not in cols:
+                ctx.execute("ALTER TABLE sessions ADD COLUMN break_minutes INTEGER NOT NULL DEFAULT 0")
+            if 'timeline_json' not in cols:
+                ctx.execute("ALTER TABLE sessions ADD COLUMN timeline_json TEXT")
+            ctx.execute("UPDATE sessions SET xp = duration_minutes * 10 WHERE xp IS NULL OR xp = 0")
 
             ctx.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_subjects_user_name ON subjects (user_id, LOWER(name))")
             ctx.execute("CREATE INDEX IF NOT EXISTS idx_sessions_user_date ON sessions (user_id, date)")
@@ -955,8 +981,6 @@ def add_session(user_id, subject_name, duration_minutes, date_str=None, timestam
     if not end_time:
         base_end = end_dt.strftime('%I:%M %p').lstrip('0')
         end_time = f"{base_end} (+1d)" if is_overnight else base_end
-    elif is_overnight and '(+' not in end_time and '(-' not in end_time:
-        end_time = f"{end_time} (+1d)"
 
     # Normalize timeline
     if isinstance(timeline_json, (list, dict)):
@@ -1134,13 +1158,11 @@ def get_sessions(user_id, limit=None):
 def get_day_details(user_id, date_str):
     try:
         dt = datetime.strptime(date_str, '%Y-%m-%d')
-        day_start_ms = int(datetime(dt.year, dt.month, dt.day, 0, 0, 0).timestamp() * 1000)
-        day_end_ms = int(datetime(dt.year, dt.month, dt.day, 23, 59, 59, 999).timestamp() * 1000)
         formatted_date = dt.strftime('%A, %B %d, %Y')
+        prev_date_str = (dt - timedelta(days=1)).strftime('%Y-%m-%d')
     except Exception:
         dt = datetime.now()
-        day_start_ms = 0
-        day_end_ms = int(dt.timestamp() * 1000) + 86400000
+        prev_date_str = (dt - timedelta(days=1)).strftime('%Y-%m-%d')
         formatted_date = date_str
 
     with get_connection() as ctx:
@@ -1154,12 +1176,10 @@ def get_day_details(user_id, date_str):
             LEFT JOIN subjects s ON sess.subject_id = s.id
             WHERE sess.user_id = ? AND (
                 sess.date = ?
-                OR (sess.session_start_ms IS NOT NULL AND sess.session_end_ms IS NOT NULL AND (
-                    sess.session_start_ms <= ? AND sess.session_end_ms >= ?
-                ))
+                OR (sess.date = ? AND sess.end_time LIKE '%(+1d)%')
             )
             ORDER BY sess.timestamp DESC
-        """, (user_id, date_str, day_end_ms, day_start_ms))
+        """, (user_id, date_str, prev_date_str))
         rows = [dict(r) for r in cur.fetchall()]
 
     sessions = []
@@ -1174,49 +1194,34 @@ def get_day_details(user_id, date_str):
         if not start_ms:
             start_ms = end_ms - (duration * 60000)
 
-        start_dt = datetime.fromtimestamp(start_ms / 1000)
-        end_dt = datetime.fromtimestamp(end_ms / 1000)
-        start_date_str = start_dt.strftime('%Y-%m-%d')
-        end_date_str = end_dt.strftime('%Y-%m-%d')
-        recorded_date = r.get('date') or start_date_str
-        is_overnight = (start_date_str != end_date_str)
+        end_time_raw = str(r.get('end_time') or '')
+        is_overnight = '(+1d)' in end_time_raw
+        recorded_date = r.get('date') or date_str
 
         day_minutes = duration
         if is_overnight:
-            midnight_dt = datetime(end_dt.year, end_dt.month, end_dt.day, 0, 0, 0)
-            midnight_ms = int(midnight_dt.timestamp() * 1000)
-            total_span = max(1, end_ms - start_ms)
-            span_day1 = max(0, midnight_ms - start_ms)
-            if total_span > 0:
-                day1_mins = max(1, round(duration * (span_day1 / total_span)))
-                day2_mins = max(1, duration - day1_mins)
-            else:
-                day1_mins = max(1, duration // 2)
-                day2_mins = max(1, duration - day1_mins)
+            day1_mins = max(1, duration // 2)
+            day2_mins = max(1, duration - day1_mins)
 
-            if date_str == start_date_str:
+            if date_str == recorded_date:
                 day_minutes = day1_mins
-            elif date_str == end_date_str:
+            else:
                 day_minutes = day2_mins
 
         total_minutes += day_minutes
         total_xp += sess_xp
 
-        clean_start = (r.get('start_time') or start_dt.strftime('%I:%M %p').lstrip('0')).replace(' (-1d)', '').replace(' (+1d)', '').strip()
-        clean_end = (r.get('end_time') or end_dt.strftime('%I:%M %p').lstrip('0')).replace(' (+1d)', '').replace(' (-1d)', '').strip()
+        clean_start = (r.get('start_time') or '').replace(' (-1d)', '').replace(' (+1d)', '').strip()
+        clean_end = end_time_raw.replace(' (+1d)', '').replace(' (-1d)', '').strip()
 
         if is_overnight:
-            if date_str == start_date_str:
+            if date_str == recorded_date:
                 time_range_display = f"{clean_start} – {clean_end} (+1d)"
                 start_str = clean_start
                 end_str = f"{clean_end} (+1d)"
-            elif date_str == end_date_str:
+            else:
                 time_range_display = f"{clean_start} (-1d) – {clean_end}"
                 start_str = f"{clean_start} (-1d)"
-                end_str = clean_end
-            else:
-                time_range_display = f"{clean_start} – {clean_end}"
-                start_str = clean_start
                 end_str = clean_end
         else:
             time_range_display = f"{clean_start} – {clean_end}"
@@ -1284,7 +1289,7 @@ def get_day_details(user_id, date_str):
 def get_daily_activity(user_id):
     with get_connection() as ctx:
         cur = ctx.execute("""
-            SELECT id, date, duration_minutes, session_start_ms, session_end_ms
+            SELECT id, date, duration_minutes, session_start_ms, session_end_ms, end_time
             FROM sessions
             WHERE user_id = ?
             ORDER BY timestamp ASC
@@ -1294,37 +1299,27 @@ def get_daily_activity(user_id):
     activity = {}
     for r in rows:
         dur = int(r.get('duration_minutes') or 0)
-        start_ms = r.get('session_start_ms')
-        end_ms = r.get('session_end_ms')
         date_str = r.get('date')
+        if not date_str:
+            date_str = datetime.now().strftime('%Y-%m-%d')
+        end_time_str = str(r.get('end_time') or '')
 
-        if start_ms and end_ms and end_ms > start_ms:
-            start_dt = datetime.fromtimestamp(start_ms / 1000)
-            end_dt = datetime.fromtimestamp(end_ms / 1000)
-            s_date = start_dt.strftime('%Y-%m-%d')
-            e_date = end_dt.strftime('%Y-%m-%d')
+        if '(+1d)' in end_time_str:
+            try:
+                start_d = datetime.strptime(date_str, '%Y-%m-%d').date()
+                next_d = start_d + timedelta(days=1)
+                s_date = start_d.strftime('%Y-%m-%d')
+                e_date = next_d.strftime('%Y-%m-%d')
 
-            if s_date != e_date:
-                midnight_dt = datetime(end_dt.year, end_dt.month, end_dt.day, 0, 0, 0)
-                midnight_ms = int(midnight_dt.timestamp() * 1000)
-
-                total_span = end_ms - start_ms
-                span_day1 = max(0, midnight_ms - start_ms)
-                if total_span > 0:
-                    day1_mins = max(1, round(dur * (span_day1 / total_span)))
-                    day2_mins = max(1, dur - day1_mins)
-                else:
-                    day1_mins = max(1, dur // 2)
-                    day2_mins = max(1, dur - day1_mins)
+                day1_mins = max(1, dur // 2)
+                day2_mins = max(1, dur - day1_mins)
 
                 activity[s_date] = activity.get(s_date, 0) + day1_mins
                 activity[e_date] = activity.get(e_date, 0) + day2_mins
                 continue
+            except Exception:
+                pass
 
-        if not date_str and start_ms:
-            date_str = datetime.fromtimestamp(start_ms / 1000).strftime('%Y-%m-%d')
-        if not date_str:
-            date_str = datetime.now().strftime('%Y-%m-%d')
         activity[date_str] = activity.get(date_str, 0) + dur
 
     return activity
@@ -1572,15 +1567,7 @@ def get_full_state(user_id, client_date=None):
                 'duration': duration * 60
             }]
 
-        start_dt = datetime.fromtimestamp(start_ms / 1000)
-        end_dt = datetime.fromtimestamp(end_ms / 1000)
-        start_date_str = start_dt.strftime('%Y-%m-%d')
-        end_date_str = end_dt.strftime('%Y-%m-%d')
-        is_overnight = (start_date_str != end_date_str)
-        if is_overnight and '(+' not in end_str and '(-' not in end_str:
-            time_range_str = f"{start_str} – {end_str} (+1d)"
-        else:
-            time_range_str = f"{start_str} – {end_str}"
+        time_range_str = f"{start_str} – {end_str}"
 
         sessions_res.append({
             'id': f"sess_{r['id']}",
@@ -1605,36 +1592,31 @@ def get_full_state(user_id, client_date=None):
     day_act = {}
     for r in (data.get('sessions') or []):
         dur = int(r.get('duration_minutes') or 0)
-        start_ms = r.get('session_start_ms')
-        end_ms = r.get('session_end_ms')
         rec_date = r.get('date')
+        if not rec_date:
+            start_ms = r.get('session_start_ms')
+            if start_ms:
+                rec_date = datetime.fromtimestamp(start_ms / 1000).strftime('%Y-%m-%d')
+            else:
+                rec_date = datetime.now().strftime('%Y-%m-%d')
+        end_time_str = str(r.get('end_time') or '')
 
-        if start_ms and end_ms and end_ms > start_ms:
-            start_dt = datetime.fromtimestamp(start_ms / 1000)
-            end_dt = datetime.fromtimestamp(end_ms / 1000)
-            s_date = start_dt.strftime('%Y-%m-%d')
-            e_date = end_dt.strftime('%Y-%m-%d')
+        if '(+1d)' in end_time_str:
+            try:
+                start_d = datetime.strptime(rec_date, '%Y-%m-%d').date()
+                next_d = start_d + timedelta(days=1)
+                s_date = start_d.strftime('%Y-%m-%d')
+                e_date = next_d.strftime('%Y-%m-%d')
 
-            if s_date != e_date:
-                midnight_dt = datetime(end_dt.year, end_dt.month, end_dt.day, 0, 0, 0)
-                midnight_ms = int(midnight_dt.timestamp() * 1000)
-                total_span = end_ms - start_ms
-                span_day1 = max(0, midnight_ms - start_ms)
-                if total_span > 0:
-                    day1_mins = max(1, round(dur * (span_day1 / total_span)))
-                    day2_mins = max(1, dur - day1_mins)
-                else:
-                    day1_mins = max(1, dur // 2)
-                    day2_mins = max(1, dur - day1_mins)
+                day1_mins = max(1, dur // 2)
+                day2_mins = max(1, dur - day1_mins)
 
                 day_act[s_date] = day_act.get(s_date, 0) + day1_mins
                 day_act[e_date] = day_act.get(e_date, 0) + day2_mins
                 continue
+            except Exception:
+                pass
 
-        if not rec_date and start_ms:
-            rec_date = datetime.fromtimestamp(start_ms / 1000).strftime('%Y-%m-%d')
-        if not rec_date:
-            rec_date = datetime.now().strftime('%Y-%m-%d')
         day_act[rec_date] = day_act.get(rec_date, 0) + dur
 
     tot_focus_mins = sum(day_act.values())

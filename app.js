@@ -5164,7 +5164,7 @@
     if (timeEl) timeEl.textContent = activityMins > 0 ? formattedTotal : '...';
     if (sessEl) sessEl.textContent = '...';
     if (avgEl) avgEl.textContent = '...';
-    if (xpEl) xpEl.textContent = activityMins > 0 ? `+${formatCompactNumber(activityMins)} XP` : '...';
+    if (xpEl) xpEl.textContent = activityMins > 0 ? `+${formatCompactNumber(activityMins * 10)} XP` : '...';
     if (countEl) countEl.textContent = 'Loading...';
     if (listEl) {
       listEl.innerHTML = `
@@ -8282,15 +8282,21 @@
     let dayTotalMins = 0;
     let dayTotalSess = 0;
     let dayAvgMins = 0;
+    let dayTotalXp = 0;
 
     if (dateStr && dayDetailsCache.has(dateStr)) {
       const c = dayDetailsCache.get(dateStr);
       dayTotalMins = c.totalMinutes || 0;
       dayTotalSess = c.totalSessions || 0;
       dayAvgMins = c.avgFocusMinutes || 0;
+      dayTotalXp = c.totalXp || (dayTotalMins * 10);
     } else {
       const matching = (state.sessions || []).filter(s => s.date === dateStr);
-      matching.forEach(s => dayTotalMins += (s.durationMinutes || s.duration_minutes || 0));
+      matching.forEach(s => {
+        const d = (s.durationMinutes || s.duration_minutes || 0);
+        dayTotalMins += d;
+        dayTotalXp += (s.xp || (d * 10));
+      });
       dayTotalSess = matching.length;
       dayAvgMins = dayTotalSess > 0 ? Math.round(dayTotalMins / dayTotalSess) : 0;
     }
@@ -8302,7 +8308,7 @@
     if (timeEl) timeEl.textContent = formattedTotal;
     if (sessEl) sessEl.textContent = dayTotalSess;
     if (avgEl) avgEl.textContent = `${dayAvgMins}m`;
-    if (xpEl) xpEl.textContent = `+${formatCompactNumber(dayTotalMins)} XP`;
+    if (xpEl) xpEl.textContent = `+${formatCompactNumber(dayTotalXp)} XP`;
     if (countEl) countEl.textContent = `${dayTotalSess} session${dayTotalSess === 1 ? '' : 's'}`;
 
     saveState();
@@ -8397,7 +8403,12 @@
     } else {
       const dayDlg = document.getElementById('day-detail-dialog');
       if (dayDlg && dayDlg.open && currentDialogDate) {
-        renderDayDetails(currentDialogDate);
+        const updatedDay = getDayDataFromClient(currentDialogDate);
+        if (updatedDay) {
+          renderDayDialogDOM(updatedDay);
+        } else {
+          openDayDialog(currentDialogDate);
+        }
       }
       const histDlg = document.getElementById('sessions-history-dialog');
       if (histDlg && histDlg.open) {

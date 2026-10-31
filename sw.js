@@ -1,12 +1,12 @@
 // StudyArk Progressive Web App (PWA) Service Worker — iOS Safari Bulletproof Edition
-const CACHE_NAME = 'studyark-pwa-v131';
+const CACHE_NAME = 'studyark-pwa-v132';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/styles.css',
-  '/styles.css?v=12.51',
+  '/styles.css?v=12.52',
   '/app.js',
-  '/app.js?v=12.51',
+  '/app.js?v=12.52',
   '/levels.json',
   '/assets/socket.io.min.js',
   '/assets/lenis.min.js',
@@ -101,7 +101,14 @@ self.addEventListener('fetch', (event) => {
           const cache = await caches.open(CACHE_NAME);
           const cached = (await cache.match('/index.html')) || (await cache.match('/'));
           if (cached) return cached;
-          return fetch('/');
+          try {
+            return await fetch('/');
+          } catch {
+            return new Response('<!DOCTYPE html><html><head><meta charset="utf-8"><title>StudyArk Offline</title><style>body{background:#0a0a0c;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}</style></head><body><div><h2>You are currently offline</h2><p>Please check your internet connection and reload.</p></div></body></html>', {
+              status: 503,
+              headers: { 'Content-Type': 'text/html; charset=utf-8' }
+            });
+          }
         })
     );
     return;
